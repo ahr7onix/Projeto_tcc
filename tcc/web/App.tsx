@@ -1,11 +1,18 @@
-import React from 'react';
-import LoginForm from './src/components/LoginForm';
-import { authStyles as styles } from './src/styles/authStyles';
+import React, { useState } from 'react';
+import LoginForm from './LoginForm';
+import RegisterForm from './RegisterForm';
+import { authStyles as styles } from './authStyles';
 
 const App: React.FC = () => {
+  const [isLogin, setIsLogin] = useState<boolean>(true);
+
   return (
     <div style={styles.wrapper}>
-      <LoginForm />
+      {isLogin ? (
+        <LoginForm onSwitch={() => setIsLogin(false)} />
+      ) : (
+        <RegisterForm onSwitch={() => setIsLogin(true)} />
+      )}
     </div>
   );
 };

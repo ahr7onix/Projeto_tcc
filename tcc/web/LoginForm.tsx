@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { authStyles as styles } from '../styles/authStyles';
+import { authStyles as styles } from './authStyles';
 
-const LoginForm: React.FC = () => {
+interface LoginFormProps {
+  onSwitch: () => void;
+}
+
+const LoginForm: React.FC<LoginFormProps> = ({ onSwitch }) => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const []
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -50,6 +53,13 @@ const LoginForm: React.FC = () => {
         <a href="#" style={{ color: '#007bff', textDecoration: 'none' }}>
           Esqueceu a senha?
         </a>
+      </div>
+
+      <div style={{ marginTop: '16px', textAlign: 'center', fontSize: '14px' }}>
+        Não tem uma conta?{' '}
+        <button type="button" onClick={onSwitch} style={{ background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', padding: 0, font: 'inherit' }}>
+          Cadastre-se
+        </button>
       </div>
     </form>
   );
