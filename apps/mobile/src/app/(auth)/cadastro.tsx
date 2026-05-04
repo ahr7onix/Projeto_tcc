@@ -1,26 +1,37 @@
-import { useState } from 'react';
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { Link } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { FormField } from '@/components/FormField';
+import { RoleSelector } from '@/components/RoleSelector';
+import { extractAuthError, useCadastro } from '@/hooks/use-auth';
+import { cadastroSchema, type CadastroFormValues } from '@/lib/validation/auth';
 import { colors, radius, spacing, typography } from '@/lib/theme';
 
 export default function CadastroScreen() {
-  const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
+  const { control, handleSubmit } = useForm<CadastroFormValues>({
+    resolver: zodResolver(cadastroSchema),
+    defaultValues: { nome: '', email: '', senha: '', role: 'paciente' },
+  });
+  const cadastro = useCadastro();
 
-  const handleCadastro = () => {
-    // TODO: integrar com endpoint /auth/cadastro da API
-  };
+  const onSubmit = handleSubmit((values) => {
+    cadastro.mutate(values);
+  });
+
+  const errorMessage = cadastro.isError
+    ? extractAuthError(cadastro.error, 'Não foi possível criar a conta.')
+    : null;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -35,45 +46,42 @@ export default function CadastroScreen() {
           </View>
 
           <View style={styles.form}>
-            <View>
-              <Text style={styles.label}>Nome completo</Text>
-              <TextInput
-                style={styles.input}
-                value={nome}
-                onChangeText={setNome}
-                placeholder="Seu nome"
-                placeholderTextColor={colors.textMuted}
-              />
-            </View>
+            <FormField
+              control={control}
+              name="nome"
+              label="Nome completo"
+              placeholder="Seu nome"
+            />
+            <FormField
+              control={control}
+              name="email"
+              label="E-mail"
+              autoCapitalize="none"
+              autoComplete="email"
+              keyboardType="email-address"
+              placeholder="voce@exemplo.com"
+            />
+            <FormField
+              control={control}
+              name="senha"
+              label="Senha"
+              secureTextEntry
+              placeholder="Mínimo 8 caracteres"
+            />
+            <RoleSelector control={control} name="role" label="Tipo de conta" />
 
-            <View>
-              <Text style={styles.label}>E-mail</Text>
-              <TextInput
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                autoComplete="email"
-                keyboardType="email-address"
-                placeholder="voce@exemplo.com"
-                placeholderTextColor={colors.textMuted}
-              />
-            </View>
+            {errorMessage ? <Text style={styles.errorBanner}>{errorMessage}</Text> : null}
 
-            <View>
-              <Text style={styles.label}>Senha</Text>
-              <TextInput
-                style={styles.input}
-                value={senha}
-                onChangeText={setSenha}
-                secureTextEntry
-                placeholder="Mínimo 8 caracteres"
-                placeholderTextColor={colors.textMuted}
-              />
-            </View>
-
-            <Pressable style={styles.button} onPress={handleCadastro}>
-              <Text style={styles.buttonText}>Cadastrar</Text>
+            <Pressable
+              style={[styles.button, cadastro.isPending && styles.buttonDisabled]}
+              onPress={onSubmit}
+              disabled={cadastro.isPending}
+            >
+              {cadastro.isPending ? (
+                <ActivityIndicator color={colors.textInverse} />
+              ) : (
+                <Text style={styles.buttonText}>Cadastrar</Text>
+              )}
             </Pressable>
 
             <Link href="/(auth)/login" style={styles.linkText}>
@@ -93,16 +101,10 @@ const styles = StyleSheet.create({
   title: { ...typography.h1, color: colors.text },
   subtitle: { ...typography.body, color: colors.textMuted, marginTop: spacing.xs },
   form: { gap: spacing.lg },
-  label: { ...typography.caption, color: colors.text, marginBottom: spacing.xs },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    fontSize: 15,
-    color: colors.text,
-    backgroundColor: colors.surface,
+  errorBanner: {
+    ...typography.caption,
+    color: colors.danger,
+    textAlign: 'center',
   },
   button: {
     backgroundColor: colors.primary,
@@ -111,6 +113,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: spacing.md,
   },
+  buttonDisabled: { opacity: 0.7 },
   buttonText: { color: colors.textInverse, fontSize: 16, fontWeight: '600' },
   linkText: { textAlign: 'center', color: colors.primary, marginTop: spacing.md },
 });

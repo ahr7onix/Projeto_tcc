@@ -1,24 +1,35 @@
-import { useState } from 'react';
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { Link } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { FormField } from '@/components/FormField';
+import { extractAuthError, useLogin } from '@/hooks/use-auth';
+import { loginSchema, type LoginFormValues } from '@/lib/validation/auth';
 import { colors, radius, spacing, typography } from '@/lib/theme';
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
+  const { control, handleSubmit } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: '', senha: '' },
+  });
+  const login = useLogin();
 
-  const handleLogin = () => {
-    // TODO: integrar com endpoint /auth/login da API
-  };
+  const onSubmit = handleSubmit((values) => {
+    login.mutate(values);
+  });
+
+  const errorMessage = login.isError
+    ? extractAuthError(login.error, 'E-mail ou senha incorretos.')
+    : null;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -32,34 +43,35 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.form}>
-          <View>
-            <Text style={styles.label}>E-mail</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              autoComplete="email"
-              keyboardType="email-address"
-              placeholder="voce@exemplo.com"
-              placeholderTextColor={colors.textMuted}
-            />
-          </View>
+          <FormField
+            control={control}
+            name="email"
+            label="E-mail"
+            autoCapitalize="none"
+            autoComplete="email"
+            keyboardType="email-address"
+            placeholder="voce@exemplo.com"
+          />
+          <FormField
+            control={control}
+            name="senha"
+            label="Senha"
+            secureTextEntry
+            placeholder="••••••••"
+          />
 
-          <View>
-            <Text style={styles.label}>Senha</Text>
-            <TextInput
-              style={styles.input}
-              value={senha}
-              onChangeText={setSenha}
-              secureTextEntry
-              placeholder="••••••••"
-              placeholderTextColor={colors.textMuted}
-            />
-          </View>
+          {errorMessage ? <Text style={styles.errorBanner}>{errorMessage}</Text> : null}
 
-          <Pressable style={styles.button} onPress={handleLogin}>
-            <Text style={styles.buttonText}>Entrar</Text>
+          <Pressable
+            style={[styles.button, login.isPending && styles.buttonDisabled]}
+            onPress={onSubmit}
+            disabled={login.isPending}
+          >
+            {login.isPending ? (
+              <ActivityIndicator color={colors.textInverse} />
+            ) : (
+              <Text style={styles.buttonText}>Entrar</Text>
+            )}
           </Pressable>
 
           <Link href="/(auth)/cadastro" style={styles.linkText}>
@@ -78,16 +90,10 @@ const styles = StyleSheet.create({
   title: { ...typography.h1, color: colors.text },
   subtitle: { ...typography.body, color: colors.textMuted, marginTop: spacing.xs },
   form: { gap: spacing.lg },
-  label: { ...typography.caption, color: colors.text, marginBottom: spacing.xs },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    fontSize: 15,
-    color: colors.text,
-    backgroundColor: colors.surface,
+  errorBanner: {
+    ...typography.caption,
+    color: colors.danger,
+    textAlign: 'center',
   },
   button: {
     backgroundColor: colors.primary,
@@ -96,6 +102,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: spacing.md,
   },
+  buttonDisabled: { opacity: 0.7 },
   buttonText: { color: colors.textInverse, fontSize: 16, fontWeight: '600' },
   linkText: { textAlign: 'center', color: colors.primary, marginTop: spacing.md },
 });
