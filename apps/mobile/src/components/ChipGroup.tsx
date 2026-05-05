@@ -4,48 +4,44 @@ import {
   type Control,
   type FieldPath,
   type FieldValues,
+  type PathValue,
 } from 'react-hook-form';
 import { colors, radius, spacing, typography } from '@/lib/theme';
-import type { UserRole } from '@/types/auth';
 
-interface Option {
-  value: UserRole;
+interface Option<V extends string> {
+  value: V;
   label: string;
 }
 
-const OPTIONS: Option[] = [
-  { value: 'paciente', label: 'Paciente' },
-  { value: 'nutricionista', label: 'Nutricionista' },
-];
-
-interface Props<T extends FieldValues> {
+interface Props<T extends FieldValues, V extends string> {
   control: Control<T>;
   name: FieldPath<T>;
-  label: string;
+  options: Option<V>[];
 }
 
-export function RoleSelector<T extends FieldValues>({
+export function ChipGroup<T extends FieldValues, V extends string>({
   control,
   name,
-  label,
-}: Props<T>) {
+  options,
+}: Props<T, V>) {
   return (
     <Controller
       control={control}
       name={name}
       render={({ field: { value, onChange }, fieldState: { error } }) => (
         <View style={styles.wrapper}>
-          <Text style={styles.label}>{label}</Text>
           <View style={styles.row}>
-            {OPTIONS.map((opt) => {
+            {options.map((opt) => {
               const selected = value === opt.value;
               return (
                 <Pressable
                   key={opt.value}
-                  onPress={() => onChange(opt.value)}
+                  onPress={() => onChange(opt.value as PathValue<T, FieldPath<T>>)}
                   style={[styles.chip, selected && styles.chipSelected]}
                 >
-                  <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
+                  <Text
+                    style={[styles.chipText, selected && styles.chipTextSelected]}
+                  >
                     {opt.label}
                   </Text>
                 </Pressable>
@@ -61,19 +57,27 @@ export function RoleSelector<T extends FieldValues>({
 
 const styles = StyleSheet.create({
   wrapper: { gap: spacing.xs },
-  label: { ...typography.caption, color: colors.text },
   row: { flexDirection: 'row', gap: spacing.sm },
   chip: {
     flex: 1,
     paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
-  chipSelected: { borderColor: colors.primary, backgroundColor: colors.primary },
-  chipText: { ...typography.body, color: colors.text, fontWeight: '500' },
-  chipTextSelected: { color: colors.textInverse },
+  chipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  chipText: {
+    ...typography.body,
+    color: colors.text,
+    fontWeight: '500',
+    fontSize: 14,
+  },
+  chipTextSelected: { color: colors.textInverse, fontWeight: '700' },
   error: { ...typography.caption, color: colors.danger },
 });
