@@ -16,6 +16,7 @@ interface AuthState {
     token: string;
     refreshToken: string;
   }) => Promise<void>;
+  updateUser: (patch: Partial<AuthUser>) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -44,6 +45,14 @@ export const useAuthStore = create<AuthState>((set) => ({
       secureStorage.set(STORAGE_KEYS.user, JSON.stringify(user)),
     ]);
     set({ user, token, refreshToken });
+  },
+
+  updateUser: async (patch) => {
+    const current = useAuthStore.getState().user;
+    if (!current) return;
+    const next = { ...current, ...patch };
+    await secureStorage.set(STORAGE_KEYS.user, JSON.stringify(next));
+    set({ user: next });
   },
 
   signOut: async () => {

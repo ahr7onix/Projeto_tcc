@@ -23,6 +23,16 @@ export interface AuthUser {
   nome: string;
   email: string;
   role: UserRole;
+  perfilCompleto?: boolean;
+}
+
+export interface PacientePerfil {
+  dataNascimento: string;
+  sexo: Sexo;
+  tipoDiabetes: TipoDiabetes;
+  peso: number;
+  altura: number;
+  restricoesAlergias?: string;
 }
 
 export interface AuthResponse {
@@ -44,4 +54,12 @@ export interface CadastroInput {
   tipoDiabetes?: TipoDiabetes;
   dataNascimento?: string;
   sexo?: Sexo;
+}
+
+export interface EsqueciSenhaInput {
+  email: string;
+}
+
+export interface EsqueciSenhaResponse {
+  message: string;
 }

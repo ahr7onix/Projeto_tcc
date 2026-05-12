@@ -62,7 +62,6 @@ export function SocialButton({ provider, onPress, loading, disabled }: Props) {
         )}
       </View>
       <Text style={[styles.label, { color: meta.fg }]}>{meta.label}</Text>
-      <View style={styles.iconWrap} />
     </Pressable>
   );
 }
@@ -71,13 +70,13 @@ const styles = StyleSheet.create({
   btn: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     borderWidth: 1,
-    borderRadius: radius.md,
+    borderRadius: radius.pill,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     gap: spacing.sm,
   },
   iconWrap: { width: 22, alignItems: 'center' },
-  label: { ...typography.body, fontWeight: '600', flex: 1, textAlign: 'center' },
+  label: { ...typography.body, fontWeight: '600', textAlign: 'center' },
 });

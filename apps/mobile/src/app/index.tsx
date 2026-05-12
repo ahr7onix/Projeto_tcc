@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/auth';
 import { colors } from '@/lib/theme';
 
 export default function Index() {
-  const { isHydrated, token } = useAuthStore();
+  const { isHydrated, token, user } = useAuthStore();
 
   if (!isHydrated) {
     return (
@@ -14,7 +14,11 @@ export default function Index() {
     );
   }
 
-  return <Redirect href={token ? '/(tabs)/home' : '/(auth)/login'} />;
+  if (!token) return <Redirect href="/(auth)" />;
+  if (user?.role === 'paciente' && !user.perfilCompleto) {
+    return <Redirect href="/onboarding/paciente" />;
+  }
+  return <Redirect href="/(tabs)/home" />;
 }
 
 const styles = StyleSheet.create({

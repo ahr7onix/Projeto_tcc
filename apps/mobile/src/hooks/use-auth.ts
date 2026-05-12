@@ -2,7 +2,13 @@ import { useMutation } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import * as authApi from '@/lib/api/auth';
 import { useAuthStore } from '@/stores/auth';
-import type { AuthResponse, CadastroInput, LoginInput } from '@/types/auth';
+import type {
+  AuthResponse,
+  CadastroInput,
+  EsqueciSenhaInput,
+  EsqueciSenhaResponse,
+  LoginInput,
+} from '@/types/auth';
 
 export function extractAuthError(error: unknown, fallback: string): string {
   if (error instanceof AxiosError) {
@@ -43,5 +49,11 @@ export function useCadastro() {
         refreshToken: data.refreshToken,
       });
     },
+  });
+}
+
+export function useEsqueciSenha() {
+  return useMutation<EsqueciSenhaResponse, AxiosError, EsqueciSenhaInput>({
+    mutationFn: authApi.esqueciSenha,
   });
 }

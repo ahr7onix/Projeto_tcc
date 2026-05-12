@@ -1,16 +1,24 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { colors, radius, spacing, typography } from '@/lib/theme';
 
 interface Props {
   title?: string;
+  action?: ReactNode;
   children?: ReactNode;
+  style?: ViewStyle;
 }
 
-export function Card({ title, children }: Props) {
+export function Card({ title, action, children, style }: Props) {
+  const hasHeader = title || action;
   return (
-    <View style={styles.card}>
-      {title ? <Text style={styles.title}>{title}</Text> : null}
+    <View style={[styles.card, style]}>
+      {hasHeader ? (
+        <View style={styles.header}>
+          {title ? <Text style={styles.title}>{title}</Text> : <View />}
+          {action ?? null}
+        </View>
+      ) : null}
       {children}
     </View>
   );
@@ -23,7 +31,12 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    gap: spacing.sm,
+    gap: spacing.md,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   title: { ...typography.h3, color: colors.text },
 });

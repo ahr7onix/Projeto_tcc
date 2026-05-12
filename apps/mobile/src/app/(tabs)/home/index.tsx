@@ -1,36 +1,120 @@
-import { StyleSheet, Text, View } from 'react-native';
-import { ScreenContainer } from '@/components/ScreenContainer';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Card } from '@/components/Card';
+import { EmptyState } from '@/components/EmptyState';
+import { ScreenContainer } from '@/components/ScreenContainer';
+import { StatTile } from '@/components/StatTile';
 import { useAuthStore } from '@/stores/auth';
-import { colors, typography } from '@/lib/theme';
+import { colors, radius, spacing, typography } from '@/lib/theme';
+
+function saudacao() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Bom dia';
+  if (h < 18) return 'Boa tarde';
+  return 'Boa noite';
+}
+
+function dataHoje() {
+  const d = new Date();
+  const meses = [
+    'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+    'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+  ];
+  return `${d.getDate()} de ${meses[d.getMonth()]}`;
+}
+
+const quickActions = [
+  { key: 'glicemia', label: 'Registrar glicemia', icon: 'water-outline' as const, href: '/(tabs)/registros' },
+  { key: 'refeicao', label: 'Registrar refeição', icon: 'restaurant-outline' as const, href: '/(tabs)/alimentacao' },
+] as const;
 
 export default function HomeScreen() {
   const user = useAuthStore((s) => s.user);
-  const nome = user?.nome ?? 'Visitante';
+  const primeiroNome = (user?.nome ?? 'Visitante').split(' ')[0];
 
   return (
-    <ScreenContainer title={`Olá, ${nome}`} subtitle="Resumo do seu dia">
-      <Card title="Glicemia">
-        <Text style={styles.value}>-- mg/dL</Text>
-        <Text style={styles.muted}>Sem registros hoje</Text>
+    <ScreenContainer
+      eyebrow={dataHoje()}
+      title={`${saudacao()}, ${primeiroNome}`}
+      subtitle="Aqui está um panorama da sua saúde hoje."
+      headerRight={
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>
+            {(user?.nome ?? '?').charAt(0).toUpperCase()}
+          </Text>
+        </View>
+      }
+    >
+      <View style={styles.statsRow}>
+        <StatTile icon="water-outline" value="0" label="Glicemia hoje" tint="primary" />
+        <StatTile icon="restaurant-outline" value="0" label="Refeições" tint="success" />
+        <StatTile icon="trending-up-outline" value="--" label="Média" tint="warning" />
+      </View>
+
+      <Card title="Ações rápidas">
+        <View style={styles.actionsList}>
+          {quickActions.map((a) => (
+            <Pressable
+              key={a.key}
+              onPress={() => router.push(a.href as never)}
+              style={styles.action}
+            >
+              <View style={styles.actionIcon}>
+                <Ionicons name={a.icon} size={18} color={colors.primary} />
+              </View>
+              <Text style={styles.actionLabel}>{a.label}</Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+            </Pressable>
+          ))}
+        </View>
       </Card>
 
-      <Card title="Refeições">
-        <Text style={styles.value}>0 / 5</Text>
-        <Text style={styles.muted}>Plano alimentar do dia</Text>
+      <Card title="Atividade recente">
+        <EmptyState
+          icon="time-outline"
+          title="Nada por aqui ainda"
+          message="Seus registros e medições vão aparecer aqui assim que você começar."
+        />
       </Card>
-
-      <Card title="Medicamentos">
-        <Text style={styles.value}>0 pendentes</Text>
-        <Text style={styles.muted}>Próximas doses</Text>
-      </Card>
-
-      <View style={{ height: 24 }} />
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  value: { ...typography.h2, color: colors.primary },
-  muted: { ...typography.caption, color: colors.textMuted },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.pill,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  avatarText: { ...typography.h3, color: colors.primary },
+
+  statsRow: { flexDirection: 'row', gap: spacing.md },
+
+  actionsList: { gap: spacing.xs },
+  action: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  actionIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: radius.md,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionLabel: {
+    ...typography.body,
+    flex: 1,
+    color: colors.text,
+    fontWeight: '600',
+  },
 });
