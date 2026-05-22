@@ -31,7 +31,6 @@ export default function PacientesPage() {
       if (q) params.busca = q
       const { data } = await api.get('/pacientes', { params })
       setPacientes(data.data)
-      setMeta(data.meta)
     } catch (err) {
       setError(extractError(err))
     } finally {
@@ -54,7 +53,6 @@ export default function PacientesPage() {
     try {
       const { data } = await api.post('/pacientes', { nome, email })
       setPacientes(prev => [data, ...prev])
-      setMeta(prev => ({ ...prev, total: prev.total + 1, ativos: prev.ativos + 1 }))
       setNome('')
       setEmail('')
       setShowModalAdd(false)
