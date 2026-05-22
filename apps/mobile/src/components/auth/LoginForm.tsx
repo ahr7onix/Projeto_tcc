@@ -17,14 +17,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { Divider } from '@/components/Divider';
 import { FormField } from '@/components/FormField';
 import { SocialButton, type SocialProvider } from '@/components/SocialButton';
-import { extractAuthError, useLogin, useLoginGoogle } from '@/hooks/use-auth';
+import { extractAuthError, useLogin } from '@/hooks/use-auth';
 import { loginSchema, type LoginFormValues } from '@/lib/validation/auth';
 import { colors, radius, spacing, typography } from '@/lib/theme';
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
-
-GoogleSignin.configure({
-  webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || 'COLOQUE_SEU_WEB_CLIENT_ID_AQUI',
-});
 
 const COPY = {
   eyebrow: 'Acesso do cliente',
