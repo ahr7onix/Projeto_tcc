@@ -31,7 +31,7 @@ const jwt = require('jsonwebtoken')
 const { v4: uuidv4 } = require('uuid')
 
 const app = express()
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 3333
 const JWT_SECRET = process.env.JWT_SECRET || 'nutricare-dev-secret-2024'
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'nutricare-refresh-secret-2024'
 
