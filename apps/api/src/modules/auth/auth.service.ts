@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { randomBytes, createHash } from 'crypto';
+import { OAuth2Client } from 'google-auth-library';
 import type { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
 import { CadastroDto } from './dto/cadastro.dto';
@@ -29,11 +30,17 @@ export interface AuthResponse {
 
 @Injectable()
 export class AuthService {
+  private googleClient: OAuth2Client;
+
   constructor(
     @Inject(PG_POOL) private readonly pool: Pool,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
-  ) {}
+  ) {
+    this.googleClient = new OAuth2Client(
+      this.config.get<string>('GOOGLE_CLIENT_ID', 'COLOQUE_SEU_CLIENT_ID_AQUI')
+    );
+  }
 
   async cadastro(dto: CadastroDto): Promise<AuthResponse> {
     const email = dto.email.trim().toLowerCase();
@@ -96,6 +103,68 @@ export class AuthService {
       throw new UnauthorizedException('E-mail ou senha incorretos');
     }
     return this.issueSession(user);
+  }
+
+  async loginGoogle(idToken: string): Promise<AuthResponse> {
+    try {
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken,
+        // Em produção, você passaria o array de client IDs (Web, iOS, Android)
+        // audience: [CLIENT_ID_WEB, CLIENT_ID_IOS, CLIENT_ID_ANDROID]
+      });
+      const payload = ticket.getPayload();
+      
+      if (!payload || !payload.email) {
+        throw new UnauthorizedException('Token do Google inválido');
+      }
+
+      const email = payload.email.toLowerCase();
+      const nome = payload.name || 'Usuário Google';
+
+      const client = await this.pool.connect();
+      try {
+        await client.query('BEGIN');
+        
+        // Verifica se o usuário existe
+        const result = await client.query<UserRow>(
+          'SELECT id_usuario, nome, email, senha, tipo FROM usuario WHERE email = $1',
+          [email]
+        );
+
+        let user = result.rows[0];
+
+        // Se não existe, cria um novo paciente
+        if (!user) {
+          // Senha aleatória para conta social
+          const randomPass = randomBytes(16).toString('hex');
+          const senhaHash = await bcrypt.hash(randomPass, 10);
+
+          const inserted = await client.query<UserRow>(
+            `INSERT INTO usuario (nome, email, senha, tipo)
+             VALUES ($1, $2, $3, $4)
+             RETURNING id_usuario, nome, email, senha, tipo`,
+            [nome, email, senhaHash, 'paciente']
+          );
+          user = inserted.rows[0];
+
+          await client.query(
+            `INSERT INTO paciente (id_usuario, data_nascimento, genero, tipo_diabetes)
+             VALUES ($1, NULL, NULL, NULL)`,
+            [user.id_usuario]
+          );
+        }
+
+        await client.query('COMMIT');
+        return this.issueSession(user);
+      } catch (err) {
+        await client.query('ROLLBACK').catch(() => undefined);
+        throw err;
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      throw new UnauthorizedException('Falha ao autenticar com o Google: ' + error.message);
+    }
   }
 
   async refresh(refreshToken: string): Promise<AuthResponse> {
