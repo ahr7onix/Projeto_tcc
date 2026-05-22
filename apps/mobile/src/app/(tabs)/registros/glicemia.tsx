@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Card } from '@/components/Card';
 import { ScreenContainer } from '@/components/ScreenContainer';
+import { createGlicemia } from '@/lib/api/registros';
 import { colors, radius, spacing, typography } from '@/lib/theme';
 
 type Momento = 'jejum' | 'pre' | 'pos' | 'aleatorio';
@@ -36,12 +37,16 @@ export default function RegistrarGlicemiaScreen() {
       return;
     }
     setSaving(true);
-    // TODO: integrar com API POST /registros/glicemia
-    setTimeout(() => {
+    try {
+      await createGlicemia({ valor: num, momento, observacao: observacoes || undefined });
+      Alert.alert('Registrado', 'Sua glicemia foi registrada.', [
+        { text: 'OK', onPress: () => router.back() },
+      ]);
+    } catch {
+      Alert.alert('Erro', 'Não foi possível salvar o registro. Tente novamente.');
+    } finally {
       setSaving(false);
-      Alert.alert('Registrado', 'Sua glicemia foi registrada.');
-      router.back();
-    }, 600);
+    }
   };
 
   return (
