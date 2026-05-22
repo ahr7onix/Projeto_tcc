@@ -4,10 +4,10 @@ export class CreateGlicemiaDto {
   @IsNumber()
   @Min(1)
   @Max(999)
-  valor: number;
+  valor!: number;
 
   @IsIn(['jejum', 'pre', 'pos', 'pre_prandial', 'pos_prandial', 'antes_dormir', 'madrugada', 'aleatorio'])
-  momento: string;
+  momento!: string;
 
   @IsOptional()
   @IsString()
