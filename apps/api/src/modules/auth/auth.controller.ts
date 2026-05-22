@@ -27,6 +27,12 @@ export class AuthController {
     return this.auth.login(dto);
   }
 
+  @Post('google')
+  @HttpCode(HttpStatus.OK)
+  loginGoogle(@Body('idToken') idToken: string) {
+    return this.auth.loginGoogle(idToken);
+  }
+
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   refresh(@Body() dto: RefreshDto) {
