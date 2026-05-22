@@ -28,8 +28,8 @@ const COPY = {
   icon: 'person-outline' as const,
 };
 
-export function LoginForm({ role }: Props) {
-  const copy = COPY[role];
+export function LoginForm() {
+  const copy = COPY;
 
   const { control, handleSubmit } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
