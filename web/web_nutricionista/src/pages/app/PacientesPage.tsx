@@ -12,15 +12,8 @@ interface Paciente {
   status: 'ativo' | 'inativo'
 }
 
-interface Meta {
-  total: number
-  ativos: number
-  comAlertas: number
-}
-
 export default function PacientesPage() {
   const [pacientes, setPacientes] = useState<Paciente[]>([])
-  const [meta, setMeta] = useState<Meta>({ total: 0, ativos: 0, comAlertas: 0 })
   const [busca, setBusca] = useState('')
   const [showModalAdd, setShowModalAdd] = useState(false)
   const [nome, setNome] = useState('')
