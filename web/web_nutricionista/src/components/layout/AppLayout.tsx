@@ -6,10 +6,6 @@ import s from './AppLayout.module.css'
 const NAV = [
   { to: '/dashboard', label: 'Início', icon: HomeIcon },
   { to: '/pacientes', label: 'Pacientes', icon: PatientsIcon },
-  { to: '/registros', label: 'Registros', icon: RecordsIcon },
-  { to: '/alimentacao', label: 'Alimentação', icon: FoodIcon },
-  { to: '/saude', label: 'Saúde', icon: HeartIcon },
-  { to: '/perfil', label: 'Meu Perfil', icon: PersonIcon },
 ]
 
 export default function AppLayout() {
