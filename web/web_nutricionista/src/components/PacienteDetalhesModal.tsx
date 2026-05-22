@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { api, extractError } from '../../lib/api'
+import { api, extractError } from '../lib/api'
 import s from './PacienteDetalhesModal.module.css'
 
 interface ModalProps {
