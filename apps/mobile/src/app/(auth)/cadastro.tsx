@@ -14,7 +14,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Ionicons } from '@expo/vector-icons';
 import { Checkbox } from '@/components/Checkbox';
-import { ChipGroup } from '@/components/ChipGroup';
 import { FormField } from '@/components/FormField';
 import { extractAuthError, useCadastro } from '@/hooks/use-auth';
 import {
@@ -72,18 +71,6 @@ export default function CadastroScreen() {
 
           <View style={styles.card}>
             <View style={styles.form}>
-              <View style={styles.fieldBlock}>
-                <Text style={styles.fieldLabel}>Tipo de conta</Text>
-                <ChipGroup
-                  control={control}
-                  name="role"
-                  options={[
-                    { value: 'paciente', label: 'Cliente' },
-                    { value: 'nutricionista', label: 'Nutricionista' },
-                  ]}
-                />
-              </View>
-
               <FormField
                 control={control}
                 name="nome"
