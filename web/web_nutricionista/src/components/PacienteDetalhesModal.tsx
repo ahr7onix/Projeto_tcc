@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
-import { api, extractError } from '../lib/api'
+import React, { useState, useEffect } from 'react'
+import { api, extractError } from '../../lib/api'
+import s from './PacienteDetalhesModal.module.css'
 
 interface ModalProps {
   pacienteId: string
@@ -38,12 +39,11 @@ export default function PacienteDetalhesModal({ pacienteId, onClose }: ModalProp
 
   if (loading) {
     return (
-      <div style={{
-        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
-      }}>
-        <div style={{ background: 'var(--surface)', padding: 40, borderRadius: 16 }}>
-          Carregando paciente...
+      <div className={s.overlay}>
+        <div style={{ background: 'var(--surface)', padding: 40, borderRadius: 24, display: 'flex', alignItems: 'center', gap: 16, boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}>
+          <div className="spinner" style={{ width: 24, height: 24, border: '3px solid var(--primary-soft)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+          <span style={{ fontWeight: 600, color: 'var(--text)' }}>Carregando ficha do paciente...</span>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       </div>
     )
@@ -54,146 +54,188 @@ export default function PacienteDetalhesModal({ pacienteId, onClose }: ModalProp
   const regsGlicemia = registros.filter(r => r.tipo === 'glicemia')
   const regsAlimentacao = registros.filter(r => r.tipo === 'refeicao')
   const ultimaSaude = saude.length > 0 ? saude[saude.length - 1] : null
+  const initial = paciente.nome.charAt(0).toUpperCase()
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: 24
-    }} onClick={onClose}>
-      
-      <div style={{
-        background: 'var(--surface)', borderRadius: 16, width: '100%', maxWidth: 900,
-        height: '80vh', display: 'flex', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.2)'
-      }} onClick={e => e.stopPropagation()}>
+    <div className={s.overlay} onClick={onClose}>
+      <div className={s.modal} onClick={e => e.stopPropagation()}>
         
         {/* Sidebar do Card */}
-        <div style={{
-          width: 250, background: 'var(--bg)', borderRight: '1px solid var(--border)',
-          display: 'flex', flexDirection: 'column'
-        }}>
-          <div style={{ padding: 20, borderBottom: '1px solid var(--border)' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--text)' }}>{paciente.nome}</h2>
-            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{paciente.email}</div>
+        <div className={s.sidebar}>
+          <div className={s.patientHeader}>
+            <div className={s.avatar}>{initial}</div>
+            <h2 className={s.patientName}>{paciente.nome}</h2>
+            <div className={s.patientEmail}>{paciente.email}</div>
           </div>
           
-          <div style={{ display: 'flex', flexDirection: 'column', padding: 12, gap: 4 }}>
+          <div className={s.menu}>
             <button 
               onClick={() => setAbaAtiva('info')}
-              style={{ padding: '12px 16px', textAlign: 'left', background: abaAtiva === 'info' ? 'var(--primary-soft)' : 'transparent', color: abaAtiva === 'info' ? 'var(--primary)' : 'var(--text)', border: 'none', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}
-            >Informações do paciente</button>
+              className={`${s.menuItem} ${abaAtiva === 'info' ? s.menuItemActive : ''}`}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              Informações
+            </button>
             <button 
               onClick={() => setAbaAtiva('glicemia')}
-              style={{ padding: '12px 16px', textAlign: 'left', background: abaAtiva === 'glicemia' ? 'var(--primary-soft)' : 'transparent', color: abaAtiva === 'glicemia' ? 'var(--primary)' : 'var(--text)', border: 'none', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}
-            >Registro de glicemia</button>
+              className={`${s.menuItem} ${abaAtiva === 'glicemia' ? s.menuItemActive : ''}`}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              Glicemia
+            </button>
             <button 
               onClick={() => setAbaAtiva('alimentacao')}
-              style={{ padding: '12px 16px', textAlign: 'left', background: abaAtiva === 'alimentacao' ? 'var(--primary-soft)' : 'transparent', color: abaAtiva === 'alimentacao' ? 'var(--primary)' : 'var(--text)', border: 'none', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}
-            >Alimentação</button>
+              className={`${s.menuItem} ${abaAtiva === 'alimentacao' ? s.menuItemActive : ''}`}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+              Alimentação
+            </button>
             <button 
               onClick={() => setAbaAtiva('saude')}
-              style={{ padding: '12px 16px', textAlign: 'left', background: abaAtiva === 'saude' ? 'var(--primary-soft)' : 'transparent', color: abaAtiva === 'saude' ? 'var(--primary)' : 'var(--text)', border: 'none', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}
-            >Saúde</button>
+              className={`${s.menuItem} ${abaAtiva === 'saude' ? s.menuItemActive : ''}`}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              Saúde
+            </button>
           </div>
 
-          <div style={{ marginTop: 'auto', padding: 20 }}>
-            <button 
-              onClick={onClose}
-              style={{ width: '100%', padding: '10px', background: 'transparent', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text-muted)', cursor: 'pointer', fontWeight: 600 }}
-            >Fechar Card</button>
-          </div>
+          <button className={s.closeBtn} onClick={onClose}>
+            Fechar Card
+          </button>
         </div>
 
         {/* Conteúdo do Card */}
-        <div style={{ flex: 1, padding: 32, overflowY: 'auto' }}>
+        <div className={s.contentArea}>
           
           {abaAtiva === 'info' && (
-            <div>
-              <h3 style={{ fontSize: 24, marginBottom: 20, color: 'var(--text)' }}>Informações Básicas</h3>
-              <div style={{ display: 'grid', gap: 16 }}>
-                <div><strong>Nome Completo:</strong> {paciente.nome}</div>
-                <div><strong>E-mail:</strong> {paciente.email}</div>
-                <div><strong>Status:</strong> {paciente.status === 'ativo' ? 'Ativo' : 'Inativo'}</div>
-                <div><strong>Média de Glicemia:</strong> {paciente.glicemiaMedia ? `${paciente.glicemiaMedia} mg/dL` : 'Sem registros'}</div>
+            <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
+              <h3 className={s.sectionTitle}>Visão Geral</h3>
+              
+              <div className={s.gridCards} style={{ marginBottom: 32 }}>
+                <div className={s.infoCard}>
+                  <div className={s.infoLabel}>Status da Conta</div>
+                  <div className={s.infoValue}>
+                    <span className={`${s.badge} ${paciente.status === 'ativo' ? s.badgeSuccess : s.badgeWarning}`}>
+                      {paciente.status === 'ativo' ? 'Ativo' : 'Inativo'}
+                    </span>
+                  </div>
+                </div>
+                <div className={s.infoCard}>
+                  <div className={s.infoLabel}>Média Glicêmica</div>
+                  <div className={s.infoValue}>
+                    {paciente.glicemiaMedia ? (
+                      <span style={{ color: paciente.glicemiaMedia > 126 ? '#dc2626' : '#16a34a' }}>
+                        {paciente.glicemiaMedia} <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>mg/dL</span>
+                      </span>
+                    ) : '---'}
+                  </div>
+                </div>
+                <div className={s.infoCard}>
+                  <div className={s.infoLabel}>Total de Registros</div>
+                  <div className={s.infoValue}>{registros.length}</div>
+                </div>
+              </div>
+
+              <div>
+                <div className={s.infoLabel}>Nome Completo</div>
+                <div style={{ fontSize: 18, color: 'var(--text)', marginBottom: 16, fontWeight: 500 }}>{paciente.nome}</div>
+                
+                <div className={s.infoLabel}>E-mail de Contato</div>
+                <div style={{ fontSize: 18, color: 'var(--text)', fontWeight: 500 }}>{paciente.email}</div>
               </div>
             </div>
           )}
 
           {abaAtiva === 'saude' && (
-            <div>
-              <h3 style={{ fontSize: 24, marginBottom: 20, color: 'var(--text)' }}>Saúde (Dados Antropométricos)</h3>
+            <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
+              <h3 className={s.sectionTitle}>Dados Antropométricos</h3>
               {ultimaSaude ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-                  <div style={{ padding: 16, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg)' }}>
-                    <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>Peso</div>
-                    <div style={{ fontSize: 24, fontWeight: 700 }}>{ultimaSaude.peso} kg</div>
+                <div className={s.gridCards}>
+                  <div className={s.infoCard}>
+                    <div className={s.infoLabel}>Peso Atual</div>
+                    <div className={s.infoValue}>{ultimaSaude.peso} <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>kg</span></div>
                   </div>
-                  <div style={{ padding: 16, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg)' }}>
-                    <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>Altura</div>
-                    <div style={{ fontSize: 24, fontWeight: 700 }}>{ultimaSaude.altura} cm</div>
+                  <div className={s.infoCard}>
+                    <div className={s.infoLabel}>Altura</div>
+                    <div className={s.infoValue}>{ultimaSaude.altura} <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>cm</span></div>
                   </div>
-                  <div style={{ padding: 16, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg)' }}>
-                    <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>IMC</div>
-                    <div style={{ fontSize: 24, fontWeight: 700 }}>{ultimaSaude.imc}</div>
+                  <div className={s.infoCard}>
+                    <div className={s.infoLabel}>Índice IMC</div>
+                    <div className={s.infoValue}>{ultimaSaude.imc}</div>
                   </div>
                 </div>
               ) : (
-                <div style={{ color: 'var(--text-muted)' }}>Nenhum dado de saúde cadastrado no mobile.</div>
+                <div style={{ padding: 40, textAlign: 'center', background: '#f8fafc', borderRadius: 16, color: '#64748b' }}>
+                  Nenhum dado de saúde cadastrado no aplicativo mobile ainda.
+                </div>
               )}
             </div>
           )}
 
           {abaAtiva === 'glicemia' && (
-            <div>
-              <h3 style={{ fontSize: 24, marginBottom: 20, color: 'var(--text)' }}>Registro de Glicemia</h3>
+            <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
+              <h3 className={s.sectionTitle}>Histórico de Glicemia</h3>
               {regsGlicemia.length > 0 ? (
-                <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                      <th style={{ padding: 12, color: 'var(--text-muted)' }}>Data</th>
-                      <th style={{ padding: 12, color: 'var(--text-muted)' }}>Momento</th>
-                      <th style={{ padding: 12, color: 'var(--text-muted)' }}>Valor</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {regsGlicemia.map(r => (
-                      <tr key={r.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                        <td style={{ padding: 12 }}>{new Date(r.criadoEm).toLocaleString('pt-BR')}</td>
-                        <td style={{ padding: 12 }}>{r.momento}</td>
-                        <td style={{ padding: 12, fontWeight: 'bold', color: r.valor > 126 ? 'red' : 'green' }}>{r.valor} mg/dL</td>
+                <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                  <table className={s.dataTable}>
+                    <thead>
+                      <tr>
+                        <th>Data e Hora</th>
+                        <th>Momento</th>
+                        <th>Nível Glicêmico</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {regsGlicemia.map(r => (
+                        <tr key={r.id}>
+                          <td>{new Date(r.criadoEm).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</td>
+                          <td style={{ textTransform: 'capitalize' }}>{r.momento}</td>
+                          <td>
+                            <span className={`${s.badge} ${r.valor > 126 ? s.badgeWarning : s.badgeSuccess}`}>
+                              {r.valor} mg/dL
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               ) : (
-                <div style={{ color: 'var(--text-muted)' }}>Nenhum registro de glicemia enviado.</div>
+                <div style={{ padding: 40, textAlign: 'center', background: '#f8fafc', borderRadius: 16, color: '#64748b' }}>
+                  Nenhum registro de glicemia foi enviado por este paciente.
+                </div>
               )}
             </div>
           )}
 
           {abaAtiva === 'alimentacao' && (
-            <div>
-              <h3 style={{ fontSize: 24, marginBottom: 20, color: 'var(--text)' }}>Alimentação</h3>
+            <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
+              <h3 className={s.sectionTitle}>Diário de Refeições</h3>
               {regsAlimentacao.length > 0 ? (
-                <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                      <th style={{ padding: 12, color: 'var(--text-muted)' }}>Data</th>
-                      <th style={{ padding: 12, color: 'var(--text-muted)' }}>Tipo</th>
-                      <th style={{ padding: 12, color: 'var(--text-muted)' }}>Descrição</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {regsAlimentacao.map(r => (
-                      <tr key={r.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                        <td style={{ padding: 12 }}>{new Date(r.criadoEm).toLocaleString('pt-BR')}</td>
-                        <td style={{ padding: 12, textTransform: 'capitalize' }}>{r.tipo_refeicao}</td>
-                        <td style={{ padding: 12 }}>{r.descricao}</td>
+                <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                  <table className={s.dataTable}>
+                    <thead>
+                      <tr>
+                        <th>Data</th>
+                        <th>Refeição</th>
+                        <th>Descrição</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {regsAlimentacao.map(r => (
+                        <tr key={r.id}>
+                          <td style={{ whiteSpace: 'nowrap' }}>{new Date(r.criadoEm).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</td>
+                          <td style={{ textTransform: 'capitalize', fontWeight: 600 }}>{r.tipo_refeicao}</td>
+                          <td style={{ color: '#475569' }}>{r.descricao}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               ) : (
-                <div style={{ color: 'var(--text-muted)' }}>Nenhuma refeição registrada.</div>
+                <div style={{ padding: 40, textAlign: 'center', background: '#f8fafc', borderRadius: 16, color: '#64748b' }}>
+                  O paciente ainda não registrou nenhuma refeição.
+                </div>
               )}
             </div>
           )}
