@@ -37,6 +37,21 @@ export function useLogin() {
   });
 }
 
+export function useLoginGoogle() {
+  const setSession = useAuthStore((s) => s.setSession);
+
+  return useMutation<AuthResponse, AxiosError, string>({
+    mutationFn: authApi.loginGoogle,
+    onSuccess: async (data) => {
+      await setSession({
+        user: data.user,
+        token: data.accessToken,
+        refreshToken: data.refreshToken,
+      });
+    },
+  });
+}
+
 export function useCadastro() {
   const setSession = useAuthStore((s) => s.setSession);
 
