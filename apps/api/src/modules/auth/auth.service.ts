@@ -162,7 +162,7 @@ export class AuthService {
       } finally {
         client.release();
       }
-    } catch (error) {
+    } catch (error: any) {
       throw new UnauthorizedException('Falha ao autenticar com o Google: ' + error.message);
     }
   }
