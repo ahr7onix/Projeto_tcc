@@ -81,6 +81,19 @@ CREATE TABLE registro_glicemia (
 );
 CREATE INDEX idx_glicemia_paciente_data ON registro_glicemia(id_paciente, data_hora DESC);
 
+-- ---------- Tabela: registro_refeicao (log diário de refeições) ----------
+CREATE TABLE registro_refeicao (
+    id_registro   BIGSERIAL    PRIMARY KEY,
+    id_paciente   BIGINT       NOT NULL
+        REFERENCES paciente(id_paciente) ON DELETE CASCADE,
+    descricao     TEXT         NOT NULL,
+    tipo_refeicao VARCHAR(40)  NOT NULL,   -- cafe, almoco, lanche, jantar, ceia
+    carboidratos  NUMERIC(6,1),
+    observacao    TEXT,
+    data_hora     TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+CREATE INDEX idx_reg_refeicao_paciente_data ON registro_refeicao(id_paciente, data_hora DESC);
+
 -- ---------- Tabela: medicamento (uso de medicamento) ----------
 CREATE TABLE medicamento (
     id_uso            BIGSERIAL    PRIMARY KEY,
