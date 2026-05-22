@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { Card, StatTile, EmptyState, PageHeader, Btn } from '../../components/ui'
+import { api } from '../../lib/api'
 
 function saudacao() {
   const h = new Date().getHours()
@@ -23,9 +24,38 @@ const quickActions = [
   { href: '/saude', label: 'Indicadores de saúde', desc: 'IMC, metas e resumo glicêmico', icon: HeartIcon, tint: 'var(--danger-soft)', fg: 'var(--danger)' },
 ]
 
+interface Stats {
+  pacientesAtivos: number
+  registrosHoje: number
+  comAlertas: number
+}
+
 export default function HomePage() {
   const { user } = useAuth()
   const primeiroNome = (user?.nome ?? 'Nutricionista').split(' ')[0]
+  const [stats, setStats] = useState<Stats>({ pacientesAtivos: 0, registrosHoje: 0, comAlertas: 0 })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const [pacRes, regRes] = await Promise.all([
+          api.get('/pacientes'),
+          api.get('/registros', { params: { dias: '1' } }),
+        ])
+        setStats({
+          pacientesAtivos: pacRes.data.meta.ativos,
+          registrosHoje: regRes.data.meta.total,
+          comAlertas: pacRes.data.meta.comAlertas,
+        })
+      } catch {
+        // stats ficam em 0 silenciosamente
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchStats()
+  }, [])
 
   return (
     <div>
@@ -40,16 +70,14 @@ export default function HomePage() {
         }
       />
 
-      {/* Stats row */}
       <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
-        <StatTile label="Pacientes ativos" value="0" tint="primary" icon={<PatientsIcon />} />
-        <StatTile label="Registros hoje" value="0" tint="success" icon={<RecordsIcon />} />
+        <StatTile label="Pacientes ativos" value={loading ? '—' : String(stats.pacientesAtivos)} tint="primary" icon={<PatientsIcon />} />
+        <StatTile label="Registros hoje" value={loading ? '—' : String(stats.registrosHoje)} tint="success" icon={<RecordsIcon />} />
         <StatTile label="Consultas esta semana" value="0" tint="warning" icon={<CalIcon />} />
-        <StatTile label="Alertas pendentes" value="0" tint="danger" icon={<AlertIcon />} />
+        <StatTile label="Com alertas glicêmicos" value={loading ? '—' : String(stats.comAlertas)} tint="danger" icon={<AlertIcon />} />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-        {/* Quick actions */}
         <Card title="Acesso rápido" style={{ gridColumn: '1 / -1' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
             {quickActions.map((a) => (
@@ -76,7 +104,6 @@ export default function HomePage() {
           </div>
         </Card>
 
-        {/* Recent activity */}
         <Card title="Atividade recente" style={{ gridColumn: '1 / -1' }}>
           <EmptyState
             icon={<ClockIcon />}
