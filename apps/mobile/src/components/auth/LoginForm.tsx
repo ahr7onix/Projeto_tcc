@@ -38,18 +38,7 @@ export function LoginForm() {
   const login = useLogin();
 
   const onSubmit = handleSubmit((values) => {
-    login.mutate(values, {
-      onSuccess: (data) => {
-        if (data.user.role !== role) {
-          Alert.alert(
-            'Conta incompatível',
-            role === 'paciente'
-              ? 'Essa conta é de nutricionista. Use o acesso profissional.'
-              : 'Essa conta é de cliente. Use o acesso do cliente.',
-          );
-        }
-      },
-    });
+    login.mutate(values);
   });
 
   const handleSocial = (provider: SocialProvider) => {
@@ -75,14 +64,6 @@ export function LoginForm() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.hero}>
-            <Pressable
-              onPress={() => router.replace('/(auth)')}
-              style={styles.backBtn}
-              hitSlop={10}
-            >
-              <Ionicons name="chevron-back" size={20} color={colors.textInverse} />
-            </Pressable>
-
             <View style={styles.logoBox}>
               <Ionicons name={copy.icon} size={32} color={colors.primary} />
             </View>
