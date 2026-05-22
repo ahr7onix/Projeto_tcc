@@ -21,31 +21,12 @@ import { extractAuthError, useLogin } from '@/hooks/use-auth';
 import { loginSchema, type LoginFormValues } from '@/lib/validation/auth';
 import { colors, radius, spacing, typography } from '@/lib/theme';
 
-export type LoginRole = 'paciente' | 'nutricionista';
-
-interface Props {
-  role: LoginRole;
-}
-
 const COPY = {
-  paciente: {
-    eyebrow: 'Acesso do cliente',
-    title: 'Bem-vindo de volta',
-    subtitle: 'Entre para acompanhar sua glicemia e refeições.',
-    icon: 'person-outline' as const,
-  },
-  nutricionista: {
-    eyebrow: 'Acesso profissional',
-    title: 'Olá, nutricionista',
-    subtitle: 'Acesse seus pacientes e acompanhe a evolução clínica.',
-    icon: 'medkit-outline' as const,
-  },
-} satisfies Record<LoginRole, {
-  eyebrow: string;
-  title: string;
-  subtitle: string;
-  icon: keyof typeof Ionicons.glyphMap;
-}>;
+  eyebrow: 'Acesso do cliente',
+  title: 'Bem-vindo de volta',
+  subtitle: 'Entre para acompanhar sua glicemia e refeições.',
+  icon: 'person-outline' as const,
+};
 
 export function LoginForm({ role }: Props) {
   const copy = COPY[role];
