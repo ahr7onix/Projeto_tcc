@@ -24,80 +24,103 @@ export function ScreenContainer({
   children,
   scrollable = true,
 }: Props) {
-  const Body: typeof ScrollView | typeof View = scrollable ? ScrollView : View;
-  return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      {showBack ? (
-        <View style={styles.topBar}>
-          <Pressable
-            onPress={() => router.back()}
-            style={styles.backBtn}
-            hitSlop={10}
-            accessibilityLabel="Voltar"
-          >
-            <Ionicons name="chevron-back" size={20} color={colors.text} />
-          </Pressable>
-          {headerRight ? <View>{headerRight}</View> : <View style={styles.backBtn} />}
-        </View>
-      ) : null}
+  const Body = scrollable ? ScrollView : View;
 
-      <Body
-        style={styles.body}
-        contentContainerStyle={scrollable ? styles.content : undefined}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.header}>
-          <View style={{ flex: 1 }}>
-            {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
-            <Text style={styles.title}>{title}</Text>
-            {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-          </View>
-          {!showBack && headerRight ? headerRight : null}
+  return (
+    <View style={styles.root}>
+      <SafeAreaView style={styles.hero} edges={['top']}>
+        <View style={styles.navRow}>
+          {showBack ? (
+            <Pressable
+              onPress={() => router.back()}
+              style={styles.navBtn}
+              hitSlop={10}
+              accessibilityLabel="Voltar"
+            >
+              <Ionicons name="chevron-back" size={22} color={colors.textInverse} />
+            </Pressable>
+          ) : (
+            <View style={styles.navSlot} />
+          )}
+          {headerRight ? <View>{headerRight}</View> : <View style={styles.navSlot} />}
         </View>
-        {children}
-      </Body>
-    </SafeAreaView>
+
+        <View style={styles.heroText}>
+          {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
+          <Text style={styles.title}>{title}</Text>
+          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+        </View>
+      </SafeAreaView>
+
+      <View style={styles.sheet}>
+        <Body
+          style={styles.sheetScroll}
+          contentContainerStyle={scrollable ? styles.sheetContent : undefined}
+          showsVerticalScrollIndicator={false}
+        >
+          {children}
+        </Body>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.backgroundAlt },
-  topBar: {
+  root: { flex: 1, backgroundColor: colors.primary },
+
+  hero: {
+    backgroundColor: colors.primary,
+    paddingBottom: 24,
+  },
+  navRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.xl,
     paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
   },
-  backBtn: {
+  navBtn: {
     width: 40,
     height: 40,
     borderRadius: radius.pill,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
   },
-  body: { flex: 1 },
-  content: {
+  navSlot: { width: 40, height: 40 },
+
+  heroText: {
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.xxl,
-    gap: spacing.lg,
+    paddingTop: spacing.xs,
+    gap: spacing.xs,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: spacing.sm,
-    marginBottom: spacing.xs,
+  eyebrow: {
+    ...typography.eyebrow,
+    color: 'rgba(255,255,255,0.6)',
   },
-  eyebrow: { ...typography.eyebrow, color: colors.primary },
-  title: { ...typography.h1, color: colors.text, marginTop: spacing.xs },
+  title: {
+    ...typography.h1,
+    color: colors.textInverse,
+  },
   subtitle: {
     ...typography.body,
-    color: colors.textMuted,
-    marginTop: spacing.xs,
-    lineHeight: 20,
+    color: 'rgba(255,255,255,0.72)',
+    lineHeight: 22,
+  },
+
+  sheet: {
+    flex: 1,
+    backgroundColor: colors.backgroundAlt,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
+  },
+  sheetScroll: { flex: 1 },
+  sheetContent: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.xxl,
+    gap: spacing.lg,
   },
 });
