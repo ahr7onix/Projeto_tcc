@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Card } from '@/components/Card';
 import { ScreenContainer } from '@/components/ScreenContainer';
+import { createRefeicao } from '@/lib/api/registros';
 import { colors, radius, spacing, typography } from '@/lib/theme';
 
 type Tipo = 'cafe' | 'almoco' | 'lanche' | 'jantar' | 'ceia';
