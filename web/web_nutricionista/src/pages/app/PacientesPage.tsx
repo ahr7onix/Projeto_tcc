@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, PageHeader, Btn, Input, EmptyState, AlertBanner } from '../../components/ui'
 import { api, extractError } from '../../lib/api'
 import PacienteDetalhesModal from '../../components/PacienteDetalhesModal'
