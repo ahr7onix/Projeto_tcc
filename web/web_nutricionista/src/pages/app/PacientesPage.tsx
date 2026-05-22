@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, PageHeader, Btn, Input, EmptyState, Badge, AlertBanner } from '../../components/ui'
 import { api, extractError } from '../../lib/api'
 
@@ -23,6 +24,7 @@ function formatDate(iso: string | null) {
 }
 
 export default function PacientesPage() {
+  const navigate = useNavigate()
   const [pacientes, setPacientes] = useState<Paciente[]>([])
   const [meta, setMeta] = useState<Meta>({ total: 0, ativos: 0, comAlertas: 0 })
   const [busca, setBusca] = useState('')
@@ -65,9 +67,11 @@ export default function PacientesPage() {
       setMeta(prev => ({ ...prev, total: prev.total + 1, ativos: prev.ativos + 1 }))
       setNome('')
       setEmail('')
-      carregarPacientes()
-    } catch (error) {
-      alert(extractError(error))
+      setShowModal(false)
+    } catch (err) {
+      setError(extractError(err))
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -89,12 +93,14 @@ export default function PacientesPage() {
         }
       />
 
+      {error && <div style={{ marginBottom: 16 }}><AlertBanner message={error} /></div>}
+
       {/* Stats */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
         {[
-          { label: 'Total de pacientes', value: stats.total, tint: '#7C3AED', bg: '#F3EEFF' },
-          { label: 'Ativos', value: stats.ativos, tint: '#10B981', bg: '#E7F8F2' },
-          { label: 'Com alertas', value: stats.comAlertas, tint: '#EF4444', bg: '#FCEAEA' },
+          { label: 'Total de pacientes', value: String(meta.total), tint: '#7C3AED', bg: '#F3EEFF' },
+          { label: 'Ativos', value: String(meta.ativos), tint: '#10B981', bg: '#E7F8F2' },
+          { label: 'Com alertas', value: String(meta.comAlertas), tint: '#EF4444', bg: '#FCEAEA' },
         ].map((s) => (
           <div key={s.label} style={{
             flex: '1', minWidth: 150,
@@ -159,7 +165,7 @@ export default function PacientesPage() {
                   {p.glicemiaMedia ? `${p.glicemiaMedia} mg/dL` : '--'}
                 </span>
                 <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                  {p.ultimoRegistro ? new Date(p.ultimoRegistro).toLocaleDateString('pt-BR') : '--'}
+                  {formatDate(p.ultimoRegistro)}
                 </span>
                 <Badge label={p.status === 'ativo' ? 'Ativo' : 'Inativo'} tint={p.status === 'ativo' ? 'success' : 'warning'} />
               </div>
@@ -182,12 +188,13 @@ export default function PacientesPage() {
         }} onClick={() => setShowModal(false)}>
           <div style={{ background: 'var(--surface)', borderRadius: 20, padding: 28, width: '100%', maxWidth: 420 }} onClick={e => e.stopPropagation()}>
             <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 20 }}>Adicionar paciente</h3>
+            {error && <div style={{ marginBottom: 12 }}><AlertBanner message={error} /></div>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <Input label="Nome completo" value={nome} onChange={e => setNome(e.target.value)} placeholder="Nome do paciente" />
               <Input label="E-mail" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@exemplo.com" />
               <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
                 <Btn variant="secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setShowModal(false)}>Cancelar</Btn>
-                <Btn style={{ flex: 1, justifyContent: 'center' }} onClick={adicionarPaciente}>Adicionar</Btn>
+                <Btn style={{ flex: 1, justifyContent: 'center' }} loading={saving} onClick={handleAdd}>Adicionar</Btn>
               </div>
             </div>
           </div>
