@@ -2,10 +2,10 @@ import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateRefeicaoDto {
   @IsString()
-  descricao: string;
+  descricao!: string;
 
   @IsString()
-  tipo_refeicao: string;
+  tipo_refeicao!: string;
 
   @IsOptional()
   @IsNumber()
