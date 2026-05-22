@@ -38,12 +38,21 @@ export default function RegistrarRefeicaoScreen() {
       return;
     }
     setSaving(true);
-    // TODO: integrar com API POST /registros/refeicao
-    setTimeout(() => {
+    try {
+      await createRefeicao({
+        descricao: descricao.trim(),
+        tipo_refeicao: tipo,
+        carboidratos: carboidratos ? Number(carboidratos.replace(',', '.')) : undefined,
+        observacao: observacoes || undefined,
+      });
+      Alert.alert('Registrado', 'Sua refeição foi registrada.', [
+        { text: 'OK', onPress: () => router.back() },
+      ]);
+    } catch {
+      Alert.alert('Erro', 'Não foi possível salvar o registro. Tente novamente.');
+    } finally {
       setSaving(false);
-      Alert.alert('Registrado', 'Sua refeição foi registrada.');
-      router.back();
-    }, 600);
+    }
   };
 
   return (
