@@ -1,4 +1,3 @@
-import React from 'react'
 import { Card, PageHeader, EmptyState, ProgressBar } from '../../components/ui'
 
 const refeicoes = [
