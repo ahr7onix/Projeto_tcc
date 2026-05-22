@@ -12,6 +12,7 @@ import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import AppLayout from './components/layout/AppLayout'
 import HomePage from './pages/app/HomePage'
 import PacientesPage from './pages/app/PacientesPage'
+import PacienteDetalhesPage from './pages/app/PacienteDetalhesPage'
 import RegistrosPage from './pages/app/RegistrosPage'
 import AlimentacaoPage from './pages/app/AlimentacaoPage'
 import SaudePage from './pages/app/SaudePage'
@@ -46,6 +47,7 @@ export default function App() {
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<HomePage />} />
             <Route path="pacientes" element={<PacientesPage />} />
+            <Route path="pacientes/:id" element={<PacienteDetalhesPage />} />
             <Route path="registros" element={<RegistrosPage />} />
             <Route path="alimentacao" element={<AlimentacaoPage />} />
             <Route path="saude" element={<SaudePage />} />
