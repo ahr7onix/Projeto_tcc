@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { api, extractError } from '../../lib/api'
+import { useState, useEffect } from 'react'
+import { api, extractError } from '../lib/api'
 
 interface ModalProps {
   pacienteId: string
