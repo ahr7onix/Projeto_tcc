@@ -197,8 +197,6 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
   },
   form: { gap: spacing.md },
-  fieldBlock: { gap: spacing.xs },
-  fieldLabel: { ...typography.caption, color: colors.text, fontWeight: '600' },
   hint: {
     ...typography.caption,
     color: colors.textMuted,
