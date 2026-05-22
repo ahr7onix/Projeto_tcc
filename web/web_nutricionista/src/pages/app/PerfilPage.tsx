@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { Card, PageHeader, Input, Btn, AlertBanner } from '../../components/ui'
+import { api, extractError } from '../../lib/api'
 
 const menuItems = [
   { key: 'editar', label: 'Editar perfil', icon: PersonIcon, desc: 'Altere seus dados cadastrais' },
@@ -15,31 +16,48 @@ const suporteItems = [
 ]
 
 export default function PerfilPage() {
-  const { user, logout } = useAuth()
+  const { user, login, logout } = useAuth()
   const navigate = useNavigate()
   const [editing, setEditing] = useState(false)
   const [nome, setNome] = useState(user?.nome ?? '')
-  const [email, setEmail] = useState(user?.email ?? '')
-  const [saved, setSaved] = useState(false)
+  const [email] = useState(user?.email ?? '')
+  const [senhaAtual, setSenhaAtual] = useState('')
+  const [novaSenha, setNovaSenha] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
   const initial = (user?.nome ?? 'N').charAt(0).toUpperCase()
 
-  const handleSave = () => {
-    setSaved(true)
-    setEditing(false)
-    setTimeout(() => setSaved(false), 3000)
+  const handleSave = async () => {
+    setSaving(true); setError(null); setSuccess(false)
+    try {
+      const body: Record<string, string> = {}
+      if (nome && nome !== user?.nome) body.nome = nome
+      if (senhaAtual && novaSenha) { body.senhaAtual = senhaAtual; body.novaSenha = novaSenha }
+      if (Object.keys(body).length === 0) { setEditing(false); return }
+
+      const { data } = await api.patch('/perfil', body)
+      const accessToken = localStorage.getItem('@NutriCare:accessToken') ?? ''
+      const refreshToken = localStorage.getItem('@NutriCare:refreshToken') ?? ''
+      login(data, accessToken, refreshToken)
+      setNome(data.nome)
+      setSenhaAtual(''); setNovaSenha('')
+      setSuccess(true); setEditing(false)
+      setTimeout(() => setSuccess(false), 3000)
+    } catch (err) {
+      setError(extractError(err))
+    } finally { setSaving(false) }
   }
 
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
+  const handleLogout = () => { logout(); navigate('/login') }
 
   return (
     <div>
       <PageHeader eyebrow="Sua conta" title="Perfil" />
 
+      {success && <div style={{ marginBottom: 16 }}><AlertBanner message="Dados atualizados com sucesso!" type="success" /></div>}
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
-        {/* Hero card */}
         <div style={{
           gridColumn: '1 / -1',
           background: 'var(--surface)', border: '1px solid var(--border)',
@@ -58,41 +76,44 @@ export default function PerfilPage() {
             <div style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 2 }}>{user?.email ?? '—'}</div>
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
-              marginTop: 8, padding: '4px 12px', borderRadius: 999,
-              background: 'var(--primary-soft)',
+              marginTop: 8, padding: '4px 12px', borderRadius: 999, background: 'var(--primary-soft)',
             }}>
               <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary)' }} />
               <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)' }}>Nutricionista</span>
             </div>
           </div>
-          <Btn variant="secondary" icon={<EditIcon />} onClick={() => setEditing(!editing)}>
+          <Btn variant="secondary" icon={<EditIcon />} onClick={() => { setEditing(!editing); setError(null) }}>
             {editing ? 'Cancelar' : 'Editar'}
           </Btn>
         </div>
 
-        {/* Edit form */}
         {editing && (
           <Card title="Editar dados" style={{ gridColumn: '1 / -1' }}>
-            {saved && <AlertBanner message="Dados atualizados com sucesso!" type="success" />}
+            {error && <AlertBanner message={error} />}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <Input label="Nome completo" value={nome} onChange={e => setNome(e.target.value)} />
-              <Input label="E-mail" type="email" value={email} onChange={e => setEmail(e.target.value)} />
+              <Input label="E-mail" type="email" value={email} disabled style={{ opacity: 0.6 }} />
+            </div>
+            <div style={{ marginTop: 8, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-soft)', marginBottom: 12 }}>Alterar senha (opcional)</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <Input label="Senha atual" type="password" value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} placeholder="••••••••" />
+                <Input label="Nova senha" type="password" value={novaSenha} onChange={e => setNovaSenha(e.target.value)} placeholder="Mínimo 8 caracteres" />
+              </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-              <Btn icon={<CheckIcon />} onClick={handleSave}>Salvar alterações</Btn>
-              <Btn variant="secondary" onClick={() => setEditing(false)}>Cancelar</Btn>
+              <Btn icon={<CheckIcon />} loading={saving} onClick={handleSave}>Salvar alterações</Btn>
+              <Btn variant="secondary" onClick={() => { setEditing(false); setError(null) }}>Cancelar</Btn>
             </div>
           </Card>
         )}
 
-        {/* Account */}
         <Card title="Conta">
           <div>
             {menuItems.map((item, i) => (
               <div key={item.key} style={{
                 display: 'flex', alignItems: 'center', gap: 14, padding: '14px 0',
-                borderBottom: i < menuItems.length - 1 ? '1px solid var(--border)' : 'none',
-                cursor: 'pointer', transition: 'opacity 0.15s',
+                borderBottom: i < menuItems.length - 1 ? '1px solid var(--border)' : 'none', cursor: 'pointer',
               }}>
                 <div style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <item.icon />
@@ -107,14 +128,12 @@ export default function PerfilPage() {
           </div>
         </Card>
 
-        {/* Suporte */}
         <Card title="Suporte">
           <div>
             {suporteItems.map((item, i) => (
               <div key={item.key} style={{
                 display: 'flex', alignItems: 'center', gap: 14, padding: '14px 0',
-                borderBottom: i < suporteItems.length - 1 ? '1px solid var(--border)' : 'none',
-                cursor: 'pointer',
+                borderBottom: i < suporteItems.length - 1 ? '1px solid var(--border)' : 'none', cursor: 'pointer',
               }}>
                 <div style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--surface-alt)', color: 'var(--text-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <item.icon />
@@ -129,7 +148,6 @@ export default function PerfilPage() {
           </div>
         </Card>
 
-        {/* Logout */}
         <div style={{ gridColumn: '1 / -1' }}>
           <Btn variant="danger" size="lg" icon={<LogoutIcon />} style={{ width: '100%', justifyContent: 'center' }} onClick={handleLogout}>
             Sair da conta
