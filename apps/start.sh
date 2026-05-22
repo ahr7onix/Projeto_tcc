@@ -1,5 +1,5 @@
 #!/bin/bash
-# NutriCare — Inicializar API e Frontend juntos
+# NutriCare — Inicializar API e Frontend (executar de dentro de apps/)
 
 echo ""
 echo "╔══════════════════════════════════════════╗"
