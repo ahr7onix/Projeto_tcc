@@ -16,7 +16,6 @@ export default function AuthLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="login/index" />
       <Stack.Screen name="login/cliente" />
-      <Stack.Screen name="login/nutricionista" />
       <Stack.Screen name="cadastro" />
       <Stack.Screen name="esqueci-senha" />
     </Stack>
