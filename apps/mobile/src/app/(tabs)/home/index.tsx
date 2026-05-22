@@ -83,16 +83,16 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   avatar: {
-    width: 44,
-    height: 44,
+    width: 42,
+    height: 42,
     borderRadius: radius.pill,
-    backgroundColor: colors.primarySoft,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.35)',
   },
-  avatarText: { ...typography.h3, color: colors.primary },
+  avatarText: { ...typography.h3, color: colors.textInverse },
 
   statsRow: { flexDirection: 'row', gap: spacing.md },
 

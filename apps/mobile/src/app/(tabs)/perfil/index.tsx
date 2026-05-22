@@ -31,7 +31,7 @@ const suporteItems: MenuItem[] = [
 export default function PerfilScreen() {
   const { user, signOut } = useAuthStore();
   const initial = (user?.nome ?? '?').charAt(0).toUpperCase();
-  const role = user?.role === 'nutricionista' ? 'Nutricionista' : 'Cliente';
+  const role = 'Cliente';
 
   return (
     <ScreenContainer eyebrow="Sua conta" title="Perfil">
