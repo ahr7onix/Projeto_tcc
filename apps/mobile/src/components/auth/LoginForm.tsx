@@ -17,9 +17,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { Divider } from '@/components/Divider';
 import { FormField } from '@/components/FormField';
 import { SocialButton, type SocialProvider } from '@/components/SocialButton';
-import { extractAuthError, useLogin } from '@/hooks/use-auth';
+import { extractAuthError, useLogin, useLoginGoogle } from '@/hooks/use-auth';
 import { loginSchema, type LoginFormValues } from '@/lib/validation/auth';
 import { colors, radius, spacing, typography } from '@/lib/theme';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+
+GoogleSignin.configure({
+  webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || 'COLOQUE_SEU_WEB_CLIENT_ID_AQUI',
+});
 
 const COPY = {
   eyebrow: 'Acesso do cliente',
@@ -41,11 +46,28 @@ export function LoginForm() {
     login.mutate(values);
   });
 
-  const handleSocial = (provider: SocialProvider) => {
-    Alert.alert(
-      'Em breve',
-      `Login com ${provider === 'google' ? 'Google' : provider === 'apple' ? 'Apple' : 'Facebook'} ainda não foi configurado.`,
-    );
+  const loginGoogle = useLoginGoogle();
+
+  const handleSocial = async (provider: SocialProvider) => {
+    if (provider === 'google') {
+      try {
+        await GoogleSignin.hasPlayServices();
+        const userInfo = await GoogleSignin.signIn();
+        const idToken = userInfo.data?.idToken;
+        if (!idToken) throw new Error('Token do Google não encontrado.');
+        
+        loginGoogle.mutate(idToken);
+      } catch (error: any) {
+        if (error.code !== statusCodes.SIGN_IN_CANCELLED) {
+          Alert.alert('Erro no Google', error.message || 'Falha ao autenticar.');
+        }
+      }
+    } else {
+      Alert.alert(
+        'Em breve',
+        `Login com ${provider === 'apple' ? 'Apple' : 'Facebook'} ainda não foi configurado.`,
+      );
+    }
   };
 
   const errorMessage = login.isError
@@ -130,7 +152,13 @@ export function LoginForm() {
               {Platform.OS === 'ios' ? (
                 <SocialButton provider="apple" onPress={() => handleSocial('apple')} disabled />
               ) : null}
-              <SocialButton provider="google" onPress={() => handleSocial('google')} disabled />
+              {loginGoogle.isPending ? (
+                <View style={{ padding: 16, alignItems: 'center' }}>
+                  <ActivityIndicator color={colors.primary} />
+                </View>
+              ) : (
+                <SocialButton provider="google" onPress={() => handleSocial('google')} />
+              )}
             </View>
 
             <View style={styles.footer}>
