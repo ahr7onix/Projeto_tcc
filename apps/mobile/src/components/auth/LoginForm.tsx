@@ -41,28 +41,11 @@ export function LoginForm() {
     login.mutate(values);
   });
 
-  const loginGoogle = useLoginGoogle();
-
-  const handleSocial = async (provider: SocialProvider) => {
-    if (provider === 'google') {
-      try {
-        await GoogleSignin.hasPlayServices();
-        const userInfo = await GoogleSignin.signIn();
-        const idToken = userInfo.data?.idToken;
-        if (!idToken) throw new Error('Token do Google não encontrado.');
-        
-        loginGoogle.mutate(idToken);
-      } catch (error: any) {
-        if (error.code !== statusCodes.SIGN_IN_CANCELLED) {
-          Alert.alert('Erro no Google', error.message || 'Falha ao autenticar.');
-        }
-      }
-    } else {
-      Alert.alert(
-        'Em breve',
-        `Login com ${provider === 'apple' ? 'Apple' : 'Facebook'} ainda não foi configurado.`,
-      );
-    }
+  const handleSocial = (provider: SocialProvider) => {
+    Alert.alert(
+      'Em breve',
+      `Login com ${provider === 'apple' ? 'Apple' : provider === 'google' ? 'Google' : 'Facebook'} ainda não foi configurado.`,
+    );
   };
 
   const errorMessage = login.isError
