@@ -160,17 +160,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.xs,
   },
-  backBtn: {
-    position: 'absolute',
-    top: spacing.md,
-    left: spacing.md,
-    width: 40,
-    height: 40,
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   logoBox: {
     width: 64,
     height: 64,
