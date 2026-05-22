@@ -32,6 +32,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     gap: spacing.md,
+    boxShadow: '0 2px 10px rgba(11,11,23,0.05)',
+    elevation: 1,
   },
   header: {
     flexDirection: 'row',

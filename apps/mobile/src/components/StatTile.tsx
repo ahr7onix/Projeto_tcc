@@ -24,7 +24,7 @@ export function StatTile({ icon, value, label, tint = 'primary' }: Props) {
   return (
     <View style={styles.tile}>
       <View style={[styles.iconBox, { backgroundColor: t.bg }]}>
-        <Ionicons name={icon} size={16} color={t.fg} />
+        <Ionicons name={icon} size={18} color={t.fg} />
       </View>
       <Text style={styles.value}>{value}</Text>
       <Text style={styles.label}>{label}</Text>
@@ -38,14 +38,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
     padding: spacing.md,
-    gap: spacing.xs,
+    gap: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border,
+    boxShadow: '0 2px 10px rgba(11,11,23,0.06)',
+    elevation: 2,
   },
   iconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
