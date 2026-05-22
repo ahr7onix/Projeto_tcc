@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
-import { Card, PageHeader, Btn, Input, EmptyState, Badge } from '../../components/ui'
+import React, { useState, useEffect, useCallback } from 'react'
+import { Card, PageHeader, Btn, Input, EmptyState, Badge, AlertBanner } from '../../components/ui'
+import { api, extractError } from '../../lib/api'
 
 interface Paciente {
   id: string
@@ -10,18 +11,67 @@ interface Paciente {
   status: 'ativo' | 'inativo'
 }
 
-const mockPacientes: Paciente[] = []
+interface Meta {
+  total: number
+  ativos: number
+  comAlertas: number
+}
+
+function formatDate(iso: string | null) {
+  if (!iso) return '--'
+  return new Date(iso).toLocaleDateString('pt-BR')
+}
 
 export default function PacientesPage() {
+  const [pacientes, setPacientes] = useState<Paciente[]>([])
+  const [meta, setMeta] = useState<Meta>({ total: 0, ativos: 0, comAlertas: 0 })
   const [busca, setBusca] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const filtrados = mockPacientes.filter(p =>
-    p.nome.toLowerCase().includes(busca.toLowerCase()) ||
-    p.email.toLowerCase().includes(busca.toLowerCase())
-  )
+  const fetchPacientes = useCallback(async (q?: string) => {
+    try {
+      const params: Record<string, string> = {}
+      if (q) params.busca = q
+      const { data } = await api.get('/pacientes', { params })
+      setPacientes(data.data)
+      setMeta(data.meta)
+    } catch (err) {
+      setError(extractError(err))
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchPacientes() }, [fetchPacientes])
+
+  useEffect(() => {
+    if (!busca) { fetchPacientes(); return }
+    const timer = setTimeout(() => fetchPacientes(busca), 300)
+    return () => clearTimeout(timer)
+  }, [busca, fetchPacientes])
+
+  const handleAdd = async () => {
+    if (!nome || !email) return
+    setSaving(true)
+    setError(null)
+    try {
+      const { data } = await api.post('/pacientes', { nome, email })
+      setPacientes(prev => [data, ...prev])
+      setMeta(prev => ({ ...prev, total: prev.total + 1, ativos: prev.ativos + 1 }))
+      setNome('')
+      setEmail('')
+      setShowModal(false)
+    } catch (err) {
+      setError(extractError(err))
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <div>
@@ -36,12 +86,13 @@ export default function PacientesPage() {
         }
       />
 
-      {/* Stats */}
+      {error && <div style={{ marginBottom: 16 }}><AlertBanner message={error} /></div>}
+
       <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
         {[
-          { label: 'Total de pacientes', value: '0', tint: '#7C3AED', bg: '#F3EEFF' },
-          { label: 'Ativos', value: '0', tint: '#10B981', bg: '#E7F8F2' },
-          { label: 'Com alertas', value: '0', tint: '#EF4444', bg: '#FCEAEA' },
+          { label: 'Total de pacientes', value: String(meta.total), tint: '#7C3AED', bg: '#F3EEFF' },
+          { label: 'Ativos', value: String(meta.ativos), tint: '#10B981', bg: '#E7F8F2' },
+          { label: 'Com alertas', value: String(meta.comAlertas), tint: '#EF4444', bg: '#FCEAEA' },
         ].map((s) => (
           <div key={s.label} style={{
             flex: '1', minWidth: 150,
@@ -55,7 +106,6 @@ export default function PacientesPage() {
       </div>
 
       <Card>
-        {/* Search */}
         <Input
           placeholder="Buscar por nome ou e-mail..."
           value={busca}
@@ -63,8 +113,11 @@ export default function PacientesPage() {
           icon={<SearchIcon />}
         />
 
-        {/* Table header */}
-        {filtrados.length > 0 ? (
+        {loading ? (
+          <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
+            Carregando...
+          </div>
+        ) : pacientes.length > 0 ? (
           <div>
             <div style={{
               display: 'grid', gridTemplateColumns: '1fr 1fr auto auto auto',
@@ -73,18 +126,14 @@ export default function PacientesPage() {
               textTransform: 'uppercase', letterSpacing: '0.4px',
               borderBottom: '1px solid var(--border)',
             }}>
-              <span>Paciente</span>
-              <span>E-mail</span>
-              <span>Última glicemia</span>
-              <span>Último registro</span>
-              <span>Status</span>
+              <span>Paciente</span><span>E-mail</span>
+              <span>Última glicemia</span><span>Último registro</span><span>Status</span>
             </div>
-            {filtrados.map((p) => (
+            {pacientes.map((p) => (
               <div key={p.id} style={{
                 display: 'grid', gridTemplateColumns: '1fr 1fr auto auto auto',
                 gap: 16, padding: '14px 12px', alignItems: 'center',
-                borderBottom: '1px solid var(--border)',
-                transition: 'background 0.1s', cursor: 'pointer',
+                borderBottom: '1px solid var(--border)', transition: 'background 0.1s', cursor: 'pointer',
               }}
                 onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = 'var(--bg)'}
                 onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'transparent'}
@@ -102,7 +151,7 @@ export default function PacientesPage() {
                 <span style={{ fontSize: 13, color: p.glicemiaMedia ? 'var(--text)' : 'var(--text-muted)' }}>
                   {p.glicemiaMedia ? `${p.glicemiaMedia} mg/dL` : '--'}
                 </span>
-                <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{p.ultimoRegistro ?? '--'}</span>
+                <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{formatDate(p.ultimoRegistro)}</span>
                 <Badge label={p.status === 'ativo' ? 'Ativo' : 'Inativo'} tint={p.status === 'ativo' ? 'success' : 'warning'} />
               </div>
             ))}
@@ -116,20 +165,22 @@ export default function PacientesPage() {
         )}
       </Card>
 
-      {/* Modal */}
       {showModal && (
         <div style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16,
         }} onClick={() => setShowModal(false)}>
-          <div style={{ background: 'white', borderRadius: 20, padding: 28, width: '100%', maxWidth: 420 }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: 'white', borderRadius: 20, padding: 28, width: '100%', maxWidth: 420 }}
+            onClick={e => e.stopPropagation()}>
             <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 20 }}>Adicionar paciente</h3>
+            {error && <div style={{ marginBottom: 12 }}><AlertBanner message={error} /></div>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <Input label="Nome completo" value={nome} onChange={e => setNome(e.target.value)} placeholder="Nome do paciente" />
               <Input label="E-mail" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@exemplo.com" />
               <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-                <Btn variant="secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setShowModal(false)}>Cancelar</Btn>
-                <Btn style={{ flex: 1, justifyContent: 'center' }} onClick={() => setShowModal(false)}>Adicionar</Btn>
+                <Btn variant="secondary" style={{ flex: 1, justifyContent: 'center' }}
+                  onClick={() => { setShowModal(false); setError(null) }}>Cancelar</Btn>
+                <Btn style={{ flex: 1, justifyContent: 'center' }} loading={saving} onClick={handleAdd}>Adicionar</Btn>
               </div>
             </div>
           </div>
