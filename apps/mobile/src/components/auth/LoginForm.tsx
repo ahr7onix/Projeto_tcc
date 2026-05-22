@@ -130,13 +130,7 @@ export function LoginForm() {
               {Platform.OS === 'ios' ? (
                 <SocialButton provider="apple" onPress={() => handleSocial('apple')} disabled />
               ) : null}
-              {loginGoogle.isPending ? (
-                <View style={{ padding: 16, alignItems: 'center' }}>
-                  <ActivityIndicator color={colors.primary} />
-                </View>
-              ) : (
-                <SocialButton provider="google" onPress={() => handleSocial('google')} />
-              )}
+              <SocialButton provider="google" onPress={() => handleSocial('google')} />
             </View>
 
             <View style={styles.footer}>
