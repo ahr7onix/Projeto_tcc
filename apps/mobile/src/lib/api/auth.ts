@@ -12,6 +12,11 @@ export async function login(input: LoginInput): Promise<AuthResponse> {
   return data;
 }
 
+export async function loginGoogle(idToken: string): Promise<AuthResponse> {
+  const { data } = await api.post<AuthResponse>('/auth/google', { idToken });
+  return data;
+}
+
 export async function cadastro(input: CadastroInput): Promise<AuthResponse> {
   const { data } = await api.post<AuthResponse>('/auth/cadastro', input);
   return data;
