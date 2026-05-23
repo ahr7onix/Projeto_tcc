@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Card } from '@/components/Card';
@@ -19,8 +20,12 @@ interface MenuItem {
 const acessoItems: MenuItem[] = [
   { key: 'editar', label: 'Editar perfil', icon: 'person-outline' },
   { key: 'senha', label: 'Alterar senha', icon: 'lock-closed-outline' },
-  { key: 'notif', label: 'Notificações', icon: 'notifications-outline' },
 ];
+
+const navMap: Record<string, string> = {
+  editar: '/(tabs)/perfil/editar',
+  senha: '/(tabs)/perfil/senha',
+};
 
 const suporteItems: MenuItem[] = [
   { key: 'ajuda', label: 'Central de ajuda', icon: 'help-circle-outline' },
