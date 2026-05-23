@@ -55,7 +55,11 @@ export default function PerfilScreen() {
       <Card title="Conta">
         <View style={styles.menuList}>
           {acessoItems.map((item, i) => (
-            <Pressable key={item.key} style={[styles.menuRow, i > 0 && styles.rowDivider]}>
+            <Pressable
+              key={item.key}
+              style={[styles.menuRow, i > 0 && styles.rowDivider]}
+              onPress={() => router.push(navMap[item.key] as never)}
+            >
               <View style={styles.menuIcon}>
                 <Ionicons name={item.icon} size={18} color={colors.primary} />
               </View>
