@@ -98,6 +98,8 @@ export default function TabsLayout() {
       <Tabs.Screen name="alimentacao/receitas/index" options={{ href: null }} />
       <Tabs.Screen name="registros/glicemia" options={{ href: null }} />
       <Tabs.Screen name="registros/refeicao" options={{ href: null }} />
+      <Tabs.Screen name="perfil/editar" options={{ href: null }} />
+      <Tabs.Screen name="perfil/senha" options={{ href: null }} />
     </Tabs>
   );
 }
