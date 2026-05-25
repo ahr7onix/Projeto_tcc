@@ -7,7 +7,7 @@ Write-Host "---------------------------------------------------" -ForegroundColo
 
 while ($true) {
     # Verifica se há alguma mudança nos arquivos
-    $gitPath = "C:\Users\isac0\AppData\Local\GitHubDesktop\app-3.5.10\resources\app\git\cmd\git.exe"
+    $gitPath = "git"
     $status = & $gitPath status --porcelain
     if ($status) {
         Write-Host ""

@@ -12,5 +12,13 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ];
 config.resolver.disableHierarchicalLookup = true;
+config.resolver.blockList = [
+  new RegExp(`^${escapeRegex(path.resolve(workspaceRoot, 'apps', 'api'))}.*`),
+  new RegExp(`^${escapeRegex(path.resolve(workspaceRoot, 'web'))}.*`),
+];
+
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 module.exports = config;
