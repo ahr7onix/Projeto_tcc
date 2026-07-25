@@ -7,7 +7,7 @@
 BEGIN;
 
 -- ---------- Tipos enumerados ----------
-CREATE TYPE tipo_usuario       AS ENUM ('paciente', 'nutricionista');
+CREATE TYPE tipo_usuario       AS ENUM ('paciente', 'nutricionista', 'administrador');
 CREATE TYPE genero_tipo        AS ENUM ('feminino', 'masculino', 'outro');
 CREATE TYPE tipo_diabetes      AS ENUM ('tipo1', 'tipo2', 'gestacional', 'pre', 'outro');
 CREATE TYPE momento_glicemia   AS ENUM ('jejum', 'pre_prandial', 'pos_prandial', 'antes_dormir', 'madrugada', 'aleatorio');
@@ -44,11 +44,69 @@ CREATE TABLE nutricionista (
     id_nutricionista BIGSERIAL    PRIMARY KEY,
     id_usuario       BIGINT       NOT NULL UNIQUE
         REFERENCES usuario(id_usuario) ON DELETE CASCADE,
-    crn              VARCHAR(20)  NOT NULL UNIQUE,         -- registro profissional
+    crn              VARCHAR(20)  UNIQUE,                  -- registro profissional, preenchido no onboarding
+    perfil_completo  BOOLEAN      NOT NULL DEFAULT FALSE,
     especialidade    VARCHAR(120),
     criado_em        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     atualizado_em    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
+
+-- ---------- Tabela: nutricionista_paciente ----------
+-- Vínculo profissional. Um paciente pode ser acompanhado por mais de um
+-- nutricionista ao longo do tempo; apenas um vínculo ativo por par.
+CREATE TABLE nutricionista_paciente (
+    id_vinculo       BIGSERIAL   PRIMARY KEY,
+    id_nutricionista BIGINT      NOT NULL
+        REFERENCES nutricionista(id_nutricionista) ON DELETE CASCADE,
+    id_paciente      BIGINT      NOT NULL
+        REFERENCES paciente(id_paciente) ON DELETE CASCADE,
+    ativo            BOOLEAN     NOT NULL DEFAULT TRUE,
+    criado_em        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    encerrado_em     TIMESTAMPTZ,
+    CHECK (encerrado_em IS NULL OR encerrado_em >= criado_em)
+);
+CREATE UNIQUE INDEX idx_vinculo_ativo_unico
+    ON nutricionista_paciente(id_nutricionista, id_paciente) WHERE ativo = TRUE;
+CREATE INDEX idx_vinculo_nutricionista
+    ON nutricionista_paciente(id_nutricionista) WHERE ativo = TRUE;
+CREATE INDEX idx_vinculo_paciente
+    ON nutricionista_paciente(id_paciente) WHERE ativo = TRUE;
+
+-- ---------- Tabela: administrador ----------
+CREATE TABLE administrador (
+    id_admin    BIGSERIAL   PRIMARY KEY,
+    id_usuario  BIGINT      NOT NULL UNIQUE
+        REFERENCES usuario(id_usuario) ON DELETE CASCADE,
+    criado_em   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ---------- Tabela: conteudo_educativo ----------
+CREATE TABLE conteudo_educativo (
+    id_conteudo   BIGSERIAL    PRIMARY KEY,
+    id_autor      BIGINT       NOT NULL
+        REFERENCES usuario(id_usuario) ON DELETE RESTRICT,
+    titulo        VARCHAR(160) NOT NULL CHECK (length(trim(titulo)) > 0),
+    resumo        VARCHAR(300),
+    conteudo      TEXT         NOT NULL CHECK (length(trim(conteudo)) > 0),
+    categoria     VARCHAR(60)  NOT NULL DEFAULT 'geral',
+    publicado     BOOLEAN      NOT NULL DEFAULT FALSE,
+    criado_em     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    atualizado_em TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+CREATE INDEX idx_conteudo_publicado ON conteudo_educativo(publicado, criado_em DESC);
+CREATE INDEX idx_conteudo_categoria ON conteudo_educativo(categoria) WHERE publicado = TRUE;
+
+-- ---------- Tabela: push_token ----------
+CREATE TABLE push_token (
+    id_usuario   BIGINT       NOT NULL
+        REFERENCES usuario(id_usuario) ON DELETE CASCADE,
+    id_token     BIGSERIAL    PRIMARY KEY,
+    token        VARCHAR(255) NOT NULL UNIQUE,
+    plataforma   VARCHAR(20),
+    criado_em    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    usado_em     TIMESTAMPTZ
+);
+CREATE INDEX idx_push_token_usuario ON push_token(id_usuario);
 
 -- ---------- Tabela: refresh_token ----------
 -- Sessões ativas para rotação de access tokens (login mobile).
