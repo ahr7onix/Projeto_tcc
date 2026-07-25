@@ -27,4 +27,14 @@ export class CadastroDto {
   @IsOptional()
   @IsIn(['tipo1', 'tipo2', 'gestacional', 'pre', 'outro'])
   tipoDiabetes?: 'tipo1' | 'tipo2' | 'gestacional' | 'pre' | 'outro';
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20, { message: 'CRN muito longo' })
+  crn?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  especialidade?: string;
 }

@@ -76,6 +76,13 @@ export class AuthService {
            VALUES ($1, $2, $3, $4)`,
           [user.id_usuario, dataNascimento, dto.sexo ?? null, dto.tipoDiabetes ?? null],
         );
+      } else {
+        const crn = dto.crn?.trim() || null;
+        await client.query(
+          `INSERT INTO nutricionista (id_usuario, crn, especialidade, perfil_completo)
+           VALUES ($1, $2, $3, $4)`,
+          [user.id_usuario, crn, dto.especialidade?.trim() ?? null, crn !== null],
+        );
       }
 
       await client.query('COMMIT');
@@ -109,11 +116,10 @@ export class AuthService {
     try {
       const ticket = await this.googleClient.verifyIdToken({
         idToken,
-        // Em produção, você passaria o array de client IDs (Web, iOS, Android)
-        // audience: [CLIENT_ID_WEB, CLIENT_ID_IOS, CLIENT_ID_ANDROID]
+
       });
       const payload = ticket.getPayload();
-      
+
       if (!payload || !payload.email) {
         throw new UnauthorizedException('Token do Google inválido');
       }
@@ -124,8 +130,7 @@ export class AuthService {
       const client = await this.pool.connect();
       try {
         await client.query('BEGIN');
-        
-        // Verifica se o usuário existe
+
         const result = await client.query<UserRow>(
           'SELECT id_usuario, nome, email, senha, tipo FROM usuario WHERE email = $1',
           [email]
@@ -133,9 +138,8 @@ export class AuthService {
 
         let user = result.rows[0];
 
-        // Se não existe, cria um novo paciente
         if (!user) {
-          // Senha aleatória para conta social
+
           const randomPass = randomBytes(16).toString('hex');
           const senhaHash = await bcrypt.hash(randomPass, 10);
 
@@ -232,7 +236,7 @@ export class AuthService {
   }
 
   async esqueciSenha(_email: string): Promise<{ message: string }> {
-    // Stub — em produção: gerar token, gravar em password_reset_token, enviar email.
+
     return { message: 'Se o e-mail estiver cadastrado, enviaremos instruções.' };
   }
 
