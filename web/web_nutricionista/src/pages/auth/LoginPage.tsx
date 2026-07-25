@@ -7,6 +7,16 @@ import { Input, Btn, AlertBanner } from '../../components/ui'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 
+// Perfis que o painel web atende, e onde cada um entra. Paciente fica de fora:
+// as telas dele estao no app mobile.
+const DESTINO_POR_PERFIL: Record<string, string> = {
+  nutricionista: '/dashboard',
+  administrador: '/admin',
+}
+
+const ERRO_PERFIL =
+  'Esta plataforma é exclusiva para nutricionistas e administradores. Use o aplicativo mobile para acesso como paciente.'
+
 declare global {
   interface Window {
     google?: {
@@ -65,8 +75,13 @@ export default function LoginPage() {
     setError(null); setGoogleLoading(true)
     try {
       const { data } = await api.post('/auth/google', { credential: response.credential })
+      const destino = DESTINO_POR_PERFIL[data.user.role]
+      if (!destino) {
+        setError(ERRO_PERFIL)
+        setGoogleLoading(false); return
+      }
       login(data.user, data.accessToken, data.refreshToken)
-      navigate('/dashboard')
+      navigate(destino)
     } catch (err) { setError(extractError(err)) }
     finally { setGoogleLoading(false) }
   }
@@ -75,12 +90,13 @@ export default function LoginPage() {
     e.preventDefault(); setError(null); setLoading(true)
     try {
       const { data } = await api.post('/auth/login', { email, senha: password })
-      if (data.user.role !== 'nutricionista') {
-        setError('Esta plataforma é exclusiva para nutricionistas. Use o aplicativo mobile para acesso como paciente.')
+      const destino = DESTINO_POR_PERFIL[data.user.role]
+      if (!destino) {
+        setError(ERRO_PERFIL)
         setLoading(false); return
       }
       login(data.user, data.accessToken, data.refreshToken)
-      navigate('/dashboard')
+      navigate(destino)
     } catch (err) { setError(extractError(err)) }
     finally { setLoading(false) }
   }

@@ -19,6 +19,16 @@ import ConteudosPage from './pages/app/ConteudosPage'
 import AdminPage from './pages/app/AdminPage'
 import PerfilPage from './pages/app/PerfilPage'
 
+// Cada perfil tem uma tela inicial propria: o administrador nao usa o dashboard
+// do nutricionista, cujas rotas dependem de pacientes vinculados e respondem 403
+// para ele.
+function useRotaInicial() {
+  const { user } = useAuth()
+  return user?.role === 'administrador' ? '/admin' : '/dashboard'
+}
+
+const InicioPorPerfil: React.FC = () => <Navigate to={useRotaInicial()} replace />
+
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth()
   if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'var(--text-muted)' }}>Carregando...</div>
@@ -28,8 +38,9 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth()
+  const rotaInicial = useRotaInicial()
   if (loading) return null
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />
+  if (isAuthenticated) return <Navigate to={rotaInicial} replace />
   return <>{children}</>
 }
 
@@ -45,7 +56,7 @@ export default function App() {
 
           {}
           <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route index element={<InicioPorPerfil />} />
             <Route path="dashboard" element={<HomePage />} />
             <Route path="pacientes" element={<PacientesPage />} />
             <Route path="registros" element={<RegistrosPage />} />

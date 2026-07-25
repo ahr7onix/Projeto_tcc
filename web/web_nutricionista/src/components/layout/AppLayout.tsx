@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import s from './AppLayout.module.css'
 
-const NAV = [
+const NAV_NUTRICIONISTA = [
   { to: '/dashboard',   label: 'Início',      icon: HomeIcon },
   { to: '/pacientes',   label: 'Pacientes',   icon: PatientsIcon },
   { to: '/registros',   label: 'Registros',   icon: RegistrosIcon },
@@ -15,11 +15,27 @@ const NAV = [
   { to: '/perfil',      label: 'Perfil',      icon: PerfilIcon },
 ]
 
+// O administrador nao tem pacientes vinculados, entao as telas do nutricionista
+// so devolveriam 403 para ele. Fica com a administracao, os conteudos (que ele
+// tambem pode publicar) e o proprio perfil.
+const NAV_ADMINISTRADOR = [
+  { to: '/admin',     label: 'Administração', icon: AdminIcon },
+  { to: '/conteudos', label: 'Conteúdos',     icon: ConteudosIcon },
+  { to: '/perfil',    label: 'Perfil',        icon: PerfilIcon },
+]
+
+const ROTULO_PERFIL: Record<string, string> = {
+  nutricionista: 'Nutricionista',
+  administrador: 'Administrador',
+}
+
 export default function AppLayout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const initial = (user?.nome ?? 'N').charAt(0).toUpperCase()
+  const nav = user?.role === 'administrador' ? NAV_ADMINISTRADOR : NAV_NUTRICIONISTA
+  const rotuloPerfil = ROTULO_PERFIL[user?.role ?? ''] ?? 'Nutricionista'
 
   const handleLogout = () => { logout(); navigate('/login') }
 
@@ -37,7 +53,7 @@ export default function AppLayout() {
         </div>
 
         <nav className={s.nav}>
-          {NAV.map((item) => (
+          {nav.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -55,7 +71,7 @@ export default function AppLayout() {
             <div className={s.userAvatar}>{initial}</div>
             <div className={s.userInfo}>
               <div className={s.userName}>{user?.nome ?? 'Nutricionista'}</div>
-              <div className={s.userRole}>Nutricionista</div>
+              <div className={s.userRole}>{rotuloPerfil}</div>
             </div>
           </div>
           <button className={s.logoutBtn} onClick={handleLogout}>
@@ -109,6 +125,9 @@ function ConteudosIcon() {
 
 function PerfilIcon() {
   return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+}
+function AdminIcon() {
+  return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
 }
 function LogoutIcon() {
   return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
