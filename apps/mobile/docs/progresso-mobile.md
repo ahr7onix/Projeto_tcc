@@ -12,7 +12,8 @@ Setup completo do app Expo para que dê para abrir no Expo Go e começar a codar
 
 **O que foi feito**
 - Configurações: [package.json](../package.json), [app.json](../app.json), [tsconfig.json](../tsconfig.json), [babel.config.js](../babel.config.js), [metro.config.js](../metro.config.js) (modo monorepo), [.gitignore](../.gitignore), [.env.example](../.env.example), [index.ts](../index.ts) (entry), [expo-env.d.ts](../expo-env.d.ts)
-- Stack: Expo SDK 52 + RN 0.76 + Expo Router 4 + TypeScript + TanStack Query + Zustand + Axios + expo-secure-store + react-hook-form + zod
+- Stack na época: Expo SDK 52 + RN 0.76 + Expo Router 4 + TypeScript + TanStack Query + Zustand + Axios + expo-secure-store + react-hook-form + zod
+  *(hoje o [package.json](../package.json) está em Expo SDK 54, RN 0.81 e Expo Router 6, com React 19)*
 - Lib base em [src/lib/](../src/lib/): `api.ts`, `storage.ts`, `theme.ts`, `env.ts`, `query-client.ts`
 - Store de auth em [src/stores/auth.ts](../src/stores/auth.ts) com hidratação a partir do SecureStore
 - Componentes base: [ScreenContainer](../src/components/ScreenContainer.tsx), [Card](../src/components/Card.tsx)

@@ -16,7 +16,7 @@ prevista na ADJ (Associação de Diabetes Juvenil) de Birigui.
 | Módulo | Caminho | Stack |
 |---|---|---|
 | API | `apps/api` | NestJS 10, TypeScript, PostgreSQL (driver `pg`) |
-| App mobile | `apps/mobile` | React Native 0.76, Expo Router 4, React Query, Zustand |
+| App mobile | `apps/mobile` | Expo SDK 54, React Native 0.81, Expo Router 6, React Query, Zustand |
 | Painel web | `web/web_nutricionista` | React 18, Vite, React Router 6, Axios |
 | Banco | `database` | PostgreSQL 16 — schema + migrations |
 
