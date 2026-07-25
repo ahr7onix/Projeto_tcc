@@ -1,17 +1,22 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import type { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
+import { VinculosService } from '../vinculos/vinculos.service';
 
 @Injectable()
 export class PacientesService {
-  constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
+  constructor(
+    @Inject(PG_POOL) private readonly pool: Pool,
+    private readonly vinculos: VinculosService,
+  ) {}
 
-  async findAll(busca?: string) {
-    const params: string[] = [];
-    const where = busca
-      ? `AND (u.nome ILIKE $1 OR u.email ILIKE $1)`
-      : '';
-    if (busca) params.push(`%${busca}%`);
+  async findAll(idUsuarioNutri: string, busca?: string) {
+    const params: string[] = [idUsuarioNutri];
+    let where = '';
+    if (busca) {
+      params.push(`%${busca}%`);
+      where = `AND (u.nome ILIKE $${params.length} OR u.email ILIKE $${params.length})`;
+    }
 
     const result = await this.pool.query(
       `SELECT
@@ -27,11 +32,45 @@ export class PacientesService {
          ) AS ultimo_registro
        FROM usuario u
        JOIN paciente p ON p.id_usuario = u.id_usuario
+       JOIN nutricionista_paciente np
+         ON np.id_paciente = p.id_paciente AND np.ativo = TRUE
+       JOIN nutricionista n
+         ON n.id_nutricionista = np.id_nutricionista
        LEFT JOIN registro_glicemia rg ON rg.id_paciente = p.id_paciente
        LEFT JOIN registro_refeicao rr ON rr.id_paciente = p.id_paciente
-       WHERE u.tipo = 'paciente' ${where}
+       WHERE u.tipo = 'paciente' AND n.id_usuario = $1 ${where}
        GROUP BY u.id_usuario, u.nome, u.email
        ORDER BY u.nome`,
+      params,
+    );
+
+    return { data: result.rows.map((r) => this.mapResumo(r)) };
+  }
+
+  async findDisponiveis(idUsuarioNutri: string, busca?: string) {
+    const params: string[] = [idUsuarioNutri];
+    let where = '';
+    if (busca) {
+      params.push(`%${busca}%`);
+      where = `AND (u.nome ILIKE $${params.length} OR u.email ILIKE $${params.length})`;
+    }
+
+    const result = await this.pool.query(
+      `SELECT u.id_usuario, u.nome, u.email
+         FROM usuario u
+         JOIN paciente p ON p.id_usuario = u.id_usuario
+        WHERE u.tipo = 'paciente'
+          AND NOT EXISTS (
+            SELECT 1
+              FROM nutricionista_paciente np
+              JOIN nutricionista n ON n.id_nutricionista = np.id_nutricionista
+             WHERE np.id_paciente = p.id_paciente
+               AND np.ativo = TRUE
+               AND n.id_usuario = $1
+          )
+          ${where}
+        ORDER BY u.nome
+        LIMIT 50`,
       params,
     );
 
@@ -40,18 +79,19 @@ export class PacientesService {
         id: String(r.id_usuario),
         nome: r.nome,
         email: r.email,
-        glicemiaMedia: r.glicemia_media ? Number(r.glicemia_media) : null,
-        ultimoRegistro: r.ultimo_registro ?? null,
-        status:
-          r.ultimo_registro &&
-          new Date(r.ultimo_registro) > new Date(Date.now() - 7 * 86400_000)
-            ? 'ativo'
-            : 'inativo',
       })),
     };
   }
 
-  async findOne(idUsuario: string) {
+  async findOne(idUsuarioNutri: string, idUsuarioPaciente: string) {
+    const vinculado = await this.vinculos.existeVinculo(
+      idUsuarioNutri,
+      idUsuarioPaciente,
+    );
+    if (!vinculado) {
+      throw new ForbiddenException('Paciente não vinculado a você');
+    }
+
     const result = await this.pool.query(
       `SELECT
          u.id_usuario,
@@ -75,33 +115,39 @@ export class PacientesService {
        GROUP BY u.id_usuario, u.nome, u.email,
                 p.peso, p.altura, p.tipo_diabetes, p.genero,
                 p.data_nascimento, p.restricoes_alergias`,
-      [idUsuario],
+      [idUsuarioPaciente],
     );
 
     const r = result.rows[0];
     if (!r) return null;
 
     return {
-      id: String(r.id_usuario),
-      nome: r.nome,
-      email: r.email,
+      ...this.mapResumo(r),
       peso: r.peso ? Number(r.peso) : null,
       altura: r.altura ? Number(r.altura) : null,
       imc:
         r.peso && r.altura
-          ? Number((Number(r.peso) / (Number(r.altura) ** 2)).toFixed(1))
+          ? Number((Number(r.peso) / Number(r.altura) ** 2).toFixed(1))
           : null,
       tipoDiabetes: r.tipo_diabetes ?? null,
       genero: r.genero ?? null,
       dataNascimento: r.data_nascimento ?? null,
       restricoesAlergias: r.restricoes_alergias ?? null,
+    };
+  }
+
+  private mapResumo(r: Record<string, any>) {
+    const ativo =
+      r.ultimo_registro &&
+      new Date(r.ultimo_registro) > new Date(Date.now() - 7 * 86400_000);
+
+    return {
+      id: String(r.id_usuario),
+      nome: r.nome,
+      email: r.email,
       glicemiaMedia: r.glicemia_media ? Number(r.glicemia_media) : null,
       ultimoRegistro: r.ultimo_registro ?? null,
-      status:
-        r.ultimo_registro &&
-        new Date(r.ultimo_registro) > new Date(Date.now() - 7 * 86400_000)
-          ? 'ativo'
-          : 'inativo',
+      status: ativo ? 'ativo' : 'inativo',
     };
   }
 }
