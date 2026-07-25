@@ -3,18 +3,20 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { useAuth } from './contexts/AuthContext'
 
-// Auth pages
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 
-// App pages (nutricionista)
 import AppLayout from './components/layout/AppLayout'
 import HomePage from './pages/app/HomePage'
 import PacientesPage from './pages/app/PacientesPage'
 import RegistrosPage from './pages/app/RegistrosPage'
 import AlimentacaoPage from './pages/app/AlimentacaoPage'
 import SaudePage from './pages/app/SaudePage'
+import RelatoriosPage from './pages/app/RelatoriosPage'
+import MensagensPage from './pages/app/MensagensPage'
+import ConteudosPage from './pages/app/ConteudosPage'
+import AdminPage from './pages/app/AdminPage'
 import PerfilPage from './pages/app/PerfilPage'
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -36,12 +38,12 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Public */}
+          {}
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
           <Route path="/cadastro" element={<PublicRoute><RegisterPage /></PublicRoute>} />
           <Route path="/esqueci-senha" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
 
-          {/* Protected - Nutricionista */}
+          {}
           <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<HomePage />} />
@@ -49,6 +51,10 @@ export default function App() {
             <Route path="registros" element={<RegistrosPage />} />
             <Route path="alimentacao" element={<AlimentacaoPage />} />
             <Route path="saude" element={<SaudePage />} />
+            <Route path="relatorios" element={<RelatoriosPage />} />
+            <Route path="mensagens" element={<MensagensPage />} />
+            <Route path="conteudos" element={<ConteudosPage />} />
+            <Route path="admin" element={<AdminPage />} />
             <Route path="perfil" element={<PerfilPage />} />
           </Route>
 

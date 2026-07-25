@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
-import { PageHeader, Input, EmptyState, AlertBanner } from '../../components/ui'
+import { PageHeader, Input, EmptyState, AlertBanner, Btn } from '../../components/ui'
 import { api, extractError } from '../../lib/api'
 import PacienteDetalhesModal from '../../components/PacienteDetalhesModal'
+import VincularPacienteModal from '../../components/VincularPacienteModal'
+import { desvincularPaciente } from '../../lib/vinculos'
 
 interface Paciente {
   id: string
@@ -36,6 +38,8 @@ export default function PacientesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [pacienteSelecionadoId, setPacienteSelecionadoId] = useState<string | null>(null)
+  const [vincularAberto, setVincularAberto] = useState(false)
+  const [desvinculandoId, setDesvinculandoId] = useState<string | null>(null)
 
   const fetchPacientes = useCallback(async (q?: string) => {
     try {
@@ -64,17 +68,32 @@ export default function PacientesPage() {
 
   const ativos = pacientes.filter(p => p.status === 'ativo').length
 
+  async function handleDesvincular(e: React.MouseEvent, p: Paciente) {
+    e.stopPropagation()
+    if (!window.confirm(`Desvincular ${p.nome}? Você perderá o acesso aos dados deste paciente.`)) return
+    try {
+      setDesvinculandoId(p.id)
+      await desvincularPaciente(p.id)
+      setPacientes(atual => atual.filter(x => x.id !== p.id))
+    } catch (err) {
+      setError(extractError(err))
+    } finally {
+      setDesvinculandoId(null)
+    }
+  }
+
   return (
     <div>
       <PageHeader
         eyebrow="Gerenciamento"
         title="Pacientes"
-        subtitle="Clientes registrados no app mobile aparecem automaticamente aqui."
+        subtitle="Pacientes vinculados a você. Vincule novos pacientes para acompanhar seus dados."
+        action={<Btn onClick={() => setVincularAberto(true)}>+ Vincular paciente</Btn>}
       />
 
       {error && <div style={{ marginBottom: 16 }}><AlertBanner message={error} /></div>}
 
-      {/* Stats row */}
+      {}
       {!loading && pacientes.length > 0 && (
         <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
           {[
@@ -93,13 +112,13 @@ export default function PacientesPage() {
         </div>
       )}
 
-      {/* Table card */}
+      {}
       <div style={{
         background: 'var(--surface)', borderRadius: 'var(--radius-lg)',
         border: '1px solid var(--border)', overflow: 'hidden',
         boxShadow: 'var(--shadow-card)',
       }}>
-        {/* Search bar */}
+        {}
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
           <Input
             placeholder="Buscar por nome..."
@@ -109,10 +128,10 @@ export default function PacientesPage() {
           />
         </div>
 
-        {/* Column headers */}
+        {}
         {!loading && filtrados.length > 0 && (
           <div style={{
-            display: 'grid', gridTemplateColumns: '1fr 110px 140px 130px 36px',
+            display: 'grid', gridTemplateColumns: '1fr 110px 140px 130px 110px 36px',
             padding: '10px 20px', gap: 12,
             fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
             textTransform: 'uppercase', letterSpacing: '0.5px',
@@ -124,10 +143,11 @@ export default function PacientesPage() {
             <span>Glicemia média</span>
             <span>Último registro</span>
             <span />
+            <span />
           </div>
         )}
 
-        {/* Rows */}
+        {}
         {loading ? (
           <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
             Carregando pacientes...
@@ -138,7 +158,7 @@ export default function PacientesPage() {
               key={p.id}
               onClick={() => setPacienteSelecionadoId(p.id)}
               style={{
-                display: 'grid', gridTemplateColumns: '1fr 110px 140px 130px 36px',
+                display: 'grid', gridTemplateColumns: '1fr 110px 140px 130px 110px 36px',
                 alignItems: 'center', padding: '14px 20px', gap: 12,
                 borderBottom: i < filtrados.length - 1 ? '1px solid var(--border)' : 'none',
                 cursor: 'pointer', transition: 'background 0.12s',
@@ -146,7 +166,7 @@ export default function PacientesPage() {
               onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = 'var(--bg)'}
               onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'transparent'}
             >
-              {/* Name + email */}
+              {}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                 <div style={{
                   width: 40, height: 40, borderRadius: '50%',
@@ -160,7 +180,7 @@ export default function PacientesPage() {
                 </div>
               </div>
 
-              {/* Status */}
+              {}
               <div>
                 <span style={{
                   display: 'inline-flex', alignItems: 'center', gap: 5,
@@ -173,17 +193,27 @@ export default function PacientesPage() {
                 </span>
               </div>
 
-              {/* Glicemia */}
+              {}
               <div style={{ fontSize: 14, fontWeight: 600, color: glicemiaColor(p.glicemiaMedia) }}>
                 {p.glicemiaMedia ? `${p.glicemiaMedia} mg/dL` : '—'}
               </div>
 
-              {/* Last record */}
+              {}
               <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
                 {timeAgo(p.ultimoRegistro)}
               </div>
 
-              {/* Chevron */}
+              <div>
+                <Btn
+                  variant="ghost"
+                  size="sm"
+                  loading={desvinculandoId === p.id}
+                  onClick={(e) => handleDesvincular(e, p)}
+                >
+                  Desvincular
+                </Btn>
+              </div>
+
               <div style={{ color: 'var(--text-muted)', display: 'flex' }}>
                 <ChevronIcon />
               </div>
@@ -194,7 +224,7 @@ export default function PacientesPage() {
             <EmptyState
               icon={<PatientsIcon />}
               title="Nenhum paciente encontrado"
-              message={busca ? 'Tente um nome diferente.' : 'Os pacientes cadastrados no app mobile aparecerão aqui.'}
+              message={busca ? 'Tente um nome diferente.' : 'Clique em "Vincular paciente" para começar a acompanhar alguém.'}
             />
           </div>
         )}
@@ -204,6 +234,13 @@ export default function PacientesPage() {
         <PacienteDetalhesModal
           pacienteId={pacienteSelecionadoId}
           onClose={() => setPacienteSelecionadoId(null)}
+        />
+      )}
+
+      {vincularAberto && (
+        <VincularPacienteModal
+          onClose={() => setVincularAberto(false)}
+          onVinculado={() => fetchPacientes(busca || undefined)}
         />
       )}
     </div>

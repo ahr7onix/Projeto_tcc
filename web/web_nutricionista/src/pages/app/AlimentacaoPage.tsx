@@ -1,98 +1,231 @@
-import { Card, PageHeader, EmptyState, ProgressBar } from '../../components/ui'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  AlertBanner,
+  Badge,
+  Btn,
+  Card,
+  EmptyState,
+  PageHeader,
+  Select,
+} from '../../components/ui'
+import PlanoAlimentarModal from '../../components/PlanoAlimentarModal'
+import { api, extractError } from '../../lib/api'
+import { excluirPlano, listarPlanos, type PlanoAlimentar } from '../../lib/planos'
 
-const refeicoes = [
-  { nome: 'Café da manhã', horario: '07:30', status: 'feita', icon: '☕' },
-  { nome: 'Almoço', horario: '12:00', status: 'agora', icon: '🍽️' },
-  { nome: 'Lanche', horario: '16:00', status: 'pendente', icon: '🥗' },
-  { nome: 'Jantar', horario: '19:30', status: 'pendente', icon: '🌙' },
-]
+interface PacienteOption {
+  id: string
+  nome: string
+}
 
-function statusStyle(status: string) {
-  if (status === 'feita') return { bg: 'var(--success-soft)', fg: 'var(--success)', label: 'Feita' }
-  if (status === 'agora') return { bg: 'var(--primary-soft)', fg: 'var(--primary)', label: 'Agora' }
-  return { bg: 'var(--surface-alt)', fg: 'var(--text-muted)', label: 'Pendente' }
+function formatarData(iso: string | null): string {
+  if (!iso) return 'Sem término'
+  const [ano, mes, dia] = iso.slice(0, 10).split('-')
+  return `${dia}/${mes}/${ano}`
 }
 
 export default function AlimentacaoPage() {
-  const feitas = refeicoes.filter(r => r.status === 'feita').length
-  const total = refeicoes.length
+  const [planos, setPlanos] = useState<PlanoAlimentar[]>([])
+  const [pacientes, setPacientes] = useState<PacienteOption[]>([])
+  const [filtroPaciente, setFiltroPaciente] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [erro, setErro] = useState<string | null>(null)
+  const [modalAberto, setModalAberto] = useState(false)
+  const [planoEditando, setPlanoEditando] = useState<PlanoAlimentar | null>(null)
+  const [excluindoId, setExcluindoId] = useState<string | null>(null)
+
+  const carregarPlanos = useCallback(async (pacienteId?: string) => {
+    try {
+      setLoading(true)
+      setErro(null)
+      setPlanos(await listarPlanos(pacienteId || undefined))
+    } catch (err) {
+      setErro(extractError(err))
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    api
+      .get('/pacientes')
+      .then(({ data }) =>
+        setPacientes(data.data.map((p: PacienteOption) => ({ id: p.id, nome: p.nome }))),
+      )
+      .catch(() => setPacientes([]))
+  }, [])
+
+  useEffect(() => {
+    carregarPlanos(filtroPaciente)
+  }, [filtroPaciente, carregarPlanos])
+
+  const ativos = useMemo(() => planos.filter((p) => p.ativo).length, [planos])
+
+  function abrirNovo() {
+    setPlanoEditando(null)
+    setModalAberto(true)
+  }
+
+  function abrirEdicao(plano: PlanoAlimentar) {
+    setPlanoEditando(plano)
+    setModalAberto(true)
+  }
+
+  function handleSaved(salvo: PlanoAlimentar) {
+    setPlanos((atual) => {
+      const existe = atual.some((p) => p.id === salvo.id)
+      return existe ? atual.map((p) => (p.id === salvo.id ? salvo : p)) : [salvo, ...atual]
+    })
+  }
+
+  async function handleExcluir(plano: PlanoAlimentar) {
+    const confirmado = window.confirm(
+      `Excluir o plano de ${plano.pacienteNome}? Esta ação não pode ser desfeita.`,
+    )
+    if (!confirmado) return
+
+    try {
+      setExcluindoId(plano.id)
+      await excluirPlano(plano.id)
+      setPlanos((atual) => atual.filter((p) => p.id !== plano.id))
+    } catch (err) {
+      setErro(extractError(err))
+    } finally {
+      setExcluindoId(null)
+    }
+  }
 
   return (
     <div>
       <PageHeader
-        eyebrow="Plano de hoje"
+        eyebrow="Planos alimentares"
         title="Alimentação"
-        subtitle="Acompanhe as refeições, planos alimentares e receitas dos pacientes."
+        subtitle="Crie e gerencie os planos alimentares personalizados dos seus pacientes."
+        action={<Btn onClick={abrirNovo}>+ Novo plano</Btn>}
       />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
-        {/* Plano */}
+      {erro && <AlertBanner message={erro} />}
+
+      {}
+      <Card style={{ marginBottom: 20 }}>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <div style={{ minWidth: 260, flex: 1 }}>
+            <Select
+              label="Filtrar por paciente"
+              value={filtroPaciente}
+              onChange={(e) => setFiltroPaciente(e.target.value)}
+              options={[
+                { value: '', label: 'Todos os pacientes' },
+                ...pacientes.map((p) => ({ value: p.id, label: p.nome })),
+              ]}
+            />
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--primary)' }}>
+              {ativos}/{planos.length}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>planos ativos</div>
+          </div>
+        </div>
+      </Card>
+
+      {}
+      {loading ? (
         <Card>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-            <div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4 }}>Plano alimentar</div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>Padrão · controle glicêmico</div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--primary)' }}>{feitas}/{total}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>refeições</div>
-            </div>
-          </div>
-          <ProgressBar value={feitas / total} />
-        </Card>
-
-        {/* Refeições */}
-        <Card title="Refeições de hoje" style={{ gridColumn: '1 / -1' }}>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {refeicoes.map((r, i) => {
-              const t = statusStyle(r.status)
-              return (
-                <div key={r.nome} style={{
-                  display: 'flex', alignItems: 'center', gap: 14,
-                  padding: '14px 0',
-                  borderBottom: i < refeicoes.length - 1 ? '1px solid var(--border)' : 'none',
-                }}>
-                  <div style={{
-                    width: 42, height: 42, borderRadius: 12,
-                    background: t.bg, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 18, flexShrink: 0,
-                  }}>{r.icon}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, color: 'var(--text)', fontSize: 14 }}>{r.nome}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{r.horario}</div>
-                  </div>
-                  <span style={{
-                    padding: '4px 12px', borderRadius: 999,
-                    background: t.bg, color: t.fg,
-                    fontSize: 12, fontWeight: 700,
-                  }}>{t.label}</span>
-                </div>
-              )
-            })}
+          <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)' }}>
+            Carregando planos...
           </div>
         </Card>
-
-        {/* Receitas */}
-        <Card title="Receitas indicadas">
+      ) : planos.length === 0 ? (
+        <Card>
           <EmptyState
             icon={<BookIcon />}
-            title="Nenhuma receita cadastrada"
-            message="Adicione receitas personalizadas alinhadas com o plano do paciente."
+            title="Nenhum plano alimentar cadastrado"
+            message="Crie um plano personalizado para organizar as refeições do paciente."
           />
         </Card>
+      ) : (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+            gap: 20,
+          }}
+        >
+          {planos.map((plano) => (
+            <Card key={plano.id}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>
+                    {plano.pacienteNome}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
+                    {formatarData(plano.dataInicio)} → {formatarData(plano.dataFim)}
+                  </div>
+                </div>
+                <Badge
+                  label={plano.ativo ? 'Ativo' : 'Encerrado'}
+                  tint={plano.ativo ? 'success' : 'primary'}
+                />
+              </div>
 
-        {/* Restrições */}
-        <Card title="Restrições alimentares">
-          <EmptyState
-            icon={<AlertIcon />}
-            title="Nenhuma restrição cadastrada"
-            message="Registre alergias ou intolerâncias para personalizar o plano."
-          />
-        </Card>
-      </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {plano.refeicoes.map((r, i) => (
+                  <div
+                    key={r.id ?? i}
+                    style={{
+                      padding: '10px 0',
+                      borderBottom:
+                        i < plano.refeicoes.length - 1 ? '1px solid var(--border)' : 'none',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                      <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>
+                        {r.nome}
+                      </span>
+                      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{r.horario}</span>
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
+                      {r.itens}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <Btn variant="secondary" size="sm" onClick={() => abrirEdicao(plano)}>
+                  Editar
+                </Btn>
+                <Btn
+                  variant="danger"
+                  size="sm"
+                  loading={excluindoId === plano.id}
+                  onClick={() => handleExcluir(plano)}
+                >
+                  Excluir
+                </Btn>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {modalAberto && (
+        <PlanoAlimentarModal
+          pacientes={pacientes}
+          plano={planoEditando}
+          onClose={() => setModalAberto(false)}
+          onSaved={handleSaved}
+        />
+      )}
     </div>
   )
 }
 
-function BookIcon() { return <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> }
-function AlertIcon() { return <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> }
+function BookIcon() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    </svg>
+  )
+}

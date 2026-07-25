@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { StatTile, AlertBanner } from '../../components/ui'
+import AlertasPanel from '../../components/AlertasPanel'
 import { api, extractError } from '../../lib/api'
+import { resumoAlertas, type ResumoAlertas } from '../../lib/alertas'
 
 interface Paciente {
   id: string
@@ -36,6 +38,11 @@ export default function HomePage() {
   const [pacientes, setPacientes] = useState<Paciente[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [resumo, setResumo] = useState<ResumoAlertas | null>(null)
+
+  useEffect(() => {
+    resumoAlertas(7).then(setResumo).catch(() => setResumo(null))
+  }, [])
 
   useEffect(() => {
     api.get('/pacientes')
@@ -57,7 +64,7 @@ export default function HomePage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-      {/* Header */}
+      {}
       <div style={{
         background: 'linear-gradient(135deg, var(--primary) 0%, #5B21B6 100%)',
         borderRadius: 'var(--radius-xl)', padding: '28px 32px',
@@ -76,7 +83,7 @@ export default function HomePage() {
 
       {error && <AlertBanner message={error} />}
 
-      {/* Stats */}
+      {}
       <div style={{ display: 'flex', gap: 16 }}>
         <StatTile
           label="Total de pacientes"
@@ -97,9 +104,22 @@ export default function HomePage() {
           icon={<GlucoseIcon />}
           tint={mediaGeral && Number(mediaGeral) > 140 ? 'warning' : 'primary'}
         />
+        <StatTile
+          label="Alertas (7d)"
+          value={resumo ? resumo.foraDaFaixa : '...'}
+          icon={<AlertIcon />}
+          tint={resumo && resumo.criticos > 0 ? 'danger' : resumo && resumo.foraDaFaixa > 0 ? 'warning' : 'success'}
+          sub={
+            resumo?.percentualNaFaixa != null
+              ? `${resumo.percentualNaFaixa}% na faixa`
+              : undefined
+          }
+        />
       </div>
 
-      {/* Recent patients */}
+      <AlertasPanel dias={7} />
+
+      {}
       <div style={{
         background: 'var(--surface)', borderRadius: 'var(--radius-lg)',
         border: '1px solid var(--border)', overflow: 'hidden',
@@ -180,4 +200,5 @@ export default function HomePage() {
 
 function PatientsIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> }
 function ActiveIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> }
+function AlertIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> }
 function GlucoseIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> }
