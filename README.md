@@ -46,9 +46,17 @@ atualizar bancos que já estavam rodando — aplique-as apenas nesse caso.
 O seed cria o administrador inicial:
 
 - e-mail: `admin@nutricare.local`
-- senha: `admin1234`
+- senha: `NutriCare@2026`
 
-**Troque essa senha antes de qualquer uso real.**
+**Essa senha está publicada aqui, então vale só para desenvolvimento.** Antes de
+qualquer uso real, gere um hash próprio e substitua o do seed:
+
+```bash
+node database/gerar-hash-admin.js "sua-senha-forte"
+```
+
+O script imprime o hash bcrypt para colar em `database/seeds_admin.sql` e o
+`UPDATE` equivalente, caso o banco já exista.
 
 ### 2. API
 
@@ -87,8 +95,15 @@ Use o IP da máquina na rede local, não `localhost` — o celular não enxerga 
 ### Docker
 
 ```bash
-docker compose up
+docker compose up -d --build
 ```
+
+Sobe o PostgreSQL 16 na porta **5433** e a API na **3000**. Na primeira execução o
+container do banco aplica sozinho `schema.sql`, `seeds.sql` e `seeds_admin.sql` —
+não é preciso rodar o `psql` da seção 1.
+
+Os scripts de inicialização só rodam com o volume vazio. Para reaplicá-los depois de
+mudar o schema: `docker compose down -v` (isso apaga os dados).
 
 ---
 
