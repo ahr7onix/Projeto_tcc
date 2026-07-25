@@ -2,15 +2,18 @@
 -- Projeto TCC — Seeds de exemplo
 -- Rode DEPOIS de schema.sql.
 -- Senhas abaixo são hash bcrypt de "Senha123!" (apenas para desenvolvimento).
+-- O hash foi gerado com o bcryptjs da API e conferido com compareSync — o valor
+-- anterior era um placeholder que não batia com senha nenhuma, então ninguém
+-- conseguia entrar com os usuários de exemplo.
 -- =====================================================================
 
 BEGIN;
 
 -- ---------- Usuários ----------
 INSERT INTO usuario (nome, email, senha, tipo) VALUES
-    ('Dra. Camila Souza',  'camila.souza@nutri.com',     '$2b$10$3vG7QmH1cD5o0K2W9oS5b.6yYwzG6Tt8X3rJxnYpqQ7d2cJxhWQS2', 'nutricionista'),
-    ('João da Silva',      'joao.silva@email.com',       '$2b$10$3vG7QmH1cD5o0K2W9oS5b.6yYwzG6Tt8X3rJxnYpqQ7d2cJxhWQS2', 'paciente'),
-    ('Maria Oliveira',     'maria.oliveira@email.com',   '$2b$10$3vG7QmH1cD5o0K2W9oS5b.6yYwzG6Tt8X3rJxnYpqQ7d2cJxhWQS2', 'paciente');
+    ('Dra. Camila Souza',  'camila.souza@nutri.com',     '$2a$10$KCN6lz1JkKCSywueeO7w.OTS149BPYWvmohLziUm4G7U2khHHrmMq', 'nutricionista'),
+    ('João da Silva',      'joao.silva@email.com',       '$2a$10$KCN6lz1JkKCSywueeO7w.OTS149BPYWvmohLziUm4G7U2khHHrmMq', 'paciente'),
+    ('Maria Oliveira',     'maria.oliveira@email.com',   '$2a$10$KCN6lz1JkKCSywueeO7w.OTS149BPYWvmohLziUm4G7U2khHHrmMq', 'paciente');
 
 -- ---------- Nutricionista ----------
 INSERT INTO nutricionista (id_usuario, crn, especialidade)
@@ -75,13 +78,17 @@ WITH plano AS (
     LIMIT 1
 )
 INSERT INTO refeicao (id_plano, nome_refeicao, horario, itens)
-SELECT id_plano, 'Café da manhã', '07:30', '1 fatia de pão integral, 1 ovo mexido, 1 fruta, café sem açúcar' FROM plano
+-- O cast ::TIME e obrigatorio: dentro de um UNION ALL o Postgres resolve os
+-- literais como text antes de chegar no INSERT, e a coercao para TIME nao
+-- acontece mais. Sem ele o seed falha com "column horario is of type time
+-- without time zone but expression is of type text".
+SELECT id_plano, 'Café da manhã', '07:30'::TIME, '1 fatia de pão integral, 1 ovo mexido, 1 fruta, café sem açúcar' FROM plano
 UNION ALL
-SELECT id_plano, 'Almoço',        '12:00', 'Salada verde, 100g frango grelhado, 4 colheres de arroz integral, feijão' FROM plano
+SELECT id_plano, 'Almoço',        '12:00'::TIME, 'Salada verde, 100g frango grelhado, 4 colheres de arroz integral, feijão' FROM plano
 UNION ALL
-SELECT id_plano, 'Lanche',        '16:00', 'Iogurte natural com castanhas' FROM plano
+SELECT id_plano, 'Lanche',        '16:00'::TIME, 'Iogurte natural com castanhas' FROM plano
 UNION ALL
-SELECT id_plano, 'Jantar',        '19:30', 'Sopa de legumes com proteína magra' FROM plano;
+SELECT id_plano, 'Jantar',        '19:30'::TIME, 'Sopa de legumes com proteína magra' FROM plano;
 
 -- ---------- Lembretes ----------
 -- Lembrete de medicamento (João — Metformina)
