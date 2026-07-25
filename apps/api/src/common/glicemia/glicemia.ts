@@ -47,6 +47,10 @@ export function classificarGlicemia(
 
   const faixa = faixaDoMomento(momento);
   if (valor > faixa.max) return 'hiperglicemia';
+  // O piso da faixa também vale: antes de dormir o alvo começa em 90 justamente
+  // para dar margem contra a hipoglicemia noturna. Sem esta linha, 78 mg/dL às
+  // 22h era exibido como "normal" ao lado do alvo "90–150", que se contradiz.
+  if (valor < faixa.min) return 'hipoglicemia';
   return 'normal';
 }
 
