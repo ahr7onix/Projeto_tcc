@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import type { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
+import { avaliarGlicemia } from '../../common/glicemia/glicemia';
+import { PushService } from '../push/push.service';
 import type { CreateGlicemiaDto } from './dto/create-glicemia.dto';
 import type { CreateRefeicaoDto } from './dto/create-refeicao.dto';
 
@@ -15,7 +17,10 @@ const MOMENTO_MAP: Record<string, string> = {
 
 @Injectable()
 export class RegistrosService {
-  constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
+  constructor(
+    @Inject(PG_POOL) private readonly pool: Pool,
+    private readonly push: PushService,
+  ) {}
 
   async findAll(filters: { pacienteId?: string; dias?: number; tipo?: string }) {
     const { pacienteId, dias = 30, tipo } = filters;
@@ -91,6 +96,10 @@ export class RegistrosService {
         id: String(r.id),
         tipo: r.tipo,
         valor: r.valor != null ? Number(r.valor) : null,
+        alerta:
+          r.tipo === 'glicemia' && r.valor != null
+            ? avaliarGlicemia(Number(r.valor), r.momento)
+            : null,
         momento: r.momento ?? null,
         descricao: r.descricao ?? null,
         tipoRefeicao: r.tipo_refeicao ?? null,
@@ -126,13 +135,27 @@ export class RegistrosService {
     );
 
     const r = result.rows[0];
+    const valor = Number(r.valor);
+    const alerta = avaliarGlicemia(valor, r.momento);
+
+    if (alerta.severidade === 'critico') {
+      this.push
+        .notificarNutricionistasDoPaciente(idUsuario, {
+          titulo: 'Alerta glicêmico crítico',
+          corpo: `Um paciente registrou ${valor} mg/dL (${alerta.classificacao.replace('_', ' ')}).`,
+          dados: { tipo: 'alerta_glicemia', pacienteId: idUsuario, valor },
+        })
+        .catch(() => undefined);
+    }
+
     return {
       id: String(r.id_glicemia),
       tipo: 'glicemia',
-      valor: Number(r.valor),
+      valor,
       momento: r.momento,
       observacao: r.observacao,
       dataHora: r.data_hora,
+      alerta,
     };
   }
 
