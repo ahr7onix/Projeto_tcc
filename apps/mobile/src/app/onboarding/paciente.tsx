@@ -23,6 +23,7 @@ import {
   type OnboardingPacienteValues,
 } from '@/lib/validation/auth';
 import { SEXOS, TIPOS_DIABETES } from '@/types/auth';
+import { updatePacienteData } from '@/lib/api/perfil';
 import { useAuthStore } from '@/stores/auth';
 import { colors, radius, spacing, typography } from '@/lib/theme';
 
@@ -55,17 +56,29 @@ export default function OnboardingPacienteScreen() {
   const onSubmit = handleSubmit(async (raw) => {
     const values = raw as unknown as OnboardingPacienteOutput;
     setSaving(true);
-    // TODO: integrar com API PATCH /me/paciente
-    setTimeout(async () => {
+    try {
+      await updatePacienteData({
+        dataNascimento: values.dataNascimento,
+        sexo: values.sexo,
+        tipoDiabetes: values.tipoDiabetes,
+        peso: values.peso,
+        altura: values.altura,
+        restricoesAlergias: values.restricoesAlergias || undefined,
+      });
       await updateUser({ perfilCompleto: true });
-      setSaving(false);
       Alert.alert(
         'Tudo pronto!',
         'Suas informações foram salvas. Agora seu nutricionista pode te acompanhar.',
         [{ text: 'Continuar', onPress: () => router.replace('/(tabs)/home') }],
       );
-    }, 600);
-    void values;
+    } catch {
+      Alert.alert(
+        'Não foi possível salvar',
+        'Verifique sua conexão e tente novamente.',
+      );
+    } finally {
+      setSaving(false);
+    }
   });
 
   return (
