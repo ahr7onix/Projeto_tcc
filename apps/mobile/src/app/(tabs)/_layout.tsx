@@ -74,6 +74,19 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="mensagens/index"
+        options={{
+          title: 'Mensagens',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'chatbubbles' : 'chatbubbles-outline'}
+              size={22}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="saude/index"
         options={{
           title: 'Saúde',
@@ -96,10 +109,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen name="alimentacao/receitas/index" options={{ href: null }} />
+      <Tabs.Screen name="alimentacao/conteudos/index" options={{ href: null }} />
+      <Tabs.Screen name="alimentacao/conteudos/[id]" options={{ href: null }} />
       <Tabs.Screen name="registros/glicemia" options={{ href: null }} />
       <Tabs.Screen name="registros/refeicao" options={{ href: null }} />
       <Tabs.Screen name="perfil/editar" options={{ href: null }} />
       <Tabs.Screen name="perfil/senha" options={{ href: null }} />
+      <Tabs.Screen name="mensagens/[id]" options={{ href: null }} />
     </Tabs>
   );
 }

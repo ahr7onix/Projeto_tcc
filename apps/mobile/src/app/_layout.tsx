@@ -6,6 +6,12 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/lib/query-client';
 import { useAuthStore } from '@/stores/auth';
+import { usePushNotifications } from '@/hooks/use-push-notifications';
+
+function PushBridge() {
+  usePushNotifications();
+  return null;
+}
 
 export default function RootLayout() {
   const hydrate = useAuthStore((s) => s.hydrate);
@@ -18,6 +24,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
+          <PushBridge />
           <StatusBar style="auto" />
           <Stack screenOptions={{ headerShown: false }} />
         </QueryClientProvider>

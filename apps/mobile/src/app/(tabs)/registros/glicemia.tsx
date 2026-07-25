@@ -38,10 +38,25 @@ export default function RegistrarGlicemiaScreen() {
     }
     setSaving(true);
     try {
-      await createGlicemia({ valor: num, momento, observacao: observacoes || undefined });
-      Alert.alert('Registrado', 'Sua glicemia foi registrada.', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+      const registro = await createGlicemia({
+        valor: num,
+        momento,
+        observacao: observacoes || undefined,
+      });
+
+      const { severidade, mensagem, faixaReferencia } = registro.alerta;
+      const titulo =
+        severidade === 'critico'
+          ? 'Atenção: valor crítico'
+          : severidade === 'atencao'
+            ? 'Fora da faixa esperada'
+            : 'Registrado';
+      const corpo =
+        severidade === 'normal'
+          ? 'Sua glicemia foi registrada.'
+          : `${mensagem}\n\nFaixa de referência: ${faixaReferencia.min}–${faixaReferencia.max} mg/dL.`;
+
+      Alert.alert(titulo, corpo, [{ text: 'OK', onPress: () => router.back() }]);
     } catch {
       Alert.alert('Erro', 'Não foi possível salvar o registro. Tente novamente.');
     } finally {
