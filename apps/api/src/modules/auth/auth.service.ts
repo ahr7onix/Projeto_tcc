@@ -11,19 +11,28 @@ import { randomBytes, createHash } from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import type { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
+import { perfilEstaCompleto } from '../../common/perfil-completo';
 import { CadastroDto } from './dto/cadastro.dto';
 import { LoginDto } from './dto/login.dto';
+
+type Papel = 'paciente' | 'nutricionista' | 'administrador';
 
 interface UserRow {
   id_usuario: string;
   nome: string;
   email: string;
   senha: string;
-  tipo: 'paciente' | 'nutricionista';
+  tipo: Papel;
 }
 
 export interface AuthResponse {
-  user: { id: string; nome: string; email: string; role: 'paciente' | 'nutricionista' };
+  user: {
+    id: string;
+    nome: string;
+    email: string;
+    role: Papel;
+    perfilCompleto: boolean;
+  };
   accessToken: string;
   refreshToken: string;
 }
@@ -214,7 +223,7 @@ export class AuthService {
 
       const accessToken = this.signAccessToken(user);
       return {
-        user: this.toPublicUser(user),
+        user: await this.toPublicUser(user),
         accessToken,
         refreshToken: session.token,
       };
@@ -246,7 +255,7 @@ export class AuthService {
       const session = await this.createRefreshToken(client, user.id_usuario, null);
       const accessToken = this.signAccessToken(user);
       return {
-        user: this.toPublicUser(user),
+        user: await this.toPublicUser(user),
         accessToken,
         refreshToken: session.token,
       };
@@ -291,12 +300,13 @@ export class AuthService {
     );
   }
 
-  private toPublicUser(user: UserRow) {
+  private async toPublicUser(user: UserRow) {
     return {
       id: String(user.id_usuario),
       nome: user.nome,
       email: user.email,
       role: user.tipo,
+      perfilCompleto: await perfilEstaCompleto(this.pool, user.id_usuario, user.tipo),
     };
   }
 

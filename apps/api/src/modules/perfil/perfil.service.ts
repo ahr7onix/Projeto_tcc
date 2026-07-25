@@ -2,6 +2,7 @@ import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import type { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
+import { perfilEstaCompleto } from '../../common/perfil-completo';
 
 @Injectable()
 export class PerfilService {
@@ -14,7 +15,15 @@ export class PerfilService {
     );
     const u = result.rows[0];
     if (!u) throw new UnauthorizedException();
-    return { id: String(u.id_usuario), nome: u.nome, email: u.email, role: u.tipo };
+    return {
+      id: String(u.id_usuario),
+      nome: u.nome,
+      email: u.email,
+      role: u.tipo,
+      // Mesmo formato do /auth/login: o app do paciente usa este campo para
+      // decidir se ainda precisa passar pelo onboarding.
+      perfilCompleto: await perfilEstaCompleto(this.pool, String(u.id_usuario), u.tipo),
+    };
   }
 
   async update(idUsuario: string, dto: { nome?: string; senhaAtual?: string; novaSenha?: string }) {
@@ -73,7 +82,7 @@ export class PerfilService {
       values.push(val ?? null);
     };
 
-    if (dto.dataNascimento !== undefined) add('data_nascimento', dto.dataNascimento || null);
+    if (dto.dataNascimento !== undefined) add('data_nascimento', this.normalizarData(dto.dataNascimento));
     if (dto.sexo !== undefined)           add('genero', dto.sexo || null);
     if (dto.tipoDiabetes !== undefined)   add('tipo_diabetes', dto.tipoDiabetes || null);
     if (dto.peso !== undefined)           add('peso', dto.peso ?? null);
@@ -90,5 +99,16 @@ export class PerfilService {
     }
 
     return this.getPacienteData(idUsuario);
+  }
+
+  /**
+   * As telas mandam a data no formato brasileiro (DD/MM/AAAA), que o Postgres
+   * leria como MM/DD/AAAA — 12/04/1985 viraria dezembro. Converte para ISO
+   * antes de gravar; o que já vier em ISO passa direto.
+   */
+  private normalizarData(valor?: string): string | null {
+    if (!valor) return null;
+    const br = valor.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    return br ? `${br[3]}-${br[2]}-${br[1]}` : valor;
   }
 }
