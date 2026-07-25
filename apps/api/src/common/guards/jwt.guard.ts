@@ -10,7 +10,7 @@ import type { Request } from 'express';
 export interface JwtPayload {
   sub: string;
   email: string;
-  role: 'paciente' | 'nutricionista';
+  role: 'paciente' | 'nutricionista' | 'administrador';
 }
 
 @Injectable()
