@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
@@ -7,6 +8,7 @@ import type { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
 import { avaliarGlicemia } from '../../common/glicemia/glicemia';
 import { PushService } from '../push/push.service';
+import { VinculosService } from '../vinculos/vinculos.service';
 import type { CreateGlicemiaDto } from './dto/create-glicemia.dto';
 import type { CreateRefeicaoDto } from './dto/create-refeicao.dto';
 
@@ -20,17 +22,20 @@ export class RegistrosService {
   constructor(
     @Inject(PG_POOL) private readonly pool: Pool,
     private readonly push: PushService,
+    private readonly vinculos: VinculosService,
   ) {}
 
-  async findAll(filters: { pacienteId?: string; dias?: number; tipo?: string }) {
+  async findAll(
+    usuario: { sub: string; role: string },
+    filters: { pacienteId?: string; dias?: number; tipo?: string },
+  ) {
     const { pacienteId, dias = 30, tipo } = filters;
     const params: unknown[] = [dias];
-    const conditions: string[] = ['rg.data_hora > NOW() - ($1 || \' days\')::INTERVAL'];
-
-    if (pacienteId) {
-      params.push(pacienteId);
-      conditions.push(`u.id_usuario = $${params.length}`);
-    }
+    const escopo = await this.montarEscopo(usuario, pacienteId, params);
+    const conditions: string[] = [
+      'rg.data_hora > NOW() - ($1 || \' days\')::INTERVAL',
+      escopo,
+    ];
 
     const glicemiaRows =
       tipo === 'refeicao'
@@ -55,13 +60,10 @@ export class RegistrosService {
             )
           ).rows;
 
-    const refeicaoParams = [...params];
     const refeicaoConditions = [
       `rr.data_hora > NOW() - ($1 || ' days')::INTERVAL`,
+      escopo,
     ];
-    if (pacienteId) {
-      refeicaoConditions.push(`u.id_usuario = $${refeicaoParams.length}`);
-    }
 
     const refeicaoRows =
       tipo === 'glicemia'
@@ -83,7 +85,7 @@ export class RegistrosService {
                JOIN usuario u ON u.id_usuario = p.id_usuario
                WHERE ${refeicaoConditions.join(' AND ')}
                ORDER BY rr.data_hora DESC`,
-              refeicaoParams,
+              params,
             )
           ).rows;
 
@@ -115,6 +117,53 @@ export class RegistrosService {
         total: data.length,
       },
     };
+  }
+
+  /**
+   * Recorta a consulta ao que o usuário logado tem direito de ver.
+   *
+   * Antes disso o `pacienteId` vinha solto da query string e ninguém o conferia:
+   * qualquer conta autenticada lia a glicemia de qualquer paciente, e sem
+   * `pacienteId` a resposta trazia os registros do sistema inteiro. Como são
+   * dados de saúde, o filtro tem que nascer aqui no servidor.
+   *
+   * A expressão devolvida entra no WHERE das duas consultas (glicemia e
+   * refeição), que fazem o mesmo JOIN com `paciente p` e `usuario u`.
+   */
+  private async montarEscopo(
+    usuario: { sub: string; role: string },
+    pacienteId: string | undefined,
+    params: unknown[],
+  ): Promise<string> {
+    if (usuario.role === 'paciente') {
+      if (pacienteId && pacienteId !== usuario.sub) {
+        throw new ForbiddenException('Você só pode consultar os seus registros');
+      }
+      params.push(usuario.sub);
+      return `u.id_usuario = $${params.length}`;
+    }
+
+    if (usuario.role === 'nutricionista') {
+      if (pacienteId) {
+        const vinculado = await this.vinculos.existeVinculo(usuario.sub, pacienteId);
+        if (!vinculado) {
+          throw new ForbiddenException('Paciente não vinculado a você');
+        }
+        params.push(pacienteId);
+        return `u.id_usuario = $${params.length}`;
+      }
+      // Sem filtro explícito, a tela de registros mostra os pacientes ativos dele.
+      params.push(usuario.sub);
+      return `p.id_paciente IN (
+                SELECT np.id_paciente
+                  FROM nutricionista_paciente np
+                  JOIN nutricionista n ON n.id_nutricionista = np.id_nutricionista
+                 WHERE n.id_usuario = $${params.length}
+                   AND np.ativo = TRUE)`;
+    }
+
+    // O administrador cuida de contas, não de prontuário.
+    throw new ForbiddenException('Perfil sem acesso a registros clínicos');
   }
 
   async createGlicemia(idUsuario: string, dto: CreateGlicemiaDto) {

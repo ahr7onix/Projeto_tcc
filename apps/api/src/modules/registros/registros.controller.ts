@@ -22,11 +22,12 @@ export class RegistrosController {
 
   @Get()
   findAll(
+    @CurrentUser() user: JwtPayload,
     @Query('pacienteId') pacienteId?: string,
     @Query('dias') dias?: string,
     @Query('tipo') tipo?: string,
   ) {
-    return this.registros.findAll({
+    return this.registros.findAll(user, {
       pacienteId,
       dias: dias ? Number(dias) : undefined,
       tipo,
