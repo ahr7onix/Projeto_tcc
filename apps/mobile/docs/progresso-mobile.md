@@ -39,37 +39,45 @@ Telas de login e cadastro saíram do estado "casca" e agora submetem para a API 
 3. Guard de `(auth)/_layout.tsx` redireciona para `/(tabs)/home`
 4. Falha → mensagem do `data.message` da API; sem rede → "Sem conexão com o servidor"
 
----
+### 3. Funcionalidades do paciente
 
-## O que dá para fazer agora com isso
+O app deixou de ser só autenticação. Rotas em [src/app/](../src/app/):
 
-- Implementar o módulo `apps/api/src/modules/auth` seguindo [auth-contract.md](./auth-contract.md) e o login passa a funcionar fim-a-fim
-- Reutilizar `FormField` e `extractAuthError` em qualquer tela com formulário (registros de glicemia, refeições, etc.)
-- Reutilizar `useLogin`/`useCadastro` como referência para criar `useGlicemiaCreate`, `useRefeicaoCreate`, etc.
-- Acessar `useAuthStore.getState().user.role` para ramificar UI entre paciente e nutricionista
-- Testar manualmente no Expo Go assim que a API subir e os assets forem adicionados
+| Área | Rotas | Consome |
+|---|---|---|
+| Auth | `(auth)/login`, `(auth)/cadastro`, `(auth)/esqueci-senha` | `lib/api/auth.ts` |
+| Onboarding | `onboarding/paciente` | `lib/api/perfil.ts` |
+| Home | `(tabs)/home` | resumo de registros |
+| Registros | `(tabs)/registros`, `registros/glicemia`, `registros/refeicao` | `lib/api/registros.ts` |
+| Alimentação | `(tabs)/alimentacao`, `alimentacao/receitas`, `alimentacao/conteudos/[id]` | `lib/api/planos.ts`, `lib/api/conteudos.ts` |
+| Saúde | `(tabs)/saude` | `lib/api/registros.ts` |
+| Mensagens | `(tabs)/mensagens`, `mensagens/[id]` | `lib/api/mensagens.ts` |
+| Perfil | `(tabs)/perfil`, `perfil/editar`, `perfil/senha`, `conta/editar` | `lib/api/perfil.ts` |
+
+Push notifications ligadas em [use-push-notifications.ts](../src/hooks/use-push-notifications.ts)
++ [lib/api/push.ts](../src/lib/api/push.ts), registrando o token no endpoint `POST /push/token`.
+
+O módulo `auth` da API existe e está implementado — o login funciona fim-a-fim.
 
 ---
 
 ## Pendências
 
-- **Assets de imagem:** ainda faltam `icon.png` (1024×1024), `splash.png`, `adaptive-icon.png`, `favicon.png` em [assets/](../assets/) — referenciados em [app.json](../app.json)
 - **`npm install`:** rodar localmente após clonar
-- **Refresh token automático:** o interceptor de 401 hoje só limpa a sessão; falta tentar `/auth/refresh` antes de deslogar
+- **Refresh token automático:** o interceptor de 401 hoje só limpa a sessão; falta tentar `/auth/refresh` antes de deslogar. O painel web já faz isso corretamente em `web/web_nutricionista/src/lib/api.ts` — dá para espelhar a lógica
 - **Tipos compartilhados:** `src/types/auth.ts` deve migrar para `packages/shared` quando o monorepo tiver workspace configurado (root `package.json` com `workspaces`)
-- **Logout no servidor:** `authApi.logout()` existe mas não é chamado pelo `signOut` do store (atualmente só limpa local)
+- **Logout no servidor:** `authApi.logout()` existe mas não é chamado pelo `signOut` do store (atualmente só limpa local), então o refresh token continua válido no banco
 - **Tema dark:** estrutura do `theme.ts` permite, falta o toggle e a leitura de `useColorScheme`
 - **Testes:** `jest-expo` + `@testing-library/react-native` ainda não configurados
+- **Ícone e splash:** [assets/](../assets/) só tem `.gitkeep`. O [app.json](../app.json) não referencia mais imagem nenhuma, então o app roda no Expo Go com os defaults — só vira bloqueio na hora de gerar APK pelo EAS Build
 
 ---
 
 ## Próximos passos sugeridos (ordem de prioridade)
 
-1. **Tipos compartilhados** — montar `packages/shared` como workspace e migrar `types/auth.ts`. Desbloqueia tipagem fim-a-fim entre web/mobile/api.
-2. **Registros de glicemia** — primeira feature de paciente. Cria padrão para todas as outras: `lib/api/glicemia.ts` + schema Zod + `useGlicemiaCreate` + tela de formulário em `(tabs)/registros`.
-3. **Home com dados reais** — substituir os cards hardcoded por `useQuery` consumindo `/pacientes/me/resumo` (ou equivalente).
-4. **Resto do paciente** — alimentação (plano + receitas), saúde (antropometria, medicamentos, metas).
-5. **Telas de nutricionista** — lista de pacientes, detalhes, criar plano alimentar e metas. Ramificar a partir de `user.role`.
-6. **Push notifications** — `expo-notifications` ligado ao módulo `notificacoes` da API para lembretes de glicemia e medicamento.
-7. **Refresh token + logout server-side** — completar o ciclo de auth.
-8. **Testes e EAS Build** — `jest-expo` para fluxos críticos e `eas.json` quando for hora de gerar APK/IPA.
+1. **Refresh token automático** — é a pendência que o usuário sente: a sessão cai a cada 15 minutos (`JWT_EXPIRES_IN`) mesmo com refresh token válido.
+2. **Logout server-side** — chamar `authApi.logout()` no `signOut` para invalidar o refresh token no banco.
+3. **Tipos compartilhados** — montar `packages/shared` como workspace e migrar `types/auth.ts`. Desbloqueia tipagem fim-a-fim entre web/mobile/api.
+4. **Testes** — `jest-expo` nos fluxos críticos (login, registro de glicemia).
+5. **Tema dark** — toggle + `useColorScheme`.
+6. **EAS Build** — `eas.json` e os assets de ícone/splash quando for hora de gerar o APK para a apresentação.

@@ -9,27 +9,26 @@ Legenda: 🔴 Crítico · 🟡 Aviso · 🟢 Sugestão
 
 ## Segurança
 
-### 🔴 `node_modules` versionado no Git (3.778 arquivos)
+### 🔴 `node_modules` versionado no Git (3.778 arquivos) *(corrigido)*
 
 **Local:** `web/web_nutricionista/node_modules/`, `web/Api/nutricare-api/node_modules/`
 
-O repositório carrega 3.778 arquivos de dependências. Isso infla o clone para 132 MB,
-polui todo `git diff` e pode expor versões vulneráveis fixadas no histórico.
+O repositório carregava 3.778 arquivos de dependências — 95% de tudo que estava
+versionado. Isso inflava o clone, poluía todo `git diff` e fixava versões
+vulneráveis no histórico.
 
-**Correção:**
+A causa foi o [sincronizar.ps1](../sincronizar.ps1), que roda `git add .` + `commit`
++ `push` a cada 10 segundos (daí os commits "Salvo automaticamente"). O `.gitignore`
+da raiz já cobria `node_modules/`, mas `.gitignore` não desfaz o que já estava
+rastreado.
 
-```bash
-git rm -r --cached web/web_nutricionista/node_modules
-git rm -r --cached web/Api/nutricare-api/node_modules
-echo "node_modules/" >> .gitignore
-git commit -m "chore: remove node_modules do versionamento"
-```
-
-Existe `.gitignore` em `apps/api`, mas não na raiz nem nas pastas de `web/`.
+**Correção aplicada:** `git rm -r --cached` nas duas pastas. Os arquivos continuam no
+disco; só saíram do controle de versão. A contagem de arquivos rastreados caiu de
+**3.986 para 205**.
 
 ---
 
-### 🔴 Arquivos `.env` versionados
+### 🔴 Arquivos `.env` versionados *(corrigido)*
 
 **Local:** `web/web_nutricionista/.env`, `web/web_nutricionista/.env.backup`,
 `web/Api/nutricare-api/.env`
@@ -40,8 +39,24 @@ Client ID não é segredo por si só (aparece no navegador), mas versionar `.env
 O `.env.backup` é especialmente perigoso: arquivos de backup escapam de regras
 de `.gitignore` escritas para `.env`.
 
-**Correção:** remover do versionamento, manter apenas `.env.example`, e adicionar
-`.env*` ao `.gitignore` (com exceção explícita para `!.env.example`).
+**Correção aplicada:** removidos do versionamento com `git rm --cached`. O
+`.gitignore` da raiz já tinha `.env`, `.env.*` e a exceção `!.env.example`, então
+nenhuma alteração nele foi necessária. Os três `.env.example` continuam versionados.
+
+---
+
+### 🟡 O histórico do Git não foi reescrito *(decisão consciente)*
+
+Os `node_modules` e os `.env` saíram do estado atual, mas **continuam nos commits
+antigos**. Limpar isso exigiria `git filter-repo` ou BFG seguido de `push --force`,
+o que reescreve todos os hashes e quebra os clones do Natan e do Henrique no meio
+do TCC — qualquer trabalho não commitado deles vira conflito.
+
+Como o único dado sensível envolvido é um Google **Client ID** (público por
+natureza, aparece no navegador de qualquer usuário) e não um Client Secret, o risco
+não justifica a quebra. Decisão: **não reescrever**. Se um segredo real for
+commitado algum dia, o procedimento correto é revogá-lo no provedor primeiro e só
+depois considerar a reescrita.
 
 ---
 
@@ -143,15 +158,20 @@ resolveria, ao custo de infraestrutura maior.
 
 ## Clean code
 
-### 🟡 API duplicada e sem uso aparente
+### 🟡 API duplicada e sem uso aparente *(corrigido — removida)*
 
 **Local:** `web/Api/nutricare-api/server.js` (557 linhas)
 
-Existe uma segunda API em Express, separada da NestJS em `apps/api`. Ter dois
-backends confunde quem lê o projeto e cria risco de divergência de regras. Se não
-estiver em uso, remova; se estiver, documente o papel de cada uma.
+Existia uma segunda API em Express, separada da NestJS em `apps/api`. Ter dois
+backends confunde quem lê o projeto e cria risco de divergência de regras — e um
+avaliador da banca certamente perguntaria por que há duas.
 
-Isso vale especialmente para a banca: um avaliador vai perguntar por que há duas.
+Confirmado que era código morto: o mock guardava tudo em memória, sem banco, na
+porta 3333, enquanto o painel web sempre apontou para `http://localhost:3000`
+(`web/web_nutricionista/src/lib/api.ts:3`). Nenhum arquivo do projeto o referenciava.
+
+**Correção aplicada:** `git rm -r web/Api`. O código continua recuperável pelo
+histórico do Git, se algum dia fizer falta.
 
 ### 🟢 `console.log` em produção
 
@@ -183,6 +203,25 @@ registros, alertas e relatórios. Mudar uma faixa de referência altera o sistem
 inteiro de forma coerente — importante num sistema de saúde, onde divergência entre
 telas seria grave.
 
+### 🔴 Docker subia sem administrador *(corrigido)*
+
+**Local:** `docker-compose.yml`
+
+Encontrado depois da revisão original. O serviço `postgres` montava como scripts de
+inicialização apenas `schema.sql` e `seeds.sql` — `seeds_admin.sql` ficava de fora.
+Resultado: **quem subisse o projeto por `docker compose up` não tinha nenhuma conta
+de administrador**, e o painel `/admin` era inacessível. Só funcionava para quem
+rodasse os `psql` manuais do README.
+
+**Correção aplicada:** adicionado o mount
+`./database/seeds_admin.sql:/docker-entrypoint-initdb.d/03-admin.sql:ro`.
+
+Vale lembrar que os scripts de `docker-entrypoint-initdb.d` só rodam com o volume
+vazio. Num banco já criado, é preciso `docker compose down -v` (apaga os dados) ou
+aplicar o seed à mão.
+
+---
+
 ### 🟡 Sem controle de versão de migrations
 
 As migrations são arquivos soltos aplicados manualmente. Não há registro do que já
@@ -200,15 +239,24 @@ teste. Priorização defensável, mas vale citar como trabalho futuro.
 
 ## Resumo
 
-| Severidade | Quantidade |
-|---|---|
-| 🔴 Crítico | 3 (1 já corrigido) |
-| 🟡 Aviso | 7 |
-| 🟢 Sugestão/positivo | 6 |
+| Severidade | Quantidade | Situação |
+|---|---|---|
+| 🔴 Crítico | 4 | todos corrigidos |
+| 🟡 Aviso | 8 | 1 corrigido, 1 decisão registrada, 6 em aberto |
+| 🟢 Sugestão/positivo | 6 | — |
 
-**Ações recomendadas antes da entrega, em ordem:**
+**Corrigido nesta rodada:**
 
-1. Remover `node_modules` e `.env` do versionamento
-2. Decidir o destino de `web/Api` — remover ou documentar
-3. Registrar na monografia as limitações de consentimento e validação de CRN
-4. Trocar a senha do administrador do seed
+1. ✅ `node_modules` e `.env` fora do versionamento (3.986 → 205 arquivos rastreados)
+2. ✅ API Express duplicada (`web/Api`) removida
+3. ✅ `seeds_admin.sql` carregado pelo Docker — antes ninguém tinha conta de admin
+4. ✅ Senha do administrador trocada, com `database/gerar-hash-admin.js` para gerar
+   um hash próprio
+
+**Ainda pendente antes da entrega:**
+
+1. Registrar na monografia as limitações de consentimento no vínculo (LGPD art. 11)
+   e de validação do CRN — são as duas limitações que a banca tem mais chance de
+   questionar
+2. Refresh token automático no mobile (a web já faz)
+3. Cobertura de testes em planos, relatórios e mensagens
