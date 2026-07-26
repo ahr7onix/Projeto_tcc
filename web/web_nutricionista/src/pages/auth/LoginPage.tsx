@@ -10,7 +10,7 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 // Perfis que o painel web atende, e onde cada um entra. Paciente fica de fora:
 // as telas dele estao no app mobile.
 const DESTINO_POR_PERFIL: Record<string, string> = {
-  nutricionista: '/dashboard',
+  nutricionista: '/inicio',
   administrador: '/admin',
 }
 

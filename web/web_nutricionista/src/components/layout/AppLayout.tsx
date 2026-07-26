@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import s from './AppLayout.module.css'
 
 const NAV_NUTRICIONISTA = [
-  { to: '/dashboard',   label: 'Início',      icon: HomeIcon },
+  { to: '/inicio',      label: 'Início',      icon: HomeIcon },
   { to: '/pacientes',   label: 'Pacientes',   icon: PatientsIcon },
   { to: '/registros',   label: 'Registros',   icon: RegistrosIcon },
   { to: '/alimentacao', label: 'Alimentação', icon: AlimentacaoIcon },

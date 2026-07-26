@@ -123,9 +123,20 @@ mudar o schema: `docker compose down -v` (isso apaga os dados).
 
 ## Publicar na internet
 
-O passo a passo completo (Neon + Render, plano gratuito) está em
-[docs/PUBLICAR.md](docs/PUBLICAR.md). O arquivo `render.yaml` na raiz já descreve
-os dois serviços — a API e o painel web.
+O sistema está no ar no Render, plano gratuito:
+
+| Peça | Endereço |
+|---|---|
+| Painel web | <https://nutricare-adj-painel.onrender.com> |
+| API | <https://nutricare-adj-api.onrender.com> |
+
+O arquivo `render.yaml` na raiz descreve as três peças — banco, API e painel web
+— e o Render as monta sozinho a partir dele. Detalhes, credenciais de acesso e
+limitações do plano gratuito em [docs/PUBLICAR.md](docs/PUBLICAR.md).
+
+**Esse ambiente é só para demonstração, com dados fictícios.** O banco gratuito
+expira em 30 dias e o sistema ainda não pede autorização do paciente para ser
+acompanhado por um nutricionista (LGPD).
 
 Para preparar um banco novo, em vez de rodar os arquivos `.sql` na mão:
 

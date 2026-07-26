@@ -19,12 +19,12 @@ import ConteudosPage from './pages/app/ConteudosPage'
 import AdminPage from './pages/app/AdminPage'
 import PerfilPage from './pages/app/PerfilPage'
 
-// Cada perfil tem uma tela inicial propria: o administrador nao usa o dashboard
-// do nutricionista, cujas rotas dependem de pacientes vinculados e respondem 403
-// para ele.
+// Cada perfil tem uma tela inicial propria: o administrador nao usa a tela
+// inicial do nutricionista, cujas rotas dependem de pacientes vinculados e
+// respondem 403 para ele.
 function useRotaInicial() {
   const { user } = useAuth()
-  return user?.role === 'administrador' ? '/admin' : '/dashboard'
+  return user?.role === 'administrador' ? '/admin' : '/inicio'
 }
 
 const InicioPorPerfil: React.FC = () => <Navigate to={useRotaInicial()} replace />
@@ -57,7 +57,12 @@ export default function App() {
           {}
           <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
             <Route index element={<InicioPorPerfil />} />
-            <Route path="dashboard" element={<HomePage />} />
+            {/* A tela inicial se chamava "dashboard", mas o Render devolve 404
+                para esse caminho antes de chegar no site, entao quem atualizasse
+                a pagina caia num erro. O redirecionamento cobre links antigos
+                dentro do proprio painel. */}
+            <Route path="inicio" element={<HomePage />} />
+            <Route path="dashboard" element={<Navigate to="/inicio" replace />} />
             <Route path="pacientes" element={<PacientesPage />} />
             <Route path="registros" element={<RegistrosPage />} />
             <Route path="alimentacao" element={<AlimentacaoPage />} />

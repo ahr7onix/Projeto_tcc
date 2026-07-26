@@ -29,6 +29,21 @@ INSERT INTO paciente (id_usuario, data_nascimento, genero, tipo_diabetes, restri
 SELECT id_usuario, '1992-09-30', 'feminino', 'tipo1', 'Lactose', 62.10, 1.65
 FROM usuario WHERE email = 'maria.oliveira@email.com';
 
+-- ---------- Vínculos nutricionista ↔ paciente ----------
+-- Sem isto os dois pacientes existem no banco mas não aparecem para a Dra.
+-- Camila, porque o painel só mostra quem está vinculado (RN02). A tela de
+-- demonstração ficaria vazia.
+INSERT INTO nutricionista_paciente (id_nutricionista, id_paciente)
+SELECT n.id_nutricionista, p.id_paciente
+FROM nutricionista n
+JOIN usuario un ON un.id_usuario = n.id_usuario AND un.email = 'camila.souza@nutri.com'
+CROSS JOIN (
+    SELECT p.id_paciente
+    FROM paciente p
+    JOIN usuario u USING(id_usuario)
+    WHERE u.email IN ('joao.silva@email.com', 'maria.oliveira@email.com')
+) p;
+
 -- ---------- Registros de glicemia (João) ----------
 INSERT INTO registro_glicemia (id_paciente, valor, data_hora, momento, observacao)
 SELECT p.id_paciente, 110, NOW() - INTERVAL '2 days' + TIME '07:00', 'jejum', NULL

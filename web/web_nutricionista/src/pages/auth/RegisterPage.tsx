@@ -54,7 +54,7 @@ export default function RegisterPage() {
     try {
       const { data } = await api.post('/auth/google', { credential: response.credential })
       login(data.user, data.accessToken, data.refreshToken)
-      navigate('/dashboard')
+      navigate('/inicio')
     } catch (err) { setError(extractError(err)) }
     finally { setGoogleLoading(false) }
   }
@@ -67,7 +67,7 @@ export default function RegisterPage() {
     try {
       const { data } = await api.post('/auth/cadastro', { nome, email, senha, role: 'nutricionista' })
       login(data.user, data.accessToken, data.refreshToken ?? '')
-      navigate('/dashboard')
+      navigate('/inicio')
     } catch (err) { setError(extractError(err)) }
     finally { setLoading(false) }
   }
