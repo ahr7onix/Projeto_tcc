@@ -8,7 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { randomBytes, createHash } from 'crypto';
-import { OAuth2Client } from 'google-auth-library';
+import { OAuth2Client, TokenPayload } from 'google-auth-library';
 import type { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
 import { perfilEstaCompleto } from '../../common/perfil-completo';
@@ -40,15 +40,16 @@ export interface AuthResponse {
 @Injectable()
 export class AuthService {
   private googleClient: OAuth2Client;
+  private googleClientId: string;
 
   constructor(
     @Inject(PG_POOL) private readonly pool: Pool,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
   ) {
-    this.googleClient = new OAuth2Client(
-      this.config.get<string>('GOOGLE_CLIENT_ID', 'COLOQUE_SEU_CLIENT_ID_AQUI')
-    );
+    this.googleClientId =
+      this.config.get<string>('GOOGLE_CLIENT_ID', '').trim();
+    this.googleClient = new OAuth2Client(this.googleClientId);
   }
 
   async cadastro(dto: CadastroDto): Promise<AuthResponse> {
@@ -122,17 +123,38 @@ export class AuthService {
   }
 
   async loginGoogle(idToken: string): Promise<AuthResponse> {
+    if (!this.googleClientId) {
+      throw new UnauthorizedException(
+        'Login com Google não está configurado nesta instalação: defina GOOGLE_CLIENT_ID no .env da API.',
+      );
+    }
+    if (!idToken) {
+      throw new UnauthorizedException('Token do Google não recebido');
+    }
+
+    let payload: TokenPayload | undefined;
     try {
+      // `audience` é obrigatório: sem ele a biblioteca aceitaria um token
+      // emitido para qualquer outro aplicativo Google.
       const ticket = await this.googleClient.verifyIdToken({
         idToken,
-
+        audience: this.googleClientId,
       });
-      const payload = ticket.getPayload();
+      payload = ticket.getPayload();
+    } catch (error: any) {
+      throw new UnauthorizedException(
+        'Falha ao validar o token do Google: ' + error.message,
+      );
+    }
 
-      if (!payload || !payload.email) {
-        throw new UnauthorizedException('Token do Google inválido');
-      }
+    if (!payload?.email) {
+      throw new UnauthorizedException('Token do Google inválido');
+    }
+    if (payload.email_verified === false) {
+      throw new UnauthorizedException('E-mail do Google não verificado');
+    }
 
+    {
       const email = payload.email.toLowerCase();
       const nome = payload.name || 'Usuário Google';
 
@@ -175,8 +197,6 @@ export class AuthService {
       } finally {
         client.release();
       }
-    } catch (error: any) {
-      throw new UnauthorizedException('Falha ao autenticar com o Google: ' + error.message);
     }
   }
 

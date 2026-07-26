@@ -8,6 +8,7 @@ import {
 import { AuthService } from './auth.service';
 import { CadastroDto } from './dto/cadastro.dto';
 import { EsqueciSenhaDto } from './dto/esqueci-senha.dto';
+import { LoginGoogleDto } from './dto/login-google.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
 
@@ -27,10 +28,12 @@ export class AuthController {
     return this.auth.login(dto);
   }
 
+  // O app mobile envia `idToken`; o botão da web (Google Identity Services)
+  // devolve o mesmo token no campo `credential`. Aceitamos os dois nomes.
   @Post('google')
   @HttpCode(HttpStatus.OK)
-  loginGoogle(@Body('idToken') idToken: string) {
-    return this.auth.loginGoogle(idToken);
+  loginGoogle(@Body() dto: LoginGoogleDto) {
+    return this.auth.loginGoogle(dto.idToken ?? dto.credential ?? '');
   }
 
   @Post('refresh')
