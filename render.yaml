@@ -1,0 +1,73 @@
+# Publicação no Render — leia docs/PUBLICAR.md para o passo a passo.
+#
+# São dois serviços:
+#   nutricare-api     a API (NestJS), no plano gratuito
+#   nutricare-painel  o painel web da nutricionista, site estático
+#
+# O banco de dados NÃO está aqui: ele fica no Neon, que tem plano gratuito sem
+# prazo de validade. O endereço dele entra na variável DATABASE_URL.
+#
+# As variáveis marcadas com "sync: false" precisam ser preenchidas à mão no
+# painel do Render — são endereços e segredos que só existem depois que os
+# serviços são criados.
+
+services:
+  - type: web
+    name: nutricare-api
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: apps/api
+    buildCommand: npm ci && npm run build
+    # O preparar-banco.mjs cria as tabelas na primeira vez e não faz nada nas
+    # seguintes, então pode ficar no start sem problema.
+    startCommand: node preparar-banco.mjs && node dist/main.js
+    healthCheckPath: /status
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # Endereço do banco no Neon (começa com postgresql://).
+      - key: DATABASE_URL
+        sync: false
+      # Deixe em branco. Só preencha com "no-verify" se der erro de certificado.
+      - key: DATABASE_SSL
+        value: ""
+      # Gerado pelo próprio Render, ninguém precisa saber o valor.
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 15m
+      - key: REFRESH_TOKEN_TTL_DAYS
+        value: "30"
+      # Endereço do painel, para o navegador liberar as chamadas.
+      # Ex.: https://nutricare-painel.onrender.com
+      - key: CORS_ORIGIN
+        sync: false
+      # Mesmo Client ID do painel (ver docs/LOGIN_GOOGLE.md).
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      # "true" carrega pacientes fictícios para o cliente ter o que testar.
+      # Troque para "false" antes de qualquer uso com paciente de verdade.
+      - key: SEED_DEMO
+        value: "true"
+
+  - type: web
+    name: nutricare-painel
+    runtime: static
+    rootDir: web/web_nutricionista
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # Endereço da API. Ex.: https://nutricare-api.onrender.com
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_GOOGLE_CLIENT_ID
+        sync: false
+    # O painel é uma página só: qualquer endereço interno (/login, /pacientes)
+    # tem que devolver o index.html, senão o servidor responde "404".
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

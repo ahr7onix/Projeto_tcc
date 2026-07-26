@@ -37,11 +37,25 @@ psql nutricare -f database/migrations/003_mensagem.sql
 psql nutricare -f database/migrations/004_nutricionista_crn_opcional.sql
 psql nutricare -f database/migrations/005_administrador.sql
 psql nutricare -f database/migrations/006_push_token.sql
+psql nutricare -f database/migrations/007_briefing_nutricao.sql
 psql nutricare -f database/seeds_admin.sql
+psql nutricare -f database/seeds_alimentos.sql
 ```
 
 O `schema.sql` já contém tudo para uma instalação nova. As migrations existem para
 atualizar bancos que já estavam rodando — aplique-as apenas nesse caso.
+
+O `seeds_alimentos.sql` carrega 36 alimentos com valores **aproximados**, só para o
+sistema não nascer vazio. Eles ficam marcados com `fonte = 'exemplo'` e devem ser
+substituídos pela tabela oficial assim que a equipe de Nutrição indicar qual usar.
+
+Sem o `psql` instalado, dá para aplicar os mesmos arquivos pelo Node:
+
+```bash
+cd apps/api
+node aplicar-sql.mjs ../../database/migrations/007_briefing_nutricao.sql
+node conferir-banco.mjs
+```
 
 O seed cria o administrador inicial:
 
@@ -107,6 +121,28 @@ mudar o schema: `docker compose down -v` (isso apaga os dados).
 
 ---
 
+## Publicar na internet
+
+O passo a passo completo (Neon + Render, plano gratuito) está em
+[docs/PUBLICAR.md](docs/PUBLICAR.md). O arquivo `render.yaml` na raiz já descreve
+os dois serviços — a API e o painel web.
+
+Para preparar um banco novo, em vez de rodar os arquivos `.sql` na mão:
+
+```bash
+cd apps/api
+DATABASE_URL=... node preparar-banco.mjs
+```
+
+O script cria a estrutura na primeira execução, aplica só as migrations
+pendentes nas seguintes e anota tudo na tabela `migracao_aplicada`. Definir
+`SEED_DEMO=true` carrega também os usuários e registros fictícios de exemplo.
+
+A rota pública `GET /status` responde se a API e o banco estão de pé — é o que o
+servidor de hospedagem usa para monitorar o serviço.
+
+---
+
 ## Testes
 
 ```bash
@@ -119,10 +155,14 @@ npm run test:cov      # com cobertura
 
 ## Funcionalidades por requisito
 
+> A numeração abaixo é interna do projeto e **não** é a do briefing da equipe de
+> Nutrição (RF01–RF10). O comparativo contra os requisitos do cliente está em
+> [docs/RESUMO_ENTREGA.md](docs/RESUMO_ENTREGA.md).
+
 | Req. | Descrição | Situação |
 |---|---|---|
 | RF01 | Cadastro de usuários | Implementado |
-| RF02 | Login e autenticação (JWT + Google OAuth) | Implementado |
+| RF02 | Login e autenticação (JWT + Google OAuth) | Implementado — Google funcionando no painel web; detalhes em [docs/LOGIN_GOOGLE.md](docs/LOGIN_GOOGLE.md). No app mobile o login social ainda não funciona |
 | RF03 | Registro de glicemia | Implementado |
 | RF04 | Registro de alimentação | Implementado |
 | RF05 | Registro de peso e dados de saúde | Implementado |
@@ -154,6 +194,8 @@ npm run test:cov      # com cobertura
 ## Principais endpoints
 
 ```
+GET    /status                        Estado da API e do banco (público)
+
 POST   /auth/cadastro                 Cadastro (paciente ou nutricionista)
 POST   /auth/login                    Login por e-mail e senha
 POST   /auth/google                   Login social
