@@ -1,18 +1,26 @@
 # Publicação no Render — leia docs/PUBLICAR.md para o passo a passo.
 #
-# São dois serviços:
-#   nutricare-adj-api     a API (NestJS), no plano gratuito
+# São três peças, todas no plano gratuito:
+#   nutricare-adj-db      o banco de dados PostgreSQL
+#   nutricare-adj-api     a API (NestJS)
 #   nutricare-adj-painel  o painel web da nutricionista, site estático
 #
 # Os nomes viram o endereço do site e são únicos no mundo todo. "nutricare-api"
 # e "nutricare-painel" já estão ocupados por outro projeto, por isso o "-adj".
 #
-# O banco de dados NÃO está aqui: ele fica no Neon, que tem plano gratuito sem
-# prazo de validade. O endereço dele entra na variável DATABASE_URL.
+# Não há nada para preencher à mão: o endereço do banco e os endereços dos dois
+# serviços já estão amarrados aqui dentro. Basta o Render aplicar o arquivo.
 #
-# As variáveis marcadas com "sync: false" precisam ser preenchidas à mão no
-# painel do Render — são endereços e segredos que só existem depois que os
-# serviços são criados.
+# ATENÇÃO: o banco gratuito do Render expira em 30 dias. Antes disso é preciso
+# trocar para o plano pago ou criar um banco novo. Para uso além da demonstração,
+# vale migrar para um provedor com plano gratuito sem prazo (Neon, Supabase).
+
+databases:
+  - name: nutricare-adj-db
+    plan: free
+    region: oregon
+    databaseName: nutricare
+    user: nutricare
 
 services:
   - type: web
@@ -29,12 +37,14 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "20"
-      # Endereço do banco no Neon (começa com postgresql://).
+      # Endereço do banco criado acima — preenchido pelo próprio Render.
       - key: DATABASE_URL
-        sync: false
-      # Deixe em branco. Só preencha com "no-verify" se der erro de certificado.
+        fromDatabase:
+          name: nutricare-adj-db
+          property: connectionString
+      # O banco do Render usa certificado próprio, por isso "no-verify".
       - key: DATABASE_SSL
-        value: ""
+        value: no-verify
       # Gerado pelo próprio Render, ninguém precisa saber o valor.
       - key: JWT_SECRET
         generateValue: true
@@ -43,12 +53,11 @@ services:
       - key: REFRESH_TOKEN_TTL_DAYS
         value: "30"
       # Endereço do painel, para o navegador liberar as chamadas.
-      # Ex.: https://nutricare-adj-painel.onrender.com
       - key: CORS_ORIGIN
-        sync: false
+        value: https://nutricare-adj-painel.onrender.com
       # Mesmo Client ID do painel (ver docs/LOGIN_GOOGLE.md).
       - key: GOOGLE_CLIENT_ID
-        sync: false
+        value: 579066584754-mjlmqjmtscn5lgs7depm8uvovn92lm5d.apps.googleusercontent.com
       # "true" carrega pacientes fictícios para o cliente ter o que testar.
       # Troque para "false" antes de qualquer uso com paciente de verdade.
       - key: SEED_DEMO
@@ -63,11 +72,10 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "20"
-      # Endereço da API. Ex.: https://nutricare-adj-api.onrender.com
       - key: VITE_API_URL
-        sync: false
+        value: https://nutricare-adj-api.onrender.com
       - key: VITE_GOOGLE_CLIENT_ID
-        sync: false
+        value: 579066584754-mjlmqjmtscn5lgs7depm8uvovn92lm5d.apps.googleusercontent.com
     # O painel é uma página só: qualquer endereço interno (/login, /pacientes)
     # tem que devolver o index.html, senão o servidor responde "404".
     routes:
