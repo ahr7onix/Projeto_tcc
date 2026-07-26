@@ -65,15 +65,15 @@ publicar na loja é um processo separado.
 Ao final existem dois endereços, mais ou menos assim:
 
 ```
-API:     https://nutricare-api.onrender.com
-Painel:  https://nutricare-painel.onrender.com
+API:     https://nutricare-adj-api.onrender.com
+Painel:  https://nutricare-adj-painel.onrender.com
 ```
 
 Os nomes exatos aparecem na tela de cada serviço. **Anotar os dois.**
 
 ### Conferir se a API subiu
 
-Abrir no navegador: `https://nutricare-api.onrender.com/status`
+Abrir no navegador: `https://nutricare-adj-api.onrender.com/status`
 
 Deve aparecer algo assim:
 
@@ -88,11 +88,11 @@ copiar o texto inteiro.
 
 ## Parte 3 — Ligar o painel na API
 
-1. No Render, abrir o serviço **nutricare-painel** > **Environment**.
+1. No Render, abrir o serviço **nutricare-adj-painel** > **Environment**.
 2. Preencher `VITE_API_URL` com o endereço da API, **sem barra no final**:
 
    ```
-   https://nutricare-api.onrender.com
+   https://nutricare-adj-api.onrender.com
    ```
 
 3. Salvar. O Render publica o painel de novo automaticamente.
@@ -105,11 +105,11 @@ copiar o texto inteiro.
 
 ## Parte 4 — Ligar a API no painel
 
-1. No Render, abrir o serviço **nutricare-api** > **Environment**.
+1. No Render, abrir o serviço **nutricare-adj-api** > **Environment**.
 2. Preencher `CORS_ORIGIN` com o endereço do painel, **sem barra no final**:
 
    ```
-   https://nutricare-painel.onrender.com
+   https://nutricare-adj-painel.onrender.com
    ```
 
 3. Salvar e esperar reiniciar.
@@ -129,7 +129,7 @@ O botão "Entrar com Google" só funciona em endereços autorizados.
    endereço do painel (só o domínio, sem barra no final):
 
    ```
-   https://nutricare-painel.onrender.com
+   https://nutricare-adj-painel.onrender.com
    ```
 
 4. Salvar. Pode levar alguns minutos para valer.
@@ -183,8 +183,8 @@ qualquer coisa.
 | Primeira tela demora ~50 s | A API estava dormindo (plano gratuito) | Esperar; é o comportamento normal |
 | Painel abre mas as listas ficam vazias | `CORS_ORIGIN` ou `VITE_API_URL` errados | Conferir as Partes 3 e 4, sem barra no final |
 | `/status` responde `banco: indisponivel` | `DATABASE_URL` errada | Copiar de novo do Neon, o texto inteiro |
-| Erro de certificado nos logs da API | Provedor com certificado próprio | Em nutricare-api > Environment, colocar `DATABASE_SSL` = `no-verify` |
+| Erro de certificado nos logs da API | Provedor com certificado próprio | Em nutricare-adj-api > Environment, colocar `DATABASE_SSL` = `no-verify` |
 | Botão do Google some ou dá erro de origem | Endereço não autorizado no Google | Parte 5 |
 | Acessar `/login` direto dá 404 | Regra de reescrita do site | Conferir se o `render.yaml` foi aplicado pelo Blueprint |
 
-Para ver o que a API está reclamando: Render > **nutricare-api** > **Logs**.
+Para ver o que a API está reclamando: Render > **nutricare-adj-api** > **Logs**.

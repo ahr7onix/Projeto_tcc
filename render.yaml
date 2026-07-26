@@ -1,8 +1,11 @@
 # Publicação no Render — leia docs/PUBLICAR.md para o passo a passo.
 #
 # São dois serviços:
-#   nutricare-api     a API (NestJS), no plano gratuito
-#   nutricare-painel  o painel web da nutricionista, site estático
+#   nutricare-adj-api     a API (NestJS), no plano gratuito
+#   nutricare-adj-painel  o painel web da nutricionista, site estático
+#
+# Os nomes viram o endereço do site e são únicos no mundo todo. "nutricare-api"
+# e "nutricare-painel" já estão ocupados por outro projeto, por isso o "-adj".
 #
 # O banco de dados NÃO está aqui: ele fica no Neon, que tem plano gratuito sem
 # prazo de validade. O endereço dele entra na variável DATABASE_URL.
@@ -13,7 +16,7 @@
 
 services:
   - type: web
-    name: nutricare-api
+    name: nutricare-adj-api
     runtime: node
     plan: free
     region: oregon
@@ -40,7 +43,7 @@ services:
       - key: REFRESH_TOKEN_TTL_DAYS
         value: "30"
       # Endereço do painel, para o navegador liberar as chamadas.
-      # Ex.: https://nutricare-painel.onrender.com
+      # Ex.: https://nutricare-adj-painel.onrender.com
       - key: CORS_ORIGIN
         sync: false
       # Mesmo Client ID do painel (ver docs/LOGIN_GOOGLE.md).
@@ -52,7 +55,7 @@ services:
         value: "true"
 
   - type: web
-    name: nutricare-painel
+    name: nutricare-adj-painel
     runtime: static
     rootDir: web/web_nutricionista
     buildCommand: npm ci && npm run build
@@ -60,7 +63,7 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "20"
-      # Endereço da API. Ex.: https://nutricare-api.onrender.com
+      # Endereço da API. Ex.: https://nutricare-adj-api.onrender.com
       - key: VITE_API_URL
         sync: false
       - key: VITE_GOOGLE_CLIENT_ID
