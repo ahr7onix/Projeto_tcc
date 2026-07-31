@@ -7,8 +7,11 @@
 -- durante o desenvolvimento e a demonstração. Eles NÃO substituem uma
 -- tabela nutricional oficial e ainda não foram conferidos pela equipe de
 -- Nutrição. Por isso a coluna `fonte` está marcada como 'exemplo': a tela
--- de alimentos exibe esse rótulo, e a importação por CSV permite carregar
--- a tabela oficial (TACO, IBGE ou outra) com a fonte correta.
+-- de alimentos exibe esse rótulo, e o cadastro de alimentos permite gravar
+-- os itens da tabela oficial (TACO, IBGE ou outra) com a fonte correta,
+-- convivendo com estes até a substituição.
+--
+-- A conferência pendente está organizada em docs/CONFERENCIA_NUTRICAO.md.
 --
 -- Todos os valores são por 100 g do alimento na forma indicada no nome.
 -- =====================================================================

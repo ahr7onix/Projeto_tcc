@@ -29,7 +29,7 @@ duplicada em Express.
 
 ## 2. Banco de dados
 
-Cinco migrations novas, todas já incorporadas ao `database/schema.sql` (quem
+Seis migrations novas, todas já incorporadas ao `database/schema.sql` (quem
 instala do zero não precisa aplicá-las):
 
 | Arquivo | O que cria |
@@ -39,11 +39,33 @@ instala do zero não precisa aplicá-las):
 | `004_nutricionista_crn_opcional.sql` | Torna o CRN opcional no cadastro |
 | `005_administrador.sql` | Perfil de administrador |
 | `006_push_token.sql` | Tokens de notificação push por dispositivo |
+| `007_briefing_nutricao.sql` | Tabela de alimentos, itens de refeição, dados nutricionais no plano, medidas corporais, registro emocional, lembretes configuráveis, receitas e notificações |
+
+A migration 007 é a que fechou as pendências do briefing do cliente. Ela cria:
+
+- `alimento` — tabela de alimentos com porção de referência, calorias,
+  macronutrientes, fibras, índice glicêmico e medida caseira
+- `refeicao_item` — os itens de cada refeição do plano ligados à tabela de
+  alimentos, o que permite somar calorias e macronutrientes automaticamente
+- colunas de prescrição em `plano_alimentar` (necessidade energética, fórmula
+  usada, fator de atividade e distribuição de macronutrientes), com uma regra no
+  banco garantindo que os três percentuais somem 100
+- `registro_antropometrico` — peso, altura, circunferências e dobras
+- `registro_emocional` — humor, ansiedade, compulsão e sono
+- `lembrete` reformulado, aceitando lembrete avulso (data e hora) ou recorrente
+  (hora + dias da semana)
+- `receita` — receitas com ingredientes, modo de preparo e valores por porção
+- `notificacao` — histórico do que já foi avisado ao usuário
+- `nivel_atividade` no cadastro do paciente, usado no cálculo energético
 
 Também foram criados:
 
 - `database/seeds_admin.sql` — administrador inicial
   (`admin@nutricare.local` / `NutriCare@2026`, válido só para desenvolvimento)
+- `database/seeds_alimentos.sql` — 36 alimentos de exemplo, marcados com
+  `fonte = 'exemplo'`. São valores aproximados, para demonstração: **não devem
+  ser usados clinicamente** antes de serem substituídos pela tabela TACO ou por
+  uma tabela validada pelo curso de Nutrição
 - `database/gerar-hash-admin.js` — gera um hash bcrypt próprio para substituir a
   senha publicada, com o `UPDATE` pronto para colar
 
@@ -62,6 +84,16 @@ Também foram criados:
   (jejum, pré e pós-refeição, antes de dormir, madrugada, aleatório), consumida
   por registros, alertas e relatórios. Mudar uma faixa muda o sistema inteiro de
   forma coerente.
+- `common/nutricao/nutricao.ts`: toda a matemática nutricional em um só lugar —
+  taxa metabólica basal por Mifflin-St Jeor e Harris-Benedict revisada, fator de
+  atividade, necessidade energética, divisão em macronutrientes, IMC e sua
+  classificação (OMS), relação cintura-quadril, circunferência da cintura e a
+  regra de três entre a porção de referência do alimento e a quantidade
+  prescrita. São funções puras, sem banco e sem framework, e é por isso que dá
+  para testá-las. **Nenhum valor calculado aqui substitui avaliação
+  profissional**: o sistema apresenta o resultado como sugestão e a prescrição
+  continua sendo do nutricionista — está escrito no próprio arquivo e devolvido
+  em todas as respostas da API.
 
 ### Módulos novos
 
@@ -75,6 +107,28 @@ Também foram criados:
 | `conteudos` | RF12 | Conteúdos educativos com rascunho e publicação |
 | `admin` | RF13 | Métricas do sistema e gestão de usuários |
 | `push` | — | Registro de token e envio de notificação via Expo em alerta crítico e mensagem nova |
+
+E os módulos que atenderam o briefing do cliente (a numeração abaixo é a do
+briefing de Nutrição, não a da tabela de requisitos da seção 10):
+
+| Módulo | Item do briefing | O que faz |
+|---|---|---|
+| `alimentos` | 1 | Consulta e cadastro da tabela de alimentos, com busca por nome, filtro por grupo e cálculo dos valores para a quantidade informada |
+| `nutricional` | 2 | Calcula a necessidade energética e a divisão em macronutrientes, usando o cadastro do paciente ou valores de simulação |
+| `antropometria` | 3 | Registro de peso, altura e circunferências, com IMC, classificação e evolução |
+| `emocional` | 4 | Registro de humor, ansiedade, compulsão alimentar e sono |
+| `receitas` | 5 | Receitas escritas pela nutricionista, com rascunho e publicação; o paciente só vê o que foi publicado |
+| `medicamentos` | 6 | Insulina e medicamentos em uso, com dosagem, frequência e horário |
+| `lembretes` | 7 | Lembretes de refeição, glicemia e medicamento, avulsos ou recorrentes por dia da semana |
+| `notificacoes` | 8 | Histórico do que foi avisado ao usuário, com contador de não lidas |
+
+O módulo `planos` foi estendido: o plano alimentar passou a guardar a prescrição
+(necessidade energética, fórmula, fator de atividade, distribuição de
+macronutrientes e observações) e as refeições passaram a aceitar itens ligados à
+tabela de alimentos. Com isso a API devolve o total de calorias e
+macronutrientes por refeição e do plano inteiro, informando quantos itens
+ficaram fora da soma por serem texto livre — o total nunca é apresentado como
+completo quando não é.
 
 ### Endpoints acrescentados
 
@@ -91,13 +145,45 @@ GET/POST/PATCH/DELETE /conteudos              conteúdos educativos
 GET              /admin/metricas              métricas (admin)
 GET/DELETE       /admin/usuarios              gestão de usuários (admin)
 POST/DELETE      /push/token                  token de notificação
+
+GET/POST/PATCH/DELETE /alimentos              tabela de alimentos
+GET              /alimentos/grupos            grupos disponíveis
+GET              /nutricional/referencias     níveis de atividade e fórmulas
+POST             /nutricional/calcular        necessidade energética e macros
+GET/POST/DELETE  /antropometria               medidas corporais
+GET              /antropometria/evolucao      evolução das medidas
+GET/POST/DELETE  /emocional                   registro emocional
+GET              /emocional/resumo            resumo do período
+GET/POST/PATCH/DELETE /receitas               receitas
+GET              /receitas/categorias         categorias de receita
+GET/POST/PATCH/DELETE /lembretes              lembretes
+GET              /lembretes/hoje              lembretes do dia
+PATCH            /lembretes/:id/concluir      marcar como feito
+GET/POST/PATCH/DELETE /medicamentos           medicamentos em uso
+GET              /notificacoes                histórico de avisos
+GET              /notificacoes/nao-lidas      contador
+PATCH            /notificacoes/ler-todas      marcar tudo como lido
 ```
 
 ### Testes
 
-`jest.config.js` configurado e **27 testes** cobrindo as regras de maior
-impacto: classificação de glicemia (14), `RolesGuard` (4) e `VinculosService`
-(9).
+`jest.config.js` configurado e **104 testes** cobrindo as regras de maior
+impacto:
+
+- classificação de glicemia (14)
+- `RolesGuard` (4)
+- `VinculosService` (9) — quem enxerga o dado de qual paciente
+- cálculos nutricionais (28) — taxa metabólica pelas duas fórmulas,
+  necessidade energética, macronutrientes, IMC, relação cintura-quadril e
+  conversão de porções
+- tabela de alimentos (11) — filtros, regra de três da porção e desativação
+  sem apagar o registro
+- antropometria (8) — evolução do peso, classificação de risco e atualização
+  da ficha do paciente
+- registro emocional (6) — média da escala e ranking dos fatores citados
+- receitas (13) — o que cada perfil enxerga e quem pode editar
+- lembretes (11) — validação de hora/data, vínculo com o medicamento e
+  conclusão apenas dos avulsos
 
 ```bash
 cd apps/api && npm test
@@ -274,8 +360,24 @@ histórico) e RN10 (acesso separado por perfil).
 
 ## 11. O que continua em aberto
 
-Nada disso impede a entrega, mas são os pontos que a banca tem mais chance de
-questionar:
+**O briefing de Nutrição está atendido no banco e na API, mas ainda não nas
+telas.** Os oito módulos novos existem e respondem, com testes nos cálculos, e é
+possível usá-los hoje pela API. O que falta é a interface:
+
+- **Painel web** — telas de alimentos, receitas, medidas corporais, cálculo de
+  necessidade energética e gráficos de evolução.
+- **App mobile** — consulta de alimentos, medidas corporais, registro emocional,
+  lembretes, medicamentos, notificações e as receitas reais no lugar das três
+  receitas fixas que ainda estão escritas no código
+  (`apps/mobile/src/app/(tabs)/alimentacao/receitas/index.tsx`), além dos dados
+  de exemplo na tela de saúde (`(tabs)/saude/index.tsx`).
+
+Enquanto essas telas não existirem, o cliente não consegue exercitar esses
+recursos pela interface — vale dizer isso claramente na apresentação em vez de
+demonstrar só o que já tem tela.
+
+Os demais pontos abertos não impedem a entrega, mas são os que a banca tem mais
+chance de questionar:
 
 1. **Vínculo sem consentimento do paciente** — o nutricionista vincula qualquer
    paciente cadastrado sem aprovação dele. Em dados de saúde isso conflita com a
@@ -285,11 +387,17 @@ questionar:
    CFN. A mitigação realista é aprovação manual pelo administrador, que já
    existe.
 3. **Refresh token automático no mobile** — a web já faz, o app ainda não.
-4. **Cobertura de testes** — planos, relatórios e mensagens ainda sem teste.
-5. **Mensagens por polling** (15 s na conversa, 30 s na lista) em vez de
+4. **Cobertura de testes** — os cálculos nutricionais, a glicemia, o controle de
+   acesso e os cinco módulos novos estão cobertos; planos, relatórios e
+   mensagens ainda não têm teste automatizado.
+5. **Faixas de referência e tabela de alimentos precisam de validação clínica** —
+   as faixas glicêmicas são referências gerais e os 36 alimentos de exemplo têm
+   valores aproximados. Antes de qualquer uso com paciente real, os dois pontos
+   precisam ser conferidos pelo curso de Nutrição.
+6. **Mensagens por polling** (15 s na conversa, 30 s na lista) em vez de
    WebSocket.
-6. **PDF gerado pelo navegador**, não no servidor.
-7. **Migrations sem controle de versão** — arquivos soltos, aplicados à mão; a
+7. **PDF gerado pelo navegador**, não no servidor.
+8. **Migrations sem controle de versão** — arquivos soltos, aplicados à mão; a
    ordem está documentada no README.
 
 ---

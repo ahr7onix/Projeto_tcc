@@ -74,7 +74,7 @@ tornando o CRN opcional no cadastro.
 
 ---
 
-### 🟡 Vínculo sem consentimento do paciente
+### 🟡 Vínculo sem consentimento do paciente *(registrado — correção fica como trabalho futuro)*
 
 **Local:** `apps/api/src/modules/vinculos/vinculos.service.ts`
 
@@ -83,8 +83,12 @@ ver glicemia, peso, alimentação e histórico. Em dados de saúde, isso conflit
 princípio de consentimento da LGPD (art. 11 trata dados de saúde como sensíveis).
 
 **Correção sugerida:** adicionar `status` (`pendente` / `aceito` / `recusado`) ao
-vínculo, liberando o acesso apenas após aceite do paciente pelo app. Para o TCC, no
-mínimo vale registrar essa limitação na monografia.
+vínculo, liberando o acesso apenas após aceite do paciente pelo app.
+
+A limitação, a análise legal e o desenho da correção estão documentados em
+[LIMITACOES_LGPD.md](LIMITACOES_LGPD.md), com um parágrafo pronto para a seção de
+limitações da monografia. Enquanto não for implementada, vale a regra já em vigor:
+**o ambiente publicado opera somente com dados fictícios**.
 
 ---
 
@@ -95,7 +99,8 @@ mínimo vale registrar essa limitação na monografia.
 O CRN é aceito como texto livre. Qualquer pessoa pode se cadastrar como
 nutricionista e acessar dados clínicos. Não há API pública do CFN para validação
 automática, então a mitigação realista é aprovação manual pelo administrador —
-que agora existe.
+que agora existe. Registrado junto com o item anterior em
+[LIMITACOES_LGPD.md](LIMITACOES_LGPD.md).
 
 ---
 
@@ -229,11 +234,36 @@ rodou, então reaplicar é responsabilidade de quem executa. Ferramentas como
 `node-pg-migrate` ou `Flyway` resolveriam. Para o TCC, documentar a ordem no README
 (feito) é suficiente.
 
-### 🟡 Cobertura de testes concentrada
+### 🟡 Cobertura de testes concentrada *(ampliada nesta rodada)*
 
-26 testes cobrem classificação de glicemia, `RolesGuard` e `VinculosService` — as
-regras de maior impacto. Serviços de planos, relatórios e mensagens ainda não têm
-teste. Priorização defensável, mas vale citar como trabalho futuro.
+Eram 104 testes, cobrindo classificação de glicemia, `RolesGuard`,
+`VinculosService`, os cálculos nutricionais e os cinco módulos novos (alimentos,
+antropometria, emocional, receitas e lembretes). Faltavam justamente os três
+serviços mais longos.
+
+Foram acrescentados **57 testes** — `planos.service.spec.ts` (21),
+`relatorios.service.spec.ts` (17) e `mensagens.service.spec.ts` (19) —, chegando a
+**161 testes em 12 suítes, todos passando**. O foco foi em regra de negócio e
+autorização, não em cobertura de linha:
+
+- **Planos:** validação de período e de macros antes de qualquer acesso ao banco,
+  transação (`BEGIN` → `COMMIT`, `ROLLBACK` no erro, `release` sempre), alimento
+  inexistente, item sem alimento e sem descrição, autorização por plano (paciente
+  de outro, nutricionista de outro), soma de macronutrientes ignorando itens de
+  texto livre e contando-os em `itensSemAnalise`.
+- **Relatórios:** `pacienteId` forjado por paciente é ignorado, vínculo exigido do
+  nutricionista, período (30 dias padrão, teto de 365, entradas inválidas),
+  estatísticas (média, desvio padrão amostral, percentual na faixa, contagem de
+  hipo/hiper/críticos, agrupamento por momento), IMC e média de carboidratos, e o
+  CSV (neutralização de fórmula, aspas, BOM, CRLF, nome do arquivo).
+- **Mensagens:** conversa e envio bloqueados sem vínculo ativo, coluna de busca
+  conforme o papel de quem pede, limite padrão e teto, ordem cronológica, marcação
+  de lida só das mensagens da outra pessoa, e mensagem entregue mesmo quando o
+  push falha.
+
+Continua sem teste automatizado a camada de controllers (contratos HTTP) e o app
+mobile, que ainda não tem runner de teste configurado — esse é o trabalho futuro
+que resta neste item.
 
 ---
 
@@ -242,7 +272,7 @@ teste. Priorização defensável, mas vale citar como trabalho futuro.
 | Severidade | Quantidade | Situação |
 |---|---|---|
 | 🔴 Crítico | 4 | todos corrigidos |
-| 🟡 Aviso | 8 | 1 corrigido, 1 decisão registrada, 6 em aberto |
+| 🟡 Aviso | 8 | 2 corrigidos, 3 decisões registradas, 3 em aberto |
 | 🟢 Sugestão/positivo | 6 | — |
 
 **Corrigido nesta rodada:**
@@ -252,11 +282,22 @@ teste. Priorização defensável, mas vale citar como trabalho futuro.
 3. ✅ `seeds_admin.sql` carregado pelo Docker — antes ninguém tinha conta de admin
 4. ✅ Senha do administrador trocada, com `database/gerar-hash-admin.js` para gerar
    um hash próprio
+5. ✅ Limitações de consentimento no vínculo e de validação do CRN registradas em
+   [LIMITACOES_LGPD.md](LIMITACOES_LGPD.md), com parágrafo pronto para a seção de
+   limitações da monografia
+6. ✅ Refresh token automático no mobile, com fila de requisições e rotação
+   persistida — e, junto dele, dois defeitos vizinhos: a web não guardava o
+   refresh token rotacionado (o segundo refresh sempre derrubava a sessão) e o
+   `logout()` do mobile não enviava o token, então nunca revogava nada no servidor
+7. ✅ Testes de planos, relatórios e mensagens: 104 → **161 testes, 12 suítes,
+   todos passando**
 
 **Ainda pendente antes da entrega:**
 
-1. Registrar na monografia as limitações de consentimento no vínculo (LGPD art. 11)
-   e de validação do CRN — são as duas limitações que a banca tem mais chance de
-   questionar
-2. Refresh token automático no mobile (a web já faz)
-3. Cobertura de testes em planos, relatórios e mensagens
+1. Conferência das faixas glicêmicas, dos 36 alimentos de exemplo e das fórmulas
+   pelo curso de Nutrição — o roteiro está em
+   [CONFERENCIA_NUTRICAO.md](CONFERENCIA_NUTRICAO.md), com bloco de assinatura no
+   fim. É dependência externa: enquanto não voltar assinado, a coluna `fonte` dos
+   alimentos continua em `exemplo`
+2. Manter a regra de **somente dados fictícios** no ambiente publicado, enquanto o
+   aceite do vínculo pelo paciente não existir
