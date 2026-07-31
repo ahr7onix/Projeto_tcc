@@ -3,13 +3,21 @@ import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AlertasModule } from './modules/alertas/alertas.module';
+import { AlimentosModule } from './modules/alimentos/alimentos.module';
+import { AntropometriaModule } from './modules/antropometria/antropometria.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ConteudosModule } from './modules/conteudos/conteudos.module';
+import { EmocionalModule } from './modules/emocional/emocional.module';
+import { LembretesModule } from './modules/lembretes/lembretes.module';
+import { MedicamentosModule } from './modules/medicamentos/medicamentos.module';
 import { MensagensModule } from './modules/mensagens/mensagens.module';
+import { NotificacoesModule } from './modules/notificacoes/notificacoes.module';
+import { NutricionalModule } from './modules/nutricional/nutricional.module';
 import { PacientesModule } from './modules/pacientes/pacientes.module';
 import { PerfilModule } from './modules/perfil/perfil.module';
 import { PlanosModule } from './modules/planos/planos.module';
 import { PushModule } from './modules/push/push.module';
+import { ReceitasModule } from './modules/receitas/receitas.module';
 import { RegistrosModule } from './modules/registros/registros.module';
 import { RelatoriosModule } from './modules/relatorios/relatorios.module';
 import { SaudeModule } from './modules/saude/saude.module';
@@ -34,6 +42,15 @@ import { VinculosModule } from './modules/vinculos/vinculos.module';
     ConteudosModule,
     AdminModule,
     PushModule,
+    // Módulos do briefing de nutrição (migration 007)
+    AlimentosModule,
+    ReceitasModule,
+    AntropometriaModule,
+    EmocionalModule,
+    LembretesModule,
+    MedicamentosModule,
+    NutricionalModule,
+    NotificacoesModule,
   ],
 })
 export class AppModule {}

@@ -1,238 +1,320 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
+import { useMemo } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { ScreenContainer } from '@/components/ScreenContainer';
+import { buscarEvolucao, listarAntropometria, rotuloRisco } from '@/lib/api/antropometria';
+import { buscarResumoEmocional, ESTADOS } from '@/lib/api/emocional';
+import { horaCurta, listarMedicamentos } from '@/lib/api/medicamentos';
+import { listarRegistros } from '@/lib/api/registros';
 import { colors, radius, spacing, typography } from '@/lib/theme';
 
-type ImcStatus = {
-  label: string;
-  tint: string;
-  tintBg: string;
-};
+const DIAS_GLICEMIA = 7;
 
-function classificarImc(imc: number | null): ImcStatus | null {
-  if (imc === null) return null;
-  if (imc < 18.5) return { label: 'Abaixo do peso', tint: colors.warning, tintBg: colors.warningSoft };
-  if (imc < 25) return { label: 'Peso normal', tint: colors.success, tintBg: colors.successSoft };
-  if (imc < 30) return { label: 'Sobrepeso', tint: colors.warning, tintBg: colors.warningSoft };
-  return { label: 'Obesidade', tint: colors.danger, tintBg: colors.dangerSoft };
-}
+const emojiDoEstado = (estado: string): string =>
+  ESTADOS.find((e) => e.valor === estado)?.emoji ?? '🙂';
 
-const metas = [
-  { titulo: 'Glicemia em jejum', meta: '< 130 mg/dL', progresso: 0 },
-  { titulo: 'Hemoglobina glicada', meta: '< 7%', progresso: 0 },
-  { titulo: 'Atividade física', meta: '150 min/semana', progresso: 0 },
-];
+/** A média vem na escala 1-5 da API; vira a carinha mais próxima. */
+const emojiDaMedia = (media: number): string =>
+  ESTADOS[Math.min(ESTADOS.length - 1, Math.max(0, 5 - Math.round(media)))].emoji;
 
-const glicResumo = [
-  { label: 'Média', valor: '--', unidade: 'mg/dL' },
-  { label: 'Mínima', valor: '--', unidade: 'mg/dL' },
-  { label: 'Máxima', valor: '--', unidade: 'mg/dL' },
-  { label: 'No alvo', valor: '--', unidade: '%' },
-];
+const dataCurta = (iso: string): string =>
+  new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 
 export default function SaudeScreen() {
-  const [peso, setPeso] = useState('');
-  const [altura, setAltura] = useState('');
+  const router = useRouter();
 
-  const imc = useMemo(() => {
-    const p = Number(peso.replace(',', '.'));
-    const a = Number(altura.replace(',', '.'));
-    if (!p || !a || a <= 0) return null;
-    const result = p / (a * a);
-    return Number.isFinite(result) ? result : null;
-  }, [peso, altura]);
+  const { data: medidas, isLoading: carregandoMedidas } = useQuery({
+    queryKey: ['antropometria', 'ultimas'],
+    queryFn: () => listarAntropometria(5),
+  });
 
-  const status = classificarImc(imc);
+  const { data: evolucao } = useQuery({
+    queryKey: ['antropometria-evolucao'],
+    queryFn: buscarEvolucao,
+  });
+
+  const { data: registros } = useQuery({
+    queryKey: ['registros', DIAS_GLICEMIA],
+    queryFn: () => listarRegistros(DIAS_GLICEMIA),
+  });
+
+  const { data: emocional } = useQuery({
+    queryKey: ['emocional-resumo', 30],
+    queryFn: () => buscarResumoEmocional(30),
+  });
+
+  const { data: medicamentos, isLoading: carregandoMedicamentos } = useQuery({
+    queryKey: ['medicamentos'],
+    queryFn: listarMedicamentos,
+  });
+
+  const ultima = medidas?.[0] ?? null;
+
+  // O resumo da semana é calculado aqui a partir do histórico que a tela já
+  // baixou; não existe endpoint só para essas quatro caixinhas.
+  const glicemia = useMemo(() => {
+    const valores = (registros?.data ?? [])
+      .filter((r) => r.tipo === 'glicemia' && r.valor !== null)
+      .map((r) => ({ valor: r.valor as number, alerta: r.alerta }));
+
+    if (!valores.length) return null;
+
+    const soma = valores.reduce((acc, v) => acc + v.valor, 0);
+    const noAlvo = valores.filter((v) => v.alerta?.classificacao === 'normal').length;
+
+    return {
+      total: valores.length,
+      media: Math.round(soma / valores.length),
+      minima: Math.min(...valores.map((v) => v.valor)),
+      maxima: Math.max(...valores.map((v) => v.valor)),
+      percentualAlvo: Math.round((noAlvo / valores.length) * 100),
+    };
+  }, [registros]);
 
   return (
     <ScreenContainer
       eyebrow="Indicadores"
       title="Saúde"
-      subtitle="Metas, antropometria e bem-estar em um só lugar."
+      subtitle="Medidas, glicemia, bem-estar e medicamentos em um só lugar."
     >
-      <Pressable style={styles.appointment}>
-        <View style={styles.appointmentIcon}>
-          <Ionicons name="calendar" size={18} color={colors.textInverse} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.appointmentEyebrow}>Próxima consulta</Text>
-          <Text style={styles.appointmentTitle}>Nenhuma agendada</Text>
-        </View>
-        <Ionicons name="chevron-forward" size={18} color={colors.textInverse} />
-      </Pressable>
+      <View style={styles.acoes}>
+        <Pressable style={styles.acao} onPress={() => router.push('/(tabs)/saude/medidas')}>
+          <View style={styles.acaoIcone}>
+            <Ionicons name="body-outline" size={18} color={colors.primary} />
+          </View>
+          <Text style={styles.acaoTexto}>Registrar medidas</Text>
+        </Pressable>
+        <Pressable style={styles.acao} onPress={() => router.push('/(tabs)/saude/humor')}>
+          <View style={styles.acaoIcone}>
+            <Ionicons name="happy-outline" size={18} color={colors.primary} />
+          </View>
+          <Text style={styles.acaoTexto}>Como estou hoje</Text>
+        </Pressable>
+      </View>
 
-      <Card title="Antropometria">
-        <View style={styles.antroRow}>
-          <View style={styles.antroField}>
-            <Text style={styles.antroLabel}>Peso (kg)</Text>
-            <TextInput
-              value={peso}
-              onChangeText={setPeso}
-              style={styles.antroInput}
-              keyboardType="numeric"
-              placeholder="--"
-              placeholderTextColor={colors.textMuted}
-            />
+      <Card
+        title="Últimas medidas"
+        action={
+          ultima ? <Text style={styles.cardAction}>{dataCurta(ultima.dataMedicao)}</Text> : undefined
+        }
+      >
+        {carregandoMedidas ? (
+          <View style={styles.center}>
+            <ActivityIndicator color={colors.primary} />
           </View>
-          <View style={styles.antroField}>
-            <Text style={styles.antroLabel}>Altura (m)</Text>
-            <TextInput
-              value={altura}
-              onChangeText={setAltura}
-              style={styles.antroInput}
-              keyboardType="numeric"
-              placeholder="--"
-              placeholderTextColor={colors.textMuted}
-            />
-          </View>
-        </View>
-
-        <View style={styles.imcBox}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.antroLabel}>IMC</Text>
-            <Text style={styles.imcValue}>
-              {imc ? imc.toFixed(1) : '--'}
-            </Text>
-          </View>
-          {status ? (
-            <View style={[styles.statusPill, { backgroundColor: status.tintBg }]}>
-              <Text style={[styles.statusText, { color: status.tint }]}>{status.label}</Text>
+        ) : !ultima ? (
+          <EmptyState
+            icon="body-outline"
+            title="Nenhuma medida registrada"
+            message="Registre seu peso e suas circunferências para acompanhar a evolução."
+          />
+        ) : (
+          <>
+            <View style={styles.grid}>
+              <View style={styles.cell}>
+                <Text style={styles.cellLabel}>Peso</Text>
+                <Text style={styles.cellValor}>
+                  {ultima.peso ?? '--'}
+                  <Text style={styles.cellUnidade}> kg</Text>
+                </Text>
+              </View>
+              <View style={styles.cell}>
+                <Text style={styles.cellLabel}>IMC</Text>
+                <Text style={styles.cellValor}>{ultima.imc ?? '--'}</Text>
+                {ultima.rotuloImc ? (
+                  <Text style={styles.cellNota}>{ultima.rotuloImc}</Text>
+                ) : null}
+              </View>
+              <View style={styles.cell}>
+                <Text style={styles.cellLabel}>Cintura</Text>
+                <Text style={styles.cellValor}>
+                  {ultima.circCintura ?? '--'}
+                  <Text style={styles.cellUnidade}> cm</Text>
+                </Text>
+                {rotuloRisco(ultima.riscoCintura) ? (
+                  <Text style={styles.cellNota}>{rotuloRisco(ultima.riscoCintura)}</Text>
+                ) : null}
+              </View>
+              <View style={styles.cell}>
+                <Text style={styles.cellLabel}>Cintura/quadril</Text>
+                <Text style={styles.cellValor}>{ultima.rcq ?? '--'}</Text>
+                {rotuloRisco(ultima.riscoRcq) ? (
+                  <Text style={styles.cellNota}>{rotuloRisco(ultima.riscoRcq)}</Text>
+                ) : null}
+              </View>
             </View>
-          ) : (
-            <Text style={styles.imcHint}>Informe peso e altura</Text>
-          )}
-        </View>
+
+            {evolucao?.variacaoPeso !== null && evolucao?.variacaoPeso !== undefined ? (
+              <View style={styles.variacao}>
+                <Ionicons
+                  name={evolucao.variacaoPeso > 0 ? 'trending-up' : 'trending-down'}
+                  size={16}
+                  color={colors.textSoft}
+                />
+                <Text style={styles.variacaoTexto}>
+                  {evolucao.variacaoPeso > 0 ? '+' : ''}
+                  {evolucao.variacaoPeso} kg desde a primeira pesagem
+                </Text>
+              </View>
+            ) : null}
+          </>
+        )}
       </Card>
 
       <Card
         title="Resumo glicêmico"
-        action={<Text style={styles.cardAction}>7 dias</Text>}
+        action={<Text style={styles.cardAction}>{DIAS_GLICEMIA} dias</Text>}
       >
-        <View style={styles.glicGrid}>
-          {glicResumo.map((g) => (
-            <View key={g.label} style={styles.glicCell}>
-              <Text style={styles.glicLabel}>{g.label}</Text>
-              <Text style={styles.glicValue}>
-                {g.valor}
-                <Text style={styles.glicUnit}> {g.unidade}</Text>
+        {!glicemia ? (
+          <EmptyState
+            icon="water-outline"
+            title="Sem medições na semana"
+            message="Registre sua glicemia na aba Registros para ver o resumo aqui."
+          />
+        ) : (
+          <>
+            <View style={styles.grid}>
+              <View style={styles.cell}>
+                <Text style={styles.cellLabel}>Média</Text>
+                <Text style={styles.cellValor}>
+                  {glicemia.media}
+                  <Text style={styles.cellUnidade}> mg/dL</Text>
+                </Text>
+              </View>
+              <View style={styles.cell}>
+                <Text style={styles.cellLabel}>Mínima</Text>
+                <Text style={styles.cellValor}>
+                  {glicemia.minima}
+                  <Text style={styles.cellUnidade}> mg/dL</Text>
+                </Text>
+              </View>
+              <View style={styles.cell}>
+                <Text style={styles.cellLabel}>Máxima</Text>
+                <Text style={styles.cellValor}>
+                  {glicemia.maxima}
+                  <Text style={styles.cellUnidade}> mg/dL</Text>
+                </Text>
+              </View>
+              <View style={styles.cell}>
+                <Text style={styles.cellLabel}>Na faixa</Text>
+                <Text style={styles.cellValor}>
+                  {glicemia.percentualAlvo}
+                  <Text style={styles.cellUnidade}> %</Text>
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.rodapeCard}>
+              {glicemia.total} {glicemia.total === 1 ? 'medição' : 'medições'} nos últimos{' '}
+              {DIAS_GLICEMIA} dias.
+            </Text>
+          </>
+        )}
+      </Card>
+
+      <Card title="Bem-estar" action={<Text style={styles.cardAction}>30 dias</Text>}>
+        {!emocional || emocional.total === 0 ? (
+          <EmptyState
+            icon="happy-outline"
+            title="Nenhum registro ainda"
+            message="Contar como você se sente ajuda a nutricionista a entender seus resultados."
+          />
+        ) : (
+          <>
+            <View style={styles.humorTopo}>
+              <Text style={styles.humorEmoji}>
+                {emocional.mediaEscala ? emojiDaMedia(emocional.mediaEscala) : '🙂'}
               </Text>
-            </View>
-          ))}
-        </View>
-      </Card>
-
-      <Card
-        title="Metas clínicas"
-        action={<Text style={styles.cardAction}>Editar</Text>}
-      >
-        <View style={styles.metasList}>
-          {metas.map((m, i) => (
-            <View
-              key={m.titulo}
-              style={[styles.metaRow, i > 0 && styles.rowDivider]}
-            >
-              <View style={styles.metaTopRow}>
-                <Text style={styles.metaTitle}>{m.titulo}</Text>
-                <Text style={styles.metaTarget}>{m.meta}</Text>
-              </View>
-              <View style={styles.progressBar}>
-                <View
-                  style={[
-                    styles.progressFill,
-                    { width: `${Math.max(m.progresso * 100, 4)}%` },
-                  ]}
-                />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.humorTitulo}>
+                  {emocional.total} {emocional.total === 1 ? 'registro' : 'registros'} no mês
+                </Text>
+                {emocional.porEstado.length ? (
+                  <Text style={styles.humorNota}>
+                    Mais frequente: {emojiDoEstado(emocional.porEstado[0].estado)}{' '}
+                    {emocional.porEstado[0].rotulo}
+                  </Text>
+                ) : null}
               </View>
             </View>
-          ))}
-        </View>
+
+            {emocional.fatoresFrequentes.length ? (
+              <View style={styles.fatores}>
+                {emocional.fatoresFrequentes.slice(0, 4).map((f) => (
+                  <View key={f.fator} style={styles.fator}>
+                    <Text style={styles.fatorTexto}>
+                      {f.fator} · {f.vezes}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+          </>
+        )}
       </Card>
 
-      <Card
-        title="Medicamentos"
-        action={
-          <View style={styles.addBtn}>
-            <Ionicons name="add" size={16} color={colors.primary} />
+      <Card title="Medicamentos">
+        {carregandoMedicamentos ? (
+          <View style={styles.center}>
+            <ActivityIndicator color={colors.primary} />
           </View>
-        }
-      >
-        <EmptyState
-          icon="medkit-outline"
-          title="Nenhum medicamento ativo"
-          message="Adicione seus medicamentos para receber lembretes nos horários certos."
-        />
+        ) : !medicamentos?.length ? (
+          <EmptyState
+            icon="medkit-outline"
+            title="Nenhum medicamento ativo"
+            message="Quem cadastra seus medicamentos é a nutricionista, durante a consulta."
+          />
+        ) : (
+          medicamentos.map((m, i) => (
+            <View key={m.id} style={[styles.linha, i > 0 && styles.linhaDivisoria]}>
+              <View style={styles.remedioIcone}>
+                <Ionicons name="medkit-outline" size={16} color={colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.remedioNome}>{m.nome}</Text>
+                <Text style={styles.remedioNota}>
+                  {m.dosagem} · {m.frequencia}
+                </Text>
+              </View>
+              <Text style={styles.remedioHora}>{horaCurta(m.horarioInicial)}</Text>
+            </View>
+          ))
+        )}
       </Card>
-
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  appointment: {
-    flexDirection: 'row',
+  acoes: { flexDirection: 'row', gap: spacing.sm },
+  acao: {
+    flex: 1,
     alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.primary,
-    padding: spacing.md,
+    gap: spacing.xs,
+    paddingVertical: spacing.lg,
     borderRadius: radius.lg,
-    boxShadow: '0 10px 24px rgba(124, 58, 237, 0.35)',
-    elevation: 6,
-  },
-  appointmentIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.md,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  appointmentEyebrow: {
-    ...typography.caption,
-    color: 'rgba(255,255,255,0.85)',
-    fontWeight: '600',
-  },
-  appointmentTitle: {
-    ...typography.h3,
-    color: colors.textInverse,
-    marginTop: 2,
-  },
-
-  antroRow: { flexDirection: 'row', gap: spacing.md },
-  antroField: { flex: 1, gap: spacing.xs },
-  antroLabel: { ...typography.caption, color: colors.textSoft, fontWeight: '600' },
-  antroInput: {
-    backgroundColor: colors.backgroundAlt,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    fontSize: 15,
-    color: colors.text,
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  imcBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    marginTop: spacing.sm,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    backgroundColor: colors.surfaceAlt,
-  },
-  imcValue: { ...typography.h1, color: colors.text, marginTop: 2 },
-  imcHint: { ...typography.caption, color: colors.textMuted },
-  statusPill: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+  acaoIcone: {
+    width: 36,
+    height: 36,
     borderRadius: radius.pill,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  statusText: { fontSize: 12, fontWeight: '700' },
+  acaoTexto: { fontSize: 12, fontWeight: '700', color: colors.text },
 
-  glicGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  glicCell: {
+  center: { alignItems: 'center', paddingVertical: spacing.lg },
+  cardAction: { color: colors.primary, fontSize: 13, fontWeight: '600' },
+
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  cell: {
     flexBasis: '47%',
     flexGrow: 1,
     padding: spacing.md,
@@ -240,46 +322,44 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceAlt,
     gap: spacing.xs,
   },
-  glicLabel: { ...typography.caption, color: colors.textMuted, fontWeight: '600' },
-  glicValue: { ...typography.h2, color: colors.text },
-  glicUnit: { fontSize: 12, fontWeight: '500', color: colors.textMuted },
+  cellLabel: { ...typography.caption, color: colors.textMuted, fontWeight: '600' },
+  cellValor: { ...typography.h2, color: colors.text },
+  cellUnidade: { fontSize: 12, fontWeight: '500', color: colors.textMuted },
+  cellNota: { fontSize: 11, color: colors.textSoft },
 
-  cardAction: { color: colors.primary, fontSize: 13, fontWeight: '600' },
+  variacao: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  variacaoTexto: { ...typography.caption, color: colors.textSoft },
+  rodapeCard: { ...typography.caption, color: colors.textMuted },
 
-  metasList: { gap: 0 },
-  metaRow: { paddingVertical: spacing.sm, gap: spacing.xs },
-  rowDivider: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: spacing.md,
-    marginTop: spacing.xs,
+  humorTopo: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  humorEmoji: { fontSize: 34 },
+  humorTitulo: { ...typography.h3, color: colors.text },
+  humorNota: { ...typography.caption, color: colors.textSoft, marginTop: 2 },
+  fatores: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  fator: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surfaceAlt,
   },
-  metaTopRow: {
+  fatorTexto: { fontSize: 12, fontWeight: '600', color: colors.textSoft },
+
+  linha: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: spacing.md,
+    paddingVertical: spacing.md,
   },
-  metaTitle: { ...typography.body, color: colors.text, fontWeight: '600' },
-  metaTarget: { fontSize: 12, fontWeight: '700', color: colors.primary },
-  progressBar: {
-    height: 6,
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: radius.pill,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: colors.primary,
-    borderRadius: radius.pill,
-  },
-
-  addBtn: {
-    width: 32,
-    height: 32,
+  linhaDivisoria: { borderTopWidth: 1, borderTopColor: colors.border },
+  remedioIcone: {
+    width: 34,
+    height: 34,
     borderRadius: radius.pill,
     backgroundColor: colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-
+  remedioNome: { ...typography.body, color: colors.text, fontWeight: '600' },
+  remedioNota: { ...typography.caption, color: colors.textMuted, marginTop: 2 },
+  remedioHora: { fontSize: 13, fontWeight: '700', color: colors.primary },
 });

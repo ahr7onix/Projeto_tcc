@@ -8,6 +8,8 @@ const NAV_NUTRICIONISTA = [
   { to: '/pacientes',   label: 'Pacientes',   icon: PatientsIcon },
   { to: '/registros',   label: 'Registros',   icon: RegistrosIcon },
   { to: '/alimentacao', label: 'Alimentação', icon: AlimentacaoIcon },
+  { to: '/alimentos',   label: 'Alimentos',   icon: AlimentosIcon },
+  { to: '/receitas',    label: 'Receitas',    icon: ReceitasIcon },
   { to: '/saude',       label: 'Saúde',       icon: SaudeIcon },
   { to: '/relatorios',  label: 'Relatórios',  icon: RelatoriosIcon },
   { to: '/mensagens',   label: 'Mensagens',   icon: MensagensIcon },
@@ -107,6 +109,12 @@ function RegistrosIcon() {
 }
 function AlimentacaoIcon() {
   return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+}
+function AlimentosIcon() {
+  return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h18v18H3z"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+}
+function ReceitasIcon() {
+  return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6z"/><path d="M6 17h12"/></svg>
 }
 function SaudeIcon() {
   return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
@@ -55,6 +56,37 @@ export class VinculosService {
         'Este paciente não está vinculado a você. Vincule-o antes de continuar.',
       );
     }
+  }
+
+  /**
+   * Descobre de qual paciente é o dado que está sendo lido ou gravado.
+   *
+   * O paciente só mexe nos próprios dados — se mandar um pacienteId de outra
+   * pessoa, é ignorado de propósito, para não existir caminho de leitura
+   * cruzada. O nutricionista precisa dizer de quem é, e o vínculo é conferido
+   * (RN02). O administrador não entra aqui: ele não acompanha paciente.
+   */
+  async resolverPacienteAlvo(
+    user: { sub: string; role: string },
+    pacienteIdInformado?: string,
+  ): Promise<{ idUsuarioPaciente: string; idPaciente: string }> {
+    if (user.role === 'paciente') {
+      const idPaciente = await this.resolvePacienteId(user.sub);
+      return { idUsuarioPaciente: user.sub, idPaciente };
+    }
+
+    if (user.role === 'nutricionista') {
+      if (!pacienteIdInformado) {
+        throw new BadRequestException('Informe o paciente (pacienteId)');
+      }
+      await this.garantirVinculo(user.sub, pacienteIdInformado);
+      const idPaciente = await this.resolvePacienteId(pacienteIdInformado);
+      return { idUsuarioPaciente: pacienteIdInformado, idPaciente };
+    }
+
+    throw new ForbiddenException(
+      'Este recurso é do acompanhamento nutricional: disponível para paciente e nutricionista',
+    );
   }
 
   async listarPacientes(idUsuarioNutri: string) {

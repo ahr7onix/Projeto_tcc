@@ -152,6 +152,27 @@ export default function AlimentacaoScreen() {
         </>
       )}
 
+      <View style={styles.atalhos}>
+        <Pressable
+          style={styles.atalho}
+          onPress={() => router.push('/(tabs)/alimentacao/receitas')}
+        >
+          <View style={styles.atalhoIcone}>
+            <Ionicons name="restaurant-outline" size={18} color={colors.primary} />
+          </View>
+          <Text style={styles.atalhoTexto}>Receitas</Text>
+        </Pressable>
+        <Pressable
+          style={styles.atalho}
+          onPress={() => router.push('/(tabs)/alimentacao/alimentos')}
+        >
+          <View style={styles.atalhoIcone}>
+            <Ionicons name="nutrition-outline" size={18} color={colors.primary} />
+          </View>
+          <Text style={styles.atalhoTexto}>Tabela de alimentos</Text>
+        </Pressable>
+      </View>
+
       <Pressable
         style={styles.cta}
         onPress={() => router.push('/(tabs)/alimentacao/conteudos')}
@@ -248,6 +269,33 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   tagText: { fontSize: 11, fontWeight: '700' },
+
+  atalhos: { flexDirection: 'row', gap: spacing.sm },
+  atalho: {
+    flex: 1,
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  atalhoIcone: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.pill,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  atalhoTexto: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.text,
+    textAlign: 'center',
+  },
 
   cta: {
     flexDirection: 'row',

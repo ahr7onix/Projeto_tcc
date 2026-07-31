@@ -12,6 +12,8 @@ import HomePage from './pages/app/HomePage'
 import PacientesPage from './pages/app/PacientesPage'
 import RegistrosPage from './pages/app/RegistrosPage'
 import AlimentacaoPage from './pages/app/AlimentacaoPage'
+import AlimentosPage from './pages/app/AlimentosPage'
+import ReceitasPage from './pages/app/ReceitasPage'
 import SaudePage from './pages/app/SaudePage'
 import RelatoriosPage from './pages/app/RelatoriosPage'
 import MensagensPage from './pages/app/MensagensPage'
@@ -66,6 +68,8 @@ export default function App() {
             <Route path="pacientes" element={<PacientesPage />} />
             <Route path="registros" element={<RegistrosPage />} />
             <Route path="alimentacao" element={<AlimentacaoPage />} />
+            <Route path="alimentos" element={<AlimentosPage />} />
+            <Route path="receitas" element={<ReceitasPage />} />
             <Route path="saude" element={<SaudePage />} />
             <Route path="relatorios" element={<RelatoriosPage />} />
             <Route path="mensagens" element={<MensagensPage />} />
