@@ -16,6 +16,7 @@ interface AuthState {
     token: string;
     refreshToken: string;
   }) => Promise<void>;
+  setTokens: (params: { token: string; refreshToken: string }) => Promise<void>;
   updateUser: (patch: Partial<AuthUser>) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -45,6 +46,15 @@ export const useAuthStore = create<AuthState>((set) => ({
       secureStorage.set(STORAGE_KEYS.user, JSON.stringify(user)),
     ]);
     set({ user, token, refreshToken });
+  },
+
+  // Usado pela renovação automática: troca só os tokens e mantém o usuário logado.
+  setTokens: async ({ token, refreshToken }) => {
+    await Promise.all([
+      secureStorage.set(STORAGE_KEYS.authToken, token),
+      secureStorage.set(STORAGE_KEYS.refreshToken, refreshToken),
+    ]);
+    set({ token, refreshToken });
   },
 
   updateUser: async (patch) => {

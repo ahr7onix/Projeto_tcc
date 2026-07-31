@@ -4,6 +4,7 @@ import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Card } from '@/components/Card';
 import { ScreenContainer } from '@/components/ScreenContainer';
+import { logout } from '@/lib/api/auth';
 import { useAuthStore } from '@/stores/auth';
 import { colors, radius, spacing, typography } from '@/lib/theme';
 
@@ -37,6 +38,13 @@ export default function PerfilScreen() {
   const { user, signOut } = useAuthStore();
   const initial = (user?.nome ?? '?').charAt(0).toUpperCase();
   const role = 'Cliente';
+
+  // Revoga o refresh token no servidor antes de limpar o aparelho; se a rede
+  // falhar, o logout local acontece do mesmo jeito.
+  async function sair() {
+    await logout();
+    await signOut();
+  }
 
   return (
     <ScreenContainer eyebrow="Sua conta" title="Perfil">
@@ -84,7 +92,7 @@ export default function PerfilScreen() {
         </View>
       </Card>
 
-      <Pressable style={styles.signOut} onPress={signOut}>
+      <Pressable style={styles.signOut} onPress={sair}>
         <Ionicons name="log-out-outline" size={18} color={colors.danger} />
         <Text style={styles.signOutText}>Sair da conta</Text>
       </Pressable>

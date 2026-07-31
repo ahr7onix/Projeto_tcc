@@ -1,4 +1,5 @@
 import { api } from '@/lib/api';
+import { STORAGE_KEYS, secureStorage } from '@/lib/storage';
 import type {
   AuthResponse,
   CadastroInput,
@@ -23,7 +24,10 @@ export async function cadastro(input: CadastroInput): Promise<AuthResponse> {
 }
 
 export async function logout(): Promise<void> {
-  await api.post('/auth/logout').catch(() => undefined);
+  // A rota exige o refresh token no corpo — é ele que será revogado no banco.
+  const refreshToken = await secureStorage.get(STORAGE_KEYS.refreshToken);
+  if (!refreshToken) return;
+  await api.post('/auth/logout', { refreshToken }).catch(() => undefined);
 }
 
 export async function esqueciSenha(
