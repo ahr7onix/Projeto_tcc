@@ -6,6 +6,7 @@ import { useAuth } from './contexts/AuthContext'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
+import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 
 import AppLayout from './components/layout/AppLayout'
 import HomePage from './pages/app/HomePage'
@@ -55,6 +56,7 @@ export default function App() {
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
           <Route path="/cadastro" element={<PublicRoute><RegisterPage /></PublicRoute>} />
           <Route path="/esqueci-senha" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
+          <Route path="/redefinir-senha" element={<PublicRoute><ResetPasswordPage /></PublicRoute>} />
 
           {}
           <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>

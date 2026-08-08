@@ -18,24 +18,28 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textMuted,
+        tabBarActiveTintColor: colors.authFocus,
+        tabBarInactiveTintColor: colors.authMuted,
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
+          backgroundColor: colors.authBg1,
+          borderTopColor: colors.authBorder,
           borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 88 : 72,
-          paddingTop: 10,
-          paddingBottom: Platform.OS === 'ios' ? 30 : 14,
-          boxShadow: '0 -4px 20px rgba(11,11,23,0.07)',
-          elevation: 10,
+          height: Platform.OS === 'ios' ? 90 : 74,
+          paddingTop: 8,
+          paddingBottom: Platform.OS === 'ios' ? 28 : 12,
+          boxShadow: '0 -8px 24px rgba(0,0,0,0.35)',
+          elevation: 12,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: '600',
-          marginTop: 3,
+          marginTop: 2,
         },
-        tabBarItemStyle: { paddingVertical: 4 },
+        tabBarItemStyle: {
+          paddingVertical: 2,
+          minHeight: 48,
+        },
+        tabBarHideOnKeyboard: true,
       }}
     >
       <Tabs.Screen

@@ -132,7 +132,12 @@ interface BtnProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: React.ReactNode
 }
 const btnStyles: Record<string, React.CSSProperties> = {
-  primary: { background: 'var(--primary)', color: 'white', border: 'none' },
+  primary: {
+    background: 'linear-gradient(90deg, #6c22bd, #9d4edd)',
+    color: 'white',
+    border: 'none',
+    boxShadow: '0 8px 18px rgba(108, 34, 189, 0.35)',
+  },
   secondary: { background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)' },
   danger: { background: 'var(--danger-soft)', color: 'var(--danger)', border: 'none' },
   ghost: { background: 'transparent', color: 'var(--text-soft)', border: '1px solid var(--border)' },

@@ -35,6 +35,7 @@ export default function AppLayout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState(false)
   const initial = (user?.nome ?? 'N').charAt(0).toUpperCase()
   const nav = user?.role === 'administrador' ? NAV_ADMINISTRADOR : NAV_NUTRICIONISTA
   const rotuloPerfil = ROTULO_PERFIL[user?.role ?? ''] ?? 'Nutricionista'
@@ -45,53 +46,85 @@ export default function AppLayout() {
     <div className={s.shell}>
       {sidebarOpen && <div className={s.overlay} onClick={() => setSidebarOpen(false)} />}
 
-      <aside className={`${s.sidebar} ${sidebarOpen ? s.sidebarOpen : ''}`}>
+      <aside
+        className={[
+          s.sidebar,
+          sidebarOpen ? s.sidebarOpen : '',
+          collapsed ? s.sidebarCollapsed : '',
+        ].filter(Boolean).join(' ')}
+      >
+        <div className={s.sidebarBlobA} aria-hidden />
+        <div className={s.sidebarBlobB} aria-hidden />
+
         <div className={s.brand}>
           <div className={s.brandIcon}><PulseIcon /></div>
-          <div>
+          <div className={s.brandText}>
             <div className={s.brandName}>NutriCare</div>
             <div className={s.brandSub}>Painel Profissional</div>
           </div>
+          <button
+            type="button"
+            className={s.collapseBtn}
+            onClick={() => setCollapsed(v => !v)}
+            aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
+            title={collapsed ? 'Expandir' : 'Recolher'}
+          >
+            <CollapseIcon collapsed={collapsed} />
+          </button>
         </div>
 
-        <nav className={s.nav}>
-          {nav.map((item) => (
+        <nav className={s.nav} aria-label="Navegação principal">
+          {nav.map((item, index) => (
             <NavLink
               key={item.to}
               to={item.to}
+              title={item.label}
               className={({ isActive }) => `${s.navItem} ${isActive ? s.navItemActive : ''}`}
+              style={{ animationDelay: `${0.05 + index * 0.045}s` }}
               onClick={() => setSidebarOpen(false)}
             >
               <span className={s.navIcon}><item.icon /></span>
-              <span>{item.label}</span>
+              <span className={s.navLabel}>{item.label}</span>
             </NavLink>
           ))}
         </nav>
 
         <div className={s.sidebarFooter}>
-          <div className={s.userCard}>
+          <div className={s.userCard} title={user?.nome ?? 'Nutricionista'}>
             <div className={s.userAvatar}>{initial}</div>
             <div className={s.userInfo}>
               <div className={s.userName}>{user?.nome ?? 'Nutricionista'}</div>
               <div className={s.userRole}>{rotuloPerfil}</div>
             </div>
           </div>
-          <button className={s.logoutBtn} onClick={handleLogout}>
+          <button className={s.logoutBtn} onClick={handleLogout} title="Sair da conta">
             <LogoutIcon />
-            Sair da conta
+            <span className={s.logoutLabel}>Sair da conta</span>
           </button>
         </div>
       </aside>
 
       <div className={s.main}>
         <header className={s.topbar}>
-          <button className={s.menuBtn} onClick={() => setSidebarOpen(true)}><MenuIcon /></button>
+          <button type="button" className={s.menuBtn} onClick={() => setSidebarOpen(true)} aria-label="Abrir menu">
+            <MenuIcon />
+          </button>
           <div className={s.topbarBrand}><PulseIcon /><span>NutriCare</span></div>
           <div className={s.topbarAvatar}>{initial}</div>
         </header>
         <div className={s.content}><Outlet /></div>
       </div>
     </div>
+  )
+}
+
+function CollapseIcon({ collapsed }: { collapsed: boolean }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      {collapsed
+        ? <polyline points="9 18 15 12 9 6" />
+        : <polyline points="15 18 9 12 15 6" />}
+    </svg>
   )
 }
 

@@ -9,6 +9,7 @@ interface Props {
   onPress?: () => void;
   loading?: boolean;
   disabled?: boolean;
+  tone?: 'light' | 'glass';
 }
 
 const META: Record<
@@ -39,8 +40,14 @@ const META: Record<
   },
 };
 
-export function SocialButton({ provider, onPress, loading, disabled }: Props) {
+export function SocialButton({ provider, onPress, loading, disabled, tone = 'light' }: Props) {
   const meta = META[provider];
+  const glass = tone === 'glass';
+  const bg = glass ? 'rgba(0,0,0,0.55)' : meta.bg;
+  const fg = glass ? '#FFFFFF' : meta.fg;
+  const border = glass ? 'rgba(255,255,255,0.18)' : meta.border ?? meta.bg;
+  const iconColor = glass && provider === 'google' ? '#FFFFFF' : meta.iconColor;
+
   return (
     <Pressable
       onPress={onPress}
@@ -48,20 +55,20 @@ export function SocialButton({ provider, onPress, loading, disabled }: Props) {
       style={({ pressed }) => [
         styles.btn,
         {
-          backgroundColor: meta.bg,
-          borderColor: meta.border ?? meta.bg,
+          backgroundColor: bg,
+          borderColor: border,
           opacity: disabled ? 0.6 : pressed ? 0.85 : 1,
         },
       ]}
     >
       <View style={styles.iconWrap}>
         {loading ? (
-          <ActivityIndicator color={meta.fg} />
+          <ActivityIndicator color={fg} />
         ) : (
-          <Ionicons name={meta.icon} size={18} color={meta.iconColor} />
+          <Ionicons name={meta.icon} size={18} color={iconColor} />
         )}
       </View>
-      <Text style={[styles.label, { color: meta.fg }]}>{meta.label}</Text>
+      <Text style={[styles.label, { color: fg }]}>{meta.label}</Text>
     </Pressable>
   );
 }

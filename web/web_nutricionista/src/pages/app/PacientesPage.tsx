@@ -87,7 +87,7 @@ export default function PacientesPage() {
       <PageHeader
         eyebrow="Gerenciamento"
         title="Pacientes"
-        subtitle="Pacientes vinculados a você. Vincule novos pacientes para acompanhar seus dados."
+        subtitle="Pacientes vinculados a você. Novos cadastros pelo app mobile aparecem automaticamente aqui."
         action={<Btn onClick={() => setVincularAberto(true)}>+ Vincular paciente</Btn>}
       />
 

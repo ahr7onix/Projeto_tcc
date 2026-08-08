@@ -405,4 +405,20 @@ CREATE TRIGGER receita_set_atualizado_em
     BEFORE UPDATE ON receita
     FOR EACH ROW EXECUTE FUNCTION trg_set_atualizado_em();
 
+-- ---------- Tabela: senha_reset_token ----------
+CREATE TABLE senha_reset_token (
+    id_token     BIGSERIAL    PRIMARY KEY,
+    id_usuario   BIGINT       NOT NULL
+        REFERENCES usuario(id_usuario) ON DELETE CASCADE,
+    token_hash   CHAR(64)     NOT NULL UNIQUE,
+    expira_em    TIMESTAMPTZ  NOT NULL,
+    usado_em     TIMESTAMPTZ,
+    criado_em    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+CREATE INDEX idx_senha_reset_usuario
+    ON senha_reset_token(id_usuario);
+CREATE INDEX idx_senha_reset_validos
+    ON senha_reset_token(token_hash)
+    WHERE usado_em IS NULL;
+
 COMMIT;

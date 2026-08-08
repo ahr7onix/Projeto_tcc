@@ -21,6 +21,16 @@ export const colors = {
   danger: '#EF4444',
   dangerSoft: '#FCEAEA',
   info: '#7C3AED',
+  /** Auth FEZ (painel web) */
+  authBg0: '#0B001A',
+  authBg1: '#1A0B2E',
+  authBg2: '#2D124D',
+  authGlass: 'rgba(45, 18, 77, 0.45)',
+  authBorder: 'rgba(255, 255, 255, 0.12)',
+  authInput: 'rgba(255, 255, 255, 0.06)',
+  authBrand: 'rgba(255, 255, 255, 0.55)',
+  authMuted: 'rgba(255, 255, 255, 0.65)',
+  authFocus: '#A252FF',
 } as const;
 
 export const spacing = {

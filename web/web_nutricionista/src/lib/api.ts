@@ -66,11 +66,21 @@ api.interceptors.response.use(
 )
 
 export const extractError = (error: unknown): string => {
-  if (error && typeof error === 'object' && 'response' in error) {
-    const err = error as { response?: { data?: { message?: string | string[] } } }
+  if (error && typeof error === 'object') {
+    const err = error as {
+      code?: string
+      message?: string
+      response?: { status?: number; data?: { message?: string | string[] } }
+    }
+
     if (err.response?.data?.message) {
       const msg = err.response.data.message
       return Array.isArray(msg) ? msg.join(', ') : msg
+    }
+
+    // Sem resposta HTTP = API fora do ar, CORS ou URL errada.
+    if (err.code === 'ERR_NETWORK' || err.message === 'Network Error' || !err.response) {
+      return 'Não foi possível conectar à API. Confira se o backend está rodando em http://localhost:3000.'
     }
   }
   return 'Ocorreu um erro inesperado.'

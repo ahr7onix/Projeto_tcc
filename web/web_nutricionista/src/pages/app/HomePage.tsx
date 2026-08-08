@@ -64,7 +64,6 @@ export default function HomePage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-      {}
       <div style={{
         background: 'linear-gradient(135deg, var(--primary) 0%, #5B21B6 100%)',
         borderRadius: 'var(--radius-xl)', padding: '28px 32px',
@@ -83,7 +82,6 @@ export default function HomePage() {
 
       {error && <AlertBanner message={error} />}
 
-      {}
       <div style={{ display: 'flex', gap: 16 }}>
         <StatTile
           label="Total de pacientes"

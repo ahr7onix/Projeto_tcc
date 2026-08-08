@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -9,36 +10,78 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Ionicons } from '@expo/vector-icons';
+import { Checkbox } from '@/components/Checkbox';
 import { Divider } from '@/components/Divider';
 import { FormField } from '@/components/FormField';
 import { SocialButton, type SocialProvider } from '@/components/SocialButton';
-import { extractAuthError, useLogin } from '@/hooks/use-auth';
-import { loginSchema, type LoginFormValues } from '@/lib/validation/auth';
+import {
+  extractAuthError,
+  useCadastro,
+  useLogin,
+} from '@/hooks/use-auth';
+import {
+  cadastroSchema,
+  loginSchema,
+  type CadastroFormValues,
+  type LoginFormValues,
+} from '@/lib/validation/auth';
 import { colors, radius, spacing, typography } from '@/lib/theme';
 
-const COPY = {
-  eyebrow: 'Acesso do cliente',
-  title: 'Bem-vindo de volta',
-  subtitle: 'Entre para acompanhar sua glicemia e refeições.',
-  icon: 'person-outline' as const,
-};
+type Mode = 'login' | 'cadastro';
 
-export function LoginForm() {
-  const copy = COPY;
+interface Props {
+  initialMode?: Mode;
+}
 
-  const { control, handleSubmit } = useForm<LoginFormValues>({
+export function LoginForm({ initialMode = 'login' }: Props) {
+  const [mode, setMode] = useState<Mode>(initialMode);
+  const isSignUp = mode === 'cadastro';
+
+  const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', senha: '' },
   });
-  const login = useLogin();
+  const cadastroForm = useForm<CadastroFormValues>({
+    resolver: zodResolver(cadastroSchema),
+    defaultValues: {
+      nome: '',
+      email: '',
+      senha: '',
+      role: 'paciente',
+      aceiteTermos: false as unknown as true,
+    },
+  });
 
-  const onSubmit = handleSubmit((values) => {
+  const login = useLogin();
+  const cadastro = useCadastro();
+
+  const switchMode = (next: Mode) => {
+    setMode(next);
+    login.reset();
+    cadastro.reset();
+    if (next === 'cadastro') {
+      router.replace('/(auth)/cadastro');
+    } else {
+      router.replace('/(auth)/login/cliente');
+    }
+  };
+
+  const onLogin = loginForm.handleSubmit((values) => {
     login.mutate(values);
+  });
+
+  const onCadastro = cadastroForm.handleSubmit((values) => {
+    cadastro.mutate({
+      nome: values.nome,
+      email: values.email,
+      senha: values.senha,
+      role: 'paciente',
+    });
   });
 
   const handleSocial = (provider: SocialProvider) => {
@@ -48,191 +91,308 @@ export function LoginForm() {
     );
   };
 
-  const errorMessage = login.isError
-    ? extractAuthError(login.error, 'E-mail ou senha incorretos.')
-    : null;
+  const pending = isSignUp ? cadastro.isPending : login.isPending;
+  const errorMessage = isSignUp
+    ? cadastro.isError
+      ? extractAuthError(cadastro.error, 'Não foi possível criar a conta.')
+      : null
+    : login.isError
+      ? extractAuthError(login.error, 'E-mail ou senha incorretos.')
+      : null;
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+    <View style={styles.root}>
+      <View style={styles.bgBlobA} />
+      <View style={styles.bgBlobB} />
+      <View style={styles.bgBlobC} />
+
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <View style={styles.hero}>
-            <View style={styles.logoBox}>
-              <Ionicons name={copy.icon} size={32} color={colors.primary} />
-            </View>
-            <Text style={styles.heroEyebrow}>{copy.eyebrow}</Text>
-            <Text style={styles.heroTitle}>{copy.title}</Text>
-            <Text style={styles.heroSubtitle}>{copy.subtitle}</Text>
-          </View>
-
-          <View style={styles.card}>
-            <View style={styles.form}>
-              <FormField
-                control={control}
-                name="email"
-                label="E-mail"
-                icon="mail-outline"
-                autoCapitalize="none"
-                autoComplete="email"
-                keyboardType="email-address"
-                placeholder="seu@email.com"
-              />
-              <FormField
-                control={control}
-                name="senha"
-                label="Senha"
-                icon="lock-closed-outline"
-                secureTextEntry
-                placeholder="Sua senha"
-              />
-
-              <Link href="/(auth)/esqueci-senha" style={styles.forgot} asChild>
-                <Pressable>
-                  <Text style={styles.forgotText}>Esqueceu sua senha?</Text>
-                </Pressable>
-              </Link>
+          <ScrollView
+            contentContainerStyle={styles.scroll}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.panel}>
+              <Text style={styles.brand}>NutriCare</Text>
+              <Text style={styles.title}>
+                {isSignUp ? 'Criar conta' : 'Bem-vindo de volta'}
+              </Text>
+              <Text style={styles.subtitle}>
+                {isSignUp
+                  ? 'Cadastre-se no app para acompanhar glicemia e refeições com seu nutricionista.'
+                  : 'Entre para acompanhar sua glicemia e refeições.'}
+              </Text>
 
               {errorMessage ? (
                 <View style={styles.errorBanner}>
-                  <Ionicons name="alert-circle" size={16} color={colors.danger} />
+                  <Ionicons name="alert-circle" size={16} color="#FECACA" />
                   <Text style={styles.errorText}>{errorMessage}</Text>
                 </View>
               ) : null}
 
+              {isSignUp ? (
+                <View style={styles.form}>
+                  <FormField
+                    control={cadastroForm.control}
+                    name="nome"
+                    variant="glass"
+                    icon="person-outline"
+                    placeholder="Nome completo"
+                    autoComplete="name"
+                  />
+                  <FormField
+                    control={cadastroForm.control}
+                    name="email"
+                    variant="glass"
+                    icon="mail-outline"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    keyboardType="email-address"
+                    placeholder="E-mail"
+                  />
+                  <FormField
+                    control={cadastroForm.control}
+                    name="senha"
+                    variant="glass"
+                    icon="lock-closed-outline"
+                    secureTextEntry
+                    placeholder="Senha (mín. 8 caracteres)"
+                    autoComplete="new-password"
+                  />
+                  <Text style={styles.hint}>
+                    Use 8+ caracteres, com letras e números.
+                  </Text>
+                  <Checkbox control={cadastroForm.control} name="aceiteTermos" tone="glass">
+                    <>
+                      Li e aceito os{' '}
+                      <Text style={styles.termsLink}>Termos de Uso</Text> e a{' '}
+                      <Text style={styles.termsLink}>Política de Privacidade</Text>.
+                    </>
+                  </Checkbox>
+                  <Pressable
+                    style={[styles.primaryBtn, pending && styles.btnDisabled]}
+                    onPress={onCadastro}
+                    disabled={pending}
+                  >
+                    {pending ? (
+                      <ActivityIndicator color={colors.textInverse} />
+                    ) : (
+                      <Text style={styles.primaryBtnText}>Cadastrar</Text>
+                    )}
+                  </Pressable>
+                </View>
+              ) : (
+                <View style={styles.form}>
+                  <FormField
+                    control={loginForm.control}
+                    name="email"
+                    variant="glass"
+                    icon="mail-outline"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    keyboardType="email-address"
+                    placeholder="Endereço de e-mail"
+                  />
+                  <FormField
+                    control={loginForm.control}
+                    name="senha"
+                    variant="glass"
+                    icon="lock-closed-outline"
+                    secureTextEntry
+                    placeholder="Senha"
+                  />
+
+                  <Link href="/(auth)/esqueci-senha" asChild>
+                    <Pressable style={styles.forgot}>
+                      <Text style={styles.forgotText}>Esqueceu a senha?</Text>
+                    </Pressable>
+                  </Link>
+
+                  <Pressable
+                    style={[styles.primaryBtn, pending && styles.btnDisabled]}
+                    onPress={onLogin}
+                    disabled={pending}
+                  >
+                    {pending ? (
+                      <ActivityIndicator color={colors.textInverse} />
+                    ) : (
+                      <Text style={styles.primaryBtnText}>Entrar</Text>
+                    )}
+                  </Pressable>
+
+                  <View style={styles.dividerWrap}>
+                    <Divider label="ou continue com" tone="glass" />
+                  </View>
+
+                  <SocialButton
+                    provider="google"
+                    tone="glass"
+                    onPress={() => handleSocial('google')}
+                  />
+                </View>
+              )}
+
               <Pressable
-                style={[styles.primaryBtn, login.isPending && styles.btnDisabled]}
-                onPress={onSubmit}
-                disabled={login.isPending}
+                style={styles.toggle}
+                onPress={() => switchMode(isSignUp ? 'login' : 'cadastro')}
               >
-                {login.isPending ? (
-                  <ActivityIndicator color={colors.textInverse} />
-                ) : (
-                  <>
-                    <Text style={styles.primaryBtnText}>Acessar conta</Text>
-                    <Ionicons name="arrow-forward" size={18} color={colors.textInverse} />
-                  </>
-                )}
+                <Text style={styles.toggleText}>
+                  {isSignUp ? 'Já tem conta? ' : 'Novo por aqui? '}
+                  <Text style={styles.toggleStrong}>
+                    {isSignUp ? 'Entrar' : 'Criar conta'}
+                  </Text>
+                </Text>
               </Pressable>
             </View>
-
-            <View style={styles.dividerWrap}>
-              <Divider label="ou continue com" />
-            </View>
-
-            <View style={styles.social}>
-              {Platform.OS === 'ios' ? (
-                <SocialButton provider="apple" onPress={() => handleSocial('apple')} disabled />
-              ) : null}
-              <SocialButton provider="google" onPress={() => handleSocial('google')} />
-            </View>
-
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>
-                Novo por aqui?{' '}
-                <Link href="/(auth)/cadastro" style={styles.footerLink}>
-                  Cadastre-se
-                </Link>
-              </Text>
-            </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.primary },
-  scroll: { flexGrow: 1, backgroundColor: colors.backgroundAlt },
-
-  hero: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.xxl + spacing.lg,
-    alignItems: 'center',
-    gap: spacing.xs,
+  root: {
+    flex: 1,
+    backgroundColor: colors.authBg1,
+    overflow: 'hidden',
   },
-  logoBox: {
-    width: 64,
-    height: 64,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
+  bgBlobA: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    backgroundColor: 'rgba(108, 34, 189, 0.35)',
+    top: -80,
+    left: -60,
+  },
+  bgBlobB: {
+    position: 'absolute',
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: 'rgba(157, 78, 221, 0.22)',
+    bottom: -40,
+    right: -70,
+  },
+  bgBlobC: {
+    position: 'absolute',
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(11, 0, 26, 0.55)',
+    top: '42%',
+    left: '30%',
+  },
+  safe: { flex: 1 },
+  scroll: {
+    flexGrow: 1,
     justifyContent: 'center',
-    marginBottom: spacing.sm,
-    boxShadow: '0 12px 28px rgba(0, 0, 0, 0.18)',
-    elevation: 8,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xl,
   },
-  heroEyebrow: {
+  panel: {
+    width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
+    backgroundColor: colors.authGlass,
+    borderWidth: 1,
+    borderColor: colors.authBorder,
+    borderRadius: 24,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xxl,
+    paddingBottom: spacing.xl,
+    gap: spacing.md,
+    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.45)',
+    elevation: 12,
+  },
+  brand: {
     ...typography.eyebrow,
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.authBrand,
+    letterSpacing: 2.2,
+    textAlign: 'center',
+    fontSize: 12,
   },
-  heroTitle: {
+  title: {
     ...typography.h1,
     color: colors.textInverse,
-    fontSize: 28,
+    fontSize: 26,
+    letterSpacing: 0.4,
     textAlign: 'center',
+    fontWeight: '600',
   },
-  heroSubtitle: {
+  subtitle: {
     ...typography.body,
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.authMuted,
     textAlign: 'center',
-    maxWidth: 300,
-    marginTop: spacing.xs,
+    marginBottom: spacing.sm,
+    lineHeight: 21,
   },
-
-  card: {
-    flex: 1,
-    backgroundColor: colors.background,
-    marginTop: -spacing.xxl,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.xl,
-    gap: spacing.lg,
+  form: { gap: spacing.md, width: '100%' },
+  hint: {
+    ...typography.caption,
+    color: colors.authMuted,
+    marginTop: -spacing.xs,
   },
-  form: { gap: spacing.md },
-  forgot: { alignSelf: 'flex-end' },
-  forgotText: { ...typography.caption, color: colors.primary, fontWeight: '700' },
-
+  termsLink: { color: colors.authFocus, fontWeight: '700' },
+  forgot: { alignSelf: 'flex-end', marginTop: -spacing.xs },
+  forgotText: {
+    ...typography.caption,
+    color: colors.authMuted,
+    fontWeight: '600',
+  },
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.dangerSoft,
+    backgroundColor: 'rgba(239, 68, 68, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.35)',
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: radius.md,
   },
-  errorText: { ...typography.caption, color: colors.danger, flex: 1, fontWeight: '600' },
-
+  errorText: {
+    ...typography.caption,
+    color: '#FECACA',
+    flex: 1,
+    fontWeight: '600',
+  },
   primaryBtn: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.primary,
+    backgroundColor: '#6C22BD',
     paddingVertical: spacing.lg,
     borderRadius: radius.pill,
     marginTop: spacing.sm,
-    boxShadow: '0 10px 24px rgba(124, 58, 237, 0.35)',
+    boxShadow: '0 10px 20px rgba(108, 34, 189, 0.35)',
     elevation: 6,
   },
   btnDisabled: { opacity: 0.7 },
-  primaryBtnText: { color: colors.textInverse, fontSize: 15, fontWeight: '700' },
-
+  primaryBtnText: {
+    color: colors.textInverse,
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
   dividerWrap: { marginTop: spacing.xs },
-  social: { gap: spacing.sm },
-  footer: { alignItems: 'center', marginTop: spacing.md },
-  footerText: { ...typography.body, color: colors.textMuted },
-  footerLink: { color: colors.primary, fontWeight: '700' },
+  toggle: {
+    alignItems: 'center',
+    marginTop: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  toggleText: {
+    ...typography.body,
+    color: colors.authMuted,
+    textAlign: 'center',
+  },
+  toggleStrong: {
+    color: colors.textInverse,
+    fontWeight: '700',
+  },
 });

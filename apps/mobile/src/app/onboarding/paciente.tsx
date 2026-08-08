@@ -14,7 +14,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Ionicons } from '@expo/vector-icons';
 import { FormField } from '@/components/FormField';
 import { SelectField } from '@/components/SelectField';
 import {
@@ -40,6 +39,7 @@ export default function OnboardingPacienteScreen() {
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
   const [saving, setSaving] = useState(false);
+  const firstName = user?.nome?.split(' ')[0];
 
   const { control, handleSubmit } = useForm<OnboardingPacienteValues>({
     resolver: zodResolver(onboardingPacienteSchema),
@@ -82,198 +82,233 @@ export default function OnboardingPacienteScreen() {
   });
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+    <View style={styles.root}>
+      <View style={styles.bgBlobA} />
+      <View style={styles.bgBlobB} />
+      <View style={styles.bgBlobC} />
+
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <View style={styles.hero}>
-            <View style={styles.logoBox}>
-              <Ionicons name="person-add-outline" size={30} color={colors.primary} />
-            </View>
-            <Text style={styles.heroEyebrow}>Bem-vindo{user?.nome ? `, ${user.nome.split(' ')[0]}` : ''}</Text>
-            <Text style={styles.heroTitle}>Vamos conhecer você</Text>
-            <Text style={styles.heroSubtitle}>
-              Essas informações ajudam seu nutricionista a montar um plano sob medida.
-            </Text>
-          </View>
-
-          <View style={styles.card}>
-            <View style={styles.form}>
-              <Text style={styles.section}>Dados pessoais</Text>
-
-              <FormField
-                control={control}
-                name="dataNascimento"
-                label="Data de nascimento"
-                icon="calendar-outline"
-                placeholder="DD/MM/AAAA"
-                keyboardType="number-pad"
-                maxLength={10}
-                transform={formatDateMask}
-              />
-
-              <SelectField
-                control={control}
-                name="sexo"
-                label="Sexo"
-                placeholder="Selecione"
-                options={SEXOS}
-              />
-
-              <Text style={[styles.section, styles.sectionTop]}>Saúde</Text>
-
-              <SelectField
-                control={control}
-                name="tipoDiabetes"
-                label="Tipo de diabetes"
-                placeholder="Selecione"
-                options={TIPOS_DIABETES}
-              />
-
-              <View style={styles.row}>
-                <View style={styles.col}>
-                  <FormField
-                    control={control}
-                    name="peso"
-                    label="Peso (kg)"
-                    icon="fitness-outline"
-                    keyboardType="decimal-pad"
-                    placeholder="72,5"
-                  />
-                </View>
-                <View style={styles.col}>
-                  <FormField
-                    control={control}
-                    name="altura"
-                    label="Altura (m)"
-                    icon="resize-outline"
-                    keyboardType="decimal-pad"
-                    placeholder="1,74"
-                  />
-                </View>
-              </View>
-
-              <FormField
-                control={control}
-                name="restricoesAlergias"
-                label="Restrições e alergias"
-                icon="alert-circle-outline"
-                placeholder="Ex.: lactose, amendoim (opcional)"
-                multiline
-                numberOfLines={3}
-              />
-
-              <Pressable
-                style={[styles.primaryBtn, saving && styles.btnDisabled]}
-                onPress={onSubmit}
-                disabled={saving}
-              >
-                {saving ? (
-                  <ActivityIndicator color={colors.textInverse} />
-                ) : (
-                  <>
-                    <Text style={styles.primaryBtnText}>Concluir cadastro</Text>
-                    <Ionicons name="arrow-forward" size={18} color={colors.textInverse} />
-                  </>
-                )}
-              </Pressable>
-
-              <Text style={styles.helpText}>
-                Você poderá atualizar essas informações depois em Perfil.
+          <ScrollView
+            contentContainerStyle={styles.scroll}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.panel}>
+              <Text style={styles.brand}>NutriCare</Text>
+              <Text style={styles.title}>Vamos conhecer você</Text>
+              <Text style={styles.subtitle}>
+                {firstName
+                  ? `Oi, ${firstName}. Essas informações ajudam seu nutricionista a montar um plano sob medida.`
+                  : 'Essas informações ajudam seu nutricionista a montar um plano sob medida.'}
               </Text>
+
+              <View style={styles.form}>
+                <Text style={styles.section}>Dados pessoais</Text>
+
+                <FormField
+                  control={control}
+                  name="dataNascimento"
+                  variant="glass"
+                  label="Data de nascimento"
+                  icon="calendar-outline"
+                  placeholder="DD/MM/AAAA"
+                  keyboardType="number-pad"
+                  maxLength={10}
+                  transform={formatDateMask}
+                />
+
+                <SelectField
+                  control={control}
+                  name="sexo"
+                  tone="glass"
+                  label="Sexo"
+                  placeholder="Selecione"
+                  options={SEXOS}
+                />
+
+                <Text style={[styles.section, styles.sectionTop]}>Saúde</Text>
+
+                <SelectField
+                  control={control}
+                  name="tipoDiabetes"
+                  tone="glass"
+                  label="Tipo de diabetes"
+                  placeholder="Selecione"
+                  options={TIPOS_DIABETES}
+                />
+
+                <View style={styles.row}>
+                  <View style={styles.col}>
+                    <FormField
+                      control={control}
+                      name="peso"
+                      variant="glass"
+                      label="Peso (kg)"
+                      icon="fitness-outline"
+                      keyboardType="decimal-pad"
+                      placeholder="72,5"
+                    />
+                  </View>
+                  <View style={styles.col}>
+                    <FormField
+                      control={control}
+                      name="altura"
+                      variant="glass"
+                      label="Altura (m)"
+                      icon="resize-outline"
+                      keyboardType="decimal-pad"
+                      placeholder="1,74"
+                    />
+                  </View>
+                </View>
+
+                <FormField
+                  control={control}
+                  name="restricoesAlergias"
+                  variant="glass"
+                  label="Restrições e alergias"
+                  icon="alert-circle-outline"
+                  placeholder="Ex.: lactose, amendoim (opcional)"
+                  multiline
+                  numberOfLines={3}
+                />
+
+                <Pressable
+                  style={[styles.primaryBtn, saving && styles.btnDisabled]}
+                  onPress={onSubmit}
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <ActivityIndicator color={colors.textInverse} />
+                  ) : (
+                    <Text style={styles.primaryBtnText}>Concluir cadastro</Text>
+                  )}
+                </Pressable>
+
+                <Text style={styles.helpText}>
+                  Você poderá atualizar essas informações depois em Perfil.
+                </Text>
+              </View>
             </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.primary },
-  scroll: { flexGrow: 1, backgroundColor: colors.backgroundAlt },
-
-  hero: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.xxl + spacing.lg,
-    alignItems: 'center',
-    gap: spacing.xs,
+  root: {
+    flex: 1,
+    backgroundColor: colors.authBg1,
+    overflow: 'hidden',
   },
-  logoBox: {
-    width: 60,
-    height: 60,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
+  bgBlobA: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    backgroundColor: 'rgba(108, 34, 189, 0.35)',
+    top: -80,
+    left: -60,
+  },
+  bgBlobB: {
+    position: 'absolute',
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: 'rgba(157, 78, 221, 0.22)',
+    bottom: -40,
+    right: -70,
+  },
+  bgBlobC: {
+    position: 'absolute',
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(11, 0, 26, 0.55)',
+    top: '42%',
+    left: '30%',
+  },
+  safe: { flex: 1 },
+  scroll: {
+    flexGrow: 1,
     justifyContent: 'center',
-    marginBottom: spacing.sm,
-    boxShadow: '0 12px 28px rgba(0, 0, 0, 0.18)',
-    elevation: 8,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xl,
   },
-  heroEyebrow: {
+  panel: {
+    width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
+    backgroundColor: colors.authGlass,
+    borderWidth: 1,
+    borderColor: colors.authBorder,
+    borderRadius: 24,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xxl,
+    paddingBottom: spacing.xl,
+    gap: spacing.md,
+    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.45)',
+    elevation: 12,
+  },
+  brand: {
     ...typography.eyebrow,
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.authBrand,
+    letterSpacing: 2.2,
+    textAlign: 'center',
+    fontSize: 12,
   },
-  heroTitle: {
+  title: {
     ...typography.h1,
     color: colors.textInverse,
     fontSize: 26,
+    letterSpacing: 0.4,
     textAlign: 'center',
+    fontWeight: '600',
   },
-  heroSubtitle: {
+  subtitle: {
     ...typography.body,
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.authMuted,
     textAlign: 'center',
-    maxWidth: 300,
-    marginTop: spacing.xs,
+    marginBottom: spacing.sm,
+    lineHeight: 21,
   },
-
-  card: {
-    flex: 1,
-    backgroundColor: colors.background,
-    marginTop: -spacing.xxl,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.xl,
-  },
-  form: { gap: spacing.md },
+  form: { gap: spacing.md, width: '100%' },
   section: {
     ...typography.eyebrow,
-    color: colors.primary,
+    color: colors.authFocus,
+    letterSpacing: 1.2,
   },
-  sectionTop: { marginTop: spacing.md },
+  sectionTop: { marginTop: spacing.sm },
   row: { flexDirection: 'row', gap: spacing.md },
   col: { flex: 1 },
-
   primaryBtn: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.primary,
+    backgroundColor: '#6C22BD',
     paddingVertical: spacing.lg,
     borderRadius: radius.pill,
-    marginTop: spacing.md,
-    boxShadow: '0 10px 24px rgba(124, 58, 237, 0.35)',
+    marginTop: spacing.sm,
+    boxShadow: '0 10px 20px rgba(108, 34, 189, 0.35)',
     elevation: 6,
   },
   btnDisabled: { opacity: 0.7 },
-  primaryBtnText: { color: colors.textInverse, fontSize: 15, fontWeight: '700' },
-
+  primaryBtnText: {
+    color: colors.textInverse,
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
   helpText: {
     ...typography.caption,
-    color: colors.textMuted,
+    color: colors.authMuted,
     textAlign: 'center',
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
   },
 });

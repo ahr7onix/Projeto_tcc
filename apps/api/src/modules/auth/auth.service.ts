@@ -12,6 +12,7 @@ import { OAuth2Client, TokenPayload } from 'google-auth-library';
 import type { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
 import { perfilEstaCompleto } from '../../common/perfil-completo';
+import { MailService } from '../mail/mail.service';
 import { CadastroDto } from './dto/cadastro.dto';
 import { LoginDto } from './dto/login.dto';
 
@@ -46,13 +47,17 @@ export class AuthService {
     @Inject(PG_POOL) private readonly pool: Pool,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
+    private readonly mail: MailService,
   ) {
     this.googleClientId =
       this.config.get<string>('GOOGLE_CLIENT_ID', '').trim();
     this.googleClient = new OAuth2Client(this.googleClientId);
   }
 
-  async cadastro(dto: CadastroDto): Promise<AuthResponse> {
+  async cadastro(
+    dto: CadastroDto,
+    papel: 'paciente' | 'nutricionista',
+  ): Promise<AuthResponse> {
     const email = dto.email.trim().toLowerCase();
     const nome = dto.nome.trim().replace(/\s+/g, ' ');
 
@@ -75,16 +80,30 @@ export class AuthService {
         `INSERT INTO usuario (nome, email, senha, tipo)
          VALUES ($1, $2, $3, $4)
          RETURNING id_usuario, nome, email, senha, tipo`,
-        [nome, email, senhaHash, dto.role],
+        [nome, email, senhaHash, papel],
       );
       const user = inserted.rows[0];
 
-      if (dto.role === 'paciente') {
+      if (papel === 'paciente') {
         const dataNascimento = this.parseBrDate(dto.dataNascimento);
-        await client.query(
+        const pacienteIns = await client.query<{ id_paciente: string }>(
           `INSERT INTO paciente (id_usuario, data_nascimento, genero, tipo_diabetes)
-           VALUES ($1, $2, $3, $4)`,
+           VALUES ($1, $2, $3, $4)
+           RETURNING id_paciente`,
           [user.id_usuario, dataNascimento, dto.sexo ?? null, dto.tipoDiabetes ?? null],
+        );
+        // Paciente novo já aparece na lista do nutricionista (vínculo automático).
+        await client.query(
+          `INSERT INTO nutricionista_paciente (id_nutricionista, id_paciente)
+           SELECT n.id_nutricionista, $1
+             FROM nutricionista n
+            WHERE NOT EXISTS (
+              SELECT 1 FROM nutricionista_paciente np
+               WHERE np.id_nutricionista = n.id_nutricionista
+                 AND np.id_paciente = $1
+                 AND np.ativo = TRUE
+            )`,
+          [pacienteIns.rows[0].id_paciente],
         );
       } else {
         const crn = dto.crn?.trim() || null;
@@ -122,7 +141,10 @@ export class AuthService {
     return this.issueSession(user);
   }
 
-  async loginGoogle(idToken: string): Promise<AuthResponse> {
+  async loginGoogle(
+    idToken: string,
+    perfilCadastro: 'paciente' | 'nutricionista' = 'paciente',
+  ): Promise<AuthResponse> {
     if (!this.googleClientId) {
       throw new UnauthorizedException(
         'Login com Google não está configurado nesta instalação: defina GOOGLE_CLIENT_ID no .env da API.',
@@ -170,23 +192,44 @@ export class AuthService {
         let user = result.rows[0];
 
         if (!user) {
-
           const randomPass = randomBytes(16).toString('hex');
           const senhaHash = await bcrypt.hash(randomPass, 10);
+          const papel = perfilCadastro === 'nutricionista' ? 'nutricionista' : 'paciente';
 
           const inserted = await client.query<UserRow>(
             `INSERT INTO usuario (nome, email, senha, tipo)
              VALUES ($1, $2, $3, $4)
              RETURNING id_usuario, nome, email, senha, tipo`,
-            [nome, email, senhaHash, 'paciente']
+            [nome, email, senhaHash, papel]
           );
           user = inserted.rows[0];
 
-          await client.query(
-            `INSERT INTO paciente (id_usuario, data_nascimento, genero, tipo_diabetes)
-             VALUES ($1, NULL, NULL, NULL)`,
-            [user.id_usuario]
-          );
+          if (papel === 'paciente') {
+            const pacienteIns = await client.query<{ id_paciente: string }>(
+              `INSERT INTO paciente (id_usuario, data_nascimento, genero, tipo_diabetes)
+               VALUES ($1, NULL, NULL, NULL)
+               RETURNING id_paciente`,
+              [user.id_usuario],
+            );
+            await client.query(
+              `INSERT INTO nutricionista_paciente (id_nutricionista, id_paciente)
+               SELECT n.id_nutricionista, $1
+                 FROM nutricionista n
+                WHERE NOT EXISTS (
+                  SELECT 1 FROM nutricionista_paciente np
+                   WHERE np.id_nutricionista = n.id_nutricionista
+                     AND np.id_paciente = $1
+                     AND np.ativo = TRUE
+                )`,
+              [pacienteIns.rows[0].id_paciente],
+            );
+          } else {
+            await client.query(
+              `INSERT INTO nutricionista (id_usuario, crn, especialidade, perfil_completo)
+               VALUES ($1, NULL, NULL, FALSE)`,
+              [user.id_usuario]
+            );
+          }
         }
 
         await client.query('COMMIT');
@@ -264,9 +307,127 @@ export class AuthService {
     );
   }
 
-  async esqueciSenha(_email: string): Promise<{ message: string }> {
+  async esqueciSenha(email: string): Promise<{
+    message: string;
+    previewUrl?: string;
+    resetUrl?: string;
+  }> {
+    const message =
+      'Se o e-mail estiver cadastrado, enviaremos instruções para redefinir a senha.';
 
-    return { message: 'Se o e-mail estiver cadastrado, enviaremos instruções.' };
+    const result = await this.pool.query<{
+      id_usuario: string;
+      nome: string;
+      email: string;
+    }>(
+      'SELECT id_usuario, nome, email FROM usuario WHERE LOWER(email) = LOWER($1)',
+      [email.trim()],
+    );
+
+    const user = result.rows[0];
+    if (!user) {
+      // Não revela se o e-mail existe.
+      return { message };
+    }
+
+    const token = randomBytes(32).toString('hex');
+    const tokenHash = this.hashToken(token);
+    const expiraEm = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+
+    // Invalida tokens anteriores ainda válidos.
+    await this.pool.query(
+      `UPDATE senha_reset_token
+       SET usado_em = NOW()
+       WHERE id_usuario = $1 AND usado_em IS NULL`,
+      [user.id_usuario],
+    );
+
+    await this.pool.query(
+      `INSERT INTO senha_reset_token (id_usuario, token_hash, expira_em)
+       VALUES ($1, $2, $3)`,
+      [user.id_usuario, tokenHash, expiraEm.toISOString()],
+    );
+
+    const webUrl = (
+      this.config.get<string>('WEB_APP_URL') || 'http://localhost:5173'
+    ).replace(/\/$/, '');
+    const resetUrl = `${webUrl}/redefinir-senha?token=${token}`;
+
+    try {
+      const envio = await this.mail.enviarRedefinicaoSenha({
+        para: user.email,
+        nome: user.nome,
+        resetUrl,
+      });
+
+      const isProd = this.config.get<string>('NODE_ENV') === 'production';
+      return {
+        message,
+        ...(isProd
+          ? {}
+          : {
+              previewUrl: envio.previewUrl,
+              resetUrl,
+            }),
+      };
+    } catch (err) {
+      // Em falha de e-mail, ainda devolve mensagem genérica (e o link em dev).
+      const isProd = this.config.get<string>('NODE_ENV') === 'production';
+      return {
+        message,
+        ...(isProd ? {} : { resetUrl }),
+      };
+    }
+  }
+
+  async redefinirSenha(token: string, novaSenha: string): Promise<{ message: string }> {
+    const tokenHash = this.hashToken(token);
+    const found = await this.pool.query<{
+      id_token: string;
+      id_usuario: string;
+    }>(
+      `SELECT id_token, id_usuario
+       FROM senha_reset_token
+       WHERE token_hash = $1
+         AND usado_em IS NULL
+         AND expira_em > NOW()`,
+      [tokenHash],
+    );
+
+    const row = found.rows[0];
+    if (!row) {
+      throw new UnauthorizedException(
+        'Link inválido ou expirado. Solicite uma nova redefinição de senha.',
+      );
+    }
+
+    const senhaHash = await bcrypt.hash(novaSenha, 10);
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query(
+        'UPDATE usuario SET senha = $1, atualizado_em = NOW() WHERE id_usuario = $2',
+        [senhaHash, row.id_usuario],
+      );
+      await client.query(
+        'UPDATE senha_reset_token SET usado_em = NOW() WHERE id_token = $1',
+        [row.id_token],
+      );
+      // Revoga sessões ativas depois da troca de senha.
+      await client.query(
+        `UPDATE refresh_token SET revogado_em = NOW()
+         WHERE id_usuario = $1 AND revogado_em IS NULL`,
+        [row.id_usuario],
+      );
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK').catch(() => undefined);
+      throw err;
+    } finally {
+      client.release();
+    }
+
+    return { message: 'Senha atualizada com sucesso. Você já pode entrar.' };
   }
 
   private async issueSession(user: UserRow): Promise<AuthResponse> {

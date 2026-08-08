@@ -14,12 +14,19 @@ export async function login(input: LoginInput): Promise<AuthResponse> {
 }
 
 export async function loginGoogle(idToken: string): Promise<AuthResponse> {
-  const { data } = await api.post<AuthResponse>('/auth/google', { idToken });
+  const { data } = await api.post<AuthResponse>('/auth/google/paciente', {
+    idToken,
+  });
   return data;
 }
 
 export async function cadastro(input: CadastroInput): Promise<AuthResponse> {
-  const { data } = await api.post<AuthResponse>('/auth/cadastro', input);
+  // App mobile: sempre paciente — o papel vem da rota, não do corpo.
+  const { role: _role, ...payload } = input;
+  const { data } = await api.post<AuthResponse>(
+    '/auth/cadastro/paciente',
+    payload,
+  );
   return data;
 }
 

@@ -56,7 +56,7 @@ export default function MensagensScreen() {
           <EmptyState
             icon="chatbubbles-outline"
             title="Nenhuma conversa"
-            message="Assim que um nutricionista vincular você, a conversa aparecerá aqui."
+            message="Quando o nutricionista iniciar a conversa, ela aparecerá aqui."
           />
         </Card>
       ) : (

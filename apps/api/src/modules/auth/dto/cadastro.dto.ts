@@ -1,5 +1,10 @@
 import { IsEmail, IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
+/**
+ * Cadastro sem `role` no corpo — o papel é definido pela rota da API
+ * (`/auth/cadastro/paciente` ou `/auth/cadastro/nutricionista`), para o
+ * cliente não conseguir se auto-promover.
+ */
 export class CadastroDto {
   @IsString()
   @MinLength(2, { message: 'Nome muito curto' })
@@ -12,9 +17,6 @@ export class CadastroDto {
   @IsString()
   @MinLength(8, { message: 'Use pelo menos 8 caracteres' })
   senha!: string;
-
-  @IsIn(['paciente', 'nutricionista'])
-  role!: 'paciente' | 'nutricionista';
 
   @IsOptional()
   @IsString()
