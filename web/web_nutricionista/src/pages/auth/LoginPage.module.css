@@ -213,13 +213,19 @@
   width: 100%;
   margin-bottom: 6px;
   position: relative;
+  min-height: 44px;
 }
 
 .googleBtn {
   width: 100%;
-  min-height: 40px;
+  min-height: 44px;
   display: flex;
   justify-content: center;
+  align-items: center;
+}
+
+.googleBtn > div {
+  margin: 0 auto !important;
 }
 
 .googleBusy {
@@ -234,14 +240,27 @@
   justify-content: center;
   gap: 10px;
   padding: 12px 16px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #131314;
+  color: #ffffff;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   font-family: inherit;
+}
+
+.googleFallback:hover:not(:disabled) {
+  background: #1f1f1f;
+}
+
+.googleFallback:disabled {
+  opacity: 0.75;
+  cursor: wait;
+}
+
+.googleHost {
+  display: none;
 }
 
 .divider {

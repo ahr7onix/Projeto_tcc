@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -23,7 +23,13 @@ import {
   extractAuthError,
   useCadastro,
   useLogin,
+  useLoginGoogle,
 } from '@/hooks/use-auth';
+import {
+  isGoogleAuthConfigured,
+  mountGoogleWebButton,
+  useNativeGoogleAuthRequest,
+} from '@/lib/google-sign-in';
 import {
   cadastroSchema,
   loginSchema,
@@ -38,9 +44,51 @@ interface Props {
   initialMode?: Mode;
 }
 
+function GoogleWebButton({
+  loading,
+  disabled,
+  onCredential,
+  onError,
+}: {
+  loading?: boolean;
+  disabled?: boolean;
+  onCredential: (idToken: string) => void;
+  onError: (message: string) => void;
+}) {
+  const [host, setHost] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || disabled || !host) return;
+    return mountGoogleWebButton(host, onCredential, onError);
+  }, [host, disabled, onCredential, onError]);
+
+  return (
+    <View style={styles.googleWebWrap}>
+      <SocialButton provider="google" tone="glass" loading={loading} disabled />
+      {Platform.OS === 'web' ? (
+        // Host DOM real para o botão oficial do Google (web / popup, sem redirect_uri)
+        <div
+          ref={setHost}
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+            opacity: 0.02,
+            overflow: 'hidden',
+            pointerEvents: disabled || loading ? 'none' : 'auto',
+          }}
+        />
+      ) : null}
+    </View>
+  );
+}
+
 export function LoginForm({ initialMode = 'login' }: Props) {
   const [mode, setMode] = useState<Mode>(initialMode);
   const isSignUp = mode === 'cadastro';
+  const isWeb = Platform.OS === 'web';
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -59,11 +107,47 @@ export function LoginForm({ initialMode = 'login' }: Props) {
 
   const login = useLogin();
   const cadastro = useCadastro();
+  const loginGoogle = useLoginGoogle();
+  const googleConfigured = isGoogleAuthConfigured();
+  const [googleError, setGoogleError] = useState<string | null>(null);
+
+  const [googleRequest, googleResponse, promptGoogle] = useNativeGoogleAuthRequest();
+
+  const submitGoogleToken = useCallback((idToken: string) => {
+    setGoogleError(null);
+    loginGoogle.mutate(idToken, {
+      onError: (err) => {
+        setGoogleError(extractAuthError(err, 'Não foi possível entrar com Google.'));
+      },
+    });
+  }, [loginGoogle]);
+
+  const handleGoogleWebError = useCallback((message: string) => {
+    setGoogleError(message);
+  }, []);
+
+  useEffect(() => {
+    if (isWeb || !googleResponse) return;
+    if (googleResponse.type === 'success') {
+      const idToken = googleResponse.params.id_token;
+      if (!idToken) {
+        setGoogleError('O Google não retornou o token de identidade.');
+        return;
+      }
+      submitGoogleToken(idToken);
+      return;
+    }
+    if (googleResponse.type === 'error') {
+      setGoogleError(googleResponse.error?.message || 'Falha no login com Google.');
+    }
+  }, [googleResponse, isWeb]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const switchMode = (next: Mode) => {
     setMode(next);
     login.reset();
     cadastro.reset();
+    loginGoogle.reset();
+    setGoogleError(null);
     if (next === 'cadastro') {
       router.replace('/(auth)/cadastro');
     } else {
@@ -84,21 +168,63 @@ export function LoginForm({ initialMode = 'login' }: Props) {
     });
   });
 
+  const handleGoogleNative = async () => {
+    setGoogleError(null);
+    if (!googleConfigured) {
+      Alert.alert(
+        'Google não configurado',
+        'Defina EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID no arquivo .env do app mobile e reinicie o Expo.',
+      );
+      return;
+    }
+    try {
+      await promptGoogle();
+    } catch (err) {
+      setGoogleError(
+        err instanceof Error ? err.message : 'Não foi possível abrir o login do Google.',
+      );
+    }
+  };
+
   const handleSocial = (provider: SocialProvider) => {
+    if (provider === 'google') {
+      void handleGoogleNative();
+      return;
+    }
     Alert.alert(
       'Em breve',
-      `Login com ${provider === 'apple' ? 'Apple' : provider === 'google' ? 'Google' : 'Facebook'} ainda não foi configurado.`,
+      `Login com ${provider === 'apple' ? 'Apple' : 'Facebook'} ainda não foi configurado.`,
     );
   };
 
-  const pending = isSignUp ? cadastro.isPending : login.isPending;
-  const errorMessage = isSignUp
-    ? cadastro.isError
-      ? extractAuthError(cadastro.error, 'Não foi possível criar a conta.')
-      : null
-    : login.isError
-      ? extractAuthError(login.error, 'E-mail ou senha incorretos.')
-      : null;
+  const pending =
+    (isSignUp ? cadastro.isPending : login.isPending) || loginGoogle.isPending;
+  const errorMessage = googleError
+    ? googleError
+    : isSignUp
+      ? cadastro.isError
+        ? extractAuthError(cadastro.error, 'Não foi possível criar a conta.')
+        : null
+      : login.isError
+        ? extractAuthError(login.error, 'E-mail ou senha incorretos.')
+        : null;
+
+  const googleButton = isWeb ? (
+    <GoogleWebButton
+      loading={loginGoogle.isPending}
+      disabled={!googleConfigured || pending}
+      onCredential={submitGoogleToken}
+      onError={handleGoogleWebError}
+    />
+  ) : (
+    <SocialButton
+      provider="google"
+      tone="glass"
+      loading={loginGoogle.isPending}
+      disabled={!googleRequest || pending}
+      onPress={() => handleSocial('google')}
+    />
+  );
 
   return (
     <View style={styles.root}>
@@ -178,12 +304,18 @@ export function LoginForm({ initialMode = 'login' }: Props) {
                     onPress={onCadastro}
                     disabled={pending}
                   >
-                    {pending ? (
+                    {pending && !loginGoogle.isPending ? (
                       <ActivityIndicator color={colors.textInverse} />
                     ) : (
                       <Text style={styles.primaryBtnText}>Cadastrar</Text>
                     )}
                   </Pressable>
+
+                  <View style={styles.dividerWrap}>
+                    <Divider label="ou continue com" tone="glass" />
+                  </View>
+
+                  {googleButton}
                 </View>
               ) : (
                 <View style={styles.form}>
@@ -217,7 +349,7 @@ export function LoginForm({ initialMode = 'login' }: Props) {
                     onPress={onLogin}
                     disabled={pending}
                   >
-                    {pending ? (
+                    {pending && !loginGoogle.isPending ? (
                       <ActivityIndicator color={colors.textInverse} />
                     ) : (
                       <Text style={styles.primaryBtnText}>Entrar</Text>
@@ -228,11 +360,7 @@ export function LoginForm({ initialMode = 'login' }: Props) {
                     <Divider label="ou continue com" tone="glass" />
                   </View>
 
-                  <SocialButton
-                    provider="google"
-                    tone="glass"
-                    onPress={() => handleSocial('google')}
-                  />
+                  {googleButton}
                 </View>
               )}
 
@@ -394,5 +522,10 @@ const styles = StyleSheet.create({
   toggleStrong: {
     color: colors.textInverse,
     fontWeight: '700',
+  },
+  googleWebWrap: {
+    position: 'relative',
+    width: '100%',
+    minHeight: 48,
   },
 });

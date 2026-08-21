@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { api, extractError } from '../../lib/api'
@@ -39,6 +39,7 @@ export default function LoginPage() {
   const [loginError, setLoginError] = useState<string | null>(null)
   const [loginLoading, setLoginLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [googleReady, setGoogleReady] = useState(false)
 
   const [nome, setNome] = useState('')
   const [regEmail, setRegEmail] = useState('')
@@ -46,46 +47,23 @@ export default function LoginPage() {
   const [regError, setRegError] = useState<string | null>(null)
   const [regLoading, setRegLoading] = useState(false)
 
-  useEffect(() => {
-    if (!GOOGLE_CLIENT_ID) return
-    const scriptId = 'google-gsi-script'
-    const initGoogle = () => {
-      if (!window.google || !GOOGLE_CLIENT_ID) return
-      window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleGoogleCallback,
-        ux_mode: 'popup',
-      })
-      const btn = document.getElementById('google-btn-container')
-      if (btn) {
-        window.google.accounts.id.renderButton(btn, {
-          type: 'standard',
-          size: 'large',
-          width: Math.min(btn.offsetWidth || 320, 320),
-          text: 'signin_with',
-          shape: 'pill',
-          theme: 'filled_black',
-          logo_alignment: 'left',
-          locale: 'pt-BR',
-        })
-      }
-    }
-    if (!document.getElementById(scriptId)) {
-      const script = document.createElement('script')
-      script.id = scriptId
-      script.src = 'https://accounts.google.com/gsi/client'
-      script.async = true
-      script.defer = true
-      script.onload = initGoogle
-      document.head.appendChild(script)
+  const loginGoogleRef = useRef<HTMLDivElement | null>(null)
+  const signupGoogleRef = useRef<HTMLDivElement | null>(null)
+  const isSignUpRef = useRef(isSignUp)
+  isSignUpRef.current = isSignUp
+
+  const setActiveError = useCallback((message: string | null) => {
+    if (isSignUpRef.current) {
+      setRegError(message)
+      setLoginError(null)
     } else {
-      initGoogle()
+      setLoginError(message)
+      setRegError(null)
     }
-    return () => { window.google?.accounts.id.cancel() }
   }, [])
 
-  async function handleGoogleCallback(response: { credential: string }) {
-    setLoginError(null)
+  const handleGoogleCallback = useCallback(async (response: { credential: string }) => {
+    setActiveError(null)
     setGoogleLoading(true)
     try {
       const { data } = await api.post('/auth/google/nutricionista', {
@@ -93,18 +71,91 @@ export default function LoginPage() {
       })
       const destino = DESTINO_POR_PERFIL[data.user.role]
       if (!destino) {
-        setLoginError(ERRO_PERFIL)
-        setGoogleLoading(false)
+        setActiveError(ERRO_PERFIL)
         return
       }
       login(data.user, data.accessToken, data.refreshToken)
       navigate(destino)
     } catch (err) {
-      setLoginError(extractError(err))
+      setActiveError(extractError(err))
     } finally {
       setGoogleLoading(false)
     }
-  }
+  }, [login, navigate, setActiveError])
+
+  const handleGoogleCallbackRef = useRef(handleGoogleCallback)
+  handleGoogleCallbackRef.current = handleGoogleCallback
+
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return
+
+    const scriptId = 'google-gsi-script'
+    let cancelled = false
+
+    const initGoogle = () => {
+      if (cancelled || !window.google || !GOOGLE_CLIENT_ID) return
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: (response: { credential: string }) => {
+          void handleGoogleCallbackRef.current(response)
+        },
+        ux_mode: 'popup',
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      })
+      setGoogleReady(true)
+    }
+
+    const existing = document.getElementById(scriptId) as HTMLScriptElement | null
+    if (!existing) {
+      const script = document.createElement('script')
+      script.id = scriptId
+      script.src = 'https://accounts.google.com/gsi/client'
+      script.async = true
+      script.defer = true
+      script.onload = initGoogle
+      document.head.appendChild(script)
+    } else if (window.google) {
+      initGoogle()
+    } else {
+      existing.addEventListener('load', initGoogle)
+    }
+
+    return () => {
+      cancelled = true
+      window.google?.accounts.id.cancel()
+    }
+  }, [])
+
+  // Renderiza o botão oficial só no painel visível, depois da animação.
+  // O iframe do Google fica em branco se montar durante o transform.
+  useEffect(() => {
+    if (!googleReady || !window.google || !GOOGLE_CLIENT_ID) return
+
+    const target = isSignUp ? signupGoogleRef.current : loginGoogleRef.current
+    const other = isSignUp ? loginGoogleRef.current : signupGoogleRef.current
+    if (other) other.innerHTML = ''
+    if (!target) return
+
+    const timer = window.setTimeout(() => {
+      target.innerHTML = ''
+      const width = Math.max(240, Math.min(Math.floor(target.offsetWidth || 320), 360))
+      window.google?.accounts.id.renderButton(target, {
+        type: 'standard',
+        theme: 'filled_black',
+        size: 'large',
+        shape: 'pill',
+        text: 'continue_with',
+        logo_alignment: 'left',
+        locale: 'pt-BR',
+        width,
+      })
+    }, 650)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [googleReady, isSignUp])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -115,7 +166,6 @@ export default function LoginPage() {
       const destino = DESTINO_POR_PERFIL[data.user.role]
       if (!destino) {
         setLoginError(ERRO_PERFIL)
-        setLoginLoading(false)
         return
       }
       login(data.user, data.accessToken, data.refreshToken)
@@ -144,7 +194,6 @@ export default function LoginPage() {
       const destino = DESTINO_POR_PERFIL[data.user.role]
       if (!destino) {
         setRegError(ERRO_PERFIL)
-        setRegLoading(false)
         return
       }
       login(data.user, data.accessToken, data.refreshToken ?? '')
@@ -156,8 +205,45 @@ export default function LoginPage() {
     }
   }
 
-  const goSignUp = () => navigate('/cadastro')
-  const goSignIn = () => navigate('/login')
+  const goSignUp = () => {
+    setLoginError(null)
+    setRegError(null)
+    navigate('/cadastro')
+  }
+  const goSignIn = () => {
+    setLoginError(null)
+    setRegError(null)
+    navigate('/login')
+  }
+
+  const googleSlot = (ref: React.RefObject<HTMLDivElement | null>, visible: boolean) => (
+    <div className={styles.googleWrap}>
+      {GOOGLE_CLIENT_ID ? (
+        <>
+          <div
+            ref={ref}
+            className={`${styles.googleBtn} ${googleLoading ? styles.googleBusy : ''}`}
+            aria-hidden={!visible}
+          />
+          {!googleReady && (
+            <button type="button" className={styles.googleFallback} disabled>
+              <GoogleIcon /> Carregando Google...
+            </button>
+          )}
+        </>
+      ) : (
+        <button
+          type="button"
+          className={styles.googleFallback}
+          onClick={() =>
+            setActiveError('Configure VITE_GOOGLE_CLIENT_ID no .env para ativar o login com Google.')
+          }
+        >
+          <GoogleIcon /> Continuar com Google
+        </button>
+      )}
+    </div>
+  )
 
   return (
     <div className={styles.page}>
@@ -171,6 +257,15 @@ export default function LoginPage() {
             <div className={styles.brand}>NutriCare</div>
             <h1 className={styles.title}>Criar conta</h1>
             {regError && <div className={styles.error}>{regError}</div>}
+
+            {googleSlot(signupGoogleRef, isSignUp)}
+
+            <div className={styles.divider}>
+              <div className={styles.dividerLine} />
+              <span>ou e-mail</span>
+              <div className={styles.dividerLine} />
+            </div>
+
             <input
               className={styles.input}
               type="text"
@@ -199,7 +294,7 @@ export default function LoginPage() {
               autoComplete="new-password"
               minLength={8}
             />
-            <button type="submit" className={styles.btn} disabled={regLoading}>
+            <button type="submit" className={styles.btn} disabled={regLoading || googleLoading}>
               {regLoading ? 'Criando...' : 'Cadastrar'}
             </button>
             <button type="button" className={styles.mobileToggle} onClick={goSignIn}>
@@ -215,24 +310,7 @@ export default function LoginPage() {
             <h1 className={styles.title}>Bem-vindo de volta</h1>
             {loginError && <div className={styles.error}>{loginError}</div>}
 
-            {GOOGLE_CLIENT_ID ? (
-              <div className={styles.googleWrap}>
-                <div
-                  id="google-btn-container"
-                  className={`${styles.googleBtn} ${googleLoading ? styles.googleBusy : ''}`}
-                />
-              </div>
-            ) : (
-              <button
-                type="button"
-                className={styles.googleFallback}
-                onClick={() =>
-                  setLoginError('Configure VITE_GOOGLE_CLIENT_ID no .env para ativar o login com Google.')
-                }
-              >
-                <GoogleIcon /> Continuar com Google
-              </button>
-            )}
+            {googleSlot(loginGoogleRef, !isSignUp)}
 
             <div className={styles.divider}>
               <div className={styles.dividerLine} />
