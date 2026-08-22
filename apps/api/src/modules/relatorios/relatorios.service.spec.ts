@@ -190,7 +190,7 @@ describe('RelatoriosService', () => {
     });
 
     it('should use the range of each moment to classify', async () => {
-      // 78 mg/dL é normal em jejum (70–130) e baixo antes de dormir (90–150).
+      // 78 mg/dL é normal em jejum (70–180) e baixo antes de dormir (90–150).
       const { service } = criarServico([
         [linhaPaciente()],
         [

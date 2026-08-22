@@ -20,6 +20,7 @@ import { PushModule } from './modules/push/push.module';
 import { ReceitasModule } from './modules/receitas/receitas.module';
 import { RegistrosModule } from './modules/registros/registros.module';
 import { RelatoriosModule } from './modules/relatorios/relatorios.module';
+import { RestricoesModule } from './modules/restricoes/restricoes.module';
 import { SaudeModule } from './modules/saude/saude.module';
 import { StatusModule } from './modules/status/status.module';
 import { VinculosModule } from './modules/vinculos/vinculos.module';
@@ -51,6 +52,7 @@ import { VinculosModule } from './modules/vinculos/vinculos.module';
     MedicamentosModule,
     NutricionalModule,
     NotificacoesModule,
+    RestricoesModule,
   ],
 })
 export class AppModule {}

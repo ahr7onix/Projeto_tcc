@@ -34,6 +34,14 @@ export class RegistrosController {
     });
   }
 
+  @Get('glicemia/ultimo')
+  ultimaGlicemia(
+    @CurrentUser() user: JwtPayload,
+    @Query('pacienteId') pacienteId?: string,
+  ) {
+    return this.registros.ultimaGlicemia(user, pacienteId);
+  }
+
   @Post('glicemia')
   @HttpCode(HttpStatus.CREATED)
   createGlicemia(
