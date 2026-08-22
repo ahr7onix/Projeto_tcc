@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import type { ComponentProps } from 'react';
+import { useMemo } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -9,10 +11,29 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { GlicemicStatusBanner } from '@/components/GlicemicStatusBanner';
+import { useAccessibleMode } from '@/hooks/use-accessible-mode';
+import { useGlycemicWatch } from '@/hooks/use-glycemic-watch';
+import { listarRegistros, type RegistroItem } from '@/lib/api/registros';
 import { useAuthStore } from '@/stores/auth';
 import { colors, radius, spacing, typography } from '@/lib/theme';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
+
+function ehHoje(iso: string): boolean {
+  const d = new Date(iso);
+  const hoje = new Date();
+  return (
+    d.getDate() === hoje.getDate() &&
+    d.getMonth() === hoje.getMonth() &&
+    d.getFullYear() === hoje.getFullYear()
+  );
+}
+
+function horaCurta(iso: string): string {
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
 
 function saudacao() {
   const h = new Date().getHours();
@@ -40,10 +61,9 @@ function dataHoje() {
   return `${d.getDate()} de ${meses[d.getMonth()]}`;
 }
 
-const stats: {
-  key: string;
+const statsMeta: {
+  key: 'glicemia' | 'refeicoes' | 'media';
   icon: IconName;
-  value: string;
   label: string;
   accent: string;
   href: string;
@@ -51,7 +71,6 @@ const stats: {
   {
     key: 'glicemia',
     icon: 'water',
-    value: '0',
     label: 'Glicemia',
     accent: '#C4B5FD',
     href: '/(tabs)/registros',
@@ -59,7 +78,6 @@ const stats: {
   {
     key: 'refeicoes',
     icon: 'restaurant',
-    value: '0',
     label: 'Refeições',
     accent: '#6EE7B7',
     href: '/(tabs)/alimentacao',
@@ -67,7 +85,6 @@ const stats: {
   {
     key: 'media',
     icon: 'sparkles',
-    value: '--',
     label: 'Média',
     accent: '#FCD34D',
     href: '/(tabs)/registros',
@@ -140,6 +157,41 @@ const destinations: {
 export default function HomeScreen() {
   const user = useAuthStore((s) => s.user);
   const primeiroNome = (user?.nome ?? 'Visitante').split(' ')[0];
+  const { isSimplified } = useAccessibleMode();
+
+  useGlycemicWatch();
+
+  const { data: registrosData } = useQuery({
+    queryKey: ['registros', 7],
+    queryFn: () => listarRegistros(7),
+  });
+
+  const registrosHoje = useMemo(() => {
+    const todos = registrosData?.data ?? [];
+    return todos.filter((r) => ehHoje(r.dataHora));
+  }, [registrosData]);
+
+  const stats = useMemo(() => {
+    const glicemiaHoje = registrosHoje.filter((r) => r.tipo === 'glicemia');
+    const refeicoesHoje = registrosHoje.filter((r) => r.tipo === 'refeicao');
+    const media = glicemiaHoje.length
+      ? Math.round(
+          glicemiaHoje.reduce((soma, r) => soma + (r.valor ?? 0), 0) / glicemiaHoje.length,
+        )
+      : null;
+
+    const valores: Record<'glicemia' | 'refeicoes' | 'media', string> = {
+      glicemia: String(glicemiaHoje.length),
+      refeicoes: String(refeicoesHoje.length),
+      media: media != null ? String(media) : '--',
+    };
+
+    return statsMeta.map((s) => ({ ...s, value: valores[s.key] }));
+  }, [registrosHoje]);
+
+  const heroSub = registrosHoje.length
+    ? `Você já registrou ${registrosHoje.length} ${registrosHoje.length === 1 ? 'item' : 'itens'} hoje. Continue assim!`
+    : 'O que você quer fazer agora?';
 
   return (
     <View style={styles.root}>
@@ -182,8 +234,10 @@ export default function HomeScreen() {
             <Text style={styles.hello}>
               {saudacao()}, {primeiroNome}
             </Text>
-            <Text style={styles.heroSub}>O que você quer fazer agora?</Text>
+            <Text style={styles.heroSub}>{heroSub}</Text>
           </View>
+
+          <GlicemicStatusBanner />
 
           {/* Ações principais — primeiro no fluxo, alvos grandes */}
           <View style={styles.primaryRow}>
@@ -195,129 +249,173 @@ export default function HomeScreen() {
                 accessibilityLabel={a.label}
                 style={({ pressed }) => [
                   styles.primaryCard,
+                  isSimplified && styles.primaryCardGrande,
                   pressed && styles.pressed,
                 ]}
               >
                 <View style={[styles.primaryIcon, { backgroundColor: a.tint }]}>
-                  <Ionicons name={a.icon} size={24} color={colors.textInverse} />
+                  <Ionicons name={a.icon} size={isSimplified ? 30 : 24} color={colors.textInverse} />
                 </View>
-                <Text style={styles.primaryLabel}>{a.label}</Text>
-                <Text style={styles.primaryHint}>{a.hint}</Text>
+                <Text style={[styles.primaryLabel, isSimplified && styles.primaryLabelGrande]}>
+                  {a.label}
+                </Text>
+                <Text style={[styles.primaryHint, isSimplified && styles.primaryHintGrande]}>
+                  {a.hint}
+                </Text>
               </Pressable>
             ))}
           </View>
 
-          <Text style={styles.sectionLabel}>Ir para</Text>
-          <View style={styles.destGrid}>
-            {[0, 1].map((row) => (
-              <View key={row} style={styles.destRow}>
-                {destinations.slice(row * 2, row * 2 + 2).map((d) => (
+          {!isSimplified && (
+            <>
+              <Text style={styles.sectionLabel}>Ir para</Text>
+              <View style={styles.destGrid}>
+                {[0, 1].map((row) => (
+                  <View key={row} style={styles.destRow}>
+                    {destinations.slice(row * 2, row * 2 + 2).map((d) => (
+                      <Pressable
+                        key={d.key}
+                        onPress={() => router.push(d.href as never)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Ir para ${d.label}`}
+                        style={({ pressed }) => [
+                          styles.destCard,
+                          pressed && styles.pressed,
+                        ]}
+                      >
+                        <View
+                          style={[
+                            styles.destIcon,
+                            { backgroundColor: `${d.accent}22` },
+                          ]}
+                        >
+                          <Ionicons name={d.icon} size={20} color={d.accent} />
+                        </View>
+                        <Text style={styles.destLabel}>{d.label}</Text>
+                        <Ionicons
+                          name="chevron-forward"
+                          size={16}
+                          color="rgba(255,255,255,0.35)"
+                        />
+                      </Pressable>
+                    ))}
+                  </View>
+                ))}
+              </View>
+
+              <Text style={styles.sectionLabel}>Hoje</Text>
+              <View style={styles.statsRow}>
+                {stats.map((s) => (
                   <Pressable
-                    key={d.key}
-                    onPress={() => router.push(d.href as never)}
+                    key={s.key}
+                    onPress={() => router.push(s.href as never)}
                     accessibilityRole="button"
-                    accessibilityLabel={`Ir para ${d.label}`}
+                    accessibilityLabel={`Ver ${s.label}`}
                     style={({ pressed }) => [
-                      styles.destCard,
+                      styles.statCard,
                       pressed && styles.pressed,
                     ]}
                   >
                     <View
                       style={[
-                        styles.destIcon,
-                        { backgroundColor: `${d.accent}22` },
+                        styles.statIcon,
+                        { backgroundColor: `${s.accent}22` },
                       ]}
                     >
-                      <Ionicons name={d.icon} size={20} color={d.accent} />
+                      <Ionicons name={s.icon} size={16} color={s.accent} />
                     </View>
-                    <Text style={styles.destLabel}>{d.label}</Text>
-                    <Ionicons
-                      name="chevron-forward"
-                      size={16}
-                      color="rgba(255,255,255,0.35)"
-                    />
+                    <Text style={styles.statValue}>{s.value}</Text>
+                    <Text style={styles.statLabel}>{s.label}</Text>
                   </Pressable>
                 ))}
               </View>
-            ))}
-          </View>
 
-          <Text style={styles.sectionLabel}>Hoje</Text>
-          <View style={styles.statsRow}>
-            {stats.map((s) => (
-              <Pressable
-                key={s.key}
-                onPress={() => router.push(s.href as never)}
-                accessibilityRole="button"
-                accessibilityLabel={`Ver ${s.label}`}
-                style={({ pressed }) => [
-                  styles.statCard,
-                  pressed && styles.pressed,
-                ]}
-              >
-                <View
-                  style={[
-                    styles.statIcon,
-                    { backgroundColor: `${s.accent}22` },
-                  ]}
-                >
-                  <Ionicons name={s.icon} size={16} color={s.accent} />
-                </View>
-                <Text style={styles.statValue}>{s.value}</Text>
-                <Text style={styles.statLabel}>{s.label}</Text>
-              </Pressable>
-            ))}
-          </View>
-
-          <View style={styles.tipCard}>
-            <Ionicons name="heart" size={14} color="#F9A8D4" />
-            <Text style={styles.tipText} numberOfLines={2}>
-              Beber água e registrar a glicemia ajudam o seu acompanhamento.
-            </Text>
-          </View>
+              <View style={styles.tipCard}>
+                <Ionicons name="heart" size={14} color="#F9A8D4" />
+                <Text style={styles.tipText} numberOfLines={2}>
+                  Beber água e registrar a glicemia ajudam o seu acompanhamento.
+                </Text>
+              </View>
+            </>
+          )}
 
           <Text style={styles.sectionLabel}>Atividade recente</Text>
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>Ainda sem registros hoje</Text>
-            <Text style={styles.emptyText}>
-              Use os atalhos acima — tudo fica a um toque.
-            </Text>
-            <View style={styles.emptyActions}>
-              <Pressable
-                onPress={() =>
-                  router.push('/(tabs)/registros/glicemia' as never)
-                }
-                style={({ pressed }) => [
-                  styles.emptyBtn,
-                  pressed && styles.pressed,
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel="Registrar glicemia"
-              >
-                <Ionicons name="water" size={16} color={colors.textInverse} />
-                <Text style={styles.emptyBtnText}>Glicemia</Text>
-              </Pressable>
-              <Pressable
-                onPress={() =>
-                  router.push('/(tabs)/registros/refeicao' as never)
-                }
-                style={({ pressed }) => [
-                  styles.emptyBtn,
-                  styles.emptyBtnAlt,
-                  pressed && styles.pressed,
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel="Registrar refeição"
-              >
-                <Ionicons
-                  name="restaurant"
-                  size={16}
-                  color={colors.textInverse}
-                />
-                <Text style={styles.emptyBtnText}>Refeição</Text>
-              </Pressable>
+          {registrosHoje.length === 0 ? (
+            <View style={styles.emptyCard}>
+              <Text style={styles.emptyTitle}>Ainda sem registros hoje</Text>
+              <Text style={styles.emptyText}>
+                Use os atalhos acima — tudo fica a um toque.
+              </Text>
+              <View style={styles.emptyActions}>
+                <Pressable
+                  onPress={() =>
+                    router.push('/(tabs)/registros/glicemia' as never)
+                  }
+                  style={({ pressed }) => [
+                    styles.emptyBtn,
+                    pressed && styles.pressed,
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Registrar glicemia"
+                >
+                  <Ionicons name="water" size={16} color={colors.textInverse} />
+                  <Text style={styles.emptyBtnText}>Glicemia</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() =>
+                    router.push('/(tabs)/registros/refeicao' as never)
+                  }
+                  style={({ pressed }) => [
+                    styles.emptyBtn,
+                    styles.emptyBtnAlt,
+                    pressed && styles.pressed,
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Registrar refeição"
+                >
+                  <Ionicons
+                    name="restaurant"
+                    size={16}
+                    color={colors.textInverse}
+                  />
+                  <Text style={styles.emptyBtnText}>Refeição</Text>
+                </Pressable>
+              </View>
             </View>
-          </View>
+          ) : (
+            <View style={styles.activityCard}>
+              {registrosHoje.slice(0, 4).map((item: RegistroItem, i) => (
+                <View
+                  key={`${item.tipo}-${item.id}`}
+                  style={[styles.activityRow, i > 0 && styles.activityDivider]}
+                >
+                  <View
+                    style={[
+                      styles.activityIcon,
+                      {
+                        backgroundColor:
+                          item.tipo === 'glicemia'
+                            ? 'rgba(196, 181, 253, 0.18)'
+                            : 'rgba(110, 231, 183, 0.18)',
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={item.tipo === 'glicemia' ? 'water' : 'restaurant'}
+                      size={16}
+                      color={item.tipo === 'glicemia' ? '#C4B5FD' : '#6EE7B7'}
+                    />
+                  </View>
+                  <Text style={styles.activityText} numberOfLines={1}>
+                    {item.tipo === 'glicemia'
+                      ? `Glicemia: ${item.valor} mg/dL`
+                      : (item.descricao ?? 'Refeição')}
+                  </Text>
+                  <Text style={styles.activityHora}>{horaCurta(item.dataHora)}</Text>
+                </View>
+              ))}
+            </View>
+          )}
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -433,6 +531,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 6,
   },
+  primaryCardGrande: { minHeight: 148, paddingVertical: spacing.xl },
+  primaryLabelGrande: { fontSize: 19 },
+  primaryHintGrande: { fontSize: 14 },
   primaryIcon: {
     width: 48,
     height: 48,
@@ -586,5 +687,40 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textInverse,
     fontWeight: '700',
+  },
+  activityCard: {
+    backgroundColor: colors.authGlass,
+    borderWidth: 1,
+    borderColor: colors.authBorder,
+    borderRadius: 20,
+    paddingHorizontal: spacing.lg,
+  },
+  activityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+  },
+  activityDivider: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+  },
+  activityIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activityText: {
+    ...typography.caption,
+    color: colors.textInverse,
+    fontWeight: '600',
+    flex: 1,
+  },
+  activityHora: {
+    ...typography.caption,
+    color: colors.authMuted,
+    fontSize: 12,
   },
 });

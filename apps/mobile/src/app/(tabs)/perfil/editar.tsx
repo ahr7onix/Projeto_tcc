@@ -17,9 +17,24 @@ import { getPacienteData, updatePacienteData, updatePerfil } from '@/lib/api/per
 import { SEXOS, TIPOS_DIABETES } from '@/types/auth';
 import { colors, radius, spacing, typography } from '@/lib/theme';
 
+/** Converte ISO (AAAA-MM-DD) para o formato exibido nos campos, DD/MM/AAAA. */
+function isoParaBr(iso: string): string {
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : '';
+}
+
+function formatDateMask(raw: string) {
+  const digits = raw.replace(/\D/g, '').slice(0, 8);
+  let out = digits;
+  if (digits.length > 2) out = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  if (digits.length > 4) out = `${out.slice(0, 5)}/${out.slice(5)}`;
+  return out;
+}
+
 export default function EditarPerfilScreen() {
   const { user, updateUser } = useAuthStore();
   const [nome, setNome] = useState(user?.nome ?? '');
+  const [dataNascimento, setDataNascimento] = useState('');
   const [peso, setPeso] = useState('');
   const [altura, setAltura] = useState('');
   const [sexo, setSexo] = useState('');
@@ -32,6 +47,7 @@ export default function EditarPerfilScreen() {
     getPacienteData()
       .then((d) => {
         if (!d) return;
+        if (d.dataNascimento) setDataNascimento(isoParaBr(d.dataNascimento));
         if (d.peso) setPeso(String(d.peso));
         if (d.altura) setAltura(String(d.altura));
         if (d.sexo) setSexo(d.sexo);
@@ -43,6 +59,10 @@ export default function EditarPerfilScreen() {
   }, []);
 
   const onSave = async () => {
+    if (dataNascimento && !/^\d{2}\/\d{2}\/\d{4}$/.test(dataNascimento)) {
+      Alert.alert('Data inválida', 'Informe a data de nascimento no formato DD/MM/AAAA.');
+      return;
+    }
     setSaving(true);
     try {
       if (nome.trim() && nome.trim() !== user?.nome) {
@@ -50,6 +70,7 @@ export default function EditarPerfilScreen() {
         await updateUser({ nome: updated.nome });
       }
       await updatePacienteData({
+        dataNascimento: dataNascimento || undefined,
         sexo: sexo || undefined,
         tipoDiabetes: tipoDiabetes || undefined,
         peso: peso ? Number(peso.replace(',', '.')) : undefined,
@@ -106,6 +127,23 @@ export default function EditarPerfilScreen() {
         {/* Dados clínicos */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Dados clínicos</Text>
+
+          <View style={styles.field}>
+            <Text style={styles.label}>Data de nascimento</Text>
+            <TextInput
+              value={dataNascimento}
+              onChangeText={(v) => setDataNascimento(formatDateMask(v))}
+              style={styles.input}
+              keyboardType="number-pad"
+              placeholder="DD/MM/AAAA"
+              placeholderTextColor={colors.textMuted}
+              maxLength={10}
+            />
+            <Text style={styles.hint}>
+              Usamos sua idade para simplificar a interface automaticamente para
+              quem tem 55 anos ou mais.
+            </Text>
+          </View>
 
           <View style={styles.row}>
             <View style={[styles.field, { flex: 1 }]}>
@@ -226,6 +264,7 @@ const styles = StyleSheet.create({
 
   field: { gap: spacing.xs },
   label: { fontSize: 13, fontWeight: '600', color: colors.textSoft },
+  hint: { fontSize: 12, color: colors.textMuted, lineHeight: 16 },
   input: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,

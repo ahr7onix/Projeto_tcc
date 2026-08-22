@@ -63,9 +63,12 @@ export default function RegistrarHumorScreen() {
       queryClient.invalidateQueries({ queryKey: ['emocional'] });
       queryClient.invalidateQueries({ queryKey: ['emocional-resumo'] });
 
-      Alert.alert('Registro salvo', 'Obrigado por compartilhar como você está.', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+      const rotuloEstado = ESTADOS.find((e) => e.valor === estado)?.rotulo ?? 'seu estado';
+      Alert.alert(
+        'Registro salvo',
+        `Obrigado por compartilhar. Anotamos "${rotuloEstado}" para hoje — isso ajuda a nutricionista a entender como seus resultados se relacionam com o seu bem-estar.`,
+        [{ text: 'OK', onPress: () => router.back() }],
+      );
     } catch {
       Alert.alert('Erro', 'Não foi possível salvar o registro. Tente novamente.');
     } finally {

@@ -7,6 +7,7 @@ import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { ScreenContainer } from '@/components/ScreenContainer';
 import { getPlanoAtivo, type RefeicaoPlano } from '@/lib/api/planos';
+import { listarRestricoes } from '@/lib/api/restricoes';
 import { colors, radius, spacing, typography } from '@/lib/theme';
 
 type IconName = 'cafe-outline' | 'restaurant-outline' | 'leaf-outline' | 'moon-outline';
@@ -52,6 +53,11 @@ export default function AlimentacaoScreen() {
   const { data: plano, isLoading, isError, refetch } = useQuery({
     queryKey: ['plano-ativo'],
     queryFn: getPlanoAtivo,
+  });
+
+  const { data: restricoes } = useQuery({
+    queryKey: ['restricoes'],
+    queryFn: listarRestricoes,
   });
 
   const agoraMin = useMemo(() => {
@@ -152,26 +158,16 @@ export default function AlimentacaoScreen() {
         </>
       )}
 
-      <View style={styles.atalhos}>
-        <Pressable
-          style={styles.atalho}
-          onPress={() => router.push('/(tabs)/alimentacao/receitas')}
-        >
-          <View style={styles.atalhoIcone}>
-            <Ionicons name="restaurant-outline" size={18} color={colors.primary} />
-          </View>
-          <Text style={styles.atalhoTexto}>Receitas</Text>
-        </Pressable>
-        <Pressable
-          style={styles.atalho}
-          onPress={() => router.push('/(tabs)/alimentacao/alimentos')}
-        >
-          <View style={styles.atalhoIcone}>
-            <Ionicons name="nutrition-outline" size={18} color={colors.primary} />
-          </View>
-          <Text style={styles.atalhoTexto}>Tabela de alimentos</Text>
-        </Pressable>
-      </View>
+      <Pressable
+        style={styles.atalhoFull}
+        onPress={() => router.push('/(tabs)/alimentacao/receitas')}
+      >
+        <View style={styles.atalhoIcone}>
+          <Ionicons name="restaurant-outline" size={18} color={colors.primary} />
+        </View>
+        <Text style={styles.atalhoTexto}>Receitas</Text>
+        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+      </Pressable>
 
       <Pressable
         style={styles.cta}
@@ -182,12 +178,29 @@ export default function AlimentacaoScreen() {
         <Ionicons name="arrow-forward" size={18} color={colors.textInverse} />
       </Pressable>
 
-      <Card title="Restrições">
-        <EmptyState
-          icon="alert-circle-outline"
-          title="Nenhuma restrição cadastrada"
-          message="Avise seu nutricionista sobre alergias ou intolerâncias para personalizar o plano."
-        />
+      <Card
+        title="Restrições"
+        action={
+          <Pressable onPress={() => router.push('/(tabs)/alimentacao/restricoes')}>
+            <Text style={styles.cardAction}>Gerenciar</Text>
+          </Pressable>
+        }
+      >
+        {!restricoes?.length ? (
+          <EmptyState
+            icon="alert-circle-outline"
+            title="Nenhuma restrição cadastrada"
+            message="Adicione alergias ou intolerâncias para personalizar seu plano."
+          />
+        ) : (
+          <View style={styles.restricoesList}>
+            {restricoes.map((r) => (
+              <View key={r.id} style={styles.restricaoTag}>
+                <Text style={styles.restricaoTexto}>{r.descricao}</Text>
+              </View>
+            ))}
+          </View>
+        )}
       </Card>
     </ScreenContainer>
   );
@@ -207,6 +220,15 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   retryText: { ...typography.body, color: colors.primary, fontWeight: '600' },
+  cardAction: { color: colors.primary, fontSize: 13, fontWeight: '600' },
+  restricoesList: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  restricaoTag: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surfaceAlt,
+  },
+  restricaoTexto: { fontSize: 12, fontWeight: '600', color: colors.textSoft },
 
   planoHeader: {
     flexDirection: 'row',
@@ -270,13 +292,12 @@ const styles = StyleSheet.create({
   },
   tagText: { fontSize: 11, fontWeight: '700' },
 
-  atalhos: { flexDirection: 'row', gap: spacing.sm },
-  atalho: {
-    flex: 1,
+  atalhoFull: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: spacing.md,
     paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: spacing.lg,
     borderRadius: radius.lg,
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -291,10 +312,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   atalhoTexto: {
-    fontSize: 12,
+    flex: 1,
+    fontSize: 14,
     fontWeight: '700',
     color: colors.text,
-    textAlign: 'center',
   },
 
   cta: {

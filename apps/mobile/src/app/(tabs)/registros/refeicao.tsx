@@ -15,6 +15,11 @@ import { ScreenContainer } from '@/components/ScreenContainer';
 import { createRefeicao } from '@/lib/api/registros';
 import { colors, radius, spacing, typography } from '@/lib/theme';
 
+function horaAgora(): string {
+  const agora = new Date();
+  return `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`;
+}
+
 type Tipo = 'cafe' | 'almoco' | 'lanche' | 'jantar' | 'ceia';
 
 const tipos: { key: Tipo; label: string }[] = [
@@ -45,9 +50,12 @@ export default function RegistrarRefeicaoScreen() {
         carboidratos: carboidratos ? Number(carboidratos.replace(',', '.')) : undefined,
         observacao: observacoes || undefined,
       });
-      Alert.alert('Registrado', 'Sua refeição foi registrada.', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+      const rotulo = tipos.find((t) => t.key === tipo)?.label ?? 'Refeição';
+      Alert.alert(
+        'Registrado!',
+        `${rotulo} às ${horaAgora()} foi salva. A nutricionista vai poder acompanhar isso no seu histórico.`,
+        [{ text: 'OK', onPress: () => router.back() }],
+      );
     } catch {
       Alert.alert('Erro', 'Não foi possível salvar o registro. Tente novamente.');
     } finally {
