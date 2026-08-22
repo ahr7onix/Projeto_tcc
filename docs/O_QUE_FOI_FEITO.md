@@ -366,15 +366,23 @@ possível usá-los hoje pela API. O que falta é a interface:
 
 - **Painel web** — telas de alimentos, receitas, medidas corporais, cálculo de
   necessidade energética e gráficos de evolução.
-- **App mobile** — consulta de alimentos, medidas corporais, registro emocional,
-  lembretes, medicamentos, notificações e as receitas reais no lugar das três
-  receitas fixas que ainda estão escritas no código
-  (`apps/mobile/src/app/(tabs)/alimentacao/receitas/index.tsx`), além dos dados
-  de exemplo na tela de saúde (`(tabs)/saude/index.tsx`).
+- **App mobile** — consulta de alimentos, medidas corporais, registro
+  emocional, lembretes e as receitas reais no lugar das três receitas fixas
+  que ainda estão escritas no código
+  (`apps/mobile/src/app/(tabs)/alimentacao/receitas/index.tsx`), além dos
+  dados de exemplo na tela de saúde (`(tabs)/saude/index.tsx`).
 
 Enquanto essas telas não existirem, o cliente não consegue exercitar esses
 recursos pela interface — vale dizer isso claramente na apresentação em vez de
 demonstrar só o que já tem tela.
+
+**Entregue nesta rodada (Fase 1 deste pacote de melhorias)**: o paciente já
+gerencia os próprios medicamentos e restrições alimentares pelo app (antes
+eram só leitura/texto livre), recebe um banner de status glicêmico com alerta
+de hipo/hiperglicemia baseado na última leitura + notificação local, e o app
+adapta a interface (fonte e botões maiores, menos cards) para pacientes com
+55 anos ou mais. Detalhes e o que ainda fica para depois estão na seção
+"Fase 2 (planejado)" do README.
 
 Os demais pontos abertos não impedem a entrega, mas são os que a banca tem mais
 chance de questionar:

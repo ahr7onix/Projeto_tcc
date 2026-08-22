@@ -38,6 +38,9 @@ psql nutricare -f database/migrations/004_nutricionista_crn_opcional.sql
 psql nutricare -f database/migrations/005_administrador.sql
 psql nutricare -f database/migrations/006_push_token.sql
 psql nutricare -f database/migrations/007_briefing_nutricao.sql
+psql nutricare -f database/migrations/008_senha_reset.sql
+psql nutricare -f database/migrations/009_restricao_alimentar.sql
+psql nutricare -f database/migrations/010_medicamento_observacoes.sql
 psql nutricare -f database/seeds_admin.sql
 psql nutricare -f database/seeds_alimentos.sql
 ```
@@ -263,8 +266,8 @@ A classificação usada em alertas e relatórios está em
 
 | Momento | Faixa alvo (mg/dL) |
 |---|---|
-| Jejum | 70 – 130 |
-| Pré-refeição | 70 – 130 |
+| Jejum | 70 – 180 |
+| Pré-refeição | 70 – 180 |
 | Pós-refeição | 70 – 180 |
 | Antes de dormir | 90 – 150 |
 | Madrugada | 70 – 140 |
@@ -285,3 +288,27 @@ idade, gestação e condição individual do paciente.
 - Não há aprovação do paciente ao ser vinculado por um nutricionista
 - O CRN não é validado junto ao conselho profissional
 - A cobertura de testes concentra-se nas regras críticas, não na API inteira
+
+---
+
+## Fase 2 (planejado)
+
+Itens que ficam fora desta rodada de entrega, propositalmente, para não ampliar
+o escopo do TCC além do necessário:
+
+- **Push periódico real (servidor)**: hoje o alerta de hipo/hiperglicemia é
+  uma notificação local, disparada pelo próprio app ao consultar a última
+  leitura (`GET /registros/glicemia/ultimo`). A infraestrutura de push via
+  Expo já existe no backend (`PushService`), usada hoje para avisar a
+  nutricionista em leituras críticas — falta um job periódico do lado do
+  servidor para também notificar o paciente mesmo com o app fechado.
+- **Modo simplificado (55+) em todas as telas**: o modo de interface
+  simplificada (fonte maior, botões maiores, menos informação por tela) foi
+  aplicado na Home, no banner de status glicêmico e nas telas de restrições e
+  medicamentos. As demais ~15 telas do app ainda usam o padrão único de
+  design — estender o modo simplificado a todas elas é um trabalho de
+  re-skin maior, fora do escopo desta rodada.
+- **Validação clínica das faixas de referência**: as faixas glicêmicas e os
+  limiares de alerta (ver seção "Faixas de referência glicêmica") ainda
+  precisam de validação formal com o curso de Nutrição antes de qualquer uso
+  real com pacientes.
