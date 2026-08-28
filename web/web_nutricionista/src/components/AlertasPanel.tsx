@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Badge, EmptyState } from './ui'
+import { useNavigate } from 'react-router-dom'
+import { Badge, EmptyState, Card } from './ui'
 import { extractError } from '../lib/api'
 import {
   CLASSIFICACAO_LABEL,
@@ -25,6 +26,7 @@ function formatarQuando(iso: string): string {
 }
 
 export default function AlertasPanel({ dias = 7, limite = 6, pacienteId }: Props) {
+  const navigate = useNavigate()
   const [alertas, setAlertas] = useState<Alerta[]>([])
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
@@ -40,29 +42,24 @@ export default function AlertasPanel({ dias = 7, limite = 6, pacienteId }: Props
   const visiveis = alertas.slice(0, limite)
 
   return (
-    <div style={wrapper}>
-      <div style={header}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
-            Alertas glicêmicos
-          </span>
-          {criticos > 0 && <Badge label={`${criticos} crítico${criticos > 1 ? 's' : ''}`} tint="danger" />}
-        </div>
-        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>últimos {dias} dias</span>
-      </div>
-
+    <Card
+      title="Alertas glicêmicos"
+      subtitle={`Medições fora da faixa nos últimos ${dias} dias`}
+      action={criticos > 0
+        ? <Badge label={`${criticos} crítico${criticos > 1 ? 's' : ''}`} tint="danger" dot />
+        : undefined}
+      flush
+    >
       {loading ? (
         <div style={mensagem}>Carregando alertas...</div>
       ) : erro ? (
         <div style={{ ...mensagem, color: 'var(--danger)' }}>{erro}</div>
       ) : alertas.length === 0 ? (
-        <div style={{ padding: '8px 20px 20px' }}>
-          <EmptyState
-            icon={<CheckIcon />}
-            title="Nenhum alerta no período"
-            message="Todas as medições registradas ficaram dentro das faixas de referência."
-          />
-        </div>
+        <EmptyState
+          icon={<CheckIcon />}
+          title="Nenhum alerta no período"
+          message="Todas as medições registradas ficaram dentro das faixas de referência."
+        />
       ) : (
         <>
           {visiveis.map((a, i) => {
@@ -73,33 +70,41 @@ export default function AlertasPanel({ dias = 7, limite = 6, pacienteId }: Props
             return (
               <div
                 key={a.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate(`/pacientes/${a.pacienteId}/glicemia`)}
+                onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/pacientes/${a.pacienteId}/glicemia`) }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 14,
-                  padding: '12px 20px',
-                  borderBottom: i < visiveis.length - 1 ? '1px solid var(--border)' : 'none',
+                  gap: 12,
+                  padding: '11px 18px',
+                  borderTop: i === 0 ? 'none' : '1px solid var(--border)',
+                  cursor: 'pointer',
+                  transition: 'background 0.12s',
                 }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLDivElement).style.background = 'var(--surface-alt)')}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLDivElement).style.background = 'transparent')}
               >
                 <div style={{ ...valorBox, background: fundo, color: cor }}>
-                  <span style={{ fontSize: 15, fontWeight: 700 }}>{a.valor}</span>
-                  <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.8 }}>mg/dL</span>
+                  <span style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.1 }}>{a.valor}</span>
+                  <span style={{ fontSize: 9, fontWeight: 500, opacity: 0.85 }}>mg/dL</span>
                 </div>
 
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text)' }}>
                     {a.pacienteNome}
                   </div>
-                  <div style={{ fontSize: 12, color: cor, fontWeight: 600, marginTop: 2 }}>
+                  <div style={{ fontSize: 12.5, color: cor, fontWeight: 500, marginTop: 1 }}>
                     {CLASSIFICACAO_LABEL[a.classificacao]}
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                  <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 1 }}>
                     {MOMENTO_LABEL[a.momento] ?? a.momento} · alvo {a.faixaReferencia.min}–
                     {a.faixaReferencia.max} mg/dL
                   </div>
                 </div>
 
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', flexShrink: 0 }}>
+                <div style={{ fontSize: 11.5, color: 'var(--text-muted)', flexShrink: 0 }}>
                   {formatarQuando(a.dataHora)}
                 </div>
               </div>
@@ -107,39 +112,28 @@ export default function AlertasPanel({ dias = 7, limite = 6, pacienteId }: Props
           })}
 
           {alertas.length > limite && (
-            <div style={{ ...mensagem, fontSize: 12 }}>
+            <div style={{
+              padding: '10px 18px', fontSize: 12, color: 'var(--text-muted)',
+              borderTop: '1px solid var(--border)', textAlign: 'center',
+            }}>
               + {alertas.length - limite} outros alertas no período
             </div>
           )}
         </>
       )}
-    </div>
+    </Card>
   )
 }
 
-const wrapper: React.CSSProperties = {
-  background: 'var(--surface)',
-  borderRadius: 'var(--radius-lg)',
-  border: '1px solid var(--border)',
-  overflow: 'hidden',
-  boxShadow: 'var(--shadow-card)',
-}
-const header: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  padding: '16px 20px',
-  borderBottom: '1px solid var(--border)',
-}
 const mensagem: React.CSSProperties = {
-  padding: '24px 20px',
+  padding: '28px 18px',
   textAlign: 'center',
   color: 'var(--text-muted)',
-  fontSize: 14,
+  fontSize: 13,
 }
 const valorBox: React.CSSProperties = {
-  width: 52,
-  height: 46,
+  width: 50,
+  height: 44,
   borderRadius: 'var(--radius-md)',
   display: 'flex',
   flexDirection: 'column',
@@ -150,7 +144,7 @@ const valorBox: React.CSSProperties = {
 
 function CheckIcon() {
   return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
       <polyline points="22 4 12 14.01 9 11.01" />
     </svg>

@@ -109,7 +109,7 @@ export default function AlimentoModal({ alimento, onClose, onSaved }: Props) {
         <div style={header}>
           <div>
             <div style={eyebrow}>{editando ? 'Editar' : 'Novo'} alimento</div>
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)' }}>
+            <h2 style={{ fontSize: 20, fontWeight: 600, color: 'var(--text)' }}>
               Tabela de alimentos
             </h2>
           </div>
@@ -244,7 +244,7 @@ export default function AlimentoModal({ alimento, onClose, onSaved }: Props) {
 
 const overlay: React.CSSProperties = {
   position: 'fixed', inset: 0, zIndex: 100,
-  background: 'rgba(15, 23, 42, 0.45)',
+  background: 'rgba(16, 24, 40, 0.4)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   padding: 20,
 }
@@ -252,15 +252,16 @@ const modal: React.CSSProperties = {
   background: 'var(--surface)', borderRadius: 'var(--radius-lg)',
   width: '100%', maxWidth: 680, maxHeight: '90vh',
   display: 'flex', flexDirection: 'column',
-  boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+  border: '1px solid var(--border)',
+  boxShadow: 'var(--shadow-raised)',
 }
 const header: React.CSSProperties = {
   display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
   padding: '20px 24px', borderBottom: '1px solid var(--border)',
 }
 const eyebrow: React.CSSProperties = {
-  fontSize: 11, fontWeight: 700, color: 'var(--primary)',
-  letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 4,
+  fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
+  letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4,
 }
 const closeBtn: React.CSSProperties = {
   background: 'transparent', border: 'none', cursor: 'pointer',

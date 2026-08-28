@@ -1,11 +1,16 @@
 import { Redirect, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform } from 'react-native';
+import { useMensagensRealtime } from '@/hooks/use-mensagens-realtime';
 import { useAuthStore } from '@/stores/auth';
 import { colors } from '@/lib/theme';
 
 export default function TabsLayout() {
   const { token, user, isHydrated } = useAuthStore();
+
+  // Uma conexao para o app inteiro: a lista de conversas e a conversa aberta
+  // recebem mensagem nova mesmo com o usuario em outra aba.
+  useMensagensRealtime();
 
   if (isHydrated && !token) {
     return <Redirect href="/(auth)" />;

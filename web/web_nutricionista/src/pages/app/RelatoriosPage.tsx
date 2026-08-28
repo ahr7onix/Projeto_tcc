@@ -294,7 +294,7 @@ export default function RelatoriosPage() {
                       <span
                         style={{
                           width: 80,
-                          fontWeight: 700,
+                          fontWeight: 600,
                           color: corSeveridade(r.severidade),
                         }}
                       >
@@ -336,7 +336,7 @@ function Metrica({
   return (
     <div>
       <div style={rotulo}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 700, color: cor }}>{valor}</div>
+      <div style={{ fontSize: 20, fontWeight: 600, color: cor }}>{valor}</div>
     </div>
   )
 }
@@ -348,7 +348,7 @@ const grid: React.CSSProperties = {
 }
 const rotulo: React.CSSProperties = {
   fontSize: 11,
-  fontWeight: 700,
+  fontWeight: 600,
   color: 'var(--text-muted)',
   textTransform: 'uppercase',
   letterSpacing: '0.4px',
@@ -356,7 +356,7 @@ const rotulo: React.CSSProperties = {
 }
 const subtitulo: React.CSSProperties = {
   fontSize: 13,
-  fontWeight: 700,
+  fontWeight: 600,
   color: 'var(--text-soft)',
   marginBottom: 4,
 }

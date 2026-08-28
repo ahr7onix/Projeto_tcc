@@ -39,15 +39,15 @@ export default function ForgotPasswordPage() {
             <div className={styles.form}>
               <div className={styles.brand}>NutriCare</div>
               <h1 className={styles.title}>Verifique seu e-mail</h1>
-              <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 14, lineHeight: 1.5, marginBottom: 8 }}>
+              <p style={{ color: 'var(--text-soft)', fontSize: 14, lineHeight: 1.5, marginBottom: 8 }}>
                 Se existir uma conta para <strong>{email}</strong>, enviamos um link para redefinir a senha.
               </p>
-              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, lineHeight: 1.45 }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.45 }}>
                 Não chegou? Confira o spam. O link vale por 1 hora.
               </p>
 
               {(devHints.previewUrl || devHints.resetUrl) && (
-                <div className={styles.error} style={{ background: 'rgba(162,82,255,0.18)', borderColor: 'rgba(162,82,255,0.4)', color: '#e9d5ff' }}>
+                <div className={styles.error} style={{ background: 'var(--primary-soft)', borderColor: 'var(--primary)', color: 'var(--primary)' }}>
                   <strong>Modo desenvolvimento</strong>
                   <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {devHints.previewUrl && (
@@ -75,7 +75,7 @@ export default function ForgotPasswordPage() {
             <form className={styles.form} onSubmit={handleSubmit} noValidate>
               <div className={styles.brand}>NutriCare</div>
               <h1 className={styles.title}>Recuperar senha</h1>
-              <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 14, margin: '-8px 0 12px', lineHeight: 1.45 }}>
+              <p style={{ color: 'var(--text-soft)', fontSize: 14, margin: '-8px 0 12px', lineHeight: 1.45 }}>
                 Informe seu e-mail e enviaremos um link para redefinir a senha.
               </p>
               {error && <div className={styles.error}>{error}</div>}

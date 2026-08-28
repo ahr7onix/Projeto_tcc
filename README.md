@@ -176,7 +176,7 @@ npm run test:cov      # com cobertura
 | Req. | Descrição | Situação |
 |---|---|---|
 | RF01 | Cadastro de usuários | Implementado |
-| RF02 | Login e autenticação (JWT + Google OAuth) | Implementado — Google funcionando no painel web; detalhes em [docs/LOGIN_GOOGLE.md](docs/LOGIN_GOOGLE.md). No app mobile o login social ainda não funciona |
+| RF02 | Login e autenticação (JWT + Google OAuth) | Implementado — Google funcionando no painel web; detalhes em [docs/LOGIN_GOOGLE.md](docs/LOGIN_GOOGLE.md). no app mobile o acesso é por e-mail e senha, porque o Expo Go não suporta o fluxo OAuth nativo |
 | RF03 | Registro de glicemia | Implementado |
 | RF04 | Registro de alimentação | Implementado |
 | RF05 | Registro de peso e dados de saúde | Implementado |
@@ -283,6 +283,13 @@ idade, gestação e condição individual do paciente.
 
 ## Limitações conhecidas
 
+- **No Expo Go, o push remoto e o login Google do app não funcionam.** O Expo Go
+  perdeu o suporte a notificações push remotas no SDK 53, e o Google recusa o
+  endereço de retorno `exp://` usado por ele. Ambos exigem um *development
+  build*. No Expo Go isso aparece como um erro vermelho do `expo-notifications`
+  no console — é apenas aviso, o app continua funcionando, e as notificações
+  **locais** (alerta de glicemia) seguem normais. Detalhes do login social em
+  [docs/LOGIN_GOOGLE.md](docs/LOGIN_GOOGLE.md)
 - As mensagens usam polling (15 s na conversa, 30 s na lista), não WebSocket
 - O PDF é gerado pelo diálogo de impressão do navegador, não no servidor
 - Não há aprovação do paciente ao ser vinculado por um nutricionista
@@ -302,6 +309,12 @@ o escopo do TCC além do necessário:
   Expo já existe no backend (`PushService`), usada hoje para avisar a
   nutricionista em leituras críticas — falta um job periódico do lado do
   servidor para também notificar o paciente mesmo com o app fechado.
+- **Development build do app (destrava push remoto + login Google)**: as duas
+  funcionalidades que faltam no mobile têm a mesma causa — o app é distribuído
+  pelo Expo Go, que não suporta nem push remoto (removido no SDK 53) nem o
+  fluxo OAuth nativo do Google. Gerar um development build (`eas build
+  --profile development`) e criar a credencial Android no Google Cloud
+  (pacote `com.projetotcc.mobile` + SHA-1) resolve ambos de uma vez.
 - **Modo simplificado (55+) em todas as telas**: o modo de interface
   simplificada (fonte maior, botões maiores, menos informação por tela) foi
   aplicado na Home, no banner de status glicêmico e nas telas de restrições e

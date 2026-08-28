@@ -8,6 +8,7 @@ import {
   type Conversa,
   type Mensagem,
 } from '../../lib/mensagens'
+import { assinarMensagens } from '../../lib/mensagens-stream'
 
 function formatarHora(iso: string): string {
   return new Date(iso).toLocaleString('pt-BR', {
@@ -16,6 +17,16 @@ function formatarHora(iso: string): string {
     hour: '2-digit',
     minute: '2-digit',
   })
+}
+
+/**
+ * Acrescenta a mensagem só se ela ainda não estiver na lista.
+ *
+ * Quem envia recebe a mensagem por dois caminhos — a resposta do POST e o eco
+ * do canal em tempo real — e não há ordem garantida entre eles.
+ */
+function acrescentar(atual: Mensagem[], nova: Mensagem): Mensagem[] {
+  return atual.some((m) => m.id === nova.id) ? atual : [...atual, nova]
 }
 
 export default function MensagensPage() {
@@ -28,6 +39,10 @@ export default function MensagensPage() {
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const fimRef = useRef<HTMLDivElement>(null)
+  // A assinatura do canal é montada uma vez só; sem a ref ela ficaria presa à
+  // conversa que estava aberta no momento em que foi criada.
+  const selecionadaRef = useRef<Conversa | null>(null)
+  selecionadaRef.current = selecionada
 
   const carregarConversas = useCallback(async () => {
     try {
@@ -66,6 +81,30 @@ export default function MensagensPage() {
     fimRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [mensagens])
 
+  // Canal aberto com a API: mensagem nova aparece sozinha, sem atualizar a
+  // página. Vale para as duas pontas — inclusive uma segunda aba deste mesmo
+  // usuário, que recebe o que ele acabou de mandar na outra.
+  useEffect(() => {
+    const encerrar = assinarMensagens((evento) => {
+      const aberta = selecionadaRef.current
+
+      if (aberta && aberta.contraparteId === evento.contraparteId) {
+        setMensagens((atual) => acrescentar(atual, evento.mensagem))
+        // A conversa está na tela: marca como lida na API (é o que o GET faz)
+        // para o contador não subir enquanto o nutricionista está lendo.
+        if (!evento.mensagem.propria) {
+          abrirConversa(aberta.contraparteId).catch(() => undefined)
+        }
+      }
+
+      // A lista da esquerda mostra a última mensagem, o horário e os não
+      // lidos: precisa ser recarregada mesmo com outra conversa aberta.
+      carregarConversas()
+    })
+
+    return encerrar
+  }, [carregarConversas])
+
   async function handleEnviar() {
     const conteudo = texto.trim()
     if (!conteudo || !selecionada) return
@@ -74,7 +113,7 @@ export default function MensagensPage() {
       setEnviando(true)
       setErro(null)
       const nova = await enviarMensagem(selecionada.contraparteId, conteudo)
-      setMensagens((atual) => [...atual, nova])
+      setMensagens((atual) => acrescentar(atual, nova))
       setTexto('')
       carregarConversas()
     } catch (err) {
@@ -156,7 +195,7 @@ export default function MensagensPage() {
             <>
               <div style={chatHeader}>
                 <div style={avatar}>{selecionada.contraparteNome.charAt(0).toUpperCase()}</div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>
+                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)' }}>
                   {selecionada.contraparteNome}
                 </div>
               </div>
@@ -179,7 +218,7 @@ export default function MensagensPage() {
                         style={{
                           ...balao,
                           background: m.propria ? 'var(--primary)' : 'var(--surface-alt)',
-                          color: m.propria ? '#fff' : 'var(--text)',
+                          color: m.propria ? 'var(--text-inverse)' : 'var(--text)',
                         }}
                       >
                         <div style={{ whiteSpace: 'pre-wrap' }}>{m.conteudo}</div>
@@ -238,7 +277,7 @@ const listaHeader: React.CSSProperties = {
   padding: '16px 20px',
   borderBottom: '1px solid var(--border)',
   fontSize: 14,
-  fontWeight: 700,
+  fontWeight: 600,
   color: 'var(--text)',
 }
 const itemConversa: React.CSSProperties = {
@@ -260,7 +299,7 @@ const avatar: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  fontWeight: 700,
+  fontWeight: 600,
   fontSize: 14,
   flexShrink: 0,
 }

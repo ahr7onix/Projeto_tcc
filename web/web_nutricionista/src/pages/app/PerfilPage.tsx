@@ -39,7 +39,11 @@ export default function PerfilPage() {
 
   const initial = (user?.nome ?? 'N').charAt(0).toUpperCase()
   const roleLabel = ROTULO[user?.role ?? ''] ?? 'Profissional'
-  const firstName = (user?.nome ?? 'Nutricionista').split(' ')[0]
+  // Pula o titulo ("Dra.") para o cumprimento usar o nome de verdade.
+  const TITULOS = ['dr', 'dr.', 'dra', 'dra.', 'sr', 'sr.', 'sra', 'sra.']
+  const firstName = (user?.nome ?? 'Nutricionista')
+    .split(' ')
+    .filter(parte => parte && !TITULOS.includes(parte.toLowerCase()))[0] ?? 'Nutricionista'
 
   const handleSave = async (mode: 'dados' | 'senha') => {
     setSaving(true)

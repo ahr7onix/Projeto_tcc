@@ -27,7 +27,8 @@
       "expo-secure-store",
       "expo-font",
       "expo-asset",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": false

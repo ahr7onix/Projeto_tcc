@@ -2,8 +2,10 @@ import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import type { Pool } from 'pg';
 import type { JwtPayload } from '../../common/guards/jwt.guard';
 import type { PushService } from '../push/push.service';
+import { MensagensEventosService } from './mensagens-eventos.service';
 import { MensagensService } from './mensagens.service';
 import type { CreateMensagemDto } from './dto/create-mensagem.dto';
+import type { EventoMensagem } from './mensagens-eventos.service';
 
 function criarPoolMock(respostas: unknown[][]) {
   const query = jest.fn();
@@ -50,7 +52,19 @@ function linhaMensagem(extra: Record<string, unknown> = {}) {
 function criarServico(respostas: unknown[][], pushFalha = false) {
   const { pool, query } = criarPoolMock(respostas);
   const { push, enviarPara } = criarPushMock(pushFalha);
-  return { service: new MensagensService(pool, push), query, enviarPara };
+  // O barramento é de verdade (não tem dependência nenhuma); assim os testes
+  // conseguem escutar o que seria empurrado pelo canal em tempo real.
+  const eventos = new MensagensEventosService();
+  const publicados: EventoMensagem[] = [];
+  jest.spyOn(eventos, 'publicar').mockImplementation((e) => {
+    publicados.push(e);
+  });
+  return {
+    service: new MensagensService(pool, push, eventos),
+    query,
+    enviarPara,
+    publicados,
+  };
 }
 
 describe('MensagensService', () => {
@@ -178,6 +192,34 @@ describe('MensagensService', () => {
       await expect(
         service.enviar(usuario('nutricionista'), dto),
       ).resolves.toMatchObject({ conteudo: 'Bom dia' });
+    });
+
+    it('should publish the message to both sides of the conversation', async () => {
+      // Sem isso a tela de quem recebe só mostraria a mensagem depois de um F5.
+      const { service, publicados } = criarServico([
+        [linhaVinculo()],
+        [linhaMensagem({ id_remetente: '1', remetente_nome: 'Bruno' })],
+      ]);
+      await service.enviar(usuario('nutricionista'), dto);
+
+      expect(publicados).toHaveLength(2);
+
+      const destinatario = publicados.find((e) => e.paraUsuarioId === '2');
+      expect(destinatario?.contraparteId).toBe('1');
+      expect(destinatario?.mensagem.propria).toBe(false);
+      expect(destinatario?.mensagem.conteudo).toBe('Bom dia');
+
+      const remetente = publicados.find((e) => e.paraUsuarioId === '1');
+      expect(remetente?.contraparteId).toBe('2');
+      expect(remetente?.mensagem.propria).toBe(true);
+    });
+
+    it('should not publish anything when the insert returns nothing', async () => {
+      const { service, publicados } = criarServico([[linhaVinculo()], []]);
+      await expect(service.enviar(usuario('nutricionista'), dto)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(publicados).toHaveLength(0);
     });
 
     it('should throw NotFoundException when the insert returns nothing', async () => {

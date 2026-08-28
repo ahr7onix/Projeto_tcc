@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useLocalSearchParams } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { marcarConversaEmFoco } from '@/hooks/use-mensagens-realtime';
 import { abrirConversa, enviarMensagem } from '@/lib/api/mensagens';
 import { colors, radius, spacing, typography } from '@/lib/theme';
 
@@ -36,8 +37,21 @@ export default function ConversaScreen() {
   const { data: thread, isLoading } = useQuery({
     queryKey: ['conversa', id],
     queryFn: () => abrirConversa(String(id)),
-    refetchInterval: 15000,
   });
+
+  // Enquanto esta conversa esta na tela, o canal em tempo real entrega a
+  // mensagem aqui e ja a marca como lida — nada de puxar para atualizar.
+  useFocusEffect(
+    useCallback(() => {
+      marcarConversaEmFoco(String(id));
+      return () => {
+        marcarConversaEmFoco(null);
+        // Abrir a conversa zera os nao lidos no servidor: a lista precisa
+        // saber disso ao voltar, sem depender de uma mensagem nova chegar.
+        queryClient.invalidateQueries({ queryKey: ['conversas'] });
+      };
+    }, [id, queryClient]),
+  );
 
   const { mutate: enviar, isPending } = useMutation({
     mutationFn: (conteudo: string) => enviarMensagem(String(id), conteudo),

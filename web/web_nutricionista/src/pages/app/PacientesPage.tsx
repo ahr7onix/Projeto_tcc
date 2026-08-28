@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { PageHeader, Input, EmptyState, AlertBanner, Btn } from '../../components/ui'
 import { api, extractError } from '../../lib/api'
-import PacienteDetalhesModal from '../../components/PacienteDetalhesModal'
 import VincularPacienteModal from '../../components/VincularPacienteModal'
 import { desvincularPaciente } from '../../lib/vinculos'
 
@@ -33,11 +33,11 @@ function glicemiaColor(val: number | null): string {
 }
 
 export default function PacientesPage() {
+  const navigate = useNavigate()
   const [pacientes, setPacientes] = useState<Paciente[]>([])
   const [busca, setBusca] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [pacienteSelecionadoId, setPacienteSelecionadoId] = useState<string | null>(null)
   const [vincularAberto, setVincularAberto] = useState(false)
   const [desvinculandoId, setDesvinculandoId] = useState<string | null>(null)
 
@@ -105,7 +105,7 @@ export default function PacientesPage() {
               background: s.bg, borderRadius: 'var(--radius-md)',
               padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 10,
             }}>
-              <span style={{ fontSize: 22, fontWeight: 700, color: s.color }}>{s.value}</span>
+              <span style={{ fontSize: 22, fontWeight: 600, color: s.color }}>{s.value}</span>
               <span style={{ fontSize: 13, color: s.color, fontWeight: 600, opacity: 0.8 }}>{s.label}</span>
             </div>
           ))}
@@ -133,7 +133,7 @@ export default function PacientesPage() {
           <div style={{
             display: 'grid', gridTemplateColumns: '1fr 110px 140px 130px 110px 36px',
             padding: '10px 20px', gap: 12,
-            fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
+            fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
             textTransform: 'uppercase', letterSpacing: '0.5px',
             borderBottom: '1px solid var(--border)',
             background: 'var(--bg)',
@@ -156,7 +156,7 @@ export default function PacientesPage() {
           filtrados.map((p, i) => (
             <div
               key={p.id}
-              onClick={() => setPacienteSelecionadoId(p.id)}
+              onClick={() => navigate(`/pacientes/${p.id}/informacoes`)}
               style={{
                 display: 'grid', gridTemplateColumns: '1fr 110px 140px 130px 110px 36px',
                 alignItems: 'center', padding: '14px 20px', gap: 12,
@@ -172,7 +172,7 @@ export default function PacientesPage() {
                   width: 40, height: 40, borderRadius: '50%',
                   background: 'var(--primary-soft)', color: 'var(--primary)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 700, fontSize: 15, flexShrink: 0,
+                  fontWeight: 600, fontSize: 15, flexShrink: 0,
                 }}>{p.nome.charAt(0).toUpperCase()}</div>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontWeight: 600, color: 'var(--text)', fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.nome}</div>
@@ -184,7 +184,7 @@ export default function PacientesPage() {
               <div>
                 <span style={{
                   display: 'inline-flex', alignItems: 'center', gap: 5,
-                  padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700,
+                  padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600,
                   background: p.status === 'ativo' ? 'var(--success-soft)' : 'var(--surface-alt)',
                   color: p.status === 'ativo' ? 'var(--success)' : 'var(--text-muted)',
                 }}>
@@ -229,13 +229,6 @@ export default function PacientesPage() {
           </div>
         )}
       </div>
-
-      {pacienteSelecionadoId && (
-        <PacienteDetalhesModal
-          pacienteId={pacienteSelecionadoId}
-          onClose={() => setPacienteSelecionadoId(null)}
-        />
-      )}
 
       {vincularAberto && (
         <VincularPacienteModal

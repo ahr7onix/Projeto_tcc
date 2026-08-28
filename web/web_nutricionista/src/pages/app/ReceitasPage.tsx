@@ -180,7 +180,7 @@ export default function ReceitasPage() {
               <Card key={receita.id}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)' }}>
                       {receita.titulo}
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
@@ -284,7 +284,7 @@ const etiqueta: React.CSSProperties = {
 }
 const subtitulo: React.CSSProperties = {
   fontSize: 11,
-  fontWeight: 700,
+  fontWeight: 600,
   textTransform: 'uppercase',
   letterSpacing: '0.4px',
   color: 'var(--text-muted)',

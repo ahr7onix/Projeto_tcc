@@ -11,6 +11,7 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import AppLayout from './components/layout/AppLayout'
 import HomePage from './pages/app/HomePage'
 import PacientesPage from './pages/app/PacientesPage'
+import PacienteDetalhePage from './pages/app/PacienteDetalhePage'
 import RegistrosPage from './pages/app/RegistrosPage'
 import AlimentacaoPage from './pages/app/AlimentacaoPage'
 import AlimentosPage from './pages/app/AlimentosPage'
@@ -68,6 +69,10 @@ export default function App() {
             <Route path="inicio" element={<HomePage />} />
             <Route path="dashboard" element={<Navigate to="/inicio" replace />} />
             <Route path="pacientes" element={<PacientesPage />} />
+            {/* A ficha do paciente e uma tela inteira, nao um popup: cada secao
+                (informacoes / glicemia / alimentacao / saude) tem a sua URL. */}
+            <Route path="pacientes/:pacienteId" element={<PacienteDetalhePage />} />
+            <Route path="pacientes/:pacienteId/:secao" element={<PacienteDetalhePage />} />
             <Route path="registros" element={<RegistrosPage />} />
             <Route path="alimentacao" element={<AlimentacaoPage />} />
             <Route path="alimentos" element={<AlimentosPage />} />

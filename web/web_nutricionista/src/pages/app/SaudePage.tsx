@@ -6,9 +6,11 @@ import {
   Card,
   EmptyState,
   PageHeader,
+  Paginacao,
   ProgressBar,
   Select,
   StatTile,
+  usePaginacao,
 } from '../../components/ui'
 import GraficoLinha from '../../components/GraficoLinha'
 import MedidaModal from '../../components/MedidaModal'
@@ -86,7 +88,10 @@ export default function SaudePage() {
       // Os quatro blocos da página são independentes: buscar em paralelo evita
       // que a tela apareça em pedaços.
       const [lista, serie, remedios, resumo] = await Promise.all([
-        listarAntropometria(id, 60),
+        // 365 é o teto aceito pela API. Antes buscávamos 60: com a lista
+        // paginada o contador precisa refletir o histórico inteiro, senão ele
+        // diria "de 60" para um paciente que tem mais medidas que isso.
+        listarAntropometria(id, 365),
         buscarEvolucao(id),
         listarMedicamentos(id),
         buscarResumoEmocional(id, 30),
@@ -126,6 +131,11 @@ export default function SaudePage() {
     () => pacientes.find((p) => p.id === pacienteId)?.nome ?? '',
     [pacientes, pacienteId],
   )
+
+  // Uma lista por bloco: o nutricionista pode estar na pagina 3 das medidas sem
+  // que isso mexa na lista de medicamentos ao lado.
+  const pagMedidas = usePaginacao(registros, 20, pacienteId)
+  const pagMedicamentos = usePaginacao(medicamentos, 10, pacienteId)
 
   const ultima = registros[0] ?? null
 
@@ -344,7 +354,7 @@ export default function SaudePage() {
                 />
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {medicamentos.map((medicamento) => (
+                  {pagMedicamentos.visiveis.map((medicamento) => (
                     <div key={medicamento.id} style={linha}>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>
@@ -377,6 +387,15 @@ export default function SaudePage() {
                       </div>
                     </div>
                   ))}
+                  <Paginacao
+                    pagina={pagMedicamentos.pagina}
+                    totalPaginas={pagMedicamentos.totalPaginas}
+                    total={pagMedicamentos.total}
+                    primeiro={pagMedicamentos.primeiro}
+                    ultimo={pagMedicamentos.ultimo}
+                    onChange={pagMedicamentos.irPara}
+                    rotulo="medicamentos"
+                  />
                 </div>
               )}
             </Card>
@@ -391,7 +410,7 @@ export default function SaudePage() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                    <span style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)' }}>
+                    <span style={{ fontSize: 28, fontWeight: 600, color: 'var(--text)' }}>
                       {formatar(emocional.mediaEscala)}
                     </span>
                     <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
@@ -447,7 +466,7 @@ export default function SaudePage() {
               />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {registros.map((registro) => (
+                {pagMedidas.visiveis.map((registro) => (
                   <div key={registro.id} style={linha}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -491,6 +510,15 @@ export default function SaudePage() {
                     </Btn>
                   </div>
                 ))}
+                <Paginacao
+                  pagina={pagMedidas.pagina}
+                  totalPaginas={pagMedidas.totalPaginas}
+                  total={pagMedidas.total}
+                  primeiro={pagMedidas.primeiro}
+                  ultimo={pagMedidas.ultimo}
+                  onChange={pagMedidas.irPara}
+                  rotulo="medidas"
+                />
               </div>
             )}
           </Card>
@@ -537,7 +565,7 @@ const linha: React.CSSProperties = {
 }
 const subtitulo: React.CSSProperties = {
   fontSize: 11,
-  fontWeight: 700,
+  fontWeight: 600,
   textTransform: 'uppercase',
   letterSpacing: '0.4px',
   color: 'var(--text-muted)',
