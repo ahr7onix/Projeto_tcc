@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import NotificationCenter from '../NotificationCenter'
 import s from './AppLayout.module.css'
 
 interface ItemMenu {
@@ -162,6 +163,7 @@ export default function AppLayout() {
           <NavLink to="/perfil" className={s.topbarAvatar} aria-label="Abrir perfil">{initial}</NavLink>
         </header>
         <main className={s.content}><Outlet /></main>
+        {user?.role === 'nutricionista' && <NotificationCenter />}
       </div>
     </div>
   )
