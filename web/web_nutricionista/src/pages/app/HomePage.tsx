@@ -1,350 +1,215 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../contexts/AuthContext'
-import { StatTile, AlertBanner, Card, Badge, Btn, EmptyState } from '../../components/ui'
-import AlertasPanel from '../../components/AlertasPanel'
+import { AlertBanner, Badge, Btn, Card, EmptyState, StatTile } from '../../components/ui'
 import { api, extractError } from '../../lib/api'
 import { resumoAlertas, type ResumoAlertas } from '../../lib/alertas'
-import { listarConversas, type Conversa } from '../../lib/mensagens'
+import { assinarMensagens } from '../../lib/mensagens-stream'
+import { contarNaoLidas } from '../../lib/mensagens'
 
 interface Paciente {
   id: string
   nome: string
-  email: string
   glicemiaMedia: number | null
   ultimoRegistro: string | null
   status: 'ativo' | 'inativo'
 }
 
-/** Dias sem registro a partir dos quais o paciente entra na lista de atenção. */
-const DIAS_SEM_REGISTRO = 7
+interface Registro {
+  id: string
+  tipo: string
+  valor: number | null
+  alerta: { severidade: 'critico' | 'atencao' | 'normal' } | null
+  dataHora: string
+  pacienteId: string
+}
+
+type Periodo = 7 | 30 | 90
 
 function saudacao() {
-  const h = new Date().getHours()
-  if (h < 12) return 'Bom dia'
-  if (h < 18) return 'Boa tarde'
-  return 'Boa noite'
+  const hora = new Date().getHours()
+  return hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite'
 }
 
-function diasDesde(dateStr: string | null): number | null {
-  if (!dateStr) return null
-  return Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000)
+function dataCurta(data: Date) {
+  return data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
 }
 
-function tempoRelativo(dateStr: string | null): string {
-  const dias = diasDesde(dateStr)
-  if (dias === null) return 'Sem registros'
-  if (dias <= 0) return 'Hoje'
-  if (dias === 1) return 'Ontem'
-  if (dias < 7) return `Há ${dias} dias`
-  if (dias < 30) return `Há ${Math.floor(dias / 7)} sem.`
-  return `Há ${Math.floor(dias / 30)} meses`
+function pctMudanca(atual: number, anterior: number) {
+  if (anterior === 0) return atual > 0 ? null : 0
+  return Math.round(((atual - anterior) / anterior) * 100)
 }
 
 export default function HomePage() {
-  const { user } = useAuth()
   const navigate = useNavigate()
   const [pacientes, setPacientes] = useState<Paciente[]>([])
+  const [resumo7, setResumo7] = useState<ResumoAlertas | null>(null)
+  const [registros, setRegistros] = useState<Registro[]>([])
+  const [naoLidas, setNaoLidas] = useState(0)
+  const [periodo, setPeriodo] = useState<Periodo>(30)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [resumo, setResumo] = useState<ResumoAlertas | null>(null)
-  const [conversas, setConversas] = useState<Conversa[]>([])
+  const [erro, setErro] = useState<string | null>(null)
 
-  useEffect(() => {
-    resumoAlertas(7).then(setResumo).catch(() => setResumo(null))
-    listarConversas().then(setConversas).catch(() => setConversas([]))
+  const carregar = useCallback(async () => {
+    try {
+      setErro(null)
+      const [pacientesRes, alertasRes, registrosRes, mensagens] = await Promise.all([
+        api.get('/pacientes'),
+        resumoAlertas(7),
+        api.get('/registros', { params: { dias: 90, tipo: 'glicemia' } }),
+        contarNaoLidas(),
+      ])
+      setPacientes(pacientesRes.data.data ?? [])
+      setResumo7(alertasRes)
+      setRegistros(registrosRes.data.data ?? [])
+      setNaoLidas(mensagens)
+    } catch (err) {
+      setErro(extractError(err))
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => {
-    api.get('/pacientes')
-      .then(({ data }) => setPacientes(data.data))
-      .catch(err => setError(extractError(err)))
-      .finally(() => setLoading(false))
-  }, [])
+    carregar()
+    const timer = window.setInterval(carregar, 30_000)
+    const cancelarMensagens = assinarMensagens(() => { void carregar() })
+    return () => {
+      window.clearInterval(timer)
+      cancelarMensagens()
+    }
+  }, [carregar])
 
-  // "Dra. Camila Souza" cumprimenta a Camila, nao a "Dra." — o titulo e pulado.
-  const TITULOS = ['dr', 'dr.', 'dra', 'dra.', 'sr', 'sr.', 'sra', 'sra.']
-  const primeiroNome = (user?.nome ?? 'Nutricionista')
-    .split(' ')
-    .filter(parte => parte && !TITULOS.includes(parte.toLowerCase()))[0] ?? 'Nutricionista'
+  const registrosPeriodo = useMemo(() => {
+    const limite = Date.now() - periodo * 86400000
+    return registros.filter((registro) => new Date(registro.dataHora).getTime() >= limite)
+  }, [periodo, registros])
 
-  const ativos = pacientes.filter(p => p.status === 'ativo').length
-
-  const hoje = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
-  // So a primeira letra sobe: `capitalize` no CSS viraria "Sabado, 22 De Agosto".
-  const dataHoje = hoje.charAt(0).toUpperCase() + hoje.slice(1)
-
-  // Quem parou de registrar é o que exige ação da nutricionista — mais do que
-  // qualquer média geral.
-  const semRegistro = pacientes
-    .filter(p => {
-      const d = diasDesde(p.ultimoRegistro)
-      return d === null || d >= DIAS_SEM_REGISTRO
+  const situacao = useMemo(() => {
+    const ultimaPorPaciente = new Map<string, Registro>()
+    registrosPeriodo.forEach((registro) => {
+      if (!ultimaPorPaciente.has(registro.pacienteId)) ultimaPorPaciente.set(registro.pacienteId, registro)
     })
-    .sort((a, b) => (a.ultimoRegistro ?? '').localeCompare(b.ultimoRegistro ?? ''))
+    let faixa = 0
+    let atencao = 0
+    let critico = 0
+    pacientes.forEach((paciente) => {
+      const registro = ultimaPorPaciente.get(paciente.id)
+      if (!registro) return
+      if (registro.alerta?.severidade === 'critico') critico += 1
+      else if (registro.alerta?.severidade === 'atencao') atencao += 1
+      else faixa += 1
+    })
+    const semRegistro = Math.max(pacientes.length - faixa - atencao - critico, 0)
+    return [
+      { label: 'Dentro da faixa', valor: faixa, cor: 'var(--success)' },
+      { label: 'Precisam de atenção', valor: atencao, cor: 'var(--warning)' },
+      { label: 'Situação crítica', valor: critico, cor: 'var(--danger)' },
+      { label: 'Sem registros recentes', valor: semRegistro, cor: 'var(--text-muted)' },
+    ]
+  }, [pacientes, registrosPeriodo])
 
-  const naoLidas = conversas.reduce((total, c) => total + c.naoLidas, 0)
-  const conversasPendentes = conversas.filter(c => c.naoLidas > 0)
-  const conversasRecentes = (conversasPendentes.length ? conversasPendentes : conversas).slice(0, 4)
+  const tendencia = useMemo(() => {
+    const agora = Date.now()
+    const inicio = agora - periodo * 86400000
+    const porDia = new Map<string, { data: Date; fora: number; total: number }>()
+    registros.filter((registro) => new Date(registro.dataHora).getTime() >= inicio).forEach((registro) => {
+      const data = new Date(registro.dataHora)
+      const chave = data.toISOString().slice(0, 10)
+      const item = porDia.get(chave) ?? { data, fora: 0, total: 0 }
+      item.total += 1
+      if (registro.alerta?.severidade !== 'normal') item.fora += 1
+      porDia.set(chave, item)
+    })
+    return [...porDia.values()].sort((a, b) => a.data.getTime() - b.data.getTime())
+  }, [periodo, registros])
 
-  const mediaGeral = (() => {
-    const comMedia = pacientes.filter(p => p.glicemiaMedia)
-    if (!comMedia.length) return null
-    return (comMedia.reduce((a, p) => a + (p.glicemiaMedia ?? 0), 0) / comMedia.length).toFixed(0)
-  })()
-
-  const recentes = [...pacientes]
-    .filter(p => p.ultimoRegistro)
-    .sort((a, b) => (b.ultimoRegistro ?? '').localeCompare(a.ultimoRegistro ?? ''))
-    .slice(0, 5)
-
-  const criticos = resumo?.criticos ?? 0
+  const variacao = useMemo(() => {
+    const fimAtual = Date.now()
+    const inicioAtual = fimAtual - periodo * 86400000
+    const inicioAnterior = inicioAtual - periodo * 86400000
+    const fora = (inicio: number, fim: number) => registros.filter((registro) => {
+      const quando = new Date(registro.dataHora).getTime()
+      return quando >= inicio && quando < fim && registro.alerta?.severidade !== 'normal'
+    }).length
+    return pctMudanca(fora(inicioAtual, fimAtual), fora(inicioAnterior, inicioAtual))
+  }, [periodo, registros])
+  const semRegistro = situacao[3].valor
+  const dentroFaixa = situacao[0].valor
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* Cabeçalho sem caixa colorida: a cor da tela fica reservada aos dados. */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+    <div style={styles.page}>
+      <header style={styles.header}>
         <div>
-          <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)' }}>
-            {dataHoje}
-          </div>
-          <h1 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em', marginTop: 4 }}>
-            {saudacao()}, {primeiroNome}
-          </h1>
+          <div style={styles.date}>{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+          <h1 style={styles.title}>{saudacao()}</h1>
+          <p style={styles.subtitle}>Visão rápida do acompanhamento dos seus pacientes.</p>
         </div>
-        <Btn variant="secondary" onClick={() => navigate('/pacientes')}>Ver todos os pacientes</Btn>
+        <Btn variant="secondary" onClick={() => navigate('/pacientes')}>Ver pacientes</Btn>
+      </header>
+
+      {erro && <AlertBanner message={erro} />}
+
+      <section style={styles.metrics} aria-label="Indicadores principais">
+        <StatTile label="Total de pacientes" value={loading ? '—' : pacientes.length} icon={<PatientsIcon />} onClick={() => navigate('/pacientes')} />
+        <StatTile label="Pacientes ativos" value={loading ? '—' : pacientes.filter((p) => p.status === 'ativo').length} icon={<PulseIcon />} tint="success" />
+        <StatTile label="Precisam de atenção" value={loading ? '—' : semRegistro + (resumo7?.pacientes.length ?? 0)} icon={<AlertIcon />} tint={semRegistro > 0 ? 'warning' : 'success'} onClick={() => navigate('/acompanhamento')} />
+        <StatTile label="Alertas glicêmicos" value={resumo7?.foraDaFaixa ?? '—'} icon={<AlertIcon />} tint={(resumo7?.foraDaFaixa ?? 0) > 0 ? 'danger' : 'success'} onClick={() => navigate('/registros')} />
+        <StatTile label="Mensagens não lidas" value={naoLidas} icon={<MessageIcon />} tint={naoLidas > 0 ? 'warning' : 'neutral'} onClick={() => navigate('/mensagens')} />
+      </section>
+
+      <section style={styles.insight}>
+        <div><div style={styles.kicker}>Visão geral</div><strong>{dentroFaixa > 0 && pacientes.length ? `${Math.round((dentroFaixa / pacientes.length) * 100)}% dos pacientes estão dentro da faixa.` : 'Ainda não há dados suficientes para um resumo.'}</strong></div>
+        {variacao !== null && variacao !== 0 && <Badge label={`${variacao > 0 ? '↑' : '↓'} ${Math.abs(variacao)}% nos alertas glicêmicos`} tint={variacao > 0 ? 'danger' : 'success'} />}
+      </section>
+
+      <div className="home-dashboard-charts" style={styles.charts}>
+        <Card title="Situação dos pacientes" subtitle="Última medição disponível no período selecionado.">
+          {pacientes.length === 0 || registrosPeriodo.length === 0 ? <EmptyState icon={<ChartIcon />} title="Sem dados suficientes" message="Os indicadores aparecerão quando houver registros reais." /> : <div style={styles.distribution}>{situacao.map((item) => <div key={item.label} style={styles.barRow}><div style={styles.barLabel}><span>{item.label}</span><strong>{item.valor}</strong></div><div style={styles.track}><div style={{ ...styles.bar, width: `${Math.max((item.valor / pacientes.length) * 100, item.valor ? 4 : 0)}%`, background: item.cor }} /></div></div>)}</div>}
+        </Card>
+
+        <Card title="Evolução dos alertas" subtitle="Medições fora da faixa por dia." action={<div style={styles.periods}>{([7, 30, 90] as Periodo[]).map((item) => <button key={item} type="button" onClick={() => setPeriodo(item)} style={{ ...styles.periodButton, ...(periodo === item ? styles.periodActive : {}) }}>{item === 90 ? '3 meses' : `${item} dias`}</button>)}</div>}>
+          <TrendChart pontos={tendencia.map((item) => ({ data: item.data.toISOString(), valor: item.fora }))} />
+        </Card>
       </div>
 
-      {error && <AlertBanner message={error} />}
-
-      {/* As quatro métricas que mudam o que a nutricionista faz agora. */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 14 }}>
-        <StatTile
-          label="Pacientes ativos"
-          value={loading ? '—' : ativos}
-          icon={<PatientsIcon />}
-          tint="primary"
-          sub={pacientes.length ? `${pacientes.length} no total` : undefined}
-          onClick={() => navigate('/pacientes')}
-        />
-        <StatTile
-          label="Alertas críticos (7d)"
-          value={resumo ? criticos : '—'}
-          icon={<AlertIcon />}
-          tint={criticos > 0 ? 'danger' : 'success'}
-          sub={resumo ? `${resumo.foraDaFaixa} fora da faixa` : undefined}
-          onClick={() => navigate('/registros')}
-        />
-        <StatTile
-          label="Mensagens não lidas"
-          value={naoLidas}
-          icon={<MensagensIcon />}
-          tint={naoLidas > 0 ? 'warning' : 'neutral'}
-          sub={conversasPendentes.length ? `${conversasPendentes.length} conversa(s)` : undefined}
-          onClick={() => navigate('/mensagens')}
-        />
-        <StatTile
-          label={`Sem registro há ${DIAS_SEM_REGISTRO}+ dias`}
-          value={loading ? '—' : semRegistro.length}
-          icon={<RelogioIcon />}
-          tint={semRegistro.length > 0 ? 'warning' : 'success'}
-          sub={pacientes.length ? `de ${pacientes.length} pacientes` : undefined}
-        />
-      </div>
-
-      {/* Métricas de contexto ficam numa linha discreta, não em cartões. */}
-      <div style={{
-        display: 'flex', flexWrap: 'wrap', gap: '4px 18px',
-        fontSize: 12.5, color: 'var(--text-muted)',
-        padding: '0 2px',
-      }}>
-        <span>
-          Média glicêmica dos pacientes (30d):{' '}
-          <strong style={{ color: 'var(--text-soft)', fontWeight: 600 }}>
-            {mediaGeral ? `${mediaGeral} mg/dL` : '—'}
-          </strong>
-        </span>
-        <span>
-          Medições na faixa (7d):{' '}
-          <strong style={{ color: 'var(--text-soft)', fontWeight: 600 }}>
-            {resumo?.percentualNaFaixa != null ? `${resumo.percentualNaFaixa}%` : '—'}
-          </strong>
-        </span>
-        <span>
-          Registros no período:{' '}
-          <strong style={{ color: 'var(--text-soft)', fontWeight: 600 }}>
-            {resumo ? resumo.totalRegistros : '—'}
-          </strong>
-        </span>
-      </div>
-
-      <div className="grid-2">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
-          <AlertasPanel dias={7} />
-
-          <Card
-            title="Precisam de atenção"
-            subtitle={`Pacientes sem registro há ${DIAS_SEM_REGISTRO} dias ou mais`}
-            flush
-          >
-            {loading ? (
-              <Carregando />
-            ) : semRegistro.length === 0 ? (
-              <EmptyState
-                icon={<CheckIcon />}
-                title="Todos em dia"
-                message="Todos os pacientes registraram algo na última semana."
-              />
-            ) : (
-              semRegistro.slice(0, 5).map((p, i) => (
-                <Linha key={p.id} primeira={i === 0} onClick={() => navigate(`/pacientes/${p.id}/informacoes`)}>
-                  <Avatar nome={p.nome} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={nomeStyle}>{p.nome}</div>
-                    <div style={subStyle}>{p.email}</div>
-                  </div>
-                  <Badge
-                    label={tempoRelativo(p.ultimoRegistro)}
-                    tint={p.ultimoRegistro ? 'warning' : 'danger'}
-                  />
-                </Linha>
-              ))
-            )}
-          </Card>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
-          <Card
-            title="Mensagens"
-            action={<LinkBtn onClick={() => navigate('/mensagens')}>Abrir</LinkBtn>}
-            flush
-          >
-            {conversasRecentes.length === 0 ? (
-              <EmptyState
-                icon={<MensagensIcon />}
-                title="Nenhuma conversa"
-                message="As mensagens trocadas com os pacientes aparecem aqui."
-              />
-            ) : (
-              conversasRecentes.map((c, i) => (
-                <Linha key={c.vinculoId} primeira={i === 0} onClick={() => navigate('/mensagens')}>
-                  <Avatar nome={c.contraparteNome} destaque={c.naoLidas > 0} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={nomeStyle}>{c.contraparteNome}</div>
-                    <div style={{ ...subStyle, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {c.ultimaMensagem ?? 'Sem mensagens'}
-                    </div>
-                  </div>
-                  {c.naoLidas > 0 && <Badge label={String(c.naoLidas)} tint="primary" />}
-                </Linha>
-              ))
-            )}
-          </Card>
-
-          <Card
-            title="Atividade recente"
-            subtitle="Últimos pacientes com registro"
-            flush
-          >
-            {loading ? (
-              <Carregando />
-            ) : recentes.length === 0 ? (
-              <EmptyState
-                icon={<PatientsIcon />}
-                title="Nenhum registro ainda"
-                message="Assim que os pacientes começarem a registrar, eles aparecem aqui."
-              />
-            ) : (
-              recentes.map((p, i) => (
-                <Linha key={p.id} primeira={i === 0} onClick={() => navigate(`/pacientes/${p.id}/glicemia`)}>
-                  <Avatar nome={p.nome} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={nomeStyle}>{p.nome}</div>
-                    <div style={subStyle}>
-                      {p.glicemiaMedia ? `Média ${Math.round(p.glicemiaMedia)} mg/dL` : 'Sem média'}
-                    </div>
-                  </div>
-                  <span style={{ fontSize: 12, color: 'var(--text-muted)', flexShrink: 0 }}>
-                    {tempoRelativo(p.ultimoRegistro)}
-                  </span>
-                </Linha>
-              ))
-            )}
-          </Card>
-        </div>
-      </div>
+      <div style={styles.footerLine}><span>Atualização automática a cada 30 segundos</span><span>{registrosPeriodo.length} medições analisadas · período de {periodo} dias</span></div>
     </div>
   )
 }
 
-/* ─── Peças da tela ─── */
-
-const nomeStyle: React.CSSProperties = {
-  fontSize: 13.5, fontWeight: 600, color: 'var(--text)',
-  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-}
-const subStyle: React.CSSProperties = { fontSize: 12, color: 'var(--text-muted)', marginTop: 1 }
-
-function Linha({ children, primeira, onClick }: { children: React.ReactNode; primeira: boolean; onClick: () => void }) {
-  return (
-    <div
-      onClick={onClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => { if (e.key === 'Enter') onClick() }}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 12,
-        padding: '11px 18px',
-        borderTop: primeira ? 'none' : '1px solid var(--border)',
-        cursor: 'pointer', transition: 'background 0.12s',
-      }}
-      onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = 'var(--surface-alt)'}
-      onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'transparent'}
-    >
-      {children}
-    </div>
-  )
+function TrendChart({ pontos }: { pontos: { data: string; valor: number }[] }) {
+  if (!pontos.length) return <div style={styles.chartEmpty}>Ainda não há dados suficientes para gerar este gráfico.</div>
+  const max = Math.max(...pontos.map((p) => p.valor), 1)
+  const width = 640
+  const height = 210
+  const points = pontos.map((p, index) => `${pontos.length === 1 ? width / 2 : 12 + index * ((width - 24) / (pontos.length - 1))},${height - 24 - (p.valor / max) * (height - 48)}`).join(' ')
+  return <svg viewBox={`0 0 ${width} ${height}`} width="100%" style={{ display: 'block' }} role="img" aria-label="Evolução diária dos alertas glicêmicos"><line x1="12" y1={height - 24} x2={width - 12} y2={height - 24} stroke="var(--border)" /><polyline points={points} fill="none" stroke="var(--danger)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />{pontos.map((p, i) => { const x = pontos.length === 1 ? width / 2 : 12 + i * ((width - 24) / (pontos.length - 1)); const y = height - 24 - (p.valor / max) * (height - 48); return <circle key={`${p.data}-${i}`} cx={x} cy={y} r="4" fill="var(--surface)" stroke="var(--danger)" strokeWidth="2" /> })}<text x="12" y={height - 6} fill="var(--text-muted)" fontSize="11">{dataCurta(new Date(pontos[0].data))}</text><text x={width - 12} y={height - 6} textAnchor="end" fill="var(--text-muted)" fontSize="11">{dataCurta(new Date(pontos[pontos.length - 1].data))}</text></svg>
 }
 
-function Avatar({ nome, destaque }: { nome: string; destaque?: boolean }) {
-  return (
-    <div style={{
-      width: 34, height: 34, borderRadius: '50%',
-      background: destaque ? 'var(--primary-soft)' : 'var(--surface-alt)',
-      border: `1px solid ${destaque ? 'var(--primary-soft)' : 'var(--border)'}`,
-      color: destaque ? 'var(--primary)' : 'var(--text-soft)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontWeight: 600, fontSize: 13, flexShrink: 0,
-    }}>{nome.charAt(0).toUpperCase()}</div>
-  )
+const styles: Record<string, React.CSSProperties> = {
+  page: { display: 'flex', flexDirection: 'column', gap: 18 },
+  header: { display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' },
+  date: { color: 'var(--text-muted)', fontSize: 12 },
+  title: { color: 'var(--text)', fontSize: 26, fontWeight: 700, marginTop: 5 },
+  subtitle: { color: 'var(--text-soft)', fontSize: 14, marginTop: 4 },
+  metrics: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 12 },
+  insight: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '14px 16px', borderLeft: '3px solid var(--primary)', background: 'var(--surface-alt)', color: 'var(--text)', fontSize: 14, flexWrap: 'wrap' },
+  kicker: { color: 'var(--text-muted)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 },
+  charts: { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 16 },
+  distribution: { display: 'flex', flexDirection: 'column', gap: 18, padding: '8px 0' },
+  barRow: { display: 'flex', flexDirection: 'column', gap: 7 },
+  barLabel: { display: 'flex', justifyContent: 'space-between', color: 'var(--text-soft)', fontSize: 13 },
+  track: { height: 9, borderRadius: 99, background: 'var(--surface-alt)', overflow: 'hidden' },
+  bar: { height: '100%', borderRadius: 99, transition: 'width .35s ease' },
+  periods: { display: 'flex', gap: 4 },
+  periodButton: { border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-muted)', borderRadius: 6, padding: '5px 8px', fontSize: 11, cursor: 'pointer' },
+  periodActive: { background: 'var(--primary-soft)', color: 'var(--primary)', borderColor: 'var(--primary)' },
+  chartEmpty: { height: 210, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 13, textAlign: 'center' },
+  footerLine: { display: 'flex', justifyContent: 'space-between', gap: 12, color: 'var(--text-muted)', fontSize: 11, flexWrap: 'wrap' },
 }
 
-function LinkBtn({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        fontSize: 13, fontWeight: 500, color: 'var(--primary)',
-        background: 'none', border: 'none', padding: '2px 4px',
-        borderRadius: 'var(--radius-sm)', cursor: 'pointer',
-      }}
-    >{children}</button>
-  )
-}
-
-function Carregando() {
-  return (
-    <div style={{ padding: '28px 18px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-      Carregando...
-    </div>
-  )
-}
-
-/* ─── Ícones ─── */
-
-function PatientsIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M16.5 5.2a3.2 3.2 0 0 1 0 5.9"/><path d="M18 14.6a5.5 5.5 0 0 1 2.5 4.6"/></svg> }
-function AlertIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M10.3 3.9 1.9 18a2 2 0 0 0 1.7 3h16.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> }
-function MensagensIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M20 15a2 2 0 0 1-2 2H8l-4 3.5V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/><path d="M8.5 9.5h7"/><path d="M8.5 13h4"/></svg> }
-function RelogioIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg> }
-function CheckIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> }
+function PatientsIcon() { return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><circle cx="9" cy="8" r="3" /><path d="M3.5 20a5.5 5.5 0 0 1 11 0" /><path d="M17 5.5a3 3 0 0 1 0 5.5M18 14a5 5 0 0 1 2.5 4" /></svg> }
+function PulseIcon() { return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><path d="M3 12h4l2-6 4 12 2-6h6" /></svg> }
+function AlertIcon() { return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><path d="m10.3 3.9-8.4 14a2 2 0 0 0 1.7 3h16.8a2 2 0 0 0 1.7-3l-8.4-14a2 2 0 0 0-3.4 0Z" /><path d="M12 9v4M12 17h.01" /></svg> }
+function MessageIcon() { return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><path d="M20 15a2 2 0 0 1-2 2H8l-4 3.5V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z" /></svg> }
+function ChartIcon() { return <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 19V5M4 19h16M8 16v-4M12 16V8M16 16v-6" /></svg> }
