@@ -32,7 +32,8 @@ export class RelatoriosService {
     private readonly vinculos: VinculosService,
   ) {}
 
-  private normalizarDias(dias?: number): number {
+  private normalizarDias(dias?: number, completo = false): number {
+    if (completo) return 3650;
     if (!dias || Number.isNaN(dias) || dias <= 0) return DIAS_PADRAO;
     return Math.min(dias, DIAS_MAXIMO);
   }
@@ -46,9 +47,9 @@ export class RelatoriosService {
     return pacienteId;
   }
 
-  async gerar(user: JwtPayload, pacienteId?: string, dias?: number) {
+  async gerar(user: JwtPayload, pacienteId?: string, dias?: number, completo = false) {
     const alvo = await this.autorizar(user, pacienteId);
-    const periodo = this.normalizarDias(dias);
+    const periodo = this.normalizarDias(dias, completo);
 
     const { rows: pacienteRows } = await this.pool.query(
       `SELECT u.id_usuario, u.nome, u.email,

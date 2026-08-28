@@ -52,8 +52,8 @@ export interface Relatorio {
   }
 }
 
-export async function gerarRelatorio(pacienteId: string, dias = 30): Promise<Relatorio> {
-  const { data } = await api.get('/relatorios', { params: { pacienteId, dias } })
+export async function gerarRelatorio(pacienteId: string, dias = 30, completo = false): Promise<Relatorio> {
+  const { data } = await api.get('/relatorios', { params: { pacienteId, dias, completo } })
   return data
 }
 

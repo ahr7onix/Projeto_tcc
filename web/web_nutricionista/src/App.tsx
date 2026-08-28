@@ -17,6 +17,7 @@ import AlimentosPage from './pages/app/AlimentosPage'
 import ReceitasPage from './pages/app/ReceitasPage'
 import SaudePage from './pages/app/SaudePage'
 import RelatoriosPage from './pages/app/RelatoriosPage'
+import RelatorioPacientePage from './pages/app/RelatorioPacientePage'
 import MensagensPage from './pages/app/MensagensPage'
 import ConteudosPage from './pages/app/ConteudosPage'
 import AdminPage from './pages/app/AdminPage'
@@ -74,6 +75,7 @@ export default function App() {
             <Route path="receitas" element={<ReceitasPage />} />
             <Route path="saude" element={<SaudePage />} />
             <Route path="relatorios" element={<RelatoriosPage />} />
+            <Route path="relatorios/:pacienteId" element={<RelatorioPacientePage />} />
             <Route path="mensagens" element={<MensagensPage />} />
             <Route path="conteudos" element={<ConteudosPage />} />
             <Route path="admin" element={<AdminPage />} />
