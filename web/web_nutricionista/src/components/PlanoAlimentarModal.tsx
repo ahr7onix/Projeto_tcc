@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Btn, Input, Textarea, Select, AlertBanner, Badge } from './ui'
+import PatientPicker from './PatientPicker'
 import { extractError } from '../lib/api'
 import {
   atualizarPlano,
@@ -60,6 +61,7 @@ export default function PlanoAlimentarModal({
   const editando = Boolean(plano)
 
   const [pacienteId, setPacienteId] = useState(plano?.pacienteId ?? '')
+  const [pacienteBusca, setPacienteBusca] = useState('')
   const [dataInicio, setDataInicio] = useState(plano?.dataInicio ?? hoje())
   const [dataFim, setDataFim] = useState(plano?.dataFim ?? '')
   const [refeicoes, setRefeicoes] = useState<RefeicaoPlano[]>(
@@ -329,15 +331,29 @@ export default function PlanoAlimentarModal({
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             {!editando && (
               <div style={{ gridColumn: '1 / -1' }}>
-                <Select
+                <PatientPicker
+                  patients={pacientes}
+                  value={pacienteBusca}
                   label="Paciente"
-                  value={pacienteId}
-                  onChange={(e) => setPacienteId(e.target.value)}
-                  options={[
-                    { value: '', label: 'Selecione um paciente' },
-                    ...pacientes.map((p) => ({ value: p.id, label: p.nome })),
-                  ]}
+                  placeholder="Buscar paciente..."
+                  emptyMessage="Nenhum paciente encontrado."
+                  onChange={(valor) => {
+                    setPacienteBusca(valor)
+                    // Se o texto não bate mais com o paciente escolhido, a seleção é desfeita
+                    // até que outro resultado seja clicado.
+                    if (!pacientes.some((p) => p.nome === valor)) setPacienteId('')
+                  }}
+                  onSelect={(p) => {
+                    setPacienteBusca(p.nome)
+                    setPacienteId(p.id)
+                  }}
                 />
+                {pacienteId && (
+                  <div style={pacienteEscolhido}>
+                    Paciente selecionado:{' '}
+                    <strong>{pacientes.find((p) => p.id === pacienteId)?.nome ?? pacienteBusca}</strong>
+                  </div>
+                )}
               </div>
             )}
 
@@ -660,6 +676,11 @@ const secao: React.CSSProperties = {
   border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
   padding: 14, background: 'var(--bg)',
   display: 'flex', flexDirection: 'column', gap: 12,
+}
+const pacienteEscolhido: React.CSSProperties = {
+  marginTop: 8, fontSize: 12, color: 'var(--text-soft)',
+  background: 'var(--primary-soft)', border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-md)', padding: '8px 10px',
 }
 const tituloSecao: React.CSSProperties = {
   fontSize: 13, fontWeight: 600, color: 'var(--text-soft)',
