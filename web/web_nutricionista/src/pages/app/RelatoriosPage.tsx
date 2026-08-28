@@ -1,372 +1,118 @@
-import { useCallback, useEffect, useState } from 'react'
-import {
-  AlertBanner,
-  Badge,
-  Btn,
-  Card,
-  EmptyState,
-  PageHeader,
-  Select,
-} from '../../components/ui'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { AlertBanner, Btn, EmptyState, Input, PageHeader } from '../../components/ui'
 import { api, extractError } from '../../lib/api'
-import { MOMENTO_LABEL } from '../../lib/alertas'
-import { baixarCsv, gerarRelatorio, type Relatorio } from '../../lib/relatorios'
 
-interface PacienteOption {
+interface Paciente {
   id: string
   nome: string
+  email: string
+  tipoDiabetes?: string | null
+  status?: 'ativo' | 'inativo'
 }
 
-const PERIODOS = [
-  { value: '7', label: 'Últimos 7 dias' },
-  { value: '30', label: 'Últimos 30 dias' },
-  { value: '90', label: 'Últimos 90 dias' },
-  { value: '180', label: 'Últimos 6 meses' },
-]
-
-function formatarDataHora(iso: string): string {
-  return new Date(iso).toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-function corSeveridade(severidade: string): string {
-  if (severidade === 'critico') return 'var(--danger)'
-  if (severidade === 'atencao') return 'var(--warning)'
-  return 'var(--success)'
+const rotuloDiabetes: Record<string, string> = {
+  tipo1: 'Diabetes tipo 1',
+  tipo2: 'Diabetes tipo 2',
+  gestacional: 'Diabetes gestacional',
 }
 
 export default function RelatoriosPage() {
-  const [pacientes, setPacientes] = useState<PacienteOption[]>([])
-  const [pacienteId, setPacienteId] = useState('')
-  const [dias, setDias] = useState('30')
-  const [relatorio, setRelatorio] = useState<Relatorio | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [baixando, setBaixando] = useState(false)
+  const navigate = useNavigate()
+  const [pacientes, setPacientes] = useState<Paciente[]>([])
+  const [busca, setBusca] = useState('')
+  const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
 
   useEffect(() => {
-    api
-      .get('/pacientes')
-      .then(({ data }) => {
-        const lista: PacienteOption[] = data.data.map((p: PacienteOption) => ({
-          id: p.id,
-          nome: p.nome,
-        }))
-        setPacientes(lista)
-        if (lista.length) setPacienteId(lista[0].id)
-      })
+    api.get('/pacientes')
+      .then(({ data }) => setPacientes(data.data ?? []))
       .catch((err) => setErro(extractError(err)))
+      .finally(() => setLoading(false))
   }, [])
 
-  const carregar = useCallback(async () => {
-    if (!pacienteId) return
-    try {
-      setLoading(true)
-      setErro(null)
-      setRelatorio(await gerarRelatorio(pacienteId, Number(dias)))
-    } catch (err) {
-      setErro(extractError(err))
-      setRelatorio(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [pacienteId, dias])
+  const filtrados = useMemo(() => {
+    const termo = busca.trim().toLocaleLowerCase()
+    return pacientes.filter((paciente) => paciente.nome.toLocaleLowerCase().includes(termo))
+  }, [busca, pacientes])
 
-  useEffect(() => {
-    carregar()
-  }, [carregar])
-
-  async function handleCsv() {
-    if (!pacienteId) return
-    try {
-      setBaixando(true)
-      setErro(null)
-      await baixarCsv(pacienteId, Number(dias))
-    } catch (err) {
-      setErro(extractError(err))
-    } finally {
-      setBaixando(false)
-    }
-  }
-
-  const g = relatorio?.glicemia
+  const grupos = useMemo(() => {
+    return filtrados.reduce<Record<string, Paciente[]>>((acc, paciente) => {
+      const grupo = paciente.tipoDiabetes || 'sem-classificacao'
+      acc[grupo] = [...(acc[grupo] ?? []), paciente]
+      return acc
+    }, {})
+  }, [filtrados])
 
   return (
     <div>
       <PageHeader
-        eyebrow="Análise clínica"
+        eyebrow="Acompanhamento"
         title="Relatórios"
-        subtitle="Consolide os registros do paciente e exporte para acompanhamento ou prontuário."
-        action={
-          <div style={{ display: 'flex', gap: 8 }} className="no-print">
-            <Btn variant="secondary" onClick={() => window.print()} disabled={!relatorio}>
-              Imprimir / PDF
-            </Btn>
-            <Btn onClick={handleCsv} loading={baixando} disabled={!relatorio}>
-              Baixar CSV
-            </Btn>
-          </div>
-        }
+        subtitle="Escolha um paciente para consultar o histórico completo registrado no aplicativo."
       />
 
-      {erro && <AlertBanner message={erro} />}
+      {erro && <div style={{ marginBottom: 16 }}><AlertBanner message={erro} /></div>}
 
-      <div className="no-print">
-        <Card style={{ marginBottom: 20 }}>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <div style={{ minWidth: 240, flex: 1 }}>
-              <Select
-                label="Paciente"
-                value={pacienteId}
-                onChange={(e) => setPacienteId(e.target.value)}
-                options={
-                  pacientes.length
-                    ? pacientes.map((p) => ({ value: p.id, label: p.nome }))
-                    : [{ value: '', label: 'Nenhum paciente vinculado' }]
-                }
-              />
-            </div>
-            <div style={{ minWidth: 200 }}>
-              <Select
-                label="Período"
-                value={dias}
-                onChange={(e) => setDias(e.target.value)}
-                options={PERIODOS}
-              />
-            </div>
-          </div>
-        </Card>
+      <div style={styles.toolbar}>
+        <Input
+          label="Pesquisar paciente"
+          placeholder="Digite o nome do paciente..."
+          value={busca}
+          onChange={(event) => setBusca(event.target.value)}
+          icon={<SearchIcon />}
+        />
+        <span style={styles.count}>{filtrados.length} paciente{filtrados.length === 1 ? '' : 's'}</span>
       </div>
 
       {loading ? (
-        <Card>
-          <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)' }}>
-            Gerando relatório...
-          </div>
-        </Card>
-      ) : !relatorio ? (
-        <Card>
-          <EmptyState
-            icon={<ChartIcon />}
-            title="Nenhum relatório disponível"
-            message="Selecione um paciente vinculado para gerar o consolidado do período."
-          />
-        </Card>
+        <div style={styles.feedback}>Carregando pacientes...</div>
+      ) : filtrados.length === 0 ? (
+        <EmptyState
+          icon={<PatientsIcon />}
+          title={busca ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado'}
+          message={busca ? 'Tente pesquisar por outro nome.' : 'Os pacientes cadastrados no aplicativo aparecerão aqui.'}
+        />
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <Card title="Identificação">
-            <div style={grid}>
-              <Campo label="Paciente" valor={relatorio.paciente.nome} />
-              <Campo label="E-mail" valor={relatorio.paciente.email} />
-              <Campo label="Tipo de diabetes" valor={relatorio.paciente.tipoDiabetes ?? '—'} />
-              <Campo
-                label="Peso / Altura"
-                valor={
-                  relatorio.paciente.peso && relatorio.paciente.altura
-                    ? `${relatorio.paciente.peso} kg · ${relatorio.paciente.altura} m`
-                    : '—'
-                }
-              />
-              <Campo label="IMC" valor={relatorio.paciente.imc ? String(relatorio.paciente.imc) : '—'} />
-              <Campo
-                label="Restrições"
-                valor={relatorio.paciente.restricoesAlergias ?? 'Nenhuma registrada'}
-              />
-            </div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-              Período: {relatorio.periodo.dias} dias · gerado em{' '}
-              {formatarDataHora(relatorio.periodo.geradoEm)}
-            </div>
-          </Card>
-
-          <Card title="Controle glicêmico">
-            {g && g.total === 0 ? (
-              <EmptyState
-                icon={<ChartIcon />}
-                title="Sem medições no período"
-                message="O paciente não registrou glicemia nesse intervalo."
-              />
-            ) : (
-              g && (
-                <>
-                  <div style={grid}>
-                    <Metrica label="Medições" valor={g.total} />
-                    <Metrica label="Média" valor={g.media ? `${g.media} mg/dL` : '—'} />
-                    <Metrica
-                      label="Mín / Máx"
-                      valor={g.minimo != null ? `${g.minimo} / ${g.maximo} mg/dL` : '—'}
-                    />
-                    <Metrica
-                      label="Desvio padrão"
-                      valor={g.desvioPadrao != null ? `${g.desvioPadrao} mg/dL` : '—'}
-                    />
-                    <Metrica
-                      label="Tempo na faixa"
-                      valor={g.percentualNaFaixa != null ? `${g.percentualNaFaixa}%` : '—'}
-                      cor={
-                        g.percentualNaFaixa != null && g.percentualNaFaixa >= 70
-                          ? 'var(--success)'
-                          : 'var(--warning)'
-                      }
-                    />
-                    <Metrica
-                      label="Eventos críticos"
-                      valor={g.criticos}
-                      cor={g.criticos > 0 ? 'var(--danger)' : 'var(--text)'}
-                    />
-                  </div>
-
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 4 }}>
-                    <Badge label={`${g.hipoglicemias} hipoglicemias`} tint="warning" />
-                    <Badge label={`${g.hiperglicemias} hiperglicemias`} tint="danger" />
-                  </div>
-
-                  {g.porMomento.length > 0 && (
-                    <div style={{ marginTop: 8 }}>
-                      <div style={subtitulo}>Média por momento da medição</div>
-                      {g.porMomento.map((m, i) => (
-                        <div
-                          key={m.momento}
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            padding: '8px 0',
-                            borderBottom:
-                              i < g.porMomento.length - 1 ? '1px solid var(--border)' : 'none',
-                            fontSize: 13,
-                          }}
-                        >
-                          <span style={{ color: 'var(--text)' }}>
-                            {MOMENTO_LABEL[m.momento] ?? m.momento}
-                          </span>
-                          <span style={{ color: 'var(--text-muted)' }}>
-                            {m.media ?? '—'} mg/dL · {m.total} medições
-                          </span>
-                        </div>
-                      ))}
+        <div style={styles.groups}>
+          {Object.entries(grupos).map(([grupo, lista]) => (
+            <section key={grupo}>
+              <div style={styles.groupTitle}>{rotuloDiabetes[grupo] ?? (grupo === 'sem-classificacao' ? 'Sem classificação' : grupo)}</div>
+              <div style={styles.list}>
+                {lista.map((paciente) => (
+                  <div key={paciente.id} style={styles.row}>
+                    <div style={styles.identity}>
+                      <div style={styles.avatar}>{paciente.nome.charAt(0).toUpperCase()}</div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={styles.name}>{paciente.nome}</div>
+                        <div style={styles.email}>{paciente.email}</div>
+                      </div>
                     </div>
-                  )}
-                </>
-              )
-            )}
-          </Card>
-
-          <Card title="Alimentação">
-            <div style={grid}>
-              <Metrica label="Refeições registradas" valor={relatorio.alimentacao.total} />
-              <Metrica
-                label="Carboidratos (média)"
-                valor={
-                  relatorio.alimentacao.carboidratosMedia != null
-                    ? `${relatorio.alimentacao.carboidratosMedia} g`
-                    : '—'
-                }
-              />
-            </div>
-          </Card>
-
-          {g && g.registros.length > 0 && (
-            <Card title="Medições do período">
-              <div style={{ maxHeight: 420, overflowY: 'auto' }}>
-                {g.registros
-                  .slice()
-                  .reverse()
-                  .map((r, i) => (
-                    <div
-                      key={r.id}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 12,
-                        padding: '10px 0',
-                        borderBottom: i < g.registros.length - 1 ? '1px solid var(--border)' : 'none',
-                        fontSize: 13,
-                      }}
-                    >
-                      <span style={{ width: 110, color: 'var(--text-muted)', fontSize: 12 }}>
-                        {formatarDataHora(r.dataHora)}
-                      </span>
-                      <span
-                        style={{
-                          width: 80,
-                          fontWeight: 600,
-                          color: corSeveridade(r.severidade),
-                        }}
-                      >
-                        {r.valor} mg/dL
-                      </span>
-                      <span style={{ flex: 1, color: 'var(--text-muted)' }}>
-                        {MOMENTO_LABEL[r.momento] ?? r.momento}
-                        {r.observacao ? ` · ${r.observacao}` : ''}
-                      </span>
-                    </div>
-                  ))}
+                    <Btn size="sm" onClick={() => navigate(`/relatorios/${paciente.id}`)}>Ver Relatório</Btn>
+                  </div>
+                ))}
               </div>
-            </Card>
-          )}
+            </section>
+          ))}
         </div>
       )}
     </div>
   )
 }
 
-function Campo({ label, valor }: { label: string; valor: string }) {
-  return (
-    <div>
-      <div style={rotulo}>{label}</div>
-      <div style={{ fontSize: 14, color: 'var(--text)', fontWeight: 600 }}>{valor}</div>
-    </div>
-  )
+const styles: Record<string, React.CSSProperties> = {
+  toolbar: { display: 'flex', alignItems: 'end', gap: 16, marginBottom: 24, flexWrap: 'wrap' },
+  count: { color: 'var(--text-muted)', fontSize: 13, paddingBottom: 10 },
+  groups: { display: 'flex', flexDirection: 'column', gap: 24 },
+  groupTitle: { fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 },
+  list: { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-card)' },
+  row: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '16px 20px', borderBottom: '1px solid var(--border)' },
+  identity: { display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 },
+  avatar: { width: 40, height: 40, borderRadius: '50%', background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 },
+  name: { fontSize: 14, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+  email: { fontSize: 12, color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+  feedback: { padding: 48, textAlign: 'center', color: 'var(--text-muted)' },
 }
 
-function Metrica({
-  label,
-  valor,
-  cor = 'var(--text)',
-}: {
-  label: string
-  valor: string | number
-  cor?: string
-}) {
-  return (
-    <div>
-      <div style={rotulo}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 600, color: cor }}>{valor}</div>
-    </div>
-  )
-}
-
-const grid: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-  gap: 16,
-}
-const rotulo: React.CSSProperties = {
-  fontSize: 11,
-  fontWeight: 600,
-  color: 'var(--text-muted)',
-  textTransform: 'uppercase',
-  letterSpacing: '0.4px',
-  marginBottom: 3,
-}
-const subtitulo: React.CSSProperties = {
-  fontSize: 13,
-  fontWeight: 600,
-  color: 'var(--text-soft)',
-  marginBottom: 4,
-}
-
-function ChartIcon() {
-  return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="18" y1="20" x2="18" y2="10" />
-      <line x1="12" y1="20" x2="12" y2="4" />
-      <line x1="6" y1="20" x2="6" y2="14" />
-    </svg>
-  )
-}
+function SearchIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg> }
+function PatientsIcon() { return <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg> }

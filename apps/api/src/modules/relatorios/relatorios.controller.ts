@@ -16,8 +16,14 @@ export class RelatoriosController {
     @CurrentUser() user: JwtPayload,
     @Query('pacienteId') pacienteId?: string,
     @Query('dias') dias?: string,
+    @Query('completo') completo?: string,
   ) {
-    return this.relatorios.gerar(user, pacienteId, dias ? Number(dias) : undefined);
+    return this.relatorios.gerar(
+      user,
+      pacienteId,
+      dias ? Number(dias) : undefined,
+      completo === 'true',
+    );
   }
 
   @Get('csv')
