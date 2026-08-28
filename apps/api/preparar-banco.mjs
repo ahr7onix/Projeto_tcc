@@ -31,8 +31,6 @@ if (!connectionString) {
 
 function resolverSsl() {
   const modo = (process.env.DATABASE_SSL ?? '').trim().toLowerCase();
-  if (modo === 'no-verify') return { rejectUnauthorized: false };
-  if (['false', '0', 'off'].includes(modo)) return false;
   if (['true', '1', 'on'].includes(modo)) return { rejectUnauthorized: true };
   const local = /@(localhost|127\.0\.0\.1|\[::1\]|db|postgres)[:/]/.test(connectionString);
   return local ? false : { rejectUnauthorized: true };

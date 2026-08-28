@@ -19,12 +19,6 @@ type ConfigSsl = false | { rejectUnauthorized: boolean };
 function resolverSsl(config: ConfigService, connectionString: string): ConfigSsl {
   const modo = (config.get<string>('DATABASE_SSL') ?? '').trim().toLowerCase();
 
-  if (modo === 'no-verify') {
-    return { rejectUnauthorized: false };
-  }
-  if (modo === 'false' || modo === '0' || modo === 'off') {
-    return false;
-  }
   if (modo === 'true' || modo === '1' || modo === 'on') {
     return { rejectUnauthorized: true };
   }
