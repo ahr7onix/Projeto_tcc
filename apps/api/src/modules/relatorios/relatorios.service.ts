@@ -16,6 +16,14 @@ interface GlicemiaRow {
   data_hora: Date;
 }
 
+interface AnotacaoRow {
+  id_anotacao: string;
+  tipo: string;
+  texto: string;
+  criado_em: Date;
+  autor_nome: string;
+}
+
 interface RefeicaoRow {
   id_registro: string;
   descricao: string;
@@ -23,6 +31,14 @@ interface RefeicaoRow {
   carboidratos: string | null;
   observacao: string | null;
   data_hora: Date;
+}
+
+interface AnotacaoRow {
+  id_anotacao: string;
+  tipo: string;
+  texto: string;
+  criado_em: Date;
+  autor_nome: string;
 }
 
 @Injectable()
@@ -83,6 +99,17 @@ export class RelatoriosService {
         ORDER BY rr.data_hora`,
       [alvo, periodo],
     );
+
+    const anotacoesResult = await this.pool.query<AnotacaoRow>(
+      `SELECT a.id_anotacao, a.tipo, a.texto, a.criado_em, u.nome AS autor_nome
+         FROM anotacao_paciente a
+         JOIN paciente p ON p.id_paciente = a.id_paciente
+         JOIN usuario u ON u.id_usuario = a.id_autor
+        WHERE p.id_usuario = $1
+        ORDER BY a.criado_em DESC`,
+      [alvo],
+    );
+    const anotacoes = anotacoesResult?.rows ?? [];
 
     const valores = glicemias.map((g) => Number(g.valor));
     const avaliacoes = glicemias.map((g) =>
@@ -174,8 +201,22 @@ export class RelatoriosService {
           carboidratos: r.carboidratos != null ? Number(r.carboidratos) : null,
           observacao: r.observacao,
           dataHora: r.data_hora,
+              anotacoes: anotacoes.map((a) => ({
+                id: String(a.id_anotacao),
+                tipo: a.tipo,
+                texto: a.texto,
+                criadoEm: a.criado_em,
+                autorNome: a.autor_nome,
+              })),
         })),
       },
+      anotacoes: anotacoes.map((a) => ({
+        id: String(a.id_anotacao),
+        tipo: a.tipo,
+        texto: a.texto,
+        criadoEm: a.criado_em,
+        autorNome: a.autor_nome,
+      })),
     };
   }
 

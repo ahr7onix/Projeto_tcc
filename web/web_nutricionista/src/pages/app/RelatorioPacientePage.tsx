@@ -14,6 +14,14 @@ const refeicaoLabel: Record<string, string> = {
   ceia: 'Ceia',
 }
 
+const anotacaoLabel: Record<string, string> = {
+  limitacao: 'Limitação',
+  restricao: 'Restrição',
+  observacao: 'Observação',
+  recomendacao: 'Recomendação',
+  complementar: 'Informação complementar',
+}
+
 function agruparPorDia<T extends { dataHora: string }>(registros: T[]) {
   return registros.reduce<Record<string, T[]>>((grupos, registro) => {
     const chave = new Date(registro.dataHora).toLocaleDateString('pt-BR')
@@ -77,6 +85,12 @@ export default function RelatorioPacientePage() {
           </div>
         </Card>
 
+        <Card title="Registros do profissional" subtitle={`${relatorio.anotacoes.length} anotação${relatorio.anotacoes.length === 1 ? '' : 'ões'} vinculada${relatorio.anotacoes.length === 1 ? '' : 's'} ao paciente`}>
+          {relatorio.anotacoes.length === 0 ? <EmptyState icon={<NoteIcon />} title="Nenhum registro complementar" message="Ainda não há observações, limitações ou recomendações registradas." /> : (
+            <div style={styles.notes}>{relatorio.anotacoes.map((anotacao) => <article key={anotacao.id} style={styles.note}><div style={styles.noteHeader}><strong>{anotacaoLabel[anotacao.tipo] ?? anotacao.tipo}</strong><span>{new Date(anotacao.criadoEm).toLocaleString('pt-BR')}</span></div><div style={styles.noteText}>{anotacao.texto}</div>{anotacao.autorNome && <div style={styles.noteAuthor}>Registrado por {anotacao.autorNome}</div>}</article>)}</div>
+          )}
+        </Card>
+
         <Card title="Controle glicêmico" subtitle={`${glicemia.total} medição${glicemia.total === 1 ? '' : 'ões'} registrada${glicemia.total === 1 ? '' : 's'}`}>
           {glicemia.total === 0 ? <EmptyState icon={<ChartIcon />} title="Nenhuma medição registrada" message="O paciente ainda não enviou medições pelo aplicativo." /> : (
             <>
@@ -118,6 +132,7 @@ function Campo({ label, valor }: { label: string; valor: string }) { return <div
 function Metrica({ label, valor }: { label: string; valor: string }) { return <div><div style={styles.label}>{label}</div><div style={styles.metric}>{valor}</div></div> }
 function ChartIcon() { return <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg> }
 function ForkIcon() { return <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M7 2v7a2 2 0 0 0 4 0V2M9 11v11M17 2v20M17 2c-3 3-3 7 0 10" /></svg> }
+function NoteIcon() { return <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="8" y1="13" x2="16" y2="13" /><line x1="8" y1="17" x2="16" y2="17" /></svg> }
 
 const styles: Record<string, React.CSSProperties> = {
   stack: { display: 'flex', flexDirection: 'column', gap: 20 },
@@ -131,4 +146,9 @@ const styles: Record<string, React.CSSProperties> = {
   tableScroll: { overflowX: 'auto' },
   table: { borderCollapse: 'collapse', width: '100%', minWidth: 680, fontSize: 13 },
   feedback: { padding: 48, textAlign: 'center', color: 'var(--text-muted)' },
+  notes: { display: 'flex', flexDirection: 'column', gap: 10 },
+  note: { padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface-alt)' },
+  noteHeader: { display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', color: 'var(--text)', fontSize: 13 },
+  noteText: { color: 'var(--text-soft)', fontSize: 14, lineHeight: 1.5, marginTop: 8, whiteSpace: 'pre-wrap' },
+  noteAuthor: { color: 'var(--text-muted)', fontSize: 11, marginTop: 8 },
 }

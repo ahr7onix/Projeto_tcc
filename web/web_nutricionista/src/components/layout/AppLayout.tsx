@@ -35,8 +35,7 @@ const NAV_NUTRICIONISTA: GrupoMenu[] = [
   {
     titulo: 'Acompanhamento',
     itens: [
-      { to: '/registros', label: 'Registros', icon: RegistrosIcon },
-      { to: '/saude', label: 'Saúde', icon: SaudeIcon },
+      { to: '/acompanhamento', label: 'Acompanhamento', icon: SaudeIcon },
       { to: '/relatorios', label: 'Relatórios', icon: RelatoriosIcon },
     ],
   },
@@ -196,9 +195,6 @@ function PatientsIcon() {
 }
 function MensagensIcon() {
   return <Svg><path d="M20 15a2 2 0 0 1-2 2H8l-4 3.5V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z" /><path d="M8.5 9.5h7" /><path d="M8.5 13h4" /></Svg>
-}
-function RegistrosIcon() {
-  return <Svg><rect x="4" y="3.5" width="16" height="17" rx="2.5" /><path d="M9 3.5v3" /><path d="M15 3.5v3" /><path d="M4 9h16" /><path d="M8 13.5h3.5" /><path d="M8 17h8" /></Svg>
 }
 function SaudeIcon() {
   return <Svg><path d="M20.4 6.6a4.6 4.6 0 0 0-7.5-1.4L12 6.1l-.9-.9a4.6 4.6 0 0 0-6.6 6.4L12 20l7.5-8.4a4.6 4.6 0 0 0 .9-5z" /><path d="M6.5 12h2.2l1.3-2.2 1.7 4 1.3-1.8h2.5" /></Svg>

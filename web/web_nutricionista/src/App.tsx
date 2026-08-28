@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { useAuth } from './contexts/AuthContext'
 
@@ -12,11 +12,10 @@ import AppLayout from './components/layout/AppLayout'
 import HomePage from './pages/app/HomePage'
 import PacientesPage from './pages/app/PacientesPage'
 import PacienteDetalhePage from './pages/app/PacienteDetalhePage'
-import RegistrosPage from './pages/app/RegistrosPage'
+import PacienteAnotacoesPage from './pages/app/PacienteAnotacoesPage'
 import AlimentacaoPage from './pages/app/AlimentacaoPage'
 import AlimentosPage from './pages/app/AlimentosPage'
 import ReceitasPage from './pages/app/ReceitasPage'
-import SaudePage from './pages/app/SaudePage'
 import RelatoriosPage from './pages/app/RelatoriosPage'
 import RelatorioPacientePage from './pages/app/RelatorioPacientePage'
 import MensagensPage from './pages/app/MensagensPage'
@@ -33,6 +32,10 @@ function useRotaInicial() {
 }
 
 const InicioPorPerfil: React.FC = () => <Navigate to={useRotaInicial()} replace />
+const SaudeLegada: React.FC = () => {
+  const { pacienteId } = useParams<{ pacienteId: string }>()
+  return <Navigate to={`/acompanhamento/${pacienteId}/saude`} replace />
+}
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth()
@@ -73,13 +76,18 @@ export default function App() {
             {/* A ficha do paciente e uma tela inteira, nao um popup: cada secao
                 (informacoes / glicemia / alimentacao / saude) tem a sua URL. */}
             <Route path="pacientes/:pacienteId" element={<PacienteDetalhePage />} />
+            <Route path="pacientes/:pacienteId/anotacoes" element={<PacienteAnotacoesPage />} />
             <Route path="pacientes/:pacienteId/:secao" element={<PacienteDetalhePage />} />
-            <Route path="registros" element={<RegistrosPage />} />
+            <Route path="acompanhamento" element={<PacientesPage />} />
+            <Route path="acompanhamento/:pacienteId" element={<PacienteDetalhePage />} />
+            <Route path="acompanhamento/:pacienteId/anotacoes" element={<PacienteAnotacoesPage />} />
+            <Route path="acompanhamento/:pacienteId/:secao" element={<PacienteDetalhePage />} />
+            <Route path="registros" element={<Navigate to="/acompanhamento" replace />} />
             <Route path="alimentacao" element={<AlimentacaoPage />} />
             <Route path="alimentos" element={<AlimentosPage />} />
             <Route path="receitas" element={<ReceitasPage />} />
-            <Route path="saude" element={<SaudePage />} />
-            <Route path="saude/:pacienteId" element={<SaudePage />} />
+            <Route path="saude" element={<Navigate to="/acompanhamento" replace />} />
+            <Route path="saude/:pacienteId" element={<SaudeLegada />} />
             <Route path="relatorios" element={<RelatoriosPage />} />
             <Route path="relatorios/:pacienteId" element={<RelatorioPacientePage />} />
             <Route path="mensagens" element={<MensagensPage />} />

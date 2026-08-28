@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { PageHeader, Input, EmptyState, AlertBanner, Btn } from '../../components/ui'
 import { api, extractError } from '../../lib/api'
 import VincularPacienteModal from '../../components/VincularPacienteModal'
@@ -34,6 +34,8 @@ function glicemiaColor(val: number | null): string {
 
 export default function PacientesPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const acompanhamento = location.pathname.startsWith('/acompanhamento')
   const [pacientes, setPacientes] = useState<Paciente[]>([])
   const [busca, setBusca] = useState('')
   const [loading, setLoading] = useState(true)
@@ -86,8 +88,8 @@ export default function PacientesPage() {
     <div>
       <PageHeader
         eyebrow="Gerenciamento"
-        title="Pacientes"
-        subtitle="Pacientes vinculados a você. Novos cadastros pelo app mobile aparecem automaticamente aqui."
+        title={acompanhamento ? 'Acompanhamento' : 'Pacientes'}
+        subtitle={acompanhamento ? 'Selecione um paciente para registrar e acompanhar todas as informações em uma única ficha.' : 'Pacientes vinculados a você. Novos cadastros pelo app mobile aparecem automaticamente aqui.'}
         action={<Btn onClick={() => setVincularAberto(true)}>+ Vincular paciente</Btn>}
       />
 
@@ -97,9 +99,9 @@ export default function PacientesPage() {
       {!loading && pacientes.length > 0 && (
         <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
           {[
-            { label: 'Total', value: pacientes.length, color: 'var(--primary)', bg: 'var(--primary-soft)' },
+            { label: 'Cadastrados', value: pacientes.length, color: 'var(--primary)', bg: 'var(--primary-soft)' },
+            { label: 'No sistema', value: pacientes.length, color: 'var(--success)', bg: 'var(--success-soft)' },
             { label: 'Ativos', value: ativos, color: 'var(--success)', bg: 'var(--success-soft)' },
-            { label: 'Inativos', value: pacientes.length - ativos, color: 'var(--text-muted)', bg: 'var(--surface-alt)' },
           ].map(s => (
             <div key={s.label} style={{
               background: s.bg, borderRadius: 'var(--radius-md)',
@@ -142,7 +144,7 @@ export default function PacientesPage() {
             <span>Status</span>
             <span>Glicemia média</span>
             <span>Último registro</span>
-            <span />
+            <span>Ações</span>
             <span />
           </div>
         )}
@@ -156,9 +158,9 @@ export default function PacientesPage() {
           filtrados.map((p, i) => (
             <div
               key={p.id}
-              onClick={() => navigate(`/pacientes/${p.id}/informacoes`)}
+              onClick={() => navigate(`${acompanhamento ? '/acompanhamento' : '/pacientes'}/${p.id}/informacoes`)}
               style={{
-                display: 'grid', gridTemplateColumns: '1fr 110px 140px 130px 110px 36px',
+                display: 'grid', gridTemplateColumns: '1fr 110px 140px 130px minmax(250px, auto) 36px',
                 alignItems: 'center', padding: '14px 20px', gap: 12,
                 borderBottom: i < filtrados.length - 1 ? '1px solid var(--border)' : 'none',
                 cursor: 'pointer', transition: 'background 0.12s',
@@ -203,7 +205,13 @@ export default function PacientesPage() {
                 {timeAgo(p.ultimoRegistro)}
               </div>
 
-              <div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
+                <Btn variant="secondary" size="sm" onClick={() => navigate(`/relatorios/${p.id}`)}>
+                  Ver Relatório
+                </Btn>
+                <Btn variant="ghost" size="sm" onClick={() => navigate(`/pacientes/${p.id}/anotacoes`)}>
+                  Registrar Nova Informação
+                </Btn>
                 <Btn
                   variant="ghost"
                   size="sm"

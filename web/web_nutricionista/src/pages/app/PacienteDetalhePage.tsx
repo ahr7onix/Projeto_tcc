@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { AlertBanner, Paginacao, usePaginacao } from '../../components/ui'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { AlertBanner, Btn, Paginacao, usePaginacao } from '../../components/ui'
 import { api, extractError } from '../../lib/api'
 import s from './PacienteDetalhePage.module.css'
 
@@ -39,6 +39,8 @@ function dataHora(iso: string) {
 export default function PacienteDetalhePage() {
   const { pacienteId = '', secao } = useParams<{ pacienteId: string; secao: Secao }>()
   const navigate = useNavigate()
+  const location = useLocation()
+  const raiz = location.pathname.startsWith('/acompanhamento') ? '/acompanhamento' : '/pacientes'
 
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
@@ -151,6 +153,9 @@ export default function PacienteDetalhePage() {
         <span className={`${s.badge} ${ativo ? s.badgeSuccess : s.badgeWarning}`}>
           {ativo ? 'Ativo' : 'Inativo'}
         </span>
+        <Btn size="sm" onClick={() => navigate(`${raiz}/${pacienteId}/anotacoes`)}>
+          Novo registro
+        </Btn>
       </div>
 
       <nav className={s.nav}>

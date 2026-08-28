@@ -19,6 +19,14 @@ export interface RelatorioRegistroRefeicao {
   dataHora: string
 }
 
+export interface RelatorioAnotacao {
+  id: string
+  tipo: string
+  texto: string
+  criadoEm: string
+  autorNome: string
+}
+
 export interface Relatorio {
   paciente: {
     id: string
@@ -50,6 +58,7 @@ export interface Relatorio {
     carboidratosMedia: number | null
     registros: RelatorioRegistroRefeicao[]
   }
+  anotacoes: RelatorioAnotacao[]
 }
 
 export async function gerarRelatorio(pacienteId: string, dias = 30, completo = false): Promise<Relatorio> {
