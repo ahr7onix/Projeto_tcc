@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { PageHeader, Input, EmptyState, AlertBanner, Btn } from '../../components/ui'
+import { PageHeader, EmptyState, AlertBanner, Btn } from '../../components/ui'
 import { api, extractError } from '../../lib/api'
 import VincularPacienteModal from '../../components/VincularPacienteModal'
 import { desvincularPaciente } from '../../lib/vinculos'
+import PatientPicker from '../../components/PatientPicker'
 
 interface Paciente {
   id: string
@@ -122,11 +123,13 @@ export default function PacientesPage() {
       }}>
         {}
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
-          <Input
-            placeholder="Buscar por nome..."
+          <PatientPicker
+            patients={pacientes}
             value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            icon={<SearchIcon />}
+            label="Localizar paciente"
+            placeholder="Digite o nome do paciente..."
+            onChange={setBusca}
+            onSelect={(patient) => navigate(`${acompanhamento ? '/acompanhamento' : '/pacientes'}/${patient.id}/informacoes`)}
           />
         </div>
 
@@ -248,6 +251,5 @@ export default function PacientesPage() {
   )
 }
 
-function SearchIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> }
 function PatientsIcon() { return <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> }
 function ChevronIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg> }

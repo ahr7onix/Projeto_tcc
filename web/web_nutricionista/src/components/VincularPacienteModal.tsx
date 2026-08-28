@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { AlertBanner, Btn, EmptyState, Input } from './ui'
+import { AlertBanner, Btn, EmptyState } from './ui'
+import PatientPicker from './PatientPicker'
 import { extractError } from '../lib/api'
 import {
   buscarDisponiveis,
@@ -66,10 +67,12 @@ export default function VincularPacienteModal({ onClose, onVinculado }: Props) {
         <div style={body}>
           {erro && <AlertBanner message={erro} />}
 
-          <Input
-            placeholder="Buscar por nome ou e-mail..."
+          <PatientPicker
+            patients={pacientes}
             value={busca}
-            onChange={(e) => setBusca(e.target.value)}
+            label="Localizar paciente"
+            placeholder="Digite o nome ou e-mail..."
+            onChange={setBusca}
           />
 
           {loading ? (

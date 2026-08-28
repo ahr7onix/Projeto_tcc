@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertBanner, Btn, EmptyState, Input, PageHeader } from '../../components/ui'
+import { AlertBanner, Btn, EmptyState, PageHeader } from '../../components/ui'
 import { api, extractError } from '../../lib/api'
+import PatientPicker from '../../components/PatientPicker'
 
 interface Paciente {
   id: string
@@ -55,12 +56,13 @@ export default function RelatoriosPage() {
       {erro && <div style={{ marginBottom: 16 }}><AlertBanner message={erro} /></div>}
 
       <div style={styles.toolbar}>
-        <Input
+        <PatientPicker
+          patients={pacientes}
           label="Pesquisar paciente"
           placeholder="Digite o nome do paciente..."
           value={busca}
-          onChange={(event) => setBusca(event.target.value)}
-          icon={<SearchIcon />}
+          onChange={setBusca}
+          onSelect={(patient) => navigate(`/relatorios/${patient.id}`)}
         />
         <span style={styles.count}>{filtrados.length} paciente{filtrados.length === 1 ? '' : 's'}</span>
       </div>
@@ -114,5 +116,4 @@ const styles: Record<string, React.CSSProperties> = {
   feedback: { padding: 48, textAlign: 'center', color: 'var(--text-muted)' },
 }
 
-function SearchIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg> }
 function PatientsIcon() { return <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg> }

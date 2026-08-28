@@ -7,12 +7,12 @@ import {
   EmptyState,
   PageHeader,
   Paginacao,
-  Select,
   usePaginacao,
 } from '../../components/ui'
 import PlanoAlimentarModal from '../../components/PlanoAlimentarModal'
 import { api, extractError } from '../../lib/api'
 import { excluirPlano, listarPlanos, type PlanoAlimentar } from '../../lib/planos'
+import PatientPicker from '../../components/PatientPicker'
 
 interface PacienteOption {
   id: string
@@ -29,6 +29,7 @@ export default function AlimentacaoPage() {
   const [planos, setPlanos] = useState<PlanoAlimentar[]>([])
   const [pacientes, setPacientes] = useState<PacienteOption[]>([])
   const [filtroPaciente, setFiltroPaciente] = useState('')
+  const [buscaPaciente, setBuscaPaciente] = useState('')
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
   const [modalAberto, setModalAberto] = useState(false)
@@ -69,6 +70,11 @@ export default function AlimentacaoPage() {
   function abrirNovo() {
     setPlanoEditando(null)
     setModalAberto(true)
+  }
+
+  function handleBuscaPaciente(value: string) {
+    setBuscaPaciente(value)
+    if (!pacientes.some((patient) => patient.nome === value)) setFiltroPaciente('')
   }
 
   function abrirEdicao(plano: PlanoAlimentar) {
@@ -115,14 +121,16 @@ export default function AlimentacaoPage() {
       <Card style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-end', flexWrap: 'wrap' }}>
           <div style={{ minWidth: 260, flex: 1 }}>
-            <Select
+            <PatientPicker
+              patients={pacientes}
+              value={buscaPaciente}
               label="Filtrar por paciente"
-              value={filtroPaciente}
-              onChange={(e) => setFiltroPaciente(e.target.value)}
-              options={[
-                { value: '', label: 'Todos os pacientes' },
-                ...pacientes.map((p) => ({ value: p.id, label: p.nome })),
-              ]}
+              placeholder="Todos os pacientes ou digite um nome..."
+              onChange={handleBuscaPaciente}
+              onSelect={(patient) => {
+                setBuscaPaciente(patient.nome)
+                setFiltroPaciente(patient.id)
+              }}
             />
           </div>
           <div style={{ textAlign: 'right' }}>
