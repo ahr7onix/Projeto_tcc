@@ -7,7 +7,7 @@ import { type Mensagem } from '../lib/mensagens'
 
 interface Paciente { id: string; nome: string; ultimoRegistro: string | null }
 interface Persistida { id: string; tipo: string; titulo: string; mensagem: string; lida: boolean; criadoEm: string }
-type Filtro = 'todos' | 'alertas' | 'mensagens'
+type Filtro = 'pendentes' | 'todos' | 'alertas' | 'mensagens'
 type Prioridade = 'critico' | 'atencao' | 'informativo'
 interface Item { id: string; tipo: 'alerta' | 'mensagem' | 'atencao' | 'informativo'; prioridade: Prioridade; titulo: string; descricao: string; criadoEm: string; pacienteId?: string; pacienteNome?: string; conversaId?: string; lida: boolean }
 
@@ -20,7 +20,7 @@ function textoData(iso: string) { return new Date(iso).toLocaleString('pt-BR', {
 export default function NotificationCenter() {
   const navigate = useNavigate()
   const [aberto, setAberto] = useState(false)
-  const [filtro, setFiltro] = useState<Filtro>('todos')
+  const [filtro, setFiltro] = useState<Filtro>('pendentes')
   const [itens, setItens] = useState<Item[]>([])
   const [toast, setToast] = useState<Item | null>(null)
 
@@ -48,7 +48,7 @@ export default function NotificationCenter() {
 
   useEffect(() => {
     void carregar()
-    const timer = window.setInterval(carregar, 15_000)
+    const timer = window.setInterval(carregar, 5_000)
     const cancelar = assinarMensagens((evento: EventoMensagem) => {
       const mensagem: Mensagem = evento.mensagem
       const item: Item = { id: `mensagem-${mensagem.id}`, tipo: 'mensagem', prioridade: 'informativo', titulo: `Nova mensagem de ${mensagem.remetenteNome}`, descricao: mensagem.conteudo, criadoEm: mensagem.criadoEm, pacienteId: evento.contraparteId, pacienteNome: mensagem.remetenteNome, conversaId: evento.contraparteId, lida: false }
@@ -60,7 +60,12 @@ export default function NotificationCenter() {
     return () => { window.clearInterval(timer); cancelar() }
   }, [carregar])
 
-  const filtrados = useMemo(() => itens.filter((item) => filtro === 'todos' || (filtro === 'alertas' ? item.tipo === 'alerta' || item.tipo === 'atencao' : item.tipo === 'mensagem')).sort((a, b) => prioridadeOrdem[a.prioridade] - prioridadeOrdem[b.prioridade] || new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime()), [filtro, itens])
+  const filtrados = useMemo(() => itens.filter((item) => {
+    if (filtro === 'pendentes') return !item.lida
+    if (filtro === 'alertas') return item.tipo === 'alerta' || item.tipo === 'atencao'
+    if (filtro === 'mensagens') return item.tipo === 'mensagem'
+    return true
+  }).sort((a, b) => prioridadeOrdem[a.prioridade] - prioridadeOrdem[b.prioridade] || new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime()), [filtro, itens])
   const naoLidas = itens.filter((item) => !item.lida).length
 
   function marcarLida(item: Item) {
@@ -69,12 +74,18 @@ export default function NotificationCenter() {
     if (item.id.startsWith('notificacao-')) void api.patch(`/notificacoes/${item.id.replace('notificacao-', '')}/ler`).catch(() => undefined)
   }
   function abrir(item: Item) { marcarLida(item); setAberto(false); if (item.conversaId) navigate(`/mensagens/${item.conversaId}`); else if (item.pacienteId) navigate(`/acompanhamento/${item.pacienteId}`) }
-  async function marcarTodas() { setItens((atual) => atual.map((item) => ({ ...item, lida: true }))); localStorage.setItem(READ_KEY, JSON.stringify(itens.map((item) => item.id))); await api.patch('/notificacoes/ler-todas').catch(() => undefined) }
+  async function marcarTodas() {
+    const ids = itens.filter((item) => !item.lida).map((item) => item.id)
+    if (ids.length === 0) return
+    setItens((atual) => atual.map((item) => ({ ...item, lida: true })))
+    localStorage.setItem(READ_KEY, JSON.stringify([...new Set([...lerIds(), ...ids])]))
+    await api.patch('/notificacoes/ler-todas').catch(() => undefined)
+  }
 
   return <>
     <button type="button" aria-label={`Notificações${naoLidas ? `, ${naoLidas} não lidas` : ''}`} title="Abrir notificações" onClick={() => setAberto((valor) => !valor)} style={styles.bell}><BellIcon />{naoLidas > 0 && <span style={styles.badge}>{naoLidas > 99 ? '99+' : naoLidas}</span>}</button>
     {toast && !aberto && <button type="button" onClick={() => abrir(toast)} style={styles.toast}><div style={styles.toastTitle}><BellIcon /> {toast.titulo}</div><div style={styles.toastText}>{toast.descricao.length > 90 ? `${toast.descricao.slice(0, 90)}...` : toast.descricao}</div><div style={styles.toastTime}>{textoData(toast.criadoEm)}</div></button>}
-    {aberto && <aside style={styles.panel} aria-label="Central de notificações"><div style={styles.panelHeader}><div><strong style={styles.panelTitle}>Notificações</strong><div style={styles.panelSub}>{naoLidas} não lidas</div></div><button type="button" onClick={() => setAberto(false)} style={styles.close}>×</button></div><div style={styles.tabs}>{(['todos', 'alertas', 'mensagens'] as Filtro[]).map((aba) => <button key={aba} type="button" onClick={() => setFiltro(aba)} style={{ ...styles.tab, ...(filtro === aba ? styles.tabActive : {}) }}>{aba === 'todos' ? 'Todos' : aba === 'alertas' ? 'Alertas' : 'Mensagens'}</button>)}<button type="button" onClick={marcarTodas} style={styles.readAll}>Marcar todas</button></div><div style={styles.list}>{filtrados.length === 0 ? <div style={styles.empty}>Nenhuma notificação encontrada.</div> : filtrados.map((item) => <article key={item.id} style={{ ...styles.item, ...(item.lida ? {} : styles.unread) }}><button type="button" onClick={() => abrir(item)} style={styles.itemButton}><span style={{ ...styles.itemIcon, color: item.prioridade === 'critico' ? 'var(--danger)' : item.prioridade === 'atencao' ? 'var(--warning)' : 'var(--primary)' }}><TypeIcon tipo={item.tipo} /></span><span style={styles.itemBody}><strong>{item.titulo}</strong>{item.pacienteNome && <small>{item.pacienteNome}</small>}<span>{item.descricao}</span><time>{textoData(item.criadoEm)}</time></span>{!item.lida && <span style={styles.dot} />}</button>{!item.lida && <button type="button" onClick={() => marcarLida(item)} style={styles.mark}>Marcar como lida</button>}</article>)}</div></aside>}
+    {aberto && <aside style={styles.panel} aria-label="Central de notificações"><div style={styles.panelHeader}><div><strong style={styles.panelTitle}>Notificações</strong><div style={styles.panelSub}>{naoLidas} não lidas</div></div><button type="button" onClick={() => setAberto(false)} style={styles.close}>×</button></div><div style={styles.tabs}>{(['pendentes', 'todos', 'alertas', 'mensagens'] as Filtro[]).map((aba) => <button key={aba} type="button" onClick={() => setFiltro(aba)} style={{ ...styles.tab, ...(filtro === aba ? styles.tabActive : {}) }}>{aba === 'pendentes' ? `Pendentes${naoLidas ? ` (${naoLidas})` : ''}` : aba === 'todos' ? 'Todas' : aba === 'alertas' ? 'Alertas' : 'Mensagens'}</button>)}<button type="button" onClick={marcarTodas} style={styles.readAll} disabled={!naoLidas}>Marcar todas</button></div><div style={styles.list}>{filtrados.length === 0 ? <div style={styles.empty}>{filtro === 'pendentes' ? 'Nenhuma notificação pendente.' : 'Nenhuma notificação encontrada.'}</div> : filtrados.map((item) => <article key={item.id} style={{ ...styles.item, ...(item.lida ? {} : styles.unread) }}><button type="button" onClick={() => abrir(item)} style={styles.itemButton}><span style={{ ...styles.itemIcon, color: item.prioridade === 'critico' ? 'var(--danger)' : item.prioridade === 'atencao' ? 'var(--warning)' : 'var(--primary)' }}><TypeIcon tipo={item.tipo} /></span><span style={styles.itemBody}><strong>{item.titulo}</strong>{item.pacienteNome && <small>{item.pacienteNome}</small>}<span>{item.descricao}</span><time>{textoData(item.criadoEm)}</time></span>{!item.lida && <span style={styles.dot} />}</button>{!item.lida && <button type="button" onClick={() => marcarLida(item)} style={styles.mark}>Marcar como lida</button>}</article>)}</div></aside>}
   </>
 }
 

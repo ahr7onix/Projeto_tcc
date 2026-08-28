@@ -6,11 +6,13 @@ import {
   Card,
   EmptyState,
   PageHeader,
-  Select,
+  Paginacao,
+  usePaginacao,
 } from '../../components/ui'
 import PlanoAlimentarModal from '../../components/PlanoAlimentarModal'
 import { api, extractError } from '../../lib/api'
 import { excluirPlano, listarPlanos, type PlanoAlimentar } from '../../lib/planos'
+import PatientPicker from '../../components/PatientPicker'
 
 interface PacienteOption {
   id: string
@@ -27,11 +29,15 @@ export default function AlimentacaoPage() {
   const [planos, setPlanos] = useState<PlanoAlimentar[]>([])
   const [pacientes, setPacientes] = useState<PacienteOption[]>([])
   const [filtroPaciente, setFiltroPaciente] = useState('')
+  const [buscaPaciente, setBuscaPaciente] = useState('')
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
   const [modalAberto, setModalAberto] = useState(false)
   const [planoEditando, setPlanoEditando] = useState<PlanoAlimentar | null>(null)
   const [excluindoId, setExcluindoId] = useState<string | null>(null)
+  // Só um plano aberto por vez: a lista serve para comparar pacientes, e
+  // vários blocos de refeições abertos ao mesmo tempo desfazem isso.
+  const [expandidoId, setExpandidoId] = useState<string | null>(null)
 
   const carregarPlanos = useCallback(async (pacienteId?: string) => {
     try {
@@ -59,10 +65,16 @@ export default function AlimentacaoPage() {
   }, [filtroPaciente, carregarPlanos])
 
   const ativos = useMemo(() => planos.filter((p) => p.ativo).length, [planos])
+  const pag = usePaginacao(planos, 15, filtroPaciente)
 
   function abrirNovo() {
     setPlanoEditando(null)
     setModalAberto(true)
+  }
+
+  function handleBuscaPaciente(value: string) {
+    setBuscaPaciente(value)
+    if (!pacientes.some((patient) => patient.nome === value)) setFiltroPaciente('')
   }
 
   function abrirEdicao(plano: PlanoAlimentar) {
@@ -109,18 +121,20 @@ export default function AlimentacaoPage() {
       <Card style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-end', flexWrap: 'wrap' }}>
           <div style={{ minWidth: 260, flex: 1 }}>
-            <Select
+            <PatientPicker
+              patients={pacientes}
+              value={buscaPaciente}
               label="Filtrar por paciente"
-              value={filtroPaciente}
-              onChange={(e) => setFiltroPaciente(e.target.value)}
-              options={[
-                { value: '', label: 'Todos os pacientes' },
-                ...pacientes.map((p) => ({ value: p.id, label: p.nome })),
-              ]}
+              placeholder="Todos os pacientes ou digite um nome..."
+              onChange={handleBuscaPaciente}
+              onSelect={(patient) => {
+                setBuscaPaciente(patient.nome)
+                setFiltroPaciente(patient.id)
+              }}
             />
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--primary)' }}>
+            <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--primary)' }}>
               {ativos}/{planos.length}
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>planos ativos</div>
@@ -144,69 +158,83 @@ export default function AlimentacaoPage() {
           />
         </Card>
       ) : (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
-            gap: 20,
-          }}
-        >
-          {planos.map((plano) => (
-            <Card key={plano.id}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>
-                    {plano.pacienteNome}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
-                    {formatarData(plano.dataInicio)} → {formatarData(plano.dataFim)}
-                  </div>
-                </div>
-                <Badge
-                  label={plano.ativo ? 'Ativo' : 'Encerrado'}
-                  tint={plano.ativo ? 'success' : 'primary'}
-                />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {plano.refeicoes.map((r, i) => (
-                  <div
-                    key={r.id ?? i}
-                    style={{
-                      padding: '10px 0',
-                      borderBottom:
-                        i < plano.refeicoes.length - 1 ? '1px solid var(--border)' : 'none',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                      <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>
-                        {r.nome}
-                      </span>
-                      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{r.horario}</span>
-                    </div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
-                      {r.itens}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                <Btn variant="secondary" size="sm" onClick={() => abrirEdicao(plano)}>
-                  Editar
-                </Btn>
-                <Btn
-                  variant="danger"
-                  size="sm"
-                  loading={excluindoId === plano.id}
-                  onClick={() => handleExcluir(plano)}
+        <Card>
+          {/* Uma linha por plano. A grade de cards obrigava a rolar para
+              comparar dois pacientes; na lista as datas e o status ficam
+              alinhados. As refeições abrem dentro da própria linha. */}
+          <div>
+            {pag.visiveis.map((plano, i) => {
+              const aberto = expandidoId === plano.id
+              return (
+                <div
+                  key={plano.id}
+                  style={{
+                    borderBottom: i < pag.visiveis.length - 1 ? '1px solid var(--border)' : 'none',
+                  }}
                 >
-                  Excluir
-                </Btn>
-              </div>
-            </Card>
-          ))}
-        </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => setExpandidoId(aberto ? null : plano.id)}
+                      aria-expanded={aberto}
+                      style={{
+                        flex: 1, minWidth: 200, display: 'flex', alignItems: 'center', gap: 10,
+                        background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left',
+                      }}
+                    >
+                      <span style={{ fontSize: 10, color: 'var(--text-muted)', width: 10 }}>{aberto ? '▾' : '▸'}</span>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{plano.pacienteNome}</span>
+                    </button>
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)', minWidth: 168 }}>
+                      {formatarData(plano.dataInicio)} → {formatarData(plano.dataFim)}
+                    </span>
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)', minWidth: 84 }}>
+                      {plano.refeicoes.length} {plano.refeicoes.length === 1 ? 'refeição' : 'refeições'}
+                    </span>
+                    <Badge
+                      label={plano.ativo ? 'Ativo' : 'Encerrado'}
+                      tint={plano.ativo ? 'success' : 'primary'}
+                    />
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <Btn variant="secondary" size="sm" onClick={() => abrirEdicao(plano)}>
+                        Editar
+                      </Btn>
+                      <Btn
+                        variant="danger"
+                        size="sm"
+                        loading={excluindoId === plano.id}
+                        onClick={() => handleExcluir(plano)}
+                      >
+                        Excluir
+                      </Btn>
+                    </div>
+                  </div>
+
+                  {aberto && (
+                    <div style={{ padding: '0 0 12px 22px' }}>
+                      {plano.refeicoes.map((r, j) => (
+                        <div key={r.id ?? j} style={{ display: 'flex', gap: 10, padding: '6px 0', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: 12, color: 'var(--text-muted)', minWidth: 44 }}>{r.horario}</span>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', minWidth: 110 }}>{r.nome}</span>
+                          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{r.itens}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+          <Paginacao
+            pagina={pag.pagina}
+            totalPaginas={pag.totalPaginas}
+            total={pag.total}
+            primeiro={pag.primeiro}
+            ultimo={pag.ultimo}
+            onChange={pag.irPara}
+            rotulo="planos"
+          />
+        </Card>
       )}
 
       {modalAberto && (

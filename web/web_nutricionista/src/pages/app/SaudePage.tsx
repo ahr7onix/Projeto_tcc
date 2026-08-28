@@ -6,7 +6,6 @@ import {
   Btn,
   Card,
   EmptyState,
-  Input,
   PageHeader,
   ProgressBar,
   Select,
@@ -16,6 +15,7 @@ import GraficoLinha from '../../components/GraficoLinha'
 import MedidaModal from '../../components/MedidaModal'
 import MedicamentoModal from '../../components/MedicamentoModal'
 import { api, extractError } from '../../lib/api'
+import PatientPicker from '../../components/PatientPicker'
 import {
   buscarEvolucao,
   excluirAntropometria,
@@ -559,7 +559,14 @@ function SaudePacientesPage() {
       {erro && <div style={{ marginBottom: 16 }}><AlertBanner message={erro} /></div>}
       <div style={{ display: 'flex', alignItems: 'end', gap: 16, flexWrap: 'wrap', marginBottom: 24 }}>
         <div style={{ flex: 1, minWidth: 240 }}>
-          <Input label="Pesquisar paciente" placeholder="Digite o nome do paciente..." value={busca} onChange={(event) => setBusca(event.target.value)} icon={<SearchIcon />} />
+          <PatientPicker
+            patients={pacientes}
+            value={busca}
+            label="Localizar paciente"
+            placeholder="Digite o nome do paciente..."
+            onChange={setBusca}
+            onSelect={(patient) => navigate(`/saude/${patient.id}`)}
+          />
         </div>
         <span style={{ color: 'var(--text-muted)', fontSize: 13, paddingBottom: 10 }}>{filtrados.length} paciente{filtrados.length === 1 ? '' : 's'}</span>
       </div>
@@ -594,7 +601,6 @@ const avatarPaciente: React.CSSProperties = { width: 40, height: 40, borderRadiu
 const nomePaciente: React.CSSProperties = { fontSize: 14, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
 const emailPaciente: React.CSSProperties = { fontSize: 12, color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
 
-function SearchIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg> }
 
 const linha: React.CSSProperties = {
   display: 'flex',
