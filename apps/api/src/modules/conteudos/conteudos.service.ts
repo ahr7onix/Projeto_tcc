@@ -23,6 +23,9 @@ export class ConteudosService {
       resumo: r.resumo ?? null,
       categoria: r.categoria,
       publicado: r.publicado,
+      publico: r.publico ?? 'todos',
+      agendadoEm: r.agendado_em ?? null,
+      imagemCapa: r.imagem_capa ?? null,
       autorNome: r.autor_nome ?? null,
       criadoEm: r.criado_em,
       atualizadoEm: r.atualizado_em,
@@ -44,7 +47,7 @@ export class ConteudosService {
 
     const podeVerRascunhos = PERFIS_EDITORES.includes(user.role);
     if (!podeVerRascunhos || !filtros.todos) {
-      condicoes.push('c.publicado = TRUE');
+      condicoes.push('c.publicado = TRUE AND (c.agendado_em IS NULL OR c.agendado_em <= NOW())');
     }
     if (filtros.categoria) {
       params.push(filtros.categoria);
@@ -55,7 +58,8 @@ export class ConteudosService {
 
     const { rows } = await this.pool.query(
       `SELECT c.id_conteudo, c.titulo, c.resumo, c.categoria, c.publicado,
-              c.criado_em, c.atualizado_em, u.nome AS autor_nome
+              c.criado_em, c.atualizado_em, c.publico, c.agendado_em, c.imagem_capa,
+              u.nome AS autor_nome
          FROM conteudo_educativo c
          JOIN usuario u ON u.id_usuario = c.id_autor
          ${where}
@@ -90,8 +94,8 @@ export class ConteudosService {
 
     const { rows } = await this.pool.query(
       `INSERT INTO conteudo_educativo
-         (id_autor, titulo, resumo, conteudo, categoria, publicado)
-       VALUES ($1, $2, $3, $4, $5, $6)
+         (id_autor, titulo, resumo, conteudo, categoria, publicado, publico, agendado_em, imagem_capa)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
       [
         user.sub,
@@ -100,6 +104,9 @@ export class ConteudosService {
         dto.conteudo.trim(),
         dto.categoria?.trim() || 'geral',
         dto.publicado ?? false,
+        dto.publico ?? 'todos',
+        dto.agendadoEm ? new Date(dto.agendadoEm) : null,
+        dto.imagemCapa?.trim() || null,
       ],
     );
 
@@ -123,8 +130,9 @@ export class ConteudosService {
     const { rows } = await this.pool.query(
       `UPDATE conteudo_educativo
           SET titulo = $1, resumo = $2, conteudo = $3,
-              categoria = $4, publicado = $5, atualizado_em = NOW()
-        WHERE id_conteudo = $6
+              categoria = $4, publicado = $5, publico = $6,
+              agendado_em = $7, imagem_capa = $8, atualizado_em = NOW()
+        WHERE id_conteudo = $9
         RETURNING *`,
       [
         dto.titulo?.trim() ?? atual.titulo,
@@ -132,6 +140,9 @@ export class ConteudosService {
         dto.conteudo?.trim() ?? atual.conteudo,
         dto.categoria?.trim() ?? atual.categoria,
         dto.publicado ?? atual.publicado,
+        dto.publico ?? atual.publico ?? 'todos',
+        dto.agendadoEm !== undefined ? new Date(dto.agendadoEm) : atual.agendado_em,
+        dto.imagemCapa !== undefined ? dto.imagemCapa?.trim() || null : atual.imagem_capa,
         id,
       ],
     );

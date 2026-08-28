@@ -6,6 +6,9 @@ export interface Conteudo {
   resumo: string | null
   categoria: string
   publicado: boolean
+  publico: 'todos' | 'pacientes_diabetes' | 'adultos'
+  agendadoEm: string | null
+  imagemCapa: string | null
   autorNome: string | null
   criadoEm: string
   atualizadoEm: string
@@ -18,6 +21,9 @@ export interface ConteudoPayload {
   conteudo: string
   categoria?: string
   publicado?: boolean
+  publico?: 'todos' | 'pacientes_diabetes' | 'adultos'
+  agendadoEm?: string
+  imagemCapa?: string
 }
 
 export async function listarConteudos(todos = true): Promise<Conteudo[]> {

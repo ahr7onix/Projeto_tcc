@@ -93,6 +93,9 @@ CREATE TABLE conteudo_educativo (
     conteudo      TEXT         NOT NULL CHECK (length(trim(conteudo)) > 0),
     categoria     VARCHAR(60)  NOT NULL DEFAULT 'geral',
     publicado     BOOLEAN      NOT NULL DEFAULT FALSE,
+    publico       VARCHAR(30)  NOT NULL DEFAULT 'todos',
+    agendado_em   TIMESTAMPTZ,
+    imagem_capa   TEXT,
     criado_em     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     atualizado_em TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
