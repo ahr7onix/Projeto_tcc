@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import {
   AlertBanner,
   Badge,
   Btn,
   Card,
   EmptyState,
+  Input,
   PageHeader,
   Paginacao,
   ProgressBar,
@@ -38,6 +40,7 @@ import {
 interface PacienteOption {
   id: string
   nome: string
+  email: string
 }
 
 function formatarData(iso: string): string {
@@ -64,9 +67,10 @@ function tintDoRisco(risco: string | null): 'success' | 'warning' | 'danger' {
   return 'warning'
 }
 
-export default function SaudePage() {
+function SaudeDetalhePage({ pacienteInicial = '' }: { pacienteInicial?: string }) {
+  const navigate = useNavigate()
   const [pacientes, setPacientes] = useState<PacienteOption[]>([])
-  const [pacienteId, setPacienteId] = useState('')
+  const [pacienteId, setPacienteId] = useState(pacienteInicial)
 
   const [registros, setRegistros] = useState<RegistroAntropometrico[]>([])
   const [evolucao, setEvolucao] = useState<EvolucaoAntropometrica | null>(null)
@@ -194,6 +198,11 @@ export default function SaudePage() {
 
   return (
     <div>
+      {pacienteInicial && (
+        <Btn variant="ghost" onClick={() => navigate('/saude')} style={{ marginBottom: 8 }}>
+          ← Voltar para Saúde
+        </Btn>
+      )}
       <PageHeader
         eyebrow="Indicadores"
         title="Saúde"
@@ -207,13 +216,13 @@ export default function SaudePage() {
 
       {erro && <AlertBanner message={erro} />}
 
-      <Card style={{ marginBottom: 20 }}>
+      {!pacienteInicial && <Card style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-end', flexWrap: 'wrap' }}>
           <div style={{ minWidth: 280, flex: 1 }}>
             <Select
-              label="Paciente"
               value={pacienteId}
               onChange={(e) => setPacienteId(e.target.value)}
+              label="Paciente"
               options={[
                 { value: '', label: 'Selecione um paciente' },
                 ...pacientes.map((p) => ({ value: p.id, label: p.nome })),
@@ -231,7 +240,7 @@ export default function SaudePage() {
             </div>
           )}
         </div>
-      </Card>
+      </Card>}
 
       {!pacienteId ? (
         <Card>
@@ -552,6 +561,68 @@ export default function SaudePage() {
     </div>
   )
 }
+
+function SaudePacientesPage() {
+  const navigate = useNavigate()
+  const [pacientes, setPacientes] = useState<PacienteOption[]>([])
+  const [busca, setBusca] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [erro, setErro] = useState<string | null>(null)
+
+  useEffect(() => {
+    api.get('/pacientes')
+      .then(({ data }) => setPacientes(data.data ?? []))
+      .catch((err) => setErro(extractError(err)))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const filtrados = useMemo(() => {
+    const termo = busca.trim().toLocaleLowerCase()
+    return pacientes.filter((paciente) => paciente.nome.toLocaleLowerCase().includes(termo))
+  }, [busca, pacientes])
+
+  return (
+    <div>
+      <PageHeader eyebrow="Indicadores" title="Saúde" subtitle="Escolha um paciente para consultar medidas, medicamentos e bem-estar." />
+      {erro && <div style={{ marginBottom: 16 }}><AlertBanner message={erro} /></div>}
+      <div style={{ display: 'flex', alignItems: 'end', gap: 16, flexWrap: 'wrap', marginBottom: 24 }}>
+        <div style={{ flex: 1, minWidth: 240 }}>
+          <Input label="Pesquisar paciente" placeholder="Digite o nome do paciente..." value={busca} onChange={(event) => setBusca(event.target.value)} icon={<SearchIcon />} />
+        </div>
+        <span style={{ color: 'var(--text-muted)', fontSize: 13, paddingBottom: 10 }}>{filtrados.length} paciente{filtrados.length === 1 ? '' : 's'}</span>
+      </div>
+      {loading ? <div style={feedback}>Carregando pacientes...</div> : filtrados.length === 0 ? (
+        <EmptyState icon={<HeartIcon />} title={busca ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado'} message={busca ? 'Tente pesquisar por outro nome.' : 'Os pacientes cadastrados no aplicativo aparecerão aqui.'} />
+      ) : (
+        <div style={listaPacientes}>
+          {filtrados.map((paciente) => (
+            <div key={paciente.id} style={linhaPaciente}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                <div style={avatarPaciente}>{paciente.nome.charAt(0).toUpperCase()}</div>
+                <div style={{ minWidth: 0 }}><div style={nomePaciente}>{paciente.nome}</div><div style={emailPaciente}>{paciente.email}</div></div>
+              </div>
+              <Btn size="sm" onClick={() => navigate(`/saude/${paciente.id}`)}>Ver Saúde</Btn>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default function SaudePage() {
+  const { pacienteId } = useParams<{ pacienteId?: string }>()
+  return pacienteId ? <SaudeDetalhePage pacienteInicial={pacienteId} /> : <SaudePacientesPage />
+}
+
+const feedback: React.CSSProperties = { padding: 48, textAlign: 'center', color: 'var(--text-muted)' }
+const listaPacientes: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-card)' }
+const linhaPaciente: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '16px 20px', borderBottom: '1px solid var(--border)' }
+const avatarPaciente: React.CSSProperties = { width: 40, height: 40, borderRadius: '50%', background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }
+const nomePaciente: React.CSSProperties = { fontSize: 14, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
+const emailPaciente: React.CSSProperties = { fontSize: 12, color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
+
+function SearchIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg> }
 
 const linha: React.CSSProperties = {
   display: 'flex',
