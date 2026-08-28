@@ -277,10 +277,36 @@ CREATE TABLE medicamento (
     dosagem           VARCHAR(80)  NOT NULL,                -- ex: "10 UI", "500 mg"
     frequencia        VARCHAR(80)  NOT NULL,                -- ex: "8 em 8h"
     horario_inicial   TIME         NOT NULL,
+    observacoes       TEXT,
     ativo             BOOLEAN      NOT NULL DEFAULT TRUE,
     criado_em         TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 CREATE INDEX idx_medicamento_paciente ON medicamento(id_paciente);
+
+-- ---------- Tabela: restricao_alimentar ----------
+-- Lista estruturada de restrições/alergias do paciente (adicionar, editar e
+-- remover itens individualmente). Complementa (não substitui) o campo livre
+-- paciente.restricoes_alergias, usado em relatórios e na visão da nutricionista.
+CREATE TABLE restricao_alimentar (
+    id_restricao BIGSERIAL    PRIMARY KEY,
+    id_paciente  BIGINT       NOT NULL
+        REFERENCES paciente(id_paciente) ON DELETE CASCADE,
+    descricao    VARCHAR(160) NOT NULL CHECK (length(trim(descricao)) > 0),
+    criado_em    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+CREATE INDEX idx_restricao_paciente ON restricao_alimentar(id_paciente);
+
+-- ---------- Tabela: anotacao_paciente ----------
+-- Informações complementares registradas pelo profissional no acompanhamento.
+CREATE TABLE anotacao_paciente (
+    id_anotacao BIGSERIAL PRIMARY KEY,
+    id_paciente BIGINT NOT NULL REFERENCES paciente(id_paciente) ON DELETE CASCADE,
+    id_autor BIGINT NOT NULL REFERENCES usuario(id_usuario) ON DELETE RESTRICT,
+    tipo VARCHAR(30) NOT NULL CHECK (tipo IN ('limitacao', 'restricao', 'observacao', 'recomendacao', 'complementar')),
+    texto TEXT NOT NULL CHECK (length(trim(texto)) >= 2),
+    criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX idx_anotacao_paciente_criado ON anotacao_paciente(id_paciente, criado_em DESC);
 
 -- ---------- Tabela: plano_alimentar ----------
 CREATE TABLE plano_alimentar (

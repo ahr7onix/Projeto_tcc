@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { AnotacoesModule } from './modules/anotacoes/anotacoes.module';
 import { AlertasModule } from './modules/alertas/alertas.module';
 import { AlimentosModule } from './modules/alimentos/alimentos.module';
 import { AntropometriaModule } from './modules/antropometria/antropometria.module';
@@ -41,6 +42,8 @@ import { VinculosModule } from './modules/vinculos/vinculos.module';
     MensagensModule,
     ConteudosModule,
     AdminModule,
+    AnotacoesModule,
+    AnotacoesModule,
     PushModule,
     // Módulos do briefing de nutrição (migration 007)
     AlimentosModule,
