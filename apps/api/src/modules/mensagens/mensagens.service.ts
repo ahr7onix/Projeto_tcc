@@ -44,7 +44,12 @@ export class MensagensService {
               up.id_usuario AS paciente_id,
               up.nome       AS paciente_nome,
               un.id_usuario AS nutricionista_id,
-              un.nome       AS nutricionista_nome
+              un.nome       AS nutricionista_nome,
+              p.data_nascimento AS paciente_nascimento,
+              p.tipo_diabetes   AS paciente_diabetes,
+              p.genero          AS paciente_genero,
+              p.peso            AS paciente_peso,
+              p.altura          AS paciente_altura
          FROM nutricionista_paciente np
          JOIN paciente p      ON p.id_paciente = np.id_paciente
          JOIN usuario  up     ON up.id_usuario = p.id_usuario
@@ -142,7 +147,7 @@ export class MensagensService {
       [vinculo.id_vinculo, max],
     );
 
-    await this.pool.query(
+    const marcadas = await this.pool.query(
       `UPDATE mensagem
           SET lida_em = NOW()
         WHERE id_vinculo = $1
@@ -151,6 +156,17 @@ export class MensagensService {
       [vinculo.id_vinculo, user.sub],
     );
 
+    // Marcou alguma como lida: avisa quem escreveu, para o "✓✓" aparecer na
+    // tela dele sem F5 (a marcação já acontecia, só não era empurrada).
+    if (marcadas.rowCount && marcadas.rowCount > 0) {
+      this.eventos.publicarSinal({
+        tipo: 'leitura',
+        paraUsuarioId: String(contraparteId),
+        contraparteId: String(user.sub),
+        lidoEm: new Date().toISOString(),
+      });
+    }
+
     return {
       contraparte: {
         id: String(contraparteId),
@@ -158,9 +174,50 @@ export class MensagensService {
           user.role === 'paciente'
             ? vinculo.nutricionista_nome
             : vinculo.paciente_nome,
+        // O nutricionista vê a ficha rápida do paciente no cabeçalho da
+        // conversa; o paciente não recebe dado nenhum do nutricionista.
+        ...(user.role === 'paciente'
+          ? {}
+          : {
+              perfil: {
+                dataNascimento: vinculo.paciente_nascimento
+                  ? new Date(vinculo.paciente_nascimento)
+                      .toISOString()
+                      .slice(0, 10)
+                  : null,
+                tipoDiabetes: vinculo.paciente_diabetes ?? null,
+                genero: vinculo.paciente_genero ?? null,
+                peso:
+                  vinculo.paciente_peso != null
+                    ? Number(vinculo.paciente_peso)
+                    : null,
+                altura:
+                  vinculo.paciente_altura != null
+                    ? Number(vinculo.paciente_altura)
+                    : null,
+              },
+            }),
       },
       data: rows.reverse().map((r) => this.mapMensagem(r, user)),
     };
+  }
+
+  /**
+   * "Fulano está digitando": sinal efêmero para a outra ponta. Passa pelo
+   * mesmo controle de vínculo das mensagens e não toca no banco.
+   */
+  async registrarDigitando(
+    user: JwtPayload,
+    contraparteId: string,
+    digitando: boolean,
+  ) {
+    await this.buscarVinculo(user, contraparteId);
+    this.eventos.publicarSinal({
+      tipo: 'digitando',
+      paraUsuarioId: String(contraparteId),
+      contraparteId: String(user.sub),
+      digitando,
+    });
   }
 
   async enviar(user: JwtPayload, dto: CreateMensagemDto) {

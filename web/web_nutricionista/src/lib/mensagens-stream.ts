@@ -9,6 +9,23 @@ export interface EventoMensagem {
   mensagem: Mensagem
 }
 
+export interface EventoDigitando {
+  contraparteId: string
+  digitando: boolean
+}
+
+export interface EventoLeitura {
+  contraparteId: string
+  lidoEm: string
+}
+
+export interface OpcoesAssinatura {
+  /** A contraparte começou ou parou de digitar. */
+  aoDigitar?: (evento: EventoDigitando) => void
+  /** A contraparte leu as mensagens até agora. */
+  aoLer?: (evento: EventoLeitura) => void
+}
+
 function esperar(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -47,6 +64,7 @@ function separarEventos(buffer: string) {
  */
 export function assinarMensagens(
   aoReceber: (evento: EventoMensagem) => void,
+  opcoes: OpcoesAssinatura = {},
 ): () => void {
   const controller = new AbortController()
   let encerrado = false
@@ -66,9 +84,15 @@ export function assinarMensagens(
       buffer = resto
       for (const evento of eventos) {
         // O batimento só serve para segurar a conexão; não vira nada na tela.
-        if (evento.tipo !== 'mensagem' || !evento.dados) continue
+        if (!evento.dados) continue
         try {
-          aoReceber(JSON.parse(evento.dados) as EventoMensagem)
+          if (evento.tipo === 'mensagem') {
+            aoReceber(JSON.parse(evento.dados) as EventoMensagem)
+          } else if (evento.tipo === 'digitando') {
+            opcoes.aoDigitar?.(JSON.parse(evento.dados) as EventoDigitando)
+          } else if (evento.tipo === 'lida') {
+            opcoes.aoLer?.(JSON.parse(evento.dados) as EventoLeitura)
+          }
         } catch {
           // Um evento malformado não pode derrubar o canal inteiro.
         }

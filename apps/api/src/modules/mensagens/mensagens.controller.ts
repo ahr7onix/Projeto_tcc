@@ -17,6 +17,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt.guard';
 import type { JwtPayload } from '../../common/guards/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CreateMensagemDto } from './dto/create-mensagem.dto';
+import { DigitandoDto } from './dto/digitando.dto';
 import { MensagensEventosService } from './mensagens-eventos.service';
 import { MensagensService } from './mensagens.service';
 
@@ -65,5 +66,19 @@ export class MensagensController {
   @HttpCode(HttpStatus.CREATED)
   enviar(@CurrentUser() user: JwtPayload, @Body() dto: CreateMensagemDto) {
     return this.mensagens.enviar(user, dto);
+  }
+
+  @Post(':contraparteId/digitando')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  digitando(
+    @CurrentUser() user: JwtPayload,
+    @Param('contraparteId') contraparteId: string,
+    @Body() dto: DigitandoDto,
+  ) {
+    return this.mensagens.registrarDigitando(
+      user,
+      contraparteId,
+      dto.digitando ?? true,
+    );
   }
 }
