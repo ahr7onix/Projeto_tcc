@@ -100,7 +100,7 @@ export default function PacienteDetalhePage() {
   if (erro || !paciente) {
     return (
       <div>
-        <button className={s.voltar} onClick={() => navigate('/pacientes')}>
+        <button className={s.voltar} onClick={() => navigate(raiz)}>
           <SetaIcon /> Voltar para pacientes
         </button>
         <AlertBanner message={erro ?? 'Paciente não encontrado.'} />
@@ -140,7 +140,7 @@ export default function PacienteDetalhePage() {
 
   return (
     <div>
-      <button className={s.voltar} onClick={() => navigate('/pacientes')}>
+      <button className={s.voltar} onClick={() => navigate(raiz)}>
         <SetaIcon /> Voltar para pacientes
       </button>
 
@@ -162,7 +162,7 @@ export default function PacienteDetalhePage() {
         {navItens.map((item) => (
           <button
             key={item.key}
-            onClick={() => navigate(`/pacientes/${pacienteId}/${item.key}`)}
+            onClick={() => navigate(`${raiz}/${pacienteId}/${item.key}`)}
             aria-current={abaAtual === item.key ? 'page' : undefined}
             className={`${s.navItem} ${abaAtual === item.key ? s.navItemActive : ''}`}
           >

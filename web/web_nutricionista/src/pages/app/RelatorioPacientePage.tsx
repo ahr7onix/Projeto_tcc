@@ -91,6 +91,12 @@ export default function RelatorioPacientePage() {
           )}
         </Card>
 
+        <Card title="Registros do profissional" subtitle={`${relatorio.anotacoes.length} anotação${relatorio.anotacoes.length === 1 ? '' : 'ões'} vinculada${relatorio.anotacoes.length === 1 ? '' : 's'} ao paciente`}>
+          {relatorio.anotacoes.length === 0 ? <EmptyState icon={<NoteIcon />} title="Nenhum registro complementar" message="Ainda não há observações, limitações ou recomendações registradas." /> : (
+            <div style={styles.notes}>{relatorio.anotacoes.map((anotacao) => <article key={anotacao.id} style={styles.note}><div style={styles.noteHeader}><strong>{anotacaoLabel[anotacao.tipo] ?? anotacao.tipo}</strong><span>{new Date(anotacao.criadoEm).toLocaleString('pt-BR')}</span></div><div style={styles.noteText}>{anotacao.texto}</div>{anotacao.autorNome && <div style={styles.noteAuthor}>Registrado por {anotacao.autorNome}</div>}</article>)}</div>
+          )}
+        </Card>
+
         <Card title="Controle glicêmico" subtitle={`${glicemia.total} medição${glicemia.total === 1 ? '' : 'ões'} registrada${glicemia.total === 1 ? '' : 's'}`}>
           {glicemia.total === 0 ? <EmptyState icon={<ChartIcon />} title="Nenhuma medição registrada" message="O paciente ainda não enviou medições pelo aplicativo." /> : (
             <>
