@@ -23,8 +23,11 @@ CREATE TABLE usuario (
     senha        VARCHAR(255) NOT NULL,                  -- hash bcrypt/argon2
     tipo         tipo_usuario NOT NULL,
     criado_em    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-    atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    desativado_em TIMESTAMPTZ                            -- NULL = conta ativa (soft delete)
 );
+
+CREATE INDEX idx_usuario_ativo ON usuario(id_usuario) WHERE desativado_em IS NULL;
 
 -- ---------- Tabela: paciente ----------
 CREATE TABLE paciente (
@@ -75,6 +78,26 @@ CREATE INDEX idx_vinculo_nutricionista
 CREATE INDEX idx_vinculo_paciente
     ON nutricionista_paciente(id_paciente) WHERE ativo = TRUE;
 
+-- ---------- Tabela: mensagem ----------
+-- Conversa entre nutricionista e paciente, presa ao vinculo entre os dois.
+-- Faltava aqui: como o preparar-banco.mjs marca as migrations como aplicadas
+-- quando cria o banco pelo schema.sql, um banco novo nascia sem esta tabela e
+-- todo /mensagens respondia 500. Espelha migrations/003_mensagem.sql.
+CREATE TABLE mensagem (
+    id_mensagem   BIGSERIAL   PRIMARY KEY,
+    id_vinculo    BIGINT      NOT NULL
+        REFERENCES nutricionista_paciente(id_vinculo) ON DELETE CASCADE,
+    id_remetente  BIGINT      NOT NULL
+        REFERENCES usuario(id_usuario) ON DELETE CASCADE,
+    conteudo      TEXT        NOT NULL CHECK (length(trim(conteudo)) > 0),
+    lida_em       TIMESTAMPTZ,
+    criado_em     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX idx_mensagem_vinculo
+    ON mensagem(id_vinculo, criado_em DESC);
+CREATE INDEX idx_mensagem_nao_lida
+    ON mensagem(id_vinculo, id_remetente) WHERE lida_em IS NULL;
+
 -- ---------- Tabela: administrador ----------
 CREATE TABLE administrador (
     id_admin    BIGSERIAL   PRIMARY KEY,
@@ -101,6 +124,7 @@ CREATE TABLE conteudo_educativo (
 );
 CREATE INDEX idx_conteudo_publicado ON conteudo_educativo(publicado, criado_em DESC);
 CREATE INDEX idx_conteudo_categoria ON conteudo_educativo(categoria) WHERE publicado = TRUE;
+CREATE INDEX idx_conteudo_agendamento ON conteudo_educativo(publicado, agendado_em);
 
 -- ---------- Tabela: push_token ----------
 CREATE TABLE push_token (

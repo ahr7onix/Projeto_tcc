@@ -1,18 +1,4 @@
--- =====================================================================
--- Migration 007 — Requisitos do briefing da equipe de Nutrição
---
--- Cobre as lacunas apontadas em docs/RESUMO_ENTREGA.md:
---   RF01  tabela de alimentos com valores nutricionais
---   RF02  parâmetros para cálculo de necessidade energética (VET)
---   RF03  distribuição de macronutrientes no plano alimentar
---   RF04  histórico antropométrico com circunferências
---   RF06  registro emocional
---   RF07  lembretes configuráveis (inclusive recorrentes)
---   RF09  repositório de receitas publicadas pelo nutricionista
---   entidade Notificacao, citada nas entidades centrais do briefing
---
--- Segura para rodar em banco já existente.
--- =====================================================================
+
 
 BEGIN;
 

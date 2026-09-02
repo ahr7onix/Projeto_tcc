@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/stores/auth';
 import { getPacienteData, updatePacienteData, updatePerfil } from '@/lib/api/perfil';
 import { SEXOS, TIPOS_DIABETES } from '@/types/auth';
-import { colors, radius, spacing, typography } from '@/lib/theme';
+import { colors, radius, spacing } from '@/lib/theme';
 
 /** Converte ISO (AAAA-MM-DD) para o formato exibido nos campos, DD/MM/AAAA. */
 function isoParaBr(iso: string): string {
@@ -292,10 +292,10 @@ const styles = StyleSheet.create({
   saveBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: spacing.sm, backgroundColor: colors.primary,
-    paddingVertical: spacing.lg, borderRadius: radius.pill,
+    paddingVertical: spacing.lg, borderRadius: radius.md,
     marginTop: spacing.sm,
-    boxShadow: '0 10px 24px rgba(124,58,237,0.35)',
-    elevation: 6,
+    boxShadow: '0 1px 2px rgba(16, 24, 40, 0.04)',
+    elevation: 2,
   },
   btnDisabled: { opacity: 0.7 },
   saveBtnText: { color: colors.textInverse, fontWeight: '700', fontSize: 15 },

@@ -21,11 +21,19 @@ interface MenuItem {
 const acessoItems: MenuItem[] = [
   { key: 'editar', label: 'Editar perfil', icon: 'person-outline' },
   { key: 'senha', label: 'Alterar senha', icon: 'lock-closed-outline' },
+  {
+    key: 'excluir',
+    label: 'Excluir conta',
+    icon: 'trash-outline',
+    tint: colors.danger,
+    tintBg: colors.dangerSoft,
+  },
 ];
 
 const navMap: Record<string, string> = {
   editar: '/(tabs)/perfil/editar',
   senha: '/(tabs)/perfil/senha',
+  excluir: '/(tabs)/perfil/excluir',
 };
 
 const suporteItems: MenuItem[] = [
@@ -68,10 +76,12 @@ export default function PerfilScreen() {
               style={[styles.menuRow, i > 0 && styles.rowDivider]}
               onPress={() => router.push(navMap[item.key] as never)}
             >
-              <View style={styles.menuIcon}>
-                <Ionicons name={item.icon} size={18} color={colors.primary} />
+              <View style={[styles.menuIcon, item.tintBg ? { backgroundColor: item.tintBg } : null]}>
+                <Ionicons name={item.icon} size={18} color={item.tint ?? colors.primary} />
               </View>
-              <Text style={styles.menuLabel}>{item.label}</Text>
+              <Text style={[styles.menuLabel, item.tint ? { color: item.tint } : null]}>
+                {item.label}
+              </Text>
               <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
             </Pressable>
           ))}
@@ -117,8 +127,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 8px 18px rgba(124, 58, 237, 0.35)',
-    elevation: 6,
+    boxShadow: '0 1px 2px rgba(16, 24, 40, 0.04)',
+    elevation: 2,
   },
   avatarText: {
     fontSize: 30,

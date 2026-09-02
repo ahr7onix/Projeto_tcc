@@ -112,8 +112,8 @@ const styles = StyleSheet.create({
   sheet: {
     flex: 1,
     backgroundColor: colors.backgroundAlt,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
     overflow: 'hidden',
   },
   sheetScroll: { flex: 1 },

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react'
+import { limparSessao } from '../lib/api'
 
 interface User {
   id?: string
@@ -38,9 +39,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = useCallback(() => {
     setUser(null)
-    localStorage.removeItem('@NutriCare:user')
-    localStorage.removeItem('@NutriCare:accessToken')
-    localStorage.removeItem('@NutriCare:refreshToken')
+    limparSessao()
   }, [])
 
   return (

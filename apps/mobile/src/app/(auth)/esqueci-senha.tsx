@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     alignItems: 'center',
     marginTop: spacing.sm,
-    boxShadow: '0 6px 12px rgba(37, 99, 235, 0.3)',
+    boxShadow: '0 1px 2px rgba(16, 24, 40, 0.04)',
     elevation: 4,
   },
   btnDisabled: { opacity: 0.7 },

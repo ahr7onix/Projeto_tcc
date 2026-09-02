@@ -1,6 +1,7 @@
 import { AppState, type AppStateStatus, type NativeEventSubscription } from 'react-native';
 import { api } from '@/lib/api';
 import { env } from '@/lib/env';
+import { log } from '@/lib/logger';
 import { STORAGE_KEYS, secureStorage } from '@/lib/storage';
 import type { Mensagem } from './mensagens';
 
@@ -146,7 +147,10 @@ export function assinarMensagens(
 
       // Recuo progressivo: se a API caiu, não adianta martelar de 1 em 1 s.
       falhasSeguidas += 1;
-      agendar(Math.min(1000 * 2 ** falhasSeguidas, 30_000));
+      const espera = Math.min(1000 * 2 ** falhasSeguidas, 30_000);
+      // Só o estado do canal: nada do que trafega por ele é registrado.
+      log.warn('realtime caiu', { motivo, tentativa: falhasSeguidas, emMs: espera });
+      agendar(espera);
     }
 
     function consumirPedaco() {
@@ -188,6 +192,7 @@ export function assinarMensagens(
       if (!avisouConectado) {
         avisouConectado = true;
         falhasSeguidas = 0;
+        log.info('realtime conectado');
         opcoes.aoReconectar?.();
       }
 

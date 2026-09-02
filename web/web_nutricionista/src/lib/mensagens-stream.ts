@@ -1,4 +1,5 @@
 import { api } from './api'
+import { log } from './logger'
 import type { Mensagem } from './mensagens'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
@@ -123,14 +124,20 @@ export function assinarMensagens(
         }
 
         falhasSeguidas = 0
+        // Só o estado do canal: nada do que trafega por ele é registrado.
+        log.info('realtime conectado')
         await ler(resposta.body)
-      } catch {
+        log.info('realtime desconectado')
+      } catch (erro) {
         if (encerrado) return
+        log.warn('realtime caiu', { tipo: (erro as Error)?.message ?? 'Error' })
       }
 
       // Recuo progressivo: se a API caiu, não adianta martelar de 1 em 1 s.
       falhasSeguidas += 1
-      await esperar(Math.min(1000 * 2 ** falhasSeguidas, 30_000))
+      const espera = Math.min(1000 * 2 ** falhasSeguidas, 30_000)
+      log.debug('realtime reconectando', { tentativa: falhasSeguidas, emMs: espera })
+      await esperar(espera)
     }
   }
 

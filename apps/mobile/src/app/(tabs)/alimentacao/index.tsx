@@ -326,8 +326,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryDark,
     paddingVertical: spacing.lg,
     borderRadius: radius.pill,
-    boxShadow: '0 10px 24px rgba(91, 33, 182, 0.45)',
-    elevation: 6,
+    boxShadow: '0 1px 2px rgba(16, 24, 40, 0.04)',
+    elevation: 2,
   },
   ctaText: { color: colors.textInverse, fontWeight: '700', fontSize: 15 },
 });

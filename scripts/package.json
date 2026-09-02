@@ -5,9 +5,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "e2e": "node e2e-smoke.mjs",
-    "e2e:retest": "node e2e-retest.mjs",
-    "e2e:web": "node e2e-web-only.mjs"
+    "e2e": "node e2e-smoke.mjs"
   },
   "dependencies": {
     "playwright": "^1.62.1"

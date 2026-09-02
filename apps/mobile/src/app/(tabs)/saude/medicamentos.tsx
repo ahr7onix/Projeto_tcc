@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     backgroundColor: colors.primary,
     paddingVertical: spacing.md,
-    borderRadius: radius.pill,
+    borderRadius: radius.md,
   },
   btnDisabled: { opacity: 0.7 },
   saveText: { color: colors.textInverse, fontWeight: '700', fontSize: 15 },

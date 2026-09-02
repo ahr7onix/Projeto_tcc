@@ -61,7 +61,7 @@ export default function PacienteDetalhePage() {
         const [pacRes, regRes, saudeRes] = await Promise.all([
           api.get(`/pacientes/${pacienteId}`),
           api.get(`/registros?pacienteId=${pacienteId}`),
-          api.get(`/saude/${pacienteId}`),
+          api.get(`/antropometria?pacienteId=${pacienteId}`),
         ])
         if (cancelado) return
         setPaciente(pacRes.data)
@@ -81,13 +81,14 @@ export default function PacienteDetalhePage() {
 
   const regsGlicemia = registros.filter((r) => r.tipo === 'glicemia')
   const regsAlimentacao = registros.filter((r) => r.tipo === 'refeicao')
-  const ultimaSaude = saude.length > 0 ? saude[saude.length - 1] : null
+  // A API devolve as medições da mais recente para a mais antiga.
+  const ultimaSaude = saude.length > 0 ? saude[0] : null
 
   // Os hooks precisam vir antes de qualquer return condicional: a ordem de
   // chamada tem que ser a mesma em todo render.
   const pagGlicemia = usePaginacao(regsGlicemia, 15, abaAtual)
   const pagAlimentacao = usePaginacao(regsAlimentacao, 15, abaAtual)
-  const pagSaude = usePaginacao([...saude].reverse(), 10, abaAtual)
+  const pagSaude = usePaginacao(saude, 10, abaAtual)
 
   if (loading) {
     return (

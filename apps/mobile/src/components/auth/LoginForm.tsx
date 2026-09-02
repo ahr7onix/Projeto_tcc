@@ -64,7 +64,7 @@ function GoogleWebButton({
 
   return (
     <View style={styles.googleWebWrap}>
-      <SocialButton provider="google" tone="glass" loading={loading} disabled />
+      <SocialButton provider="google" loading={loading} disabled={disabled} />
       {Platform.OS === 'web' ? (
         // Host DOM real para o botão oficial do Google (web / popup, sem redirect_uri)
         <div
@@ -219,7 +219,6 @@ export function LoginForm({ initialMode = 'login' }: Props) {
   ) : (
     <SocialButton
       provider="google"
-      tone="glass"
       loading={loginGoogle.isPending}
       disabled={!googleRequest || pending}
       onPress={() => handleSocial('google')}
@@ -228,10 +227,6 @@ export function LoginForm({ initialMode = 'login' }: Props) {
 
   return (
     <View style={styles.root}>
-      <View style={styles.bgBlobA} />
-      <View style={styles.bgBlobB} />
-      <View style={styles.bgBlobC} />
-
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
@@ -255,7 +250,7 @@ export function LoginForm({ initialMode = 'login' }: Props) {
 
               {errorMessage ? (
                 <View style={styles.errorBanner}>
-                  <Ionicons name="alert-circle" size={16} color="#FECACA" />
+                  <Ionicons name="alert-circle" size={16} color={colors.danger} />
                   <Text style={styles.errorText}>{errorMessage}</Text>
                 </View>
               ) : null}
@@ -265,7 +260,6 @@ export function LoginForm({ initialMode = 'login' }: Props) {
                   <FormField
                     control={cadastroForm.control}
                     name="nome"
-                    variant="glass"
                     icon="person-outline"
                     placeholder="Nome completo"
                     autoComplete="name"
@@ -273,7 +267,6 @@ export function LoginForm({ initialMode = 'login' }: Props) {
                   <FormField
                     control={cadastroForm.control}
                     name="email"
-                    variant="glass"
                     icon="mail-outline"
                     autoCapitalize="none"
                     autoComplete="email"
@@ -283,7 +276,6 @@ export function LoginForm({ initialMode = 'login' }: Props) {
                   <FormField
                     control={cadastroForm.control}
                     name="senha"
-                    variant="glass"
                     icon="lock-closed-outline"
                     secureTextEntry
                     placeholder="Senha (mín. 8 caracteres)"
@@ -292,7 +284,7 @@ export function LoginForm({ initialMode = 'login' }: Props) {
                   <Text style={styles.hint}>
                     Use 8+ caracteres, com letras e números.
                   </Text>
-                  <Checkbox control={cadastroForm.control} name="aceiteTermos" tone="glass">
+                  <Checkbox control={cadastroForm.control} name="aceiteTermos">
                     <>
                       Li e aceito os{' '}
                       <Text style={styles.termsLink}>Termos de Uso</Text> e a{' '}
@@ -300,7 +292,11 @@ export function LoginForm({ initialMode = 'login' }: Props) {
                     </>
                   </Checkbox>
                   <Pressable
-                    style={[styles.primaryBtn, pending && styles.btnDisabled]}
+                    style={({ pressed }) => [
+                      styles.primaryBtn,
+                      pressed && styles.primaryBtnPressed,
+                      pending && styles.btnDisabled,
+                    ]}
                     onPress={onCadastro}
                     disabled={pending}
                   >
@@ -312,7 +308,7 @@ export function LoginForm({ initialMode = 'login' }: Props) {
                   </Pressable>
 
                   <View style={styles.dividerWrap}>
-                    <Divider label="ou continue com" tone="glass" />
+                    <Divider label="ou continue com" />
                   </View>
 
                   {googleButton}
@@ -322,7 +318,6 @@ export function LoginForm({ initialMode = 'login' }: Props) {
                   <FormField
                     control={loginForm.control}
                     name="email"
-                    variant="glass"
                     icon="mail-outline"
                     autoCapitalize="none"
                     autoComplete="email"
@@ -332,7 +327,6 @@ export function LoginForm({ initialMode = 'login' }: Props) {
                   <FormField
                     control={loginForm.control}
                     name="senha"
-                    variant="glass"
                     icon="lock-closed-outline"
                     secureTextEntry
                     placeholder="Senha"
@@ -345,7 +339,11 @@ export function LoginForm({ initialMode = 'login' }: Props) {
                   </Link>
 
                   <Pressable
-                    style={[styles.primaryBtn, pending && styles.btnDisabled]}
+                    style={({ pressed }) => [
+                      styles.primaryBtn,
+                      pressed && styles.primaryBtnPressed,
+                      pending && styles.btnDisabled,
+                    ]}
                     onPress={onLogin}
                     disabled={pending}
                   >
@@ -357,7 +355,7 @@ export function LoginForm({ initialMode = 'login' }: Props) {
                   </Pressable>
 
                   <View style={styles.dividerWrap}>
-                    <Divider label="ou continue com" tone="glass" />
+                    <Divider label="ou continue com" />
                   </View>
 
                   {googleButton}
@@ -386,35 +384,7 @@ export function LoginForm({ initialMode = 'login' }: Props) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.authBg1,
-    overflow: 'hidden',
-  },
-  bgBlobA: {
-    position: 'absolute',
-    width: 320,
-    height: 320,
-    borderRadius: 160,
-    backgroundColor: 'rgba(108, 34, 189, 0.35)',
-    top: -80,
-    left: -60,
-  },
-  bgBlobB: {
-    position: 'absolute',
-    width: 280,
-    height: 280,
-    borderRadius: 140,
-    backgroundColor: 'rgba(157, 78, 221, 0.22)',
-    bottom: -40,
-    right: -70,
-  },
-  bgBlobC: {
-    position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(11, 0, 26, 0.55)',
-    top: '42%',
-    left: '30%',
+    backgroundColor: colors.background,
   },
   safe: { flex: 1 },
   scroll: {
@@ -427,88 +397,90 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 420,
     alignSelf: 'center',
-    backgroundColor: colors.authGlass,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.authBorder,
-    borderRadius: 24,
+    borderColor: colors.border,
+    borderRadius: radius.xl,
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.xxl,
     paddingBottom: spacing.xl,
     gap: spacing.md,
-    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.45)',
-    elevation: 12,
+    boxShadow: '0 4px 12px rgba(16, 24, 40, 0.08)',
+    elevation: 3,
   },
   brand: {
     ...typography.eyebrow,
-    color: colors.authBrand,
-    letterSpacing: 2.2,
+    color: colors.primary,
+    letterSpacing: 1,
     textAlign: 'center',
     fontSize: 12,
+    marginBottom: spacing.xs,
   },
   title: {
     ...typography.h1,
-    color: colors.textInverse,
-    fontSize: 26,
-    letterSpacing: 0.4,
+    color: colors.text,
+    fontSize: 24,
     textAlign: 'center',
     fontWeight: '600',
   },
   subtitle: {
     ...typography.body,
-    color: colors.authMuted,
+    color: colors.textSoft,
     textAlign: 'center',
-    marginBottom: spacing.sm,
+    marginTop: spacing.xs,
+    marginBottom: spacing.md,
     lineHeight: 21,
   },
   form: { gap: spacing.md, width: '100%' },
   hint: {
     ...typography.caption,
-    color: colors.authMuted,
+    color: colors.textMuted,
     marginTop: -spacing.xs,
   },
-  termsLink: { color: colors.authFocus, fontWeight: '700' },
-  forgot: { alignSelf: 'flex-end', marginTop: -spacing.xs },
+  termsLink: { color: colors.primary, fontWeight: '700' },
+  forgot: {
+    alignSelf: 'flex-end',
+    marginTop: -spacing.xs,
+    paddingVertical: spacing.xs,
+  },
   forgotText: {
     ...typography.caption,
-    color: colors.authMuted,
+    color: colors.primary,
     fontWeight: '600',
   },
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: 'rgba(239, 68, 68, 0.18)',
+    backgroundColor: colors.dangerSoft,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.35)',
+    borderColor: colors.danger,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: radius.md,
   },
   errorText: {
     ...typography.caption,
-    color: '#FECACA',
+    color: colors.danger,
     flex: 1,
     fontWeight: '600',
   },
   primaryBtn: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#6C22BD',
+    backgroundColor: colors.primary,
     paddingVertical: spacing.lg,
-    borderRadius: radius.pill,
-    marginTop: spacing.sm,
-    boxShadow: '0 10px 20px rgba(108, 34, 189, 0.35)',
-    elevation: 6,
+    borderRadius: radius.md,
+    marginTop: spacing.md,
   },
-  btnDisabled: { opacity: 0.7 },
+  primaryBtnPressed: { backgroundColor: colors.primaryDark },
+  btnDisabled: { opacity: 0.6 },
   primaryBtnText: {
     color: colors.textInverse,
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+    fontSize: 15,
+    fontWeight: '600',
   },
-  dividerWrap: { marginTop: spacing.xs },
+  dividerWrap: { marginTop: spacing.sm },
   toggle: {
     alignItems: 'center',
     marginTop: spacing.md,
@@ -516,11 +488,11 @@ const styles = StyleSheet.create({
   },
   toggleText: {
     ...typography.body,
-    color: colors.authMuted,
+    color: colors.textSoft,
     textAlign: 'center',
   },
   toggleStrong: {
-    color: colors.textInverse,
+    color: colors.primary,
     fontWeight: '700',
   },
   googleWebWrap: {

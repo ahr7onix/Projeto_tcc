@@ -20,7 +20,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 8px 16px rgba(37, 99, 235, 0.35)',
-    elevation: 6,
+    boxShadow: '0 1px 2px rgba(16, 24, 40, 0.06)',
+    elevation: 2,
   },
 });

@@ -18,17 +18,28 @@ export class PacientesService {
       where = `AND (u.nome ILIKE $${params.length} OR u.email ILIKE $${params.length})`;
     }
 
+  /**
+   * Media e ultimo registro saem de subconsultas, nao de LEFT JOIN + GROUP BY.
+   *
+   * Com os dois LEFT JOIN (glicemia e refeicao) na mesma consulta o banco
+   * montava o produto das duas tabelas antes de agrupar: um paciente com 500
+   * glicemias e 500 refeicoes gerava 250 mil linhas intermediarias so para
+   * devolver uma. O resultado final era o mesmo; o custo, nao.
+   */
     const result = await this.pool.query(
       `SELECT
          u.id_usuario,
          u.nome,
          u.email,
-         ROUND(AVG(rg.valor) FILTER (
-           WHERE rg.data_hora > NOW() - INTERVAL '30 days'
-         ), 1) AS glicemia_media,
+         (SELECT ROUND(AVG(rg.valor), 1)
+            FROM registro_glicemia rg
+           WHERE rg.id_paciente = p.id_paciente
+             AND rg.data_hora > NOW() - INTERVAL '30 days') AS glicemia_media,
          GREATEST(
-           MAX(rg.data_hora),
-           MAX(rr.data_hora)
+           (SELECT MAX(rg.data_hora) FROM registro_glicemia rg
+             WHERE rg.id_paciente = p.id_paciente),
+           (SELECT MAX(rr.data_hora) FROM registro_refeicao rr
+             WHERE rr.id_paciente = p.id_paciente)
          ) AS ultimo_registro
        FROM usuario u
        JOIN paciente p ON p.id_usuario = u.id_usuario
@@ -36,10 +47,8 @@ export class PacientesService {
          ON np.id_paciente = p.id_paciente AND np.ativo = TRUE
        JOIN nutricionista n
          ON n.id_nutricionista = np.id_nutricionista
-       LEFT JOIN registro_glicemia rg ON rg.id_paciente = p.id_paciente
-       LEFT JOIN registro_refeicao rr ON rr.id_paciente = p.id_paciente
-       WHERE u.tipo = 'paciente' AND n.id_usuario = $1 ${where}
-       GROUP BY u.id_usuario, u.nome, u.email
+       WHERE u.tipo = 'paciente' AND u.desativado_em IS NULL
+         AND n.id_usuario = $1 ${where}
        ORDER BY u.nome`,
       params,
     );
@@ -60,6 +69,7 @@ export class PacientesService {
          FROM usuario u
          JOIN paciente p ON p.id_usuario = u.id_usuario
         WHERE u.tipo = 'paciente'
+          AND u.desativado_em IS NULL
           AND NOT EXISTS (
             SELECT 1
               FROM nutricionista_paciente np
@@ -92,6 +102,7 @@ export class PacientesService {
       throw new ForbiddenException('Paciente não vinculado a você');
     }
 
+    // Mesmo motivo do findAll: subconsulta no lugar do produto das duas tabelas.
     const result = await this.pool.query(
       `SELECT
          u.id_usuario,
@@ -103,18 +114,19 @@ export class PacientesService {
          p.genero,
          p.data_nascimento,
          p.restricoes_alergias,
-         ROUND(AVG(rg.valor) FILTER (
-           WHERE rg.data_hora > NOW() - INTERVAL '30 days'
-         ), 1) AS glicemia_media,
-         GREATEST(MAX(rg.data_hora), MAX(rr.data_hora)) AS ultimo_registro
+         (SELECT ROUND(AVG(rg.valor), 1)
+            FROM registro_glicemia rg
+           WHERE rg.id_paciente = p.id_paciente
+             AND rg.data_hora > NOW() - INTERVAL '30 days') AS glicemia_media,
+         GREATEST(
+           (SELECT MAX(rg.data_hora) FROM registro_glicemia rg
+             WHERE rg.id_paciente = p.id_paciente),
+           (SELECT MAX(rr.data_hora) FROM registro_refeicao rr
+             WHERE rr.id_paciente = p.id_paciente)
+         ) AS ultimo_registro
        FROM usuario u
        JOIN paciente p ON p.id_usuario = u.id_usuario
-       LEFT JOIN registro_glicemia rg ON rg.id_paciente = p.id_paciente
-       LEFT JOIN registro_refeicao rr ON rr.id_paciente = p.id_paciente
-       WHERE u.id_usuario = $1
-       GROUP BY u.id_usuario, u.nome, u.email,
-                p.peso, p.altura, p.tipo_diabetes, p.genero,
-                p.data_nascimento, p.restricoes_alergias`,
+       WHERE u.id_usuario = $1`,
       [idUsuarioPaciente],
     );
 

@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     gap: spacing.md,
-    boxShadow: '0 2px 10px rgba(11,11,23,0.05)',
+    boxShadow: '0 1px 2px rgba(16, 24, 40, 0.04)',
     elevation: 1,
   },
   header: {
