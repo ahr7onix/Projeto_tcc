@@ -1,0 +1,77 @@
+# Verificacao automatica dos tres projetos, a cada push e a cada pull request.
+#
+# Sao tres jobs separados, e nao um so com varios passos, por dois motivos:
+# rodam em paralelo, e quando algo quebra a propria lista de jobs ja diz qual
+# aplicacao quebrou, sem precisar abrir o log.
+#
+# Node 20 e a mesma versao declarada no render.yaml. O CI so serve para alguma
+# coisa se reproduzir o ambiente do deploy; com versoes diferentes ele passaria
+# aqui e quebraria la.
+
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+# Um push novo no mesmo branch cancela a execucao anterior, que ja nao interessa.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API (NestJS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: apps/api/package-lock.json
+      # `npm ci` e nao `npm install`: instala exatamente o que o lock manda e
+      # falha se o lock estiver fora de sincronia com o package.json.
+      - run: npm ci
+        working-directory: apps/api
+      - run: npm run typecheck
+        working-directory: apps/api
+      - run: npm test
+        working-directory: apps/api
+
+  web:
+    name: Painel web (React + Vite)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+        working-directory: apps/web
+      - run: npm run typecheck
+        working-directory: apps/web
+      # O build fica alem do typecheck de proposito: pega o que so aparece na
+      # hora de empacotar, como import quebrado e variavel de ambiente ausente.
+      - run: npm run build
+        working-directory: apps/web
+
+  mobile:
+    name: App do paciente (Expo)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+      - run: npm ci
+        working-directory: apps/mobile
+      - run: npm run typecheck
+        working-directory: apps/mobile
+      - run: npm run lint
+        working-directory: apps/mobile

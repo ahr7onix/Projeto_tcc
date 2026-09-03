@@ -256,7 +256,14 @@ export default function SaudeScreen() {
         )}
       </Card>
 
-      <Card title="Medicamentos">
+      <Card
+        title="Medicamentos"
+        action={
+          <Pressable onPress={() => router.push('/(tabs)/saude/medicamentos')}>
+            <Text style={styles.cardAction}>Gerenciar</Text>
+          </Pressable>
+        }
+      >
         {carregandoMedicamentos ? (
           <View style={styles.center}>
             <ActivityIndicator color={colors.primary} />
@@ -265,7 +272,7 @@ export default function SaudeScreen() {
           <EmptyState
             icon="medkit-outline"
             title="Nenhum medicamento ativo"
-            message="Quem cadastra seus medicamentos é a nutricionista, durante a consulta."
+            message="Adicione os medicamentos que você usa para manter seu acompanhamento em dia."
           />
         ) : (
           medicamentos.map((m, i) => (

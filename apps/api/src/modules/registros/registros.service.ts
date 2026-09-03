@@ -120,6 +120,49 @@ export class RegistrosService {
   }
 
   /**
+   * Última glicemia registrada, sem o corte de dias que `findAll` aplica —
+   * para não esconder o único dado que existe de quem não registra há mais
+   * de 30 dias (o alerta precisa saber que o dado está velho, não sumir com ele).
+   */
+  async ultimaGlicemia(
+    usuario: { sub: string; role: string },
+    pacienteId?: string,
+  ) {
+    const params: unknown[] = [];
+    const escopo = await this.montarEscopo(usuario, pacienteId, params);
+
+    const result = await this.pool.query(
+      `SELECT rg.valor, rg.momento, rg.data_hora
+         FROM registro_glicemia rg
+         JOIN paciente p ON p.id_paciente = rg.id_paciente
+         JOIN usuario u ON u.id_usuario = p.id_usuario
+        WHERE ${escopo}
+        ORDER BY rg.data_hora DESC
+        LIMIT 1`,
+      params,
+    );
+
+    const r = result.rows[0];
+    if (!r) return { registro: null };
+
+    const valor = Number(r.valor);
+    const dataHora: Date = r.data_hora;
+    const minutosDesdeRegistro = Math.floor(
+      (Date.now() - new Date(dataHora).getTime()) / 60000,
+    );
+
+    return {
+      registro: {
+        valor,
+        momento: r.momento,
+        dataHora,
+        minutosDesdeRegistro,
+        avaliacao: avaliarGlicemia(valor, r.momento),
+      },
+    };
+  }
+
+  /**
    * Recorta a consulta ao que o usuário logado tem direito de ver.
    *
    * Antes disso o `pacienteId` vinha solto da query string e ninguém o conferia:

@@ -4,9 +4,13 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { capturarErrosGlobais } from '@/lib/logger';
 import { queryClient } from '@/lib/query-client';
 import { useAuthStore } from '@/stores/auth';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
+
+// Registrado uma vez, no carregamento do módulo.
+capturarErrosGlobais();
 
 function PushBridge() {
   usePushNotifications();

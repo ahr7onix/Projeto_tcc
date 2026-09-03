@@ -13,16 +13,13 @@ interface Props<T extends FieldValues> {
   control: Control<T>;
   name: FieldPath<T>;
   children: ReactNode;
-  tone?: 'light' | 'glass';
 }
 
 export function Checkbox<T extends FieldValues>({
   control,
   name,
   children,
-  tone = 'light',
 }: Props<T>) {
-  const isGlass = tone === 'glass';
   return (
     <Controller
       control={control}
@@ -30,27 +27,17 @@ export function Checkbox<T extends FieldValues>({
       render={({ field: { value, onChange }, fieldState: { error } }) => (
         <View style={styles.wrapper}>
           <Pressable style={styles.row} onPress={() => onChange(!value)}>
-            <View
-              style={[
-                styles.box,
-                isGlass && styles.boxGlass,
-                value && styles.boxChecked,
-              ]}
-            >
+            <View style={[styles.box, value && styles.boxChecked]}>
               {value ? (
                 <Ionicons name="checkmark" size={14} color={colors.textInverse} />
               ) : null}
             </View>
             <View style={styles.labelWrap}>
-              <Text style={[styles.labelText, isGlass && styles.labelGlass]}>
-                {children}
-              </Text>
+              <Text style={styles.labelText}>{children}</Text>
             </View>
           </Pressable>
           {error?.message ? (
-            <Text style={[styles.error, isGlass && styles.errorGlass]}>
-              {error.message}
-            </Text>
+            <Text style={styles.error}>{error.message}</Text>
           ) : null}
         </View>
       )}
@@ -66,16 +53,13 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: radius.sm,
     borderWidth: 1.5,
-    borderColor: colors.border,
+    borderColor: colors.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 1,
   },
-  boxGlass: { borderColor: 'rgba(255,255,255,0.35)' },
   boxChecked: { backgroundColor: colors.primary, borderColor: colors.primary },
   labelWrap: { flex: 1 },
-  labelText: { ...typography.caption, color: colors.text, lineHeight: 18 },
-  labelGlass: { color: colors.authMuted },
+  labelText: { ...typography.caption, color: colors.textSoft, lineHeight: 18 },
   error: { ...typography.caption, color: colors.danger, marginLeft: 30 },
-  errorGlass: { color: '#FECACA' },
 });

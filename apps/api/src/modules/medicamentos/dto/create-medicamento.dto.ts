@@ -34,4 +34,9 @@ export class CreateMedicamentoDto {
 
   @Matches(HORA_REGEX, { message: 'horarioInicial deve estar no formato HH:MM' })
   horarioInicial!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  observacoes?: string;
 }

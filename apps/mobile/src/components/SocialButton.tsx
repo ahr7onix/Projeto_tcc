@@ -9,7 +9,6 @@ interface Props {
   onPress?: () => void;
   loading?: boolean;
   disabled?: boolean;
-  tone?: 'light' | 'glass';
 }
 
 const META: Record<
@@ -40,13 +39,12 @@ const META: Record<
   },
 };
 
-export function SocialButton({ provider, onPress, loading, disabled, tone = 'light' }: Props) {
+export function SocialButton({ provider, onPress, loading, disabled }: Props) {
   const meta = META[provider];
-  const glass = tone === 'glass';
-  const bg = glass ? 'rgba(0,0,0,0.55)' : meta.bg;
-  const fg = glass ? '#FFFFFF' : meta.fg;
-  const border = glass ? 'rgba(255,255,255,0.18)' : meta.border ?? meta.bg;
-  const iconColor = glass && provider === 'google' ? '#FFFFFF' : meta.iconColor;
+  const bg = meta.bg;
+  const fg = meta.fg;
+  const border = meta.border ?? meta.bg;
+  const iconColor = meta.iconColor;
 
   return (
     <Pressable
@@ -79,7 +77,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderRadius: radius.pill,
+    borderRadius: radius.md,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     gap: spacing.sm,

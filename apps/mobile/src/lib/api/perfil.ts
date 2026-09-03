@@ -29,3 +29,13 @@ export async function updatePacienteData(input: PacienteDataInput) {
   const { data } = await api.patch('/perfil/paciente', input);
   return data;
 }
+
+/**
+ * Encerra a conta do próprio usuário (soft delete no servidor). Exige a senha
+ * de novo: um aparelho desbloqueado por terceiro não deve conseguir apagar a
+ * conta só por já estar logado.
+ */
+export async function desativarConta(senha: string) {
+  const { data } = await api.delete('/perfil', { data: { senha } });
+  return data as { message: string };
+}

@@ -9,6 +9,8 @@
     "start:prod": "node dist/main.js",
     "maildev": "maildev --ip 127.0.0.1 --smtp 1025 --web 1080",
     "typecheck": "tsc --noEmit",
+    "health": "node scripts/diagnostico.mjs",
+    "diagnose": "node scripts/diagnostico.mjs",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage"

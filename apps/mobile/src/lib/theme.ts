@@ -1,36 +1,42 @@
+/*
+ * Identidade visual do app do paciente.
+ *
+ * É a mesma identidade do painel web do nutricionista (apps/web):
+ * paleta clara de ambiente clínico — fundo cinza muito claro, superfícies
+ * brancas, azul como cor de ação e verde reservado ao que está saudável.
+ * A separação entre elementos vem da borda de 1px, não do relevo; sombra
+ * forte não é usada.
+ *
+ * Os nomes das chaves são mantidos de propósito: as telas continuam lendo
+ * `colors.primary`, `colors.surface` e companhia, então trocar a identidade
+ * é trocar este arquivo. O antigo tema escuro "glass" das telas de entrada
+ * foi removido — tudo segue a identidade clara do painel.
+ */
 export const colors = {
-  primary: '#7C3AED',
-  primaryDark: '#5B21B6',
-  primaryLight: '#A78BFA',
-  primarySoft: '#F3EEFF',
-  accent: '#F59E0B',
-  background: '#FFFFFF',
-  backgroundAlt: '#FAFAFB',
+  // Azul clínico: ações, links e a tela em que o usuário está.
+  primary: '#005EB8',
+  primaryDark: '#00437F',
+  primaryLight: '#3B86CC',
+  primarySoft: '#E7F0F9',
+  // Verde: acento de saúde, não cor de marca.
+  accent: '#047857',
+  background: '#F4F6F9',
+  backgroundAlt: '#F4F6F9',
   surface: '#FFFFFF',
-  surfaceAlt: '#F4F4F8',
-  border: '#ECECF1',
-  borderStrong: '#D8D8E0',
-  text: '#0B0B17',
-  textSoft: '#3B3A52',
-  textMuted: '#8B8AA0',
+  surfaceAlt: '#F1F4F8',
+  border: '#E2E7EE',
+  borderStrong: '#CBD3DF',
+  text: '#101828',
+  textSoft: '#475467',
+  textMuted: '#78829D',
   textInverse: '#FFFFFF',
-  success: '#10B981',
-  successSoft: '#E7F8F2',
-  warning: '#F59E0B',
-  warningSoft: '#FEF4E2',
-  danger: '#EF4444',
-  dangerSoft: '#FCEAEA',
-  info: '#7C3AED',
-  /** Auth FEZ (painel web) */
-  authBg0: '#0B001A',
-  authBg1: '#1A0B2E',
-  authBg2: '#2D124D',
-  authGlass: 'rgba(45, 18, 77, 0.45)',
-  authBorder: 'rgba(255, 255, 255, 0.12)',
-  authInput: 'rgba(255, 255, 255, 0.06)',
-  authBrand: 'rgba(255, 255, 255, 0.55)',
-  authMuted: 'rgba(255, 255, 255, 0.65)',
-  authFocus: '#A252FF',
+  success: '#047857',
+  successSoft: '#E6F4EF',
+  warning: '#B45309',
+  warningSoft: '#FBF1E3',
+  danger: '#B42318',
+  dangerSoft: '#FCEBEA',
+  info: '#005EB8',
 } as const;
 
 export const spacing = {
@@ -43,29 +49,31 @@ export const spacing = {
 } as const;
 
 export const radius = {
-  sm: 8,
-  md: 12,
-  lg: 20,
-  xl: 28,
+  sm: 6,
+  md: 8,
+  lg: 12,
+  xl: 16,
   pill: 999,
 } as const;
 
 export const typography = {
-  h1: { fontSize: 32, fontWeight: '700' as const, letterSpacing: -0.6 },
-  h2: { fontSize: 22, fontWeight: '700' as const, letterSpacing: -0.3 },
-  h3: { fontSize: 17, fontWeight: '700' as const, letterSpacing: -0.2 },
+  h1: { fontSize: 28, fontWeight: '700' as const, letterSpacing: -0.4 },
+  h2: { fontSize: 21, fontWeight: '600' as const, letterSpacing: -0.3 },
+  h3: { fontSize: 17, fontWeight: '600' as const, letterSpacing: -0.2 },
   body: { fontSize: 15, fontWeight: '400' as const },
   caption: { fontSize: 13, fontWeight: '400' as const },
   eyebrow: {
-    fontSize: 12,
-    fontWeight: '700' as const,
-    letterSpacing: 0.4,
+    fontSize: 11,
+    fontWeight: '600' as const,
+    letterSpacing: 0.6,
     textTransform: 'uppercase' as const,
   },
 } as const;
 
 export const shadow = {
-  card: '0 6px 18px rgba(11, 11, 23, 0.04)',
-  brand: '0 12px 30px rgba(124, 58, 237, 0.35)',
-  brandDeep: '0 10px 24px rgba(91, 33, 182, 0.45)',
+  // Sombras discretas: a separação vem da borda, não do relevo.
+  card: '0 1px 2px rgba(16, 24, 40, 0.04)',
+  raised: '0 4px 12px rgba(16, 24, 40, 0.08)',
+  brand: '0 1px 2px rgba(16, 24, 40, 0.06)',
+  brandDeep: '0 4px 12px rgba(16, 24, 40, 0.08)',
 } as const;

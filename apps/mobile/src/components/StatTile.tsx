@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border,
-    boxShadow: '0 2px 10px rgba(11,11,23,0.06)',
+    boxShadow: '0 1px 2px rgba(16, 24, 40, 0.04)',
     elevation: 2,
   },
   iconBox: {

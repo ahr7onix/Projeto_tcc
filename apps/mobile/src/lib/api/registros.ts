@@ -75,3 +75,21 @@ export async function createRefeicao(input: RefeicaoInput) {
   const { data } = await api.post('/registros/refeicao', input);
   return data;
 }
+
+export interface UltimaGlicemia {
+  valor: number;
+  momento: string;
+  dataHora: string;
+  minutosDesdeRegistro: number;
+  avaliacao: AvaliacaoGlicemia;
+}
+
+export interface UltimaGlicemiaResponse {
+  registro: UltimaGlicemia | null;
+}
+
+/** Última leitura registrada, para o banner de status glicêmico da Home. */
+export async function buscarUltimaGlicemia(): Promise<UltimaGlicemiaResponse> {
+  const { data } = await api.get('/registros/glicemia/ultimo');
+  return data;
+}

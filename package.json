@@ -1,0 +1,20 @@
+{
+  "name": "projeto-tcc",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NutriCare — monorepo com a API (NestJS), o app do paciente (Expo) e o painel da nutricionista (React).",
+  "scripts": {
+    "instalar": "npm --prefix apps/api ci && npm --prefix apps/mobile ci && npm --prefix apps/web ci",
+    "typecheck": "npm --prefix apps/api run typecheck && npm --prefix apps/web run typecheck && npm --prefix apps/mobile run typecheck",
+    "test": "npm --prefix apps/api test",
+    "test:cov": "npm --prefix apps/api run test:cov",
+    "lint": "npm --prefix apps/mobile run lint",
+    "build": "npm --prefix apps/api run build && npm --prefix apps/web run build",
+    "verificar": "npm run typecheck && npm run test && npm run build",
+    "dev:api": "npm --prefix apps/api run start:dev",
+    "dev:web": "npm --prefix apps/web run dev",
+    "dev:mobile": "npm --prefix apps/mobile start",
+    "db:preparar": "node apps/api/preparar-banco.mjs",
+    "e2e": "npm --prefix scripts run e2e"
+  }
+}

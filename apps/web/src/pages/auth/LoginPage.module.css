@@ -1,0 +1,437 @@
+/*
+ * Tela de entrada.
+ *
+ * Mesma identidade do painel: fundo cinza claro, cartão branco com borda de
+ * 1px e um painel azul chapado do lado. A troca entre entrar e cadastrar
+ * continua deslizando — é a navegação da tela, não enfeite.
+ */
+
+.page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg);
+  overflow: hidden;
+  padding: 24px 16px;
+  font-family: inherit;
+}
+
+.container {
+  position: relative;
+  width: 900px;
+  max-width: 95vw;
+  min-height: 560px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-raised);
+  overflow: hidden;
+}
+
+.formContainer {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  transition: all 0.5s ease-in-out;
+}
+
+.signInContainer {
+  left: 0;
+  width: 50%;
+  z-index: 2;
+}
+
+.signUpContainer {
+  left: 0;
+  width: 50%;
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.rightPanelActive .signInContainer {
+  transform: translateX(100%);
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.rightPanelActive .signUpContainer {
+  transform: translateX(100%);
+  opacity: 1;
+  z-index: 5;
+  pointer-events: auto;
+  animation: show 0.5s;
+}
+
+@keyframes show {
+  0%, 49.99% { opacity: 0; z-index: 1; }
+  50%, 100% { opacity: 1; z-index: 5; }
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 0 44px;
+  background: var(--surface);
+  text-align: center;
+}
+
+.brand {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.title {
+  color: var(--text);
+  margin: 0 0 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-size: 1.5rem;
+}
+
+.input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  padding: 11px 14px;
+  margin: 6px 0;
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.12s, box-shadow 0.12s;
+  font-family: inherit;
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.btn {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: var(--text-inverse);
+  font-size: 14.5px;
+  font-weight: 600;
+  padding: 12px 32px;
+  margin-top: 18px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+  font-family: inherit;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* No painel azul do lado, o botão é o contorno branco. */
+.btnGhost {
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: transparent;
+  color: #ffffff;
+  font-size: 14.5px;
+  font-weight: 600;
+  padding: 11px 32px;
+  margin-top: 20px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+  font-family: inherit;
+}
+
+.btnGhost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: #ffffff;
+}
+
+.forgot {
+  color: var(--text-soft);
+  font-size: 13px;
+  text-decoration: none;
+  margin-top: 14px;
+  transition: color 0.12s;
+}
+
+.forgot:hover {
+  color: var(--primary);
+}
+
+.error {
+  width: 100%;
+  margin: 4px 0 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--danger-soft);
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.googleWrap {
+  width: 100%;
+  margin-bottom: 6px;
+  position: relative;
+  min-height: 44px;
+}
+
+.googleBtn {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.googleBtn > div {
+  margin: 0 auto !important;
+}
+
+.googleBusy {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.googleFallback {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 11px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-soft);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.googleFallback:hover:not(:disabled) {
+  background: var(--surface-alt);
+}
+
+.googleFallback:disabled {
+  opacity: 0.75;
+  cursor: wait;
+}
+
+.googleHost {
+  display: none;
+}
+
+.divider {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 2px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.overlayContainer {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  transition: transform 0.5s ease-in-out;
+  z-index: 100;
+}
+
+.rightPanelActive .overlayContainer {
+  transform: translateX(-100%);
+}
+
+/* Cor chapada, sem degradê: o painel serve de contraste para o formulário. */
+.overlay {
+  position: relative;
+  left: -100%;
+  height: 100%;
+  width: 200%;
+  background: var(--primary);
+  transform: translateX(0);
+  transition: transform 0.5s ease-in-out;
+}
+
+.rightPanelActive .overlay {
+  transform: translateX(50%);
+}
+
+.overlayPanel {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0 40px;
+  text-align: center;
+  top: 0;
+  height: 100%;
+  width: 50%;
+  transform: translateX(0);
+  transition: transform 0.5s ease-in-out;
+}
+
+.overlayPanel h1 {
+  color: #ffffff;
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-size: 1.5rem;
+}
+
+.overlayPanel p {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14.5px;
+  font-weight: 400;
+  line-height: 1.6;
+  margin: 16px 0 4px;
+}
+
+.overlayLeft {
+  transform: translateX(-20%);
+}
+
+.rightPanelActive .overlayLeft {
+  transform: translateX(0);
+}
+
+.overlayRight {
+  right: 0;
+  transform: translateX(0);
+}
+
+.rightPanelActive .overlayRight {
+  transform: translateX(20%);
+}
+
+.mobileToggle {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 22px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  font-family: inherit;
+}
+
+.mobileToggle:hover {
+  color: var(--primary-dark);
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .container {
+    min-height: 100vh;
+    min-height: 100dvh;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
+
+  .formContainer {
+    width: 100%;
+  }
+
+  .signInContainer,
+  .signUpContainer {
+    width: 100%;
+    transition: all 0.5s ease-in-out;
+  }
+
+  .signUpContainer {
+    transform: translateX(100%);
+    pointer-events: none;
+  }
+
+  .rightPanelActive .signInContainer {
+    transform: translateX(-100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .rightPanelActive .signUpContainer {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .overlayContainer {
+    display: none;
+  }
+
+  .mobileToggle {
+    display: block;
+  }
+
+  .form {
+    padding: 0 26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .formContainer,
+  .overlayContainer,
+  .overlay,
+  .overlayPanel {
+    transition: none !important;
+  }
+
+  .rightPanelActive .signUpContainer {
+    animation: none;
+  }
+}

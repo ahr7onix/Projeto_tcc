@@ -102,6 +102,7 @@ export class VinculosService {
          JOIN usuario u       ON u.id_usuario = p.id_usuario
         WHERE n.id_usuario = $1
           AND np.ativo = TRUE
+          AND u.desativado_em IS NULL
         ORDER BY u.nome`,
       [idUsuarioNutri],
     );
@@ -130,12 +131,24 @@ export class VinculosService {
       throw new ConflictException('Paciente já vinculado a você');
     }
 
-    const { rows } = await this.pool.query(
-      `INSERT INTO nutricionista_paciente (id_nutricionista, id_paciente)
-       VALUES ($1, $2)
-       RETURNING id_vinculo, criado_em`,
-      [idNutricionista, idPaciente],
-    );
+    // A checagem acima resolve o caso comum. Dois cliques no mesmo instante
+    // passam pelos dois SELECT antes de qualquer INSERT: quem chega em segundo
+    // esbarra no indice unico parcial `idx_vinculo_ativo_unico` (23505), e sem
+    // este tratamento a resposta virava 500 em vez do mesmo 409.
+    let rows: Array<{ id_vinculo: string; criado_em: Date }>;
+    try {
+      ({ rows } = await this.pool.query(
+        `INSERT INTO nutricionista_paciente (id_nutricionista, id_paciente)
+         VALUES ($1, $2)
+         RETURNING id_vinculo, criado_em`,
+        [idNutricionista, idPaciente],
+      ));
+    } catch (err) {
+      if ((err as { code?: string })?.code === '23505') {
+        throw new ConflictException('Paciente ja vinculado a voce');
+      }
+      throw err;
+    }
 
     return {
       vinculoId: String(rows[0].id_vinculo),

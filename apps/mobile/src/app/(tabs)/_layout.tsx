@@ -1,11 +1,16 @@
 import { Redirect, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform } from 'react-native';
+import { useMensagensRealtime } from '@/hooks/use-mensagens-realtime';
 import { useAuthStore } from '@/stores/auth';
 import { colors } from '@/lib/theme';
 
 export default function TabsLayout() {
   const { token, user, isHydrated } = useAuthStore();
+
+  // Uma conexao para o app inteiro: a lista de conversas e a conversa aberta
+  // recebem mensagem nova mesmo com o usuario em outra aba.
+  useMensagensRealtime();
 
   if (isHydrated && !token) {
     return <Redirect href="/(auth)" />;
@@ -18,17 +23,17 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.authFocus,
-        tabBarInactiveTintColor: colors.authMuted,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          backgroundColor: colors.authBg1,
-          borderTopColor: colors.authBorder,
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
           borderTopWidth: 1,
           height: Platform.OS === 'ios' ? 90 : 74,
           paddingTop: 8,
           paddingBottom: Platform.OS === 'ios' ? 28 : 12,
-          boxShadow: '0 -8px 24px rgba(0,0,0,0.35)',
-          elevation: 12,
+          boxShadow: '0 -1px 2px rgba(16, 24, 40, 0.04)',
+          elevation: 4,
         },
         tabBarLabelStyle: {
           fontSize: 10,
@@ -114,16 +119,17 @@ export default function TabsLayout() {
       />
       <Tabs.Screen name="alimentacao/receitas/index" options={{ href: null }} />
       <Tabs.Screen name="alimentacao/receitas/[id]" options={{ href: null }} />
-      <Tabs.Screen name="alimentacao/alimentos/index" options={{ href: null }} />
-      <Tabs.Screen name="alimentacao/alimentos/[id]" options={{ href: null }} />
       <Tabs.Screen name="alimentacao/conteudos/index" options={{ href: null }} />
       <Tabs.Screen name="alimentacao/conteudos/[id]" options={{ href: null }} />
+      <Tabs.Screen name="alimentacao/restricoes" options={{ href: null }} />
       <Tabs.Screen name="registros/glicemia" options={{ href: null }} />
       <Tabs.Screen name="registros/refeicao" options={{ href: null }} />
       <Tabs.Screen name="saude/medidas" options={{ href: null }} />
       <Tabs.Screen name="saude/humor" options={{ href: null }} />
+      <Tabs.Screen name="saude/medicamentos" options={{ href: null }} />
       <Tabs.Screen name="perfil/editar" options={{ href: null }} />
       <Tabs.Screen name="perfil/senha" options={{ href: null }} />
+      <Tabs.Screen name="perfil/excluir" options={{ href: null }} />
       <Tabs.Screen name="mensagens/[id]" options={{ href: null }} />
     </Tabs>
   );
