@@ -17,7 +17,7 @@ prevista na ADJ (Associação de Diabetes Juvenil) de Birigui.
 |---|---|---|
 | API | `apps/api` | NestJS 10, TypeScript, PostgreSQL (driver `pg`) |
 | App mobile | `apps/mobile` | Expo SDK 54, React Native 0.81, Expo Router 6, React Query, Zustand |
-| Painel web | `web/web_nutricionista` | React 18, Vite, React Router 6, Axios |
+| Painel web | `apps/web` | React 18, Vite, React Router 6, Axios |
 | Banco | `database` | PostgreSQL 16 — schema + migrations |
 
 Perfis de usuário: **paciente** (mobile), **nutricionista** (web) e **administrador** (web).
@@ -25,6 +25,24 @@ Perfis de usuário: **paciente** (mobile), **nutricionista** (web) e **administr
 ---
 
 ## Como rodar
+
+A raiz tem um `package.json` que encaminha os comandos para os três projetos,
+para não precisar entrar em cada pasta:
+
+| Comando | O que faz |
+|---|---|
+| `npm run instalar` | instala as dependências dos três projetos |
+| `npm run verificar` | typecheck dos três + testes da API + build |
+| `npm run typecheck` | só a verificação de tipos, nos três |
+| `npm test` | testes da API |
+| `npm run dev:api` · `dev:web` · `dev:mobile` | sobe cada aplicação |
+| `npm run db:preparar` | cria e atualiza as tabelas do banco |
+
+Cada projeto mantém o seu próprio `package.json` e `package-lock.json`. A raiz
+só delega — não são workspaces do npm, de propósito: o Render instala cada
+serviço isoladamente pelo seu `rootDir`, e workspaces quebrariam isso.
+
+O passo a passo detalhado, projeto por projeto:
 
 ### 1. Banco de dados
 
@@ -86,7 +104,7 @@ Sobe em `http://localhost:3000`.
 ### 3. Painel web
 
 ```bash
-cd web/web_nutricionista
+cd apps/web
 npm install
 cp .env.example .env      # VITE_API_URL=http://localhost:3000
 npm run dev

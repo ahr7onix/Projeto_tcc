@@ -191,7 +191,7 @@ cd apps/api && npm test
 
 ---
 
-## 4. Painel web (`web/web_nutricionista`)
+## 4. Painel web (`apps/web`)
 
 Telas novas:
 

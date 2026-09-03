@@ -31,7 +31,7 @@ docker-compose up -d --build
 timeout /t 3 /nobreak >nul
 
 echo [2/3] Iniciando web do nutricionista (porta 5173)...
-start "NutriCare - Web" cmd /k "cd /d %~dp0web\web_nutricionista && npm install && npm run dev"
+start "NutriCare - Web" cmd /k "cd /d %~dp0apps\web && npm install && npm run dev"
 
 echo [3/3] Iniciando app mobile com log de erros...
 start "NutriCare - Mobile" cmd /k "%~dp0expo-com-log.bat"

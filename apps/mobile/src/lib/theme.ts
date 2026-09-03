@@ -1,7 +1,7 @@
 /*
  * Identidade visual do app do paciente.
  *
- * É a mesma identidade do painel web do nutricionista (web_nutricionista):
+ * É a mesma identidade do painel web do nutricionista (apps/web):
  * paleta clara de ambiente clínico — fundo cinza muito claro, superfícies
  * brancas, azul como cor de ação e verde reservado ao que está saudável.
  * A separação entre elementos vem da borda de 1px, não do relevo; sombra

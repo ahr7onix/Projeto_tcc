@@ -19,7 +19,7 @@ Por isso o mesmo Client ID precisa estar nos dois lugares:
 
 | Onde | Variável | Arquivo |
 |---|---|---|
-| Painel web | `VITE_GOOGLE_CLIENT_ID` | `web/web_nutricionista/.env` |
+| Painel web | `VITE_GOOGLE_CLIENT_ID` | `apps/web/.env` |
 | API | `GOOGLE_CLIENT_ID` | `apps/api/.env` |
 
 Se a API ficar sem `GOOGLE_CLIENT_ID`, o login social é recusado com uma mensagem

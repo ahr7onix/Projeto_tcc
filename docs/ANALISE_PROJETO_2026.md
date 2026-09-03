@@ -19,7 +19,7 @@ documentos existentes em `docs/` e com o `README.md` recuperado do Git.
 |---|---|---|
 | `apps/api` | API NestJS 10 + TypeScript 5.6 | 26 módulos |
 | `apps/mobile` | Aplicativo Expo 54 / React Native 0.81 / React 19 | 32 telas |
-| `web/web_nutricionista` | Painel Vite 5 + React 18 | 19 páginas |
+| `apps/web` | Painel Vite 5 + React 18 | 19 páginas |
 | `database` | `schema.sql`, 14 migrations, 3 arquivos de seed | 1.216 linhas de SQL |
 | `docs` | 8 documentos de apoio | 2.196 linhas |
 | `scripts` | Teste de fumaça ponta a ponta com Playwright | 1 script |
@@ -96,7 +96,7 @@ requisição; o banco gratuito expira em 30 dias.
 
 ## 3 O QUE ESTÁ ERRADO
 
-1. **Erro real de interface.** Em `web/web_nutricionista/src/pages/app/RelatorioPacientePage.tsx`,
+1. **Erro real de interface.** Em `apps/web/src/pages/app/RelatorioPacientePage.tsx`,
    o cartão "Registros do profissional" está escrito duas vezes (linhas 88 e 94). O relatório
    mostra o mesmo bloco repetido.
 2. **`README.md` apagado do disco.** O arquivo continua no histórico do Git, mas não existe na

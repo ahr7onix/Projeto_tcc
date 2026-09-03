@@ -428,7 +428,7 @@ apresentação diretamente ao banco.
 
 ## 3.2 Funcionamento do painel web
 
-O painel fica em `web/web_nutricionista` e é uma aplicação de página única, construída com
+O painel fica em `apps/web` e é uma aplicação de página única, construída com
 Vite 5 e React 18, escrita em TypeScript. A navegação é feita pelo `react-router-dom`, e as
 chamadas à API pelo `axios`.
 
@@ -1770,9 +1770,8 @@ O repositório é um monorepo, com as três aplicações lado a lado:
 Projeto_tcc/
 ├── apps/
 │   ├── api/          API NestJS
-│   └── mobile/       Aplicativo Expo
-├── web/
-│   └── web_nutricionista/   Painel React
+│   ├── mobile/       Aplicativo Expo
+│   └── web/          Painel React
 ├── database/
 │   ├── schema.sql
 │   ├── migrations/   001 a 014
