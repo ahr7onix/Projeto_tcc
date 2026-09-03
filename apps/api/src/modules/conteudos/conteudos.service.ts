@@ -41,6 +41,39 @@ export class ConteudosService {
     }
   }
 
+  /**
+   * Quais públicos-alvo este usuário alcança.
+   *
+   * A coluna `publico` existia desde a migration 012 e era gravada pelo painel,
+   * mas nenhuma consulta a usava: marcar um conteúdo como "pacientes_diabetes"
+   * não escondia nada, e todo paciente via tudo.
+   *
+   * Editores recebem lista vazia — para eles não há filtro, porque precisam
+   * enxergar todo o acervo para administrá-lo.
+   *
+   * `adultos` fica de fora quando a data de nascimento não foi preenchida: sem
+   * a data não dá para afirmar que a pessoa é maior de idade, e o público
+   * existe justamente para separar o que não serve a menores. O efeito é um
+   * paciente com cadastro incompleto ver menos conteúdo, não mais.
+   */
+  private async publicosDoUsuario(user: JwtPayload): Promise<string[]> {
+    if (PERFIS_EDITORES.includes(user.role)) return [];
+
+    const { rows } = await this.pool.query(
+      `SELECT p.tipo_diabetes IS NOT NULL AS tem_diabetes,
+              (p.data_nascimento IS NOT NULL
+                AND p.data_nascimento <= CURRENT_DATE - INTERVAL '18 years') AS adulto
+         FROM paciente p
+        WHERE p.id_usuario = $1`,
+      [user.sub],
+    );
+
+    const publicos = ['todos'];
+    if (rows[0]?.tem_diabetes) publicos.push('pacientes_diabetes');
+    if (rows[0]?.adulto) publicos.push('adultos');
+    return publicos;
+  }
+
   async listar(user: JwtPayload, filtros: { categoria?: string; todos?: boolean } = {}) {
     const params: unknown[] = [];
     const condicoes: string[] = [];
@@ -52,6 +85,12 @@ export class ConteudosService {
     if (filtros.categoria) {
       params.push(filtros.categoria);
       condicoes.push(`c.categoria = $${params.length}`);
+    }
+
+    const publicos = await this.publicosDoUsuario(user);
+    if (publicos.length) {
+      params.push(publicos);
+      condicoes.push(`c.publico = ANY($${params.length}::varchar[])`);
     }
 
     const where = condicoes.length ? `WHERE ${condicoes.join(' AND ')}` : '';
@@ -82,8 +121,23 @@ export class ConteudosService {
     const r = rows[0];
     if (!r) throw new NotFoundException('Conteúdo não encontrado');
 
-    if (!r.publicado && !PERFIS_EDITORES.includes(user.role)) {
-      throw new NotFoundException('Conteúdo não encontrado');
+    if (!PERFIS_EDITORES.includes(user.role)) {
+      /**
+       * O `listar` esconde rascunho, agendamento futuro e público alheio; aqui
+       * só o rascunho era conferido. Bastava ter o id para abrir um conteúdo
+       * agendado para a semana seguinte, ou destinado a outro público-alvo.
+       */
+      const agendadoParaDepois =
+        r.agendado_em != null && new Date(r.agendado_em) > new Date();
+      const publicos = await this.publicosDoUsuario(user);
+
+      if (
+        !r.publicado ||
+        agendadoParaDepois ||
+        !publicos.includes(r.publico ?? 'todos')
+      ) {
+        throw new NotFoundException('Conteúdo não encontrado');
+      }
     }
 
     return this.mapConteudo(r);
@@ -141,7 +195,15 @@ export class ConteudosService {
         dto.categoria?.trim() ?? atual.categoria,
         dto.publicado ?? atual.publicado,
         dto.publico ?? atual.publico ?? 'todos',
-        dto.agendadoEm !== undefined ? new Date(dto.agendadoEm) : atual.agendado_em,
+        // O campo aceita três estados: ausente mantém o agendamento atual,
+        // vazio o remove e uma data o substitui. Sem o teste do meio,
+        // `new Date(null)` devolvia 1970-01-01 e o conteúdo aparecia como se
+        // já tivesse sido publicado há décadas.
+        dto.agendadoEm !== undefined
+          ? dto.agendadoEm
+            ? new Date(dto.agendadoEm)
+            : null
+          : atual.agendado_em,
         dto.imagemCapa !== undefined ? dto.imagemCapa?.trim() || null : atual.imagem_capa,
         id,
       ],

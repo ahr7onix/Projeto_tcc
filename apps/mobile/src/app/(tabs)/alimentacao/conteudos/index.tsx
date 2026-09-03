@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Card } from '@/components/Card';
@@ -67,6 +68,14 @@ export default function ConteudosScreen() {
             }
           >
             <Card>
+              {c.imagemCapa ? (
+                <Image
+                  source={{ uri: c.imagemCapa }}
+                  style={styles.capa}
+                  contentFit="cover"
+                  transition={150}
+                />
+              ) : null}
               <View style={styles.header}>
                 <View style={styles.iconBox}>
                   <Ionicons
@@ -100,6 +109,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   retryText: { ...typography.body, color: colors.primary, fontWeight: '600' },
+  capa: {
+    width: '100%',
+    height: 140,
+    borderRadius: radius.md,
+    backgroundColor: colors.primarySoft,
+  },
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   iconBox: {
     width: 40,

@@ -30,12 +30,15 @@ export class UpdateConteudoDto {
   @IsIn(['todos', 'pacientes_diabetes', 'adultos'])
   publico?: string;
 
+  // Aceitam `null` para limpar o valor. `@IsOptional` já deixa passar null e
+  // undefined sem validar, e o serviço distingue os dois: ausente mantém o que
+  // está gravado, null apaga.
   @IsOptional()
   @IsISO8601()
-  agendadoEm?: string;
+  agendadoEm?: string | null;
 
   @IsOptional()
   @IsString()
   @MaxLength(1000)
-  imagemCapa?: string;
+  imagemCapa?: string | null;
 }

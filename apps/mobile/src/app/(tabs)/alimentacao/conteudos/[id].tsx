@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
+import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { ScreenContainer } from '@/components/ScreenContainer';
 import { buscarConteudo } from '@/lib/api/conteudos';
-import { colors, spacing, typography } from '@/lib/theme';
+import { colors, radius, spacing, typography } from '@/lib/theme';
 
 export default function ConteudoDetalheScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -37,6 +38,14 @@ export default function ConteudoDetalheScreen() {
         </Card>
       ) : (
         <Card>
+          {conteudo.imagemCapa ? (
+            <Image
+              source={{ uri: conteudo.imagemCapa }}
+              style={styles.capa}
+              contentFit="cover"
+              transition={150}
+            />
+          ) : null}
           <Text style={styles.corpo}>{conteudo.conteudo}</Text>
           {conteudo.autorNome ? (
             <Text style={styles.autor}>Publicado por {conteudo.autorNome}</Text>
@@ -49,6 +58,12 @@ export default function ConteudoDetalheScreen() {
 
 const styles = StyleSheet.create({
   center: { alignItems: 'center', paddingVertical: spacing.lg },
+  capa: {
+    width: '100%',
+    height: 180,
+    borderRadius: radius.md,
+    backgroundColor: colors.primarySoft,
+  },
   corpo: { ...typography.body, color: colors.text, lineHeight: 23 },
   autor: {
     ...typography.caption,

@@ -373,6 +373,17 @@ function SaudeDetalhePage({ pacienteInicial = '' }: { pacienteInicial?: string }
                           {medicamento.dosagem} · {medicamento.frequencia} · a partir das{' '}
                           {medicamento.horarioInicial.slice(0, 5)}
                         </div>
+                        {medicamento.observacoes && (
+                          <div
+                            style={{
+                              fontSize: 12, color: 'var(--text-soft)', marginTop: 6,
+                              paddingLeft: 8, borderLeft: '2px solid var(--border-strong)',
+                              lineHeight: 1.5, whiteSpace: 'pre-wrap',
+                            }}
+                          >
+                            {medicamento.observacoes}
+                          </div>
+                        )}
                       </div>
                       <div style={{ display: 'flex', gap: 6 }}>
                         <Btn

@@ -35,8 +35,9 @@ export class UpdateMedicamentoDto {
   @IsBoolean()
   ativo?: boolean;
 
+  // Aceita `null` para apagar a observação; ausente mantém a que está gravada.
   @IsOptional()
   @IsString()
   @MaxLength(500)
-  observacoes?: string;
+  observacoes?: string | null;
 }

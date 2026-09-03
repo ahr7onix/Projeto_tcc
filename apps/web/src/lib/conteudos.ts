@@ -6,7 +6,7 @@ export interface Conteudo {
   resumo: string | null
   categoria: string
   publicado: boolean
-  publico: 'todos' | 'pacientes_diabetes' | 'adultos'
+  publico: PublicoAlvo
   agendadoEm: string | null
   imagemCapa: string | null
   autorNome: string | null
@@ -15,15 +15,18 @@ export interface Conteudo {
   conteudo?: string
 }
 
+export type PublicoAlvo = 'todos' | 'pacientes_diabetes' | 'adultos'
+
 export interface ConteudoPayload {
   titulo: string
   resumo?: string
   conteudo: string
   categoria?: string
   publicado?: boolean
-  publico?: 'todos' | 'pacientes_diabetes' | 'adultos'
-  agendadoEm?: string
-  imagemCapa?: string
+  publico?: PublicoAlvo
+  // `null` limpa o valor gravado; ausente mantém o que já está lá.
+  agendadoEm?: string | null
+  imagemCapa?: string | null
 }
 
 export async function listarConteudos(todos = true): Promise<Conteudo[]> {

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AlertBanner, Btn, Input } from './ui'
+import { AlertBanner, Btn, Input, Textarea } from './ui'
 import { extractError } from '../lib/api'
 import {
   atualizarMedicamento,
@@ -30,6 +30,7 @@ export default function MedicamentoModal({
   const [horarioInicial, setHorarioInicial] = useState(
     medicamento?.horarioInicial?.slice(0, 5) ?? '08:00',
   )
+  const [observacoes, setObservacoes] = useState(medicamento?.observacoes ?? '')
 
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
@@ -56,6 +57,8 @@ export default function MedicamentoModal({
       dosagem: dosagem.trim(),
       frequencia: frequencia.trim(),
       horarioInicial,
+      // `null` quando fica vazio: é assim que a API entende "apagar".
+      observacoes: observacoes.trim() || null,
     }
 
     setErro(null)
@@ -117,9 +120,19 @@ export default function MedicamentoModal({
             />
           </div>
 
+          <Textarea
+            label="Observações (opcional)"
+            placeholder="Ex: tomar junto com a refeição; suspender se houver hipoglicemia."
+            value={observacoes}
+            onChange={(e) => setObservacoes(e.target.value)}
+            maxLength={500}
+            style={{ minHeight: 90 }}
+          />
+
           <div style={aviso}>
             O horário informado é o ponto de partida dos lembretes que o paciente
-            recebe no aplicativo.
+            recebe no aplicativo. As observações aparecem junto do medicamento no
+            aplicativo dele.
           </div>
         </div>
 
