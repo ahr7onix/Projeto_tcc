@@ -2,8 +2,10 @@ import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import type { Pool } from 'pg';
 import type { JwtPayload } from '../../common/guards/jwt.guard';
 import type { PushService } from '../push/push.service';
+import { MensagensEventosService } from './mensagens-eventos.service';
 import { MensagensService } from './mensagens.service';
 import type { CreateMensagemDto } from './dto/create-mensagem.dto';
+import type { EventoMensagem, Sinal } from './mensagens-eventos.service';
 
 function criarPoolMock(respostas: unknown[][]) {
   const query = jest.fn();
@@ -23,13 +25,19 @@ function usuario(role: JwtPayload['role'], sub = '1'): JwtPayload {
 }
 
 /** Linha do vínculo como o JOIN de `buscarVinculo` devolve. */
-function linhaVinculo() {
+function linhaVinculo(extra: Record<string, unknown> = {}) {
   return {
     id_vinculo: '10',
     paciente_id: '2',
     paciente_nome: 'Ana',
     nutricionista_id: '1',
     nutricionista_nome: 'Bruno',
+    paciente_nascimento: null,
+    paciente_diabetes: null,
+    paciente_genero: null,
+    paciente_peso: null,
+    paciente_altura: null,
+    ...extra,
   };
 }
 
@@ -50,7 +58,24 @@ function linhaMensagem(extra: Record<string, unknown> = {}) {
 function criarServico(respostas: unknown[][], pushFalha = false) {
   const { pool, query } = criarPoolMock(respostas);
   const { push, enviarPara } = criarPushMock(pushFalha);
-  return { service: new MensagensService(pool, push), query, enviarPara };
+  // O barramento é de verdade (não tem dependência nenhuma); assim os testes
+  // conseguem escutar o que seria empurrado pelo canal em tempo real.
+  const eventos = new MensagensEventosService();
+  const publicados: EventoMensagem[] = [];
+  const sinais: Sinal[] = [];
+  jest.spyOn(eventos, 'publicar').mockImplementation((e) => {
+    publicados.push(e);
+  });
+  jest.spyOn(eventos, 'publicarSinal').mockImplementation((s) => {
+    sinais.push(s);
+  });
+  return {
+    service: new MensagensService(pool, push, eventos),
+    query,
+    enviarPara,
+    publicados,
+    sinais,
+  };
 }
 
 describe('MensagensService', () => {
@@ -142,6 +167,68 @@ describe('MensagensService', () => {
       expect(resposta.data.map((m) => m.propria)).toEqual([true, false]);
       expect(resposta.contraparte).toEqual({ id: '1', nome: 'Bruno' });
     });
+
+    it('should push a read signal to the sender when messages were marked read', async () => {
+      const { service, sinais } = criarServico([
+        [linhaVinculo()],
+        [linhaMensagem()],
+        [{}, {}], // duas linhas atualizadas pelo UPDATE
+      ]);
+      await service.listarMensagens(usuario('paciente', '2'), '1');
+
+      expect(sinais).toHaveLength(1);
+      expect(sinais[0]).toMatchObject({
+        tipo: 'leitura',
+        paraUsuarioId: '1',
+        contraparteId: '2',
+      });
+    });
+
+    it('should not push a read signal when nothing was unread', async () => {
+      const { service, sinais } = criarServico([
+        [linhaVinculo()],
+        [linhaMensagem()],
+        [],
+      ]);
+      await service.listarMensagens(usuario('paciente', '2'), '1');
+      expect(sinais).toHaveLength(0);
+    });
+
+    it('should attach the patient quick profile only for the nutritionist', async () => {
+      const comPerfil = criarServico([
+        [linhaVinculo({ paciente_diabetes: 'tipo1', paciente_peso: '72.50' })],
+        [linhaMensagem()],
+        [],
+      ]);
+      const resposta = await comPerfil.service.listarMensagens(
+        usuario('nutricionista', '1'),
+        '2',
+      );
+      expect(resposta.contraparte).toMatchObject({
+        id: '2',
+        nome: 'Ana',
+        perfil: { tipoDiabetes: 'tipo1', peso: 72.5 },
+      });
+    });
+  });
+
+  describe('registrarDigitando', () => {
+    it('should push a typing signal to the counterpart', async () => {
+      const { service, sinais } = criarServico([[linhaVinculo()]]);
+      await service.registrarDigitando(usuario('nutricionista', '1'), '2', true);
+
+      expect(sinais).toEqual([
+        { tipo: 'digitando', paraUsuarioId: '2', contraparteId: '1', digitando: true },
+      ]);
+    });
+
+    it('should refuse to signal typing without an active link', async () => {
+      const { service, sinais } = criarServico([[]]);
+      await expect(
+        service.registrarDigitando(usuario('nutricionista', '1'), '9', true),
+      ).rejects.toThrow(ForbiddenException);
+      expect(sinais).toHaveLength(0);
+    });
   });
 
   describe('enviar', () => {
@@ -178,6 +265,34 @@ describe('MensagensService', () => {
       await expect(
         service.enviar(usuario('nutricionista'), dto),
       ).resolves.toMatchObject({ conteudo: 'Bom dia' });
+    });
+
+    it('should publish the message to both sides of the conversation', async () => {
+      // Sem isso a tela de quem recebe só mostraria a mensagem depois de um F5.
+      const { service, publicados } = criarServico([
+        [linhaVinculo()],
+        [linhaMensagem({ id_remetente: '1', remetente_nome: 'Bruno' })],
+      ]);
+      await service.enviar(usuario('nutricionista'), dto);
+
+      expect(publicados).toHaveLength(2);
+
+      const destinatario = publicados.find((e) => e.paraUsuarioId === '2');
+      expect(destinatario?.contraparteId).toBe('1');
+      expect(destinatario?.mensagem.propria).toBe(false);
+      expect(destinatario?.mensagem.conteudo).toBe('Bom dia');
+
+      const remetente = publicados.find((e) => e.paraUsuarioId === '1');
+      expect(remetente?.contraparteId).toBe('2');
+      expect(remetente?.mensagem.propria).toBe(true);
+    });
+
+    it('should not publish anything when the insert returns nothing', async () => {
+      const { service, publicados } = criarServico([[linhaVinculo()], []]);
+      await expect(service.enviar(usuario('nutricionista'), dto)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(publicados).toHaveLength(0);
     });
 
     it('should throw NotFoundException when the insert returns nothing', async () => {

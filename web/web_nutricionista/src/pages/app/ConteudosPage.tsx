@@ -209,7 +209,7 @@ export default function ConteudosPage() {
             <Card key={c.id}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)' }}>
                     {c.titulo}
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>

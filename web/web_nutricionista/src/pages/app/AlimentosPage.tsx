@@ -131,7 +131,7 @@ export default function AlimentosPage() {
             />
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--primary)' }}>
+            <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--primary)' }}>
               {alimentos.length}
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>alimentos listados</div>
@@ -154,7 +154,7 @@ export default function AlimentosPage() {
           />
         </Card>
       ) : (
-        <Card style={{ padding: 0, gap: 0, overflow: 'hidden' }}>
+        <Card flush>
           {/* Rolagem própria: a tabela tem mais colunas do que cabe no celular. */}
           <div style={{ overflowX: 'auto' }}>
             <table style={tabela}>
@@ -255,10 +255,11 @@ const th: React.CSSProperties = {
   padding: '12px 14px',
   textAlign: 'right',
   fontSize: 11,
-  fontWeight: 700,
+  fontWeight: 600,
   textTransform: 'uppercase',
-  letterSpacing: '0.4px',
+  letterSpacing: '0.05em',
   color: 'var(--text-muted)',
+  background: 'var(--surface-alt)',
   borderBottom: '1px solid var(--border)',
   whiteSpace: 'nowrap',
 }

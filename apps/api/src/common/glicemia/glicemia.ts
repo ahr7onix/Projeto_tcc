@@ -25,8 +25,8 @@ export const LIMITE_HIPO = 70;
 export const LIMITE_HIPER_GRAVE = 250;
 
 export const FAIXAS_REFERENCIA: Record<MomentoGlicemia, FaixaReferencia> = {
-  jejum: { min: 70, max: 130 },
-  pre_prandial: { min: 70, max: 130 },
+  jejum: { min: 70, max: 180 },
+  pre_prandial: { min: 70, max: 180 },
   pos_prandial: { min: 70, max: 180 },
   antes_dormir: { min: 90, max: 150 },
   madrugada: { min: 70, max: 140 },

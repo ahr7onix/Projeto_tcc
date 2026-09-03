@@ -34,4 +34,9 @@ export class UpdateMedicamentoDto {
   @IsOptional()
   @IsBoolean()
   ativo?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  observacoes?: string;
 }

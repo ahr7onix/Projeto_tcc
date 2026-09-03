@@ -1,13 +1,14 @@
+/*
+ * Perfil: trilho de navegação à esquerda, conteúdo à direita.
+ *
+ * Mesma identidade do resto do painel — superfície branca, borda de 1px,
+ * destaque azul-claro na seção aberta. Sem degradê e sem animação decorativa.
+ */
+
 .page {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  animation: pageIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@keyframes pageIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  gap: 18px;
 }
 
 .header {
@@ -15,50 +16,41 @@
 }
 
 .eyebrow {
-  margin: 0 0 4px;
+  margin: 0 0 6px;
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #c77dff;
+  color: var(--text-muted);
 }
 
 .title {
   margin: 0;
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   color: var(--text);
 }
 
 .subtitle {
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   font-size: 14px;
-  color: var(--text-muted);
-  max-width: 52ch;
+  color: var(--text-soft);
+  max-width: 56ch;
 }
 
 .flash {
-  animation: pageIn 0.3s ease both;
+  margin-bottom: 2px;
 }
 
-/* Hub split — SummitCanvas-inspired settings layout */
 .hub {
   display: flex;
   flex-direction: column;
-  border-radius: 24px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(26, 11, 46, 0.55);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 20px 48px rgba(0, 0, 0, 0.35);
-  animation: hubIn 0.55s cubic-bezier(0.34, 1.15, 0.64, 1) both;
-}
-
-@keyframes hubIn {
-  from { opacity: 0; transform: translateY(14px) scale(0.985); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
 }
 
 @media (min-width: 860px) {
@@ -71,94 +63,85 @@
 .rail {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 28px 22px 20px;
-  background:
-    linear-gradient(165deg, rgba(108, 34, 189, 0.28), transparent 55%),
-    rgba(11, 0, 26, 0.65);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 4px;
+  padding: 20px 14px 16px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--border);
 }
 
 @media (min-width: 860px) {
   .rail {
-    width: 280px;
+    width: 262px;
     flex-shrink: 0;
     border-bottom: none;
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    border-right: 1px solid var(--border);
   }
 }
 
 .railTop {
   text-align: center;
   padding-bottom: 16px;
-  margin-bottom: 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border);
 }
 
 .avatar {
-  width: 96px;
-  height: 96px;
-  margin: 0 auto 14px;
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 12px;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 36px;
-  font-weight: 800;
-  color: #fff;
-  background: linear-gradient(145deg, #6c22bd, #9d4edd);
-  border: 3px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 12px 28px rgba(108, 34, 189, 0.45);
-  animation: avatarSoft 3.6s ease-in-out infinite;
-}
-
-@keyframes avatarSoft {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-soft);
+  border: 1px solid var(--border);
 }
 
 .railName {
   margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: -0.3px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.01em;
 }
 
 .railRole {
-  margin: 4px 0 0;
+  margin: 3px 0 0;
   font-size: 12px;
-  font-weight: 700;
-  color: #c77dff;
+  font-weight: 500;
+  color: var(--primary);
 }
 
 .railBio {
-  margin: 12px 0 0;
+  margin: 10px 0 0;
   font-size: 12px;
   line-height: 1.45;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-soft);
 }
 
 .railEmail {
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
   word-break: break-all;
 }
 
 .railNav {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   flex: 1;
 }
 
 .railGroup {
-  margin: 10px 8px 4px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  margin: 12px 10px 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: rgba(199, 125, 255, 0.65);
+  color: var(--text-muted);
 }
 
 .railLink {
@@ -166,41 +149,38 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: none;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: transparent;
-  color: rgba(255, 255, 255, 0.62);
-  font-size: 13px;
-  font-weight: 600;
+  color: var(--text-soft);
+  font-size: 13.5px;
+  font-weight: 500;
   font-family: inherit;
   cursor: pointer;
   text-align: left;
-  transition: background 0.2s, color 0.2s, transform 0.2s;
+  transition: background 0.12s, color 0.12s;
 }
 
 .railLink:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
-  transform: translateX(2px);
+  background: var(--surface);
+  color: var(--text);
 }
 
-.railLinkActive {
-  background: linear-gradient(90deg, rgba(108, 34, 189, 0.55), rgba(157, 78, 221, 0.25));
-  color: #fff;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+.railLinkActive,
+.railLinkActive:hover {
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 600;
 }
 
 .railIcon {
   display: flex;
-  color: #c77dff;
+  color: currentColor;
   flex-shrink: 0;
 }
 
-.railLinkActive .railIcon {
-  color: #fff;
-}
-
+/* Sair é a ação menos usada da tela: discreta até o ponteiro chegar nela. */
 .railLogout {
   margin-top: 12px;
   display: flex;
@@ -208,51 +188,47 @@
   justify-content: center;
   gap: 8px;
   width: 100%;
-  padding: 11px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  background: rgba(239, 68, 68, 0.1);
-  color: #FCA5A5;
-  font-size: 13px;
-  font-weight: 700;
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  font-weight: 500;
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
 }
 
 .railLogout:hover {
-  background: rgba(239, 68, 68, 0.2);
-  transform: translateY(-1px);
+  background: var(--danger-soft);
+  border-color: var(--danger-soft);
+  color: var(--danger);
 }
 
 .panel {
   flex: 1;
-  padding: 28px 26px;
+  padding: 24px 24px 28px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  background: rgba(45, 18, 77, 0.22);
-  animation: panelSwap 0.32s ease both;
-}
-
-@keyframes panelSwap {
-  from { opacity: 0; transform: translateX(8px); }
-  to { opacity: 1; transform: translateX(0); }
+  gap: 16px;
+  background: var(--surface);
+  min-width: 0;
 }
 
 .panelHead h3 {
   margin: 0;
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 600;
   color: var(--text);
 }
 
 .panelHead p {
-  margin: 8px 0 0;
+  margin: 6px 0 0;
   font-size: 13px;
   line-height: 1.5;
-  color: var(--text-muted);
-  max-width: 48ch;
+  color: var(--text-soft);
+  max-width: 52ch;
 }
 
 .formGrid {
@@ -280,31 +256,16 @@
   color: var(--text-soft);
   font-size: 13px;
   line-height: 1.75;
-  max-width: 48ch;
+  max-width: 52ch;
 }
 
 .metaChip {
   align-self: flex-start;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #e9d5ff;
-  background: rgba(157, 78, 221, 0.22);
-  border: 1px solid rgba(199, 125, 255, 0.3);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .page,
-  .hub,
-  .avatar,
-  .panel,
-  .flash {
-    animation: none !important;
-  }
-
-  .railLink,
-  .railLogout {
-    transition: none !important;
-  }
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--primary);
+  background: var(--primary-soft);
+  border: 1px solid var(--primary-soft);
 }

@@ -63,9 +63,12 @@ export default function RegistrarHumorScreen() {
       queryClient.invalidateQueries({ queryKey: ['emocional'] });
       queryClient.invalidateQueries({ queryKey: ['emocional-resumo'] });
 
-      Alert.alert('Registro salvo', 'Obrigado por compartilhar como você está.', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+      const rotuloEstado = ESTADOS.find((e) => e.valor === estado)?.rotulo ?? 'seu estado';
+      Alert.alert(
+        'Registro salvo',
+        `Obrigado por compartilhar. Anotamos "${rotuloEstado}" para hoje — isso ajuda a nutricionista a entender como seus resultados se relacionam com o seu bem-estar.`,
+        [{ text: 'OK', onPress: () => router.back() }],
+      );
     } catch {
       Alert.alert('Erro', 'Não foi possível salvar o registro. Tente novamente.');
     } finally {
@@ -218,9 +221,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     backgroundColor: colors.primary,
     paddingVertical: spacing.lg,
-    borderRadius: radius.pill,
-    boxShadow: '0 10px 24px rgba(124, 58, 237, 0.35)',
-    elevation: 6,
+    borderRadius: radius.md,
+    boxShadow: '0 1px 2px rgba(16, 24, 40, 0.04)',
+    elevation: 2,
   },
   saveDisabled: { opacity: 0.7 },
   saveText: { color: colors.textInverse, fontWeight: '700', fontSize: 15 },

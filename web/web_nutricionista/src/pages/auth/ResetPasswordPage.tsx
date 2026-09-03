@@ -49,7 +49,7 @@ export default function ResetPasswordPage() {
             <div className={styles.form}>
               <div className={styles.brand}>NutriCare</div>
               <h1 className={styles.title}>Senha atualizada</h1>
-              <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 14, lineHeight: 1.5 }}>
+              <p style={{ color: 'var(--text-soft)', fontSize: 14, lineHeight: 1.5 }}>
                 Tudo certo. Redirecionando para o login...
               </p>
               <Link to="/login" className={styles.forgot} style={{ marginTop: 24 }}>
@@ -60,7 +60,7 @@ export default function ResetPasswordPage() {
             <form className={styles.form} onSubmit={handleSubmit} noValidate>
               <div className={styles.brand}>NutriCare</div>
               <h1 className={styles.title}>Nova senha</h1>
-              <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 14, margin: '-8px 0 12px', lineHeight: 1.45 }}>
+              <p style={{ color: 'var(--text-soft)', fontSize: 14, margin: '-8px 0 12px', lineHeight: 1.45 }}>
                 Escolha uma senha forte para sua conta.
               </p>
               {!token && (

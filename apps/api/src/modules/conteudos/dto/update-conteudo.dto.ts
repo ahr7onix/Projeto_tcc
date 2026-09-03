@@ -1,4 +1,4 @@
-import { IsBoolean, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsIn, IsISO8601, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class UpdateConteudoDto {
   @IsOptional()
@@ -25,4 +25,17 @@ export class UpdateConteudoDto {
   @IsOptional()
   @IsBoolean()
   publicado?: boolean;
+
+  @IsOptional()
+  @IsIn(['todos', 'pacientes_diabetes', 'adultos'])
+  publico?: string;
+
+  @IsOptional()
+  @IsISO8601()
+  agendadoEm?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  imagemCapa?: string;
 }

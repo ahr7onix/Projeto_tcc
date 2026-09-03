@@ -18,20 +18,22 @@ describe('classificarGlicemia', () => {
 
   it('should return normal when value is inside the fasting range', () => {
     expect(classificarGlicemia(70, 'jejum')).toBe('normal');
-    expect(classificarGlicemia(130, 'jejum')).toBe('normal');
+    expect(classificarGlicemia(180, 'jejum')).toBe('normal');
   });
 
   it('should return hiperglicemia when value exceeds the fasting ceiling', () => {
-    expect(classificarGlicemia(131, 'jejum')).toBe('hiperglicemia');
+    expect(classificarGlicemia(181, 'jejum')).toBe('hiperglicemia');
   });
 
   it('should return hiperglicemia_grave when value is above 250', () => {
     expect(classificarGlicemia(251, 'pos_prandial')).toBe('hiperglicemia_grave');
   });
 
-  it('should consider 150 normal after meals but high when fasting', () => {
-    expect(classificarGlicemia(150, 'pos_prandial')).toBe('normal');
-    expect(classificarGlicemia(150, 'jejum')).toBe('hiperglicemia');
+  it('should consider 160 normal when fasting but high before bed', () => {
+    // Jejum e pós-prandial usam o mesmo teto (180); antes de dormir é mais
+    // restritivo (150) para dar margem contra a hipoglicemia noturna.
+    expect(classificarGlicemia(160, 'jejum')).toBe('normal');
+    expect(classificarGlicemia(160, 'antes_dormir')).toBe('hiperglicemia');
   });
 
   it('should prioritize severe hypoglycemia over the momento range', () => {
@@ -79,6 +81,6 @@ describe('avaliarGlicemia', () => {
     expect(resultado.classificacao).toBe('hiperglicemia_grave');
     expect(resultado.severidade).toBe('critico');
     expect(resultado.mensagem).toBeTruthy();
-    expect(resultado.faixaReferencia).toEqual({ min: 70, max: 130 });
+    expect(resultado.faixaReferencia).toEqual({ min: 70, max: 180 });
   });
 });

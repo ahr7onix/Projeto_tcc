@@ -83,10 +83,6 @@ export default function OnboardingPacienteScreen() {
 
   return (
     <View style={styles.root}>
-      <View style={styles.bgBlobA} />
-      <View style={styles.bgBlobB} />
-      <View style={styles.bgBlobC} />
-
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
@@ -112,7 +108,6 @@ export default function OnboardingPacienteScreen() {
                 <FormField
                   control={control}
                   name="dataNascimento"
-                  variant="glass"
                   label="Data de nascimento"
                   icon="calendar-outline"
                   placeholder="DD/MM/AAAA"
@@ -124,7 +119,7 @@ export default function OnboardingPacienteScreen() {
                 <SelectField
                   control={control}
                   name="sexo"
-                  tone="glass"
+
                   label="Sexo"
                   placeholder="Selecione"
                   options={SEXOS}
@@ -135,7 +130,7 @@ export default function OnboardingPacienteScreen() {
                 <SelectField
                   control={control}
                   name="tipoDiabetes"
-                  tone="glass"
+
                   label="Tipo de diabetes"
                   placeholder="Selecione"
                   options={TIPOS_DIABETES}
@@ -146,7 +141,6 @@ export default function OnboardingPacienteScreen() {
                     <FormField
                       control={control}
                       name="peso"
-                      variant="glass"
                       label="Peso (kg)"
                       icon="fitness-outline"
                       keyboardType="decimal-pad"
@@ -157,7 +151,6 @@ export default function OnboardingPacienteScreen() {
                     <FormField
                       control={control}
                       name="altura"
-                      variant="glass"
                       label="Altura (m)"
                       icon="resize-outline"
                       keyboardType="decimal-pad"
@@ -169,7 +162,6 @@ export default function OnboardingPacienteScreen() {
                 <FormField
                   control={control}
                   name="restricoesAlergias"
-                  variant="glass"
                   label="Restrições e alergias"
                   icon="alert-circle-outline"
                   placeholder="Ex.: lactose, amendoim (opcional)"
@@ -204,35 +196,7 @@ export default function OnboardingPacienteScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.authBg1,
-    overflow: 'hidden',
-  },
-  bgBlobA: {
-    position: 'absolute',
-    width: 320,
-    height: 320,
-    borderRadius: 160,
-    backgroundColor: 'rgba(108, 34, 189, 0.35)',
-    top: -80,
-    left: -60,
-  },
-  bgBlobB: {
-    position: 'absolute',
-    width: 280,
-    height: 280,
-    borderRadius: 140,
-    backgroundColor: 'rgba(157, 78, 221, 0.22)',
-    bottom: -40,
-    right: -70,
-  },
-  bgBlobC: {
-    position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(11, 0, 26, 0.55)',
-    top: '42%',
-    left: '30%',
+    backgroundColor: colors.background,
   },
   safe: { flex: 1 },
   scroll: {
@@ -245,35 +209,34 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 420,
     alignSelf: 'center',
-    backgroundColor: colors.authGlass,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.authBorder,
-    borderRadius: 24,
+    borderColor: colors.border,
+    borderRadius: radius.xl,
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.xxl,
     paddingBottom: spacing.xl,
     gap: spacing.md,
-    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.45)',
-    elevation: 12,
+    boxShadow: '0 4px 12px rgba(16, 24, 40, 0.08)',
+    elevation: 3,
   },
   brand: {
     ...typography.eyebrow,
-    color: colors.authBrand,
-    letterSpacing: 2.2,
+    color: colors.primary,
+    letterSpacing: 1.6,
     textAlign: 'center',
     fontSize: 12,
   },
   title: {
     ...typography.h1,
-    color: colors.textInverse,
-    fontSize: 26,
-    letterSpacing: 0.4,
+    color: colors.text,
+    fontSize: 24,
     textAlign: 'center',
     fontWeight: '600',
   },
   subtitle: {
     ...typography.body,
-    color: colors.authMuted,
+    color: colors.textSoft,
     textAlign: 'center',
     marginBottom: spacing.sm,
     lineHeight: 21,
@@ -281,8 +244,8 @@ const styles = StyleSheet.create({
   form: { gap: spacing.md, width: '100%' },
   section: {
     ...typography.eyebrow,
-    color: colors.authFocus,
-    letterSpacing: 1.2,
+    color: colors.textMuted,
+    letterSpacing: 1,
   },
   sectionTop: { marginTop: spacing.sm },
   row: { flexDirection: 'row', gap: spacing.md },
@@ -290,24 +253,20 @@ const styles = StyleSheet.create({
   primaryBtn: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#6C22BD',
+    backgroundColor: colors.primary,
     paddingVertical: spacing.lg,
-    borderRadius: radius.pill,
+    borderRadius: radius.md,
     marginTop: spacing.sm,
-    boxShadow: '0 10px 20px rgba(108, 34, 189, 0.35)',
-    elevation: 6,
   },
-  btnDisabled: { opacity: 0.7 },
+  btnDisabled: { opacity: 0.6 },
   primaryBtnText: {
     color: colors.textInverse,
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+    fontSize: 15,
+    fontWeight: '600',
   },
   helpText: {
     ...typography.caption,
-    color: colors.authMuted,
+    color: colors.textMuted,
     textAlign: 'center',
     marginTop: spacing.xs,
   },

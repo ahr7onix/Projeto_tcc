@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Btn, Input, Textarea, Select, AlertBanner, Badge } from './ui'
+import PatientPicker from './PatientPicker'
 import { extractError } from '../lib/api'
 import {
   atualizarPlano,
@@ -60,6 +61,7 @@ export default function PlanoAlimentarModal({
   const editando = Boolean(plano)
 
   const [pacienteId, setPacienteId] = useState(plano?.pacienteId ?? '')
+  const [pacienteBusca, setPacienteBusca] = useState('')
   const [dataInicio, setDataInicio] = useState(plano?.dataInicio ?? hoje())
   const [dataFim, setDataFim] = useState(plano?.dataFim ?? '')
   const [refeicoes, setRefeicoes] = useState<RefeicaoPlano[]>(
@@ -313,7 +315,7 @@ export default function PlanoAlimentarModal({
         <div style={header}>
           <div>
             <div style={eyebrow}>{editando ? 'Editar' : 'Novo'} plano</div>
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)' }}>
+            <h2 style={{ fontSize: 20, fontWeight: 600, color: 'var(--text)' }}>
               Plano alimentar
             </h2>
           </div>
@@ -329,15 +331,29 @@ export default function PlanoAlimentarModal({
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             {!editando && (
               <div style={{ gridColumn: '1 / -1' }}>
-                <Select
+                <PatientPicker
+                  patients={pacientes}
+                  value={pacienteBusca}
                   label="Paciente"
-                  value={pacienteId}
-                  onChange={(e) => setPacienteId(e.target.value)}
-                  options={[
-                    { value: '', label: 'Selecione um paciente' },
-                    ...pacientes.map((p) => ({ value: p.id, label: p.nome })),
-                  ]}
+                  placeholder="Buscar paciente..."
+                  emptyMessage="Nenhum paciente encontrado."
+                  onChange={(valor) => {
+                    setPacienteBusca(valor)
+                    // Se o texto não bate mais com o paciente escolhido, a seleção é desfeita
+                    // até que outro resultado seja clicado.
+                    if (!pacientes.some((p) => p.nome === valor)) setPacienteId('')
+                  }}
+                  onSelect={(p) => {
+                    setPacienteBusca(p.nome)
+                    setPacienteId(p.id)
+                  }}
                 />
+                {pacienteId && (
+                  <div style={pacienteEscolhido}>
+                    Paciente selecionado:{' '}
+                    <strong>{pacientes.find((p) => p.id === pacienteId)?.nome ?? pacienteBusca}</strong>
+                  </div>
+                )}
               </div>
             )}
 
@@ -458,7 +474,7 @@ export default function PlanoAlimentarModal({
 
           {}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-soft)' }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-soft)' }}>
               Refeições ({refeicoes.length})
             </div>
             <Btn variant="ghost" size="sm" onClick={adicionarRefeicao} type="button">
@@ -592,7 +608,7 @@ export default function PlanoAlimentarModal({
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>
+                <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--text)' }}>
                   {Math.round(totalDoPlano.kcal)} kcal
                 </div>
                 {numero(vetKcal) !== undefined && (
@@ -629,7 +645,7 @@ export default function PlanoAlimentarModal({
 
 const overlay: React.CSSProperties = {
   position: 'fixed', inset: 0, zIndex: 100,
-  background: 'rgba(15, 23, 42, 0.45)',
+  background: 'rgba(16, 24, 40, 0.4)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   padding: 20,
 }
@@ -637,15 +653,16 @@ const modal: React.CSSProperties = {
   background: 'var(--surface)', borderRadius: 'var(--radius-lg)',
   width: '100%', maxWidth: 760, maxHeight: '90vh',
   display: 'flex', flexDirection: 'column',
-  boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+  border: '1px solid var(--border)',
+  boxShadow: 'var(--shadow-raised)',
 }
 const header: React.CSSProperties = {
   display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
   padding: '20px 24px', borderBottom: '1px solid var(--border)',
 }
 const eyebrow: React.CSSProperties = {
-  fontSize: 11, fontWeight: 700, color: 'var(--primary)',
-  letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 4,
+  fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
+  letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4,
 }
 const closeBtn: React.CSSProperties = {
   background: 'transparent', border: 'none', cursor: 'pointer',
@@ -660,8 +677,13 @@ const secao: React.CSSProperties = {
   padding: 14, background: 'var(--bg)',
   display: 'flex', flexDirection: 'column', gap: 12,
 }
+const pacienteEscolhido: React.CSSProperties = {
+  marginTop: 8, fontSize: 12, color: 'var(--text-soft)',
+  background: 'var(--primary-soft)', border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-md)', padding: '8px 10px',
+}
 const tituloSecao: React.CSSProperties = {
-  fontSize: 13, fontWeight: 700, color: 'var(--text-soft)',
+  fontSize: 13, fontWeight: 600, color: 'var(--text-soft)',
 }
 const grade: React.CSSProperties = {
   display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12,
@@ -679,7 +701,7 @@ const refeicaoCard: React.CSSProperties = {
   padding: 14, background: 'var(--bg)',
 }
 const rotuloItens: React.CSSProperties = {
-  fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+  fontSize: 11, fontWeight: 600, textTransform: 'uppercase',
   letterSpacing: '0.4px', color: 'var(--text-muted)',
 }
 const itemLinha: React.CSSProperties = {

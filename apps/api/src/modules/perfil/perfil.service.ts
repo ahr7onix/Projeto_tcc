@@ -1,7 +1,13 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import type { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
+import { logger } from '../../common/logging/logger.service';
 import { perfilEstaCompleto } from '../../common/perfil-completo';
 
 @Injectable()
@@ -41,6 +47,54 @@ export class PerfilService {
       await this.pool.query('UPDATE usuario SET nome = $1 WHERE id_usuario = $2', [dto.nome.trim(), idUsuario]);
     }
     return this.getMe(idUsuario);
+  }
+
+  /**
+   * Encerra a conta do próprio usuário. Não apaga a linha: glicemias,
+   * refeições, mensagens e prontuário estão pendurados nela por CASCADE e
+   * precisam continuar existindo. Marca `desativado_em`, o que basta para o
+   * login e o refresh recusarem, e derruba as sessões abertas.
+   */
+  async desativarConta(idUsuario: string, senha: string) {
+    const atual = await this.pool.query<{ senha: string; desativado_em: Date | null }>(
+      'SELECT senha, desativado_em FROM usuario WHERE id_usuario = $1',
+      [idUsuario],
+    );
+    const u = atual.rows[0];
+    if (!u) throw new UnauthorizedException();
+    if (u.desativado_em) throw new BadRequestException('Esta conta já está desativada.');
+
+    // Reautenticação: um token roubado não deve conseguir encerrar a conta.
+    const ok = await bcrypt.compare(senha, u.senha);
+    if (!ok) throw new UnauthorizedException('Senha incorreta');
+
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query(
+        `UPDATE usuario SET desativado_em = NOW(), atualizado_em = NOW()
+          WHERE id_usuario = $1 AND desativado_em IS NULL`,
+        [idUsuario],
+      );
+      await client.query(
+        `UPDATE refresh_token SET revogado_em = NOW()
+          WHERE id_usuario = $1 AND revogado_em IS NULL`,
+        [idUsuario],
+      );
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK').catch(() => undefined);
+      throw err;
+    } finally {
+      client.release();
+    }
+
+    // Evento de segurança: só o id interno, nada que identifique a pessoa.
+    logger.escrever('WARN', 'conta desativada pelo próprio usuário', {
+      usuario: idUsuario,
+    });
+
+    return { message: 'Conta desativada. Seus dados de saúde foram preservados.' };
   }
 
   async getPacienteData(idUsuario: string) {

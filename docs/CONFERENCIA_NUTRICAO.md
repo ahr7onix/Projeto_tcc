@@ -38,8 +38,8 @@ mínimo), ambas com severidade "atenção".
 
 | Momento | Rótulo na tela | Mínimo | Máximo | Confere? / correção |
 |---|---|---|---|---|
-| `jejum` | Jejum | 70 | 130 | |
-| `pre_prandial` | Pré-refeição | 70 | 130 | |
+| `jejum` | Jejum | 70 | 180 | |
+| `pre_prandial` | Pré-refeição | 70 | 180 | |
 | `pos_prandial` | Pós-refeição | 70 | 180 | |
 | `antes_dormir` | Antes de dormir | 90 | 150 | |
 | `madrugada` | Madrugada | 70 | 140 | |

@@ -217,6 +217,16 @@ registro emocional, lembretes, receitas e os gráficos.
 
 Os itens 1, 2, 3 e 5 não dependem de definição clínica e já estão em andamento.
 
+**Concluído fora desta lista, num pacote focado em segurança e usabilidade do
+app do paciente**: alerta de hipo/hiperglicemia (banner + notificação local)
+com base na última leitura registrada, correção do teto de referência de
+glicemia para 180 mg/dL, edição completa de restrições alimentares e
+medicamentos pelo próprio paciente, histórico com classificação visível em
+cada registro, e modo de interface simplificada para pacientes com 55 anos ou
+mais. O que ficou de fora desse pacote (push periódico via servidor e o modo
+simplificado nas demais telas) está listado na seção "Fase 2 (planejado)" do
+README.
+
 ---
 
 ## 8. Conclusão

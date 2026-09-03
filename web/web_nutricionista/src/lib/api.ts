@@ -1,6 +1,26 @@
 import axios from 'axios'
+import { log, registrarErroDeApi } from './logger'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+
+/** As unicas chaves da sessao. Ficam aqui para os dois caminhos de saida
+ *  (logout no menu e sessao expirada no interceptor) limparem a mesma coisa. */
+export const CHAVES_SESSAO = [
+  '@NutriCare:user',
+  '@NutriCare:accessToken',
+  '@NutriCare:refreshToken',
+] as const
+
+/**
+ * Limpa a sessao guardada no navegador.
+ *
+ * Antes o interceptor chamava `localStorage.clear()`, que apagava tudo o que
+ * estivesse ali — inclusive a lista de notificacoes ja lidas, que voltava a
+ * aparecer como nova toda vez que a sessao expirava.
+ */
+export function limparSessao() {
+  for (const chave of CHAVES_SESSAO) localStorage.removeItem(chave)
+}
 
 export const api = axios.create({
   baseURL: API_URL,
@@ -47,6 +67,9 @@ api.interceptors.response.use(
     const original = err.config
     const rotaDeAutenticacao = String(original?.url ?? '').startsWith('/auth/')
 
+    // Toda chamada que falha vira uma linha no console, com o requestId da API.
+    registrarErroDeApi(err, rotaDeAutenticacao ? 'autenticação' : undefined)
+
     if (err.response?.status !== 401 || !original || original._renovacaoTentada || rotaDeAutenticacao) {
       return Promise.reject(err)
     }
@@ -55,7 +78,8 @@ api.interceptors.response.use(
     const novoToken = await renovarUmaVezSo()
 
     if (!novoToken) {
-      localStorage.clear()
+      log.warn('sessão perdida: renovação recusada, voltando ao login')
+      limparSessao()
       window.location.href = '/login'
       return Promise.reject(err)
     }

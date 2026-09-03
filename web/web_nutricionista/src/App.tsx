@@ -91,6 +91,7 @@ export default function App() {
             <Route path="relatorios" element={<RelatoriosPage />} />
             <Route path="relatorios/:pacienteId" element={<RelatorioPacientePage />} />
             <Route path="mensagens" element={<MensagensPage />} />
+            <Route path="mensagens/:contraparteId" element={<MensagensPage />} />
             <Route path="conteudos" element={<ConteudosPage />} />
             <Route path="admin" element={<AdminPage />} />
             <Route path="perfil" element={<PerfilPage />} />

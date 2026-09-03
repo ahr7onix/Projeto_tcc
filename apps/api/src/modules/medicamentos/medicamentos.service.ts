@@ -25,6 +25,7 @@ export class MedicamentosService {
       frequencia: r.frequencia,
       horarioInicial: String(r.horario_inicial).slice(0, 5),
       ativo: r.ativo,
+      observacoes: r.observacoes,
       criadoEm: r.criado_em,
     };
   }
@@ -57,8 +58,8 @@ export class MedicamentosService {
 
     const { rows } = await this.pool.query(
       `INSERT INTO medicamento
-        (id_paciente, nome_medicamento, dosagem, frequencia, horario_inicial)
-       VALUES ($1, $2, $3, $4, $5)
+        (id_paciente, nome_medicamento, dosagem, frequencia, horario_inicial, observacoes)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
       [
         idPaciente,
@@ -66,6 +67,7 @@ export class MedicamentosService {
         dto.dosagem.trim(),
         dto.frequencia.trim(),
         dto.horarioInicial,
+        dto.observacoes?.trim() || null,
       ],
     );
 
@@ -93,7 +95,7 @@ export class MedicamentosService {
     const { rows } = await this.pool.query(
       `UPDATE medicamento SET
          nome_medicamento = $3, dosagem = $4, frequencia = $5,
-         horario_inicial = $6, ativo = $7
+         horario_inicial = $6, ativo = $7, observacoes = $8
        WHERE id_uso = $1 AND id_paciente = $2
        RETURNING *`,
       [
@@ -104,6 +106,7 @@ export class MedicamentosService {
         dto.frequencia?.trim() ?? atual.frequencia,
         dto.horarioInicial ?? String(atual.horario_inicial).slice(0, 5),
         dto.ativo ?? atual.ativo,
+        dto.observacoes !== undefined ? dto.observacoes.trim() || null : atual.observacoes,
       ],
     );
 

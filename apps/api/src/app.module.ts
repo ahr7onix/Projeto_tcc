@@ -1,5 +1,7 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { HttpLoggerMiddleware } from './common/logging/http-logger.middleware';
+import { MonitoringModule } from './common/monitoring/monitoring.module';
 import { DatabaseModule } from './database/database.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AnotacoesModule } from './modules/anotacoes/anotacoes.module';
@@ -9,6 +11,7 @@ import { AntropometriaModule } from './modules/antropometria/antropometria.modul
 import { AuthModule } from './modules/auth/auth.module';
 import { ConteudosModule } from './modules/conteudos/conteudos.module';
 import { EmocionalModule } from './modules/emocional/emocional.module';
+import { HealthModule } from './modules/health/health.module';
 import { LembretesModule } from './modules/lembretes/lembretes.module';
 import { MedicamentosModule } from './modules/medicamentos/medicamentos.module';
 import { MensagensModule } from './modules/mensagens/mensagens.module';
@@ -21,6 +24,7 @@ import { PushModule } from './modules/push/push.module';
 import { ReceitasModule } from './modules/receitas/receitas.module';
 import { RegistrosModule } from './modules/registros/registros.module';
 import { RelatoriosModule } from './modules/relatorios/relatorios.module';
+import { RestricoesModule } from './modules/restricoes/restricoes.module';
 import { SaudeModule } from './modules/saude/saude.module';
 import { StatusModule } from './modules/status/status.module';
 import { VinculosModule } from './modules/vinculos/vinculos.module';
@@ -29,6 +33,8 @@ import { VinculosModule } from './modules/vinculos/vinculos.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     DatabaseModule,
+    MonitoringModule,
+    HealthModule,
     StatusModule,
     AuthModule,
     PacientesModule,
@@ -43,7 +49,6 @@ import { VinculosModule } from './modules/vinculos/vinculos.module';
     ConteudosModule,
     AdminModule,
     AnotacoesModule,
-    AnotacoesModule,
     PushModule,
     // Módulos do briefing de nutrição (migration 007)
     AlimentosModule,
@@ -54,6 +59,17 @@ import { VinculosModule } from './modules/vinculos/vinculos.module';
     MedicamentosModule,
     NutricionalModule,
     NotificacoesModule,
+    RestricoesModule,
   ],
+  providers: [HttpLoggerMiddleware],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  /**
+   * Uma linha de log por requisição, para toda rota. Em middleware, e não em
+   * interceptor, porque assim também caem no log as respostas que nunca chegam
+   * a um controller — 404 e falha de validação, entre elas.
+   */
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(HttpLoggerMiddleware).forRoutes('*');
+  }
+}

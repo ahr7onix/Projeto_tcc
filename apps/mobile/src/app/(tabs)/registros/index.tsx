@@ -44,6 +44,14 @@ function tintDoAlerta(severidade?: string) {
   return { bg: colors.successSoft, fg: colors.success };
 }
 
+const CLASSIFICACAO_LABEL: Record<string, string> = {
+  hipoglicemia_grave: 'Hipoglicemia grave',
+  hipoglicemia: 'Hipoglicemia',
+  normal: 'Normal',
+  hiperglicemia: 'Hiperglicemia',
+  hiperglicemia_grave: 'Hiperglicemia grave',
+};
+
 function formatarQuando(iso: string): string {
   const d = new Date(iso);
   const dia = String(d.getDate()).padStart(2, '0');
@@ -67,7 +75,7 @@ function LinhaRegistro({ item }: { item: RegistroItem }) {
     : { bg: colors.primarySoft, fg: colors.primary };
 
   const titulo = glicemia
-    ? `${item.valor} mg/dL`
+    ? `Glicemia: ${item.valor} mg/dL`
     : (item.descricao ?? 'Refeição');
 
   const detalhe = glicemia
@@ -90,7 +98,16 @@ function LinhaRegistro({ item }: { item: RegistroItem }) {
       </View>
 
       <View style={{ flex: 1 }}>
-        <Text style={styles.registroTitulo}>{titulo}</Text>
+        <View style={styles.registroTopo}>
+          <Text style={styles.registroTitulo}>{titulo}</Text>
+          {glicemia && item.alerta ? (
+            <View style={[styles.badge, { backgroundColor: tint.bg }]}>
+              <Text style={[styles.badgeText, { color: tint.fg }]}>
+                {CLASSIFICACAO_LABEL[item.alerta.classificacao] ?? item.alerta.classificacao}
+              </Text>
+            </View>
+          ) : null}
+        </View>
         <Text style={styles.registroDetalhe}>
           {[detalhe, formatarQuando(item.dataHora)].filter(Boolean).join(' · ')}
         </Text>
@@ -315,7 +332,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  registroTopo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
   registroTitulo: { ...typography.body, color: colors.text, fontWeight: '700' },
   registroDetalhe: { ...typography.caption, color: colors.textMuted },
   registroAlerta: { ...typography.caption, fontWeight: '600', marginTop: 2 },
+  badge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radius.pill,
+  },
+  badgeText: { fontSize: 11, fontWeight: '700' },
 });

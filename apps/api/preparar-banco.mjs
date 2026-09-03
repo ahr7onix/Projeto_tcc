@@ -29,9 +29,17 @@ if (!connectionString) {
   process.exit(1);
 }
 
+// Os modos aceitos sao os mesmos da API (database.module.ts):
+//   ""            decide pelo endereco: local sem TLS, remoto com verificacao
+//   true|1|on     TLS com verificacao de certificado
+//   no-verify     TLS sem verificar a cadeia (Render, Heroku e afins usam
+//                 certificado proprio; sem isto a conexao e recusada)
+//   false|0|off   sem TLS
 function resolverSsl() {
   const modo = (process.env.DATABASE_SSL ?? '').trim().toLowerCase();
   if (['true', '1', 'on'].includes(modo)) return { rejectUnauthorized: true };
+  if (modo === 'no-verify') return { rejectUnauthorized: false };
+  if (['false', '0', 'off'].includes(modo)) return false;
   const local = /@(localhost|127\.0\.0\.1|\[::1\]|db|postgres)[:/]/.test(connectionString);
   return local ? false : { rejectUnauthorized: true };
 }
@@ -88,23 +96,24 @@ async function main() {
     console.log('Banco vazio — criando a estrutura a partir do schema.sql.');
     await client.query(ler('schema.sql'));
     await registrar('schema.sql');
-    // O schema.sql já nasce com tudo o que as migrations fazem, então elas
-    // ficam marcadas como aplicadas sem rodar de novo.
-    for (const m of migrations) await registrar(`migrations/${m}`);
-    console.log(`  estrutura criada (${migrations.length} migrations marcadas)`);
-  } else {
-    if (!(await jaAplicado('schema.sql'))) {
-      // Banco criado por outro caminho (docker-compose, psql na mão).
-      // Não dá para saber quais migrations já rodaram, então só registramos a
-      // estrutura e seguimos — nada é reaplicado por cima.
-      await registrar('schema.sql');
-      for (const m of migrations) await registrar(`migrations/${m}`);
-      console.log('Banco já existia — controle de migrations inicializado sem alterar nada.');
-    }
-    console.log('Estrutura já existe — aplicando apenas o que estiver pendente.');
-    for (const m of migrations) {
-      await aplicarUmaVez(`migrations/${m}`, ['migrations', m]);
-    }
+  } else if (!(await jaAplicado('schema.sql'))) {
+    // Banco criado por outro caminho (docker-compose, psql na mão).
+    await registrar('schema.sql');
+    console.log('Banco já existia — controle de migrations inicializado.');
+  }
+
+  // As migrations rodam sempre, inclusive logo depois do schema.sql.
+  //
+  // Antes elas eram apenas *marcadas* como aplicadas quando o banco nascia do
+  // schema.sql, no pressuposto de que o schema já continha tudo o que elas
+  // fazem. O pressuposto falhou em silencio: a tabela `mensagem` (003) nunca
+  // entrou no schema.sql, então todo banco novo nascia sem ela e /mensagens
+  // respondia 500. Como cada migration e idempotente (IF NOT EXISTS / ADD
+  // COLUMN IF NOT EXISTS / DO $$ com guarda), rodá-las custa uma passada a
+  // mais e elimina de vez esse tipo de divergência.
+  console.log('Migrations:');
+  for (const m of migrations) {
+    await aplicarUmaVez(`migrations/${m}`, ['migrations', m]);
   }
 
   console.log('Dados iniciais:');

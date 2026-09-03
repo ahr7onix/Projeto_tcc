@@ -24,7 +24,6 @@ export default function MensagensScreen() {
   const { data: conversas, isLoading, isError, refetch } = useQuery({
     queryKey: ['conversas'],
     queryFn: listarConversas,
-    refetchInterval: 30000,
   });
 
   return (

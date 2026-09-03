@@ -186,8 +186,8 @@ const styles = StyleSheet.create({
   saveBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: spacing.sm, backgroundColor: colors.primary,
-    paddingVertical: spacing.lg, borderRadius: radius.pill,
-    boxShadow: '0 10px 24px rgba(124,58,237,0.35)', elevation: 6,
+    paddingVertical: spacing.lg, borderRadius: radius.md,
+    boxShadow: '0 1px 2px rgba(16, 24, 40, 0.04)', elevation: 2,
   },
   btnDisabled: { opacity: 0.7 },
   saveBtnText: { color: colors.textInverse, fontWeight: '700', fontSize: 15 },

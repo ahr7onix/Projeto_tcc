@@ -108,9 +108,9 @@ teste é suficiente.
 2. Abrir <http://localhost:5173/login> e clicar no botão do Google.
 3. Escolher uma conta que esteja na lista de usuários de teste.
 
-Resultado esperado: entra no painel. Como o cadastro automático cria o usuário
-como **paciente**, uma conta nova pelo Google não vai ter acesso às telas de
-nutricionista — para isso, o perfil precisa ser alterado pela administração.
+Resultado esperado: entra no painel. No painel web, login e cadastro usam
+`POST /auth/google/nutricionista`: conta nova nasce como **nutricionista**.
+Pacientes continuam no app mobile (`/auth/google/paciente`).
 
 ### Erros comuns
 
@@ -129,11 +129,55 @@ quanto o Vite leem essas variáveis só na inicialização.
 
 ## No aplicativo do celular
 
-Ainda **não funciona**. O botão existe na tela de login, mas só mostra o aviso de
-que o login social não foi configurado.
+O botão **Continuar com Google** usa `expo-auth-session` e envia o
+`id_token` para `POST /auth/google/paciente`.
 
-Fazer funcionar no celular é um trabalho à parte: exige a biblioteca
-`expo-auth-session` e **Client IDs próprios para Android e iOS** (o Client ID da
-web não serve), além do SHA-1 do certificado de assinatura do app no caso do
-Android. A API já aceita o token vindo do celular (campo `idToken`), então só
-falta o lado do aplicativo.
+### Variáveis no mobile
+
+Arquivo `apps/mobile/.env`:
+
+```
+EXPO_PUBLIC_API_URL=http://SEU_IP:3000
+EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=...mesmo Client ID web da API/painel...
+```
+
+Opcionais (recomendados em build nativo):
+
+```
+EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=
+EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=
+```
+
+Sem o Client ID web, o botão avisa que o Google não está configurado.
+
+### Origens e redirect no Google Cloud
+
+No cliente **Aplicativo da Web** ("NutriCare - Painel Web"), inclua:
+
+**Origens JavaScript autorizadas**
+
+```
+http://localhost:5173
+http://127.0.0.1:5173
+http://localhost:8081
+http://127.0.0.1:8081
+```
+
+No **Expo web** (`http://localhost:8081`) o app usa Google Identity Services
+em modo popup — **não precisa** de URI de redirecionamento para esse fluxo.
+Basta a origem JavaScript acima.
+
+Para login Google no **Expo Go / app nativo** (auth-session), aí sim cadastre
+as URIs de redirecionamento que o Expo mostrar no erro (ou
+`projetotcc:/oauthredirect` em build standalone).
+
+Depois de salvar as origens, reinicie o Expo (`npx expo start --clear`).
+
+Na lista de **Usuários de teste**, use a mesma conta Google que vai entrar no app.
+
+### Limitações
+
+- No **Expo Go**, o fluxo OAuth funciona via `expo-auth-session`.
+- Client IDs nativos de Android/iOS (com SHA-1) melhoram o fluxo em builds
+  standalone; sem eles o app tenta o Client ID web.
+- Apple e Facebook continuam como "em breve".

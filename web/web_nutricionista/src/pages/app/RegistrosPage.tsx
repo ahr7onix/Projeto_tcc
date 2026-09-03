@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Card, PageHeader, ChipGroup, EmptyState, AlertBanner } from '../../components/ui'
+import { Card, PageHeader, ChipGroup, EmptyState, AlertBanner, Paginacao, usePaginacao } from '../../components/ui'
 import { api, extractError } from '../../lib/api'
 
 type Filtro = 'tudo' | 'glicemia' | 'refeicao'
@@ -60,6 +60,7 @@ export default function RegistrosPage() {
   const [meta, setMeta] = useState({ glicemiaCount: 0, refeicaoCount: 0, total: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const pag = usePaginacao(registros, 20, filtro)
 
   const fetchRegistros = useCallback(async () => {
     setLoading(true)
@@ -102,7 +103,7 @@ export default function RegistrosPage() {
           }}>
             <div style={{ width: 38, height: 38, borderRadius: 10, background: s.bg, color: s.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{s.icon}</div>
             <div>
-              <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)' }}>{s.value}</div>
+              <div style={{ fontSize: 24, fontWeight: 600, color: 'var(--text)' }}>{s.value}</div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 1 }}>{s.label}</div>
             </div>
           </div>
@@ -121,7 +122,7 @@ export default function RegistrosPage() {
           <EmptyState icon={<HourglassIcon />} title="Sem registros ainda" message="Assim que seus pacientes registrarem glicemias ou refeições pelo aplicativo, elas aparecem aqui." />
         ) : (
           <div>
-            {registros.map((r, i) => {
+            {pag.visiveis.map((r, i) => {
               const glicemia = r.tipo === 'glicemia'
               // A bolinha segue a gravidade da medição: é o que o nutricionista
               // procura ao bater o olho na lista.
@@ -132,7 +133,7 @@ export default function RegistrosPage() {
               return (
                 <div key={`${r.tipo}-${r.id}`} style={{
                   display: 'flex', alignItems: 'flex-start', gap: 14, padding: '14px 0',
-                  borderBottom: i < registros.length - 1 ? '1px solid var(--border)' : 'none',
+                  borderBottom: i < pag.visiveis.length - 1 ? '1px solid var(--border)' : 'none',
                 }}>
                   <div style={{
                     width: 38, height: 38, borderRadius: 10, flexShrink: 0,
@@ -161,6 +162,15 @@ export default function RegistrosPage() {
                 </div>
               )
             })}
+            <Paginacao
+              pagina={pag.pagina}
+              totalPaginas={pag.totalPaginas}
+              total={pag.total}
+              primeiro={pag.primeiro}
+              ultimo={pag.ultimo}
+              onChange={pag.irPara}
+              rotulo="registros"
+            />
           </div>
         )}
       </Card>
