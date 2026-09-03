@@ -9,6 +9,8 @@ Orientador: Francisco Antônio de Souza
 Ecossistema digital desenvolvido em parceria com o curso de Nutrição, com aplicação
 prevista na ADJ (Associação de Diabetes Juvenil) de Birigui.
 
+[![CI](https://github.com/ahr7onix/Projeto_tcc/actions/workflows/ci.yml/badge.svg)](https://github.com/ahr7onix/Projeto_tcc/actions/workflows/ci.yml)
+
 ---
 
 ## Arquitetura
