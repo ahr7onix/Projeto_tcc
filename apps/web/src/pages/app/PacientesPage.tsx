@@ -44,25 +44,45 @@ export default function PacientesPage() {
   const [vincularAberto, setVincularAberto] = useState(false)
   const [desvinculandoId, setDesvinculandoId] = useState<string | null>(null)
 
-  const fetchPacientes = useCallback(async (q?: string) => {
+  const fetchPacientes = useCallback(async (q: string, ativo: () => boolean) => {
+    setError(null)
     try {
       const params: Record<string, string> = {}
       if (q) params.busca = q
       const { data } = await api.get('/pacientes', { params })
+      if (!ativo()) return
       setPacientes(data.data)
     } catch (err) {
-      setError(extractError(err))
+      if (ativo()) setError(extractError(err))
     } finally {
-      setLoading(false)
+      if (ativo()) setLoading(false)
     }
   }, [])
 
-  useEffect(() => { fetchPacientes() }, [fetchPacientes])
-
+  // O debounce sozinho não resolvia a busca: ele cancela o timer pendente, mas
+  // não a requisição que já saiu. Digitar rápido deixava duas no ar e a mais
+  // lenta chegava por último, devolvendo o resultado de um termo antigo. Daí a
+  // guarda `cancelado`, que a limpeza do efeito liga.
+  //
+  // Este efeito também cobre o primeiro carregamento (busca vazia dispara na
+  // hora, sem timer). Antes havia um segundo efeito só para isso, e os dois
+  // disparavam juntos na montagem — duas requisições iguais competindo.
   useEffect(() => {
-    if (!busca) { fetchPacientes(); return }
-    const timer = setTimeout(() => fetchPacientes(busca), 300)
-    return () => clearTimeout(timer)
+    let cancelado = false
+    const ativo = () => !cancelado
+
+    if (!busca) {
+      fetchPacientes('', ativo)
+      return () => {
+        cancelado = true
+      }
+    }
+
+    const timer = setTimeout(() => fetchPacientes(busca, ativo), 300)
+    return () => {
+      cancelado = true
+      clearTimeout(timer)
+    }
   }, [busca, fetchPacientes])
 
   const filtrados = pacientes.filter(p =>
@@ -241,10 +261,12 @@ export default function PacientesPage() {
         )}
       </div>
 
+      {/* A recarga depois de vincular é pontual e não compete com nada, então
+          passa uma guarda sempre ativa. */}
       {vincularAberto && (
         <VincularPacienteModal
           onClose={() => setVincularAberto(false)}
-          onVinculado={() => fetchPacientes(busca || undefined)}
+          onVinculado={() => fetchPacientes(busca, () => true)}
         />
       )}
     </div>

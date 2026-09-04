@@ -106,7 +106,11 @@ export class MedicamentosService {
         dto.frequencia?.trim() ?? atual.frequencia,
         dto.horarioInicial ?? String(atual.horario_inicial).slice(0, 5),
         dto.ativo ?? atual.ativo,
-        dto.observacoes !== undefined ? dto.observacoes.trim() || null : atual.observacoes,
+        // `?.` porque `@IsOptional` deixa `null` passar pela validação: sem ele,
+        // limpar a observação chamava `null.trim()` e a resposta virava 500.
+        dto.observacoes !== undefined
+          ? dto.observacoes?.trim() || null
+          : atual.observacoes,
       ],
     );
 

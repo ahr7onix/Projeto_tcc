@@ -37,28 +37,53 @@ export default function AlimentosPage() {
   const [editando, setEditando] = useState<Alimento | null>(null)
   const [desativandoId, setDesativandoId] = useState<string | null>(null)
 
-  const carregar = useCallback(async (termo: string, grupoSelecionado: string) => {
-    try {
-      setLoading(true)
-      setErro(null)
-      setAlimentos(await listarAlimentos({ busca: termo, grupo: grupoSelecionado, limite: 200 }))
-    } catch (err) {
-      setErro(extractError(err))
-    } finally {
-      setLoading(false)
+  const carregar = useCallback(
+    async (termo: string, grupoSelecionado: string, ativo: () => boolean) => {
+      try {
+        setLoading(true)
+        setErro(null)
+        const lista = await listarAlimentos({
+          busca: termo,
+          grupo: grupoSelecionado,
+          limite: 200,
+        })
+        if (ativo()) setAlimentos(lista)
+      } catch (err) {
+        if (ativo()) setErro(extractError(err))
+      } finally {
+        if (ativo()) setLoading(false)
+      }
+    },
+    [],
+  )
+
+  useEffect(() => {
+    let cancelado = false
+    listarGrupos()
+      .then((lista) => {
+        if (!cancelado) setGrupos(lista)
+      })
+      .catch(() => {
+        if (!cancelado) setGrupos([])
+      })
+    return () => {
+      cancelado = true
     }
   }, [])
 
-  useEffect(() => {
-    listarGrupos()
-      .then(setGrupos)
-      .catch(() => setGrupos([]))
-  }, [])
-
   // A busca espera o usuário parar de digitar para não disparar uma consulta por tecla.
+  //
+  // O debounce evita a consulta por tecla, mas não desfaz a que já saiu: trocar
+  // de grupo com uma busca em andamento deixava as duas no ar, e a mais lenta
+  // sobrescrevia a certa. A guarda `cancelado` descarta a resposta que não vale
+  // mais.
   useEffect(() => {
-    const tempo = setTimeout(() => carregar(busca, grupo), 350)
-    return () => clearTimeout(tempo)
+    let cancelado = false
+    const tempo = setTimeout(() => carregar(busca, grupo, () => !cancelado), 350)
+    return () => {
+      cancelado = true
+      clearTimeout(tempo)
+    }
   }, [busca, grupo, carregar])
 
   function abrirNovo() {

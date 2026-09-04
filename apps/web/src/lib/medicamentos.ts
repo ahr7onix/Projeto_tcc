@@ -7,6 +7,7 @@ export interface Medicamento {
   frequencia: string
   horarioInicial: string
   ativo: boolean
+  observacoes: string | null
   criadoEm: string
 }
 
@@ -16,6 +17,8 @@ export interface MedicamentoPayload {
   dosagem: string
   frequencia: string
   horarioInicial: string
+  /** `null` apaga a observação; ausente mantém a que está gravada. */
+  observacoes?: string | null
 }
 
 export async function listarMedicamentos(

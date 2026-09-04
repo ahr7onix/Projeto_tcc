@@ -1428,6 +1428,14 @@ O nutricionista publica orientações pelo painel, em `/conteudos`, e o paciente
 aplicativo, em Alimentação → Conteúdos. Cada conteúdo tem título, resumo, texto, categoria,
 público-alvo, imagem de capa opcional e agendamento de publicação.
 
+O recorte por público-alvo é aplicado no servidor, e não no aplicativo: a API monta a lista de
+públicos que o paciente alcança a partir do próprio cadastro dele — `todos` sempre,
+`pacientes_diabetes` quando há um tipo de diabetes registrado e `adultos` quando a data de
+nascimento indica 18 anos ou mais — e devolve apenas o que se encaixa. Sem data de nascimento
+o conteúdo de `adultos` não é entregue, porque não há como afirmar a maioridade. O mesmo vale
+para o agendamento: um conteúdo marcado para uma data futura não aparece na listagem nem pode
+ser aberto pelo endereço direto antes da hora.
+
 As receitas seguem o mesmo caminho, em uma tabela própria: título, ingredientes, modo de
 preparo, porções, tempo de preparo, valores nutricionais por porção e categoria. O paciente as
 consulta em Alimentação → Receitas.

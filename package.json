@@ -15,6 +15,7 @@
     "dev:web": "npm --prefix apps/web run dev",
     "dev:mobile": "npm --prefix apps/mobile start",
     "db:preparar": "node apps/api/preparar-banco.mjs",
+    "db:verificar": "node apps/api/verificar-schema.mjs",
     "e2e": "npm --prefix scripts run e2e"
   }
 }

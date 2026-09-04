@@ -34,37 +34,61 @@ export default function ReceitasPage() {
   const [abertaId, setAbertaId] = useState<string | null>(null)
 
   const carregar = useCallback(
-    async (termo: string, categoriaSelecionada: string, minhas: boolean) => {
+    async (
+      termo: string,
+      categoriaSelecionada: string,
+      minhas: boolean,
+      ativo: () => boolean,
+    ) => {
       try {
         setLoading(true)
         setErro(null)
-        setReceitas(
-          await listarReceitas({
-            busca: termo,
-            categoria: categoriaSelecionada,
-            apenasMinhas: minhas,
-            limite: 100,
-          }),
-        )
+        const lista = await listarReceitas({
+          busca: termo,
+          categoria: categoriaSelecionada,
+          apenasMinhas: minhas,
+          limite: 100,
+        })
+        if (ativo()) setReceitas(lista)
       } catch (err) {
-        setErro(extractError(err))
+        if (ativo()) setErro(extractError(err))
       } finally {
-        setLoading(false)
+        if (ativo()) setLoading(false)
       }
     },
     [],
   )
 
   useEffect(() => {
+    let cancelado = false
     listarCategorias()
-      .then(setCategorias)
-      .catch(() => setCategorias([]))
+      .then((lista) => {
+        if (!cancelado) setCategorias(lista)
+      })
+      .catch(() => {
+        if (!cancelado) setCategorias([])
+      })
+    return () => {
+      cancelado = true
+    }
   }, [])
 
   // A busca espera o usuário parar de digitar para não disparar uma consulta por tecla.
+  //
+  // O debounce não alcança a requisição que já saiu: mudar de categoria ou
+  // marcar "apenas minhas" no meio de uma busca deixava duas no ar, e a mais
+  // lenta chegava por último com o resultado do filtro antigo. A guarda
+  // `cancelado` descarta a resposta que não vale mais.
   useEffect(() => {
-    const tempo = setTimeout(() => carregar(busca, categoria, apenasMinhas), 350)
-    return () => clearTimeout(tempo)
+    let cancelado = false
+    const tempo = setTimeout(
+      () => carregar(busca, categoria, apenasMinhas, () => !cancelado),
+      350,
+    )
+    return () => {
+      cancelado = true
+      clearTimeout(tempo)
+    }
   }, [busca, categoria, apenasMinhas, carregar])
 
   function abrirNova() {

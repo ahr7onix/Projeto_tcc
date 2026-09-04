@@ -244,12 +244,22 @@ export default function MensagensPage() {
 
   // Abre a conversa selecionada: histórico + ficha do paciente, e zera o
   // contador de não lidas na lista da esquerda.
+  //
+  // A guarda `cancelado` não é zelo: trocar de conversa antes de a primeira
+  // responder deixava duas requisições no ar, e quem chegasse por último
+  // vencia. Como o painel inteiro (mensagens, nome, ficha) vem da resposta e o
+  // envio usa `selId`, dava para ler a conversa de um paciente com outro
+  // selecionado — e a resposta digitada ali ia para o paciente errado.
   useEffect(() => {
     if (!selId) return
+    let cancelado = false
     setLoadingThread(true)
     setContraparteDigitando(false)
+    // O erro da conversa anterior não é mais sobre esta.
+    setErro(null)
     abrirConversa(selId)
       .then((thread) => {
+        if (cancelado) return
         setMensagens(thread.data)
         setThreadNome(thread.contraparte.nome)
         setPerfil(thread.contraparte.perfil ?? null)
@@ -259,8 +269,15 @@ export default function MensagensPage() {
           ),
         )
       })
-      .catch((err) => setErro(extractError(err)))
-      .finally(() => setLoadingThread(false))
+      .catch((err) => {
+        if (!cancelado) setErro(extractError(err))
+      })
+      .finally(() => {
+        if (!cancelado) setLoadingThread(false)
+      })
+    return () => {
+      cancelado = true
+    }
   }, [selId])
 
   useEffect(() => {

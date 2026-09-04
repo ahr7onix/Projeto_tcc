@@ -62,23 +62,36 @@ export default function RegistrosPage() {
   const [error, setError] = useState<string | null>(null)
   const pag = usePaginacao(registros, 20, filtro)
 
-  const fetchRegistros = useCallback(async () => {
+  // `cancelado` evita a troca rápida de filtro entregar a lista errada: sem a
+  // guarda, a resposta mais lenta chegava por último e sobrescrevia a certa —
+  // a tela mostrava tudo com "glicemia" selecionado, sem nada indicar o engano.
+  //
+  // O `setError(null)` no começo também não é enfeite: sem ele, uma oscilação
+  // de rede deixava o aviso de erro na tela para sempre, inclusive depois de
+  // recarregamentos bem-sucedidos, até alguém apertar F5.
+  const fetchRegistros = useCallback(async (ativo: () => boolean) => {
     setLoading(true)
+    setError(null)
     try {
       const params: Record<string, string> = { dias: '7' }
       if (filtro !== 'tudo') params.tipo = filtro
       const { data } = await api.get('/registros', { params })
+      if (!ativo()) return
       setRegistros(data.data)
       setMeta(data.meta)
     } catch (err) {
-      setError(extractError(err))
+      if (ativo()) setError(extractError(err))
     } finally {
-      setLoading(false)
+      if (ativo()) setLoading(false)
     }
   }, [filtro])
 
   useEffect(() => {
-    fetchRegistros()
+    let cancelado = false
+    fetchRegistros(() => !cancelado)
+    return () => {
+      cancelado = true
+    }
   }, [fetchRegistros])
 
   return (

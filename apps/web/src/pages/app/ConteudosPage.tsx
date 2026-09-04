@@ -18,6 +18,7 @@ import {
   listarConteudos,
   removerConteudo,
   type Conteudo,
+  type PublicoAlvo,
 } from '../../lib/conteudos'
 
 const CATEGORIAS = [
@@ -28,6 +29,37 @@ const CATEGORIAS = [
   { value: 'autocuidado', label: 'Autocuidado' },
 ]
 
+const PUBLICOS: { value: PublicoAlvo; label: string }[] = [
+  { value: 'todos', label: 'Todos os pacientes' },
+  { value: 'pacientes_diabetes', label: 'Somente quem tem diabetes' },
+  { value: 'adultos', label: 'Somente maiores de 18 anos' },
+]
+
+const ROTULO_PUBLICO: Record<PublicoAlvo, string> = {
+  todos: 'Todos',
+  pacientes_diabetes: 'Com diabetes',
+  adultos: 'Maiores de 18',
+}
+
+/**
+ * O `<input type="datetime-local">` fala no fuso do navegador e sem zona
+ * ("2026-09-10T14:30"); a API espera ISO 8601 completo. Estas duas funções
+ * fazem a ida e a volta — sem elas o horário escolhido chegava deslocado.
+ */
+function paraCampoLocal(iso: string | null): string {
+  if (!iso) return ''
+  const data = new Date(iso)
+  if (Number.isNaN(data.getTime())) return ''
+  const local = new Date(data.getTime() - data.getTimezoneOffset() * 60000)
+  return local.toISOString().slice(0, 16)
+}
+
+function paraIso(valorLocal: string): string | null {
+  if (!valorLocal) return null
+  const data = new Date(valorLocal)
+  return Number.isNaN(data.getTime()) ? null : data.toISOString()
+}
+
 interface Formulario {
   id?: string
   titulo: string
@@ -35,6 +67,9 @@ interface Formulario {
   conteudo: string
   categoria: string
   publicado: boolean
+  publico: PublicoAlvo
+  agendadoEm: string
+  imagemCapa: string
 }
 
 const FORM_VAZIO: Formulario = {
@@ -43,6 +78,9 @@ const FORM_VAZIO: Formulario = {
   conteudo: '',
   categoria: 'geral',
   publicado: false,
+  publico: 'todos',
+  agendadoEm: '',
+  imagemCapa: '',
 }
 
 export default function ConteudosPage() {
@@ -52,19 +90,28 @@ export default function ConteudosPage() {
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
-  const carregar = useCallback(async () => {
+  // `ativo` é opcional porque `carregar` também roda depois de salvar, fora de
+  // efeito: ali não há nada para cancelar. Sem o `setErro(null)`, um erro
+  // antigo ficava na tela mesmo depois de a lista recarregar com sucesso.
+  const carregar = useCallback(async (ativo: () => boolean = () => true) => {
     try {
       setLoading(true)
-      setConteudos(await listarConteudos(true))
+      setErro(null)
+      const lista = await listarConteudos(true)
+      if (ativo()) setConteudos(lista)
     } catch (err) {
-      setErro(extractError(err))
+      if (ativo()) setErro(extractError(err))
     } finally {
-      setLoading(false)
+      if (ativo()) setLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    carregar()
+    let cancelado = false
+    carregar(() => !cancelado)
+    return () => {
+      cancelado = true
+    }
   }, [carregar])
 
   async function abrirEdicao(c: Conteudo) {
@@ -77,6 +124,9 @@ export default function ConteudosPage() {
         conteudo: completo.conteudo ?? '',
         categoria: completo.categoria,
         publicado: completo.publicado,
+        publico: completo.publico ?? 'todos',
+        agendadoEm: paraCampoLocal(completo.agendadoEm),
+        imagemCapa: completo.imagemCapa ?? '',
       })
     } catch (err) {
       setErro(extractError(err))
@@ -103,6 +153,11 @@ export default function ConteudosPage() {
         conteudo: form.conteudo,
         categoria: form.categoria,
         publicado: form.publicado,
+        publico: form.publico,
+        // Vão como `null` quando o campo fica vazio, e não como `undefined`:
+        // é assim que a API entende "apagar" em vez de "não mexer".
+        agendadoEm: paraIso(form.agendadoEm),
+        imagemCapa: form.imagemCapa.trim() || null,
       }
       if (form.id) await atualizarConteudo(form.id, payload)
       else await criarConteudo(payload)
@@ -166,6 +221,29 @@ export default function ConteudosPage() {
               ]}
             />
           </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <Select
+              label="Público-alvo"
+              value={form.publico}
+              onChange={(e) =>
+                setForm({ ...form, publico: e.target.value as PublicoAlvo })
+              }
+              options={PUBLICOS}
+            />
+            <Input
+              label="Publicar a partir de (opcional)"
+              type="datetime-local"
+              value={form.agendadoEm}
+              onChange={(e) => setForm({ ...form, agendadoEm: e.target.value })}
+            />
+          </div>
+          <Input
+            label="Imagem de capa (opcional)"
+            type="url"
+            placeholder="https://..."
+            value={form.imagemCapa}
+            onChange={(e) => setForm({ ...form, imagemCapa: e.target.value })}
+          />
           <Textarea
             label="Conteúdo"
             value={form.conteudo}
@@ -207,6 +285,19 @@ export default function ConteudosPage() {
         >
           {conteudos.map((c) => (
             <Card key={c.id}>
+              {c.imagemCapa && (
+                <img
+                  src={c.imagemCapa}
+                  alt=""
+                  style={{
+                    width: '100%', height: 120, objectFit: 'cover',
+                    borderRadius: 'var(--radius-sm)', display: 'block',
+                  }}
+                  // Uma URL quebrada não deve deixar o cartão com o ícone de
+                  // imagem faltando: some com ela e o cartão segue inteiro.
+                  onError={(e) => { e.currentTarget.style.display = 'none' }}
+                />
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)' }}>
@@ -220,6 +311,21 @@ export default function ConteudosPage() {
                   label={c.publicado ? 'Publicado' : 'Rascunho'}
                   tint={c.publicado ? 'success' : 'warning'}
                 />
+              </div>
+
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {c.publico !== 'todos' && (
+                  <Badge label={ROTULO_PUBLICO[c.publico]} tint="primary" />
+                )}
+                {c.agendadoEm && new Date(c.agendadoEm) > new Date() && (
+                  <Badge
+                    label={`Agendado para ${new Date(c.agendadoEm).toLocaleString('pt-BR', {
+                      dateStyle: 'short',
+                      timeStyle: 'short',
+                    })}`}
+                    tint="warning"
+                  />
+                )}
               </div>
 
               {c.resumo && (
