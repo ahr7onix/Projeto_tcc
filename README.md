@@ -328,3 +328,42 @@ idade, gestação e condição individual do paciente.
 - Não há aprovação do paciente ao ser vinculado por um nutricionista
 - O CRN não é validado junto ao conselho profissional
 - A cobertura de testes concentra-se nas regras críticas, não na API inteira
+
+### Arquitetura
+
+Pontos levantados numa revisão de arquitetura do monorepo e conscientemente não
+resolvidos. Os dois defeitos que a mesma revisão encontrou — a divergência entre
+o `schema.sql` e as migrations, e as respostas obsoletas nas telas do painel —
+foram corrigidos, e o primeiro deles hoje tem verificação automática no CI.
+
+- **Os tipos de resposta da API são declarados três vezes**: no mapper do
+  service, em `apps/web/src/lib` e em `apps/mobile/src/lib/api`, somando 85
+  interfaces mantidas à mão. Renomear um campo na API passa no `typecheck` das
+  três aplicações e só aparece como campo em branco na tela — é a única falha
+  conhecida que o CI não alcança por construção. A correção seria gerar os tipos
+  a partir da API e verificar no CI que o arquivo gerado está em dia, o mesmo
+  padrão do `verificar-schema.mjs`. Não foi feita porque a raiz não usa
+  workspaces do npm de propósito (o Render instala cada serviço isolado pelo seu
+  `rootDir`), então o contrato compartilhado exige um gerador, e não um import.
+
+- **Quinze chamadas à API acontecem dentro de páginas do painel**, furando a
+  camada `lib/` que existe para isso. Como não têm tipo de retorno, a resposta é
+  `any` e o acesso aos campos deixa de ser verificado — o que agrava o ponto
+  acima justamente nas telas centrais. O app do paciente não tem nenhuma.
+
+- **O painel e o app não têm teste de comportamento**, só `typecheck` e lint no
+  CI. A escolha se sustenta enquanto a regra de negócio estiver toda na API, que
+  é onde ficam os 182 testes e as fórmulas de `common/glicemia` e
+  `common/nutricao`; deixa de se sustentar no dia em que os clientes ganharem
+  lógica própria.
+
+- **O painel busca dados com `useEffect` na mão, e o app usa react-query.** As
+  corridas de resposta que isso causava foram corrigidas uma a uma, com guarda
+  de cancelamento; unificar os dois em react-query é a correção de fundo, e
+  depende do item anterior — refatorar quinze telas sem teste é trabalho às
+  cegas.
+
+- **O painel mistura CSS modules e estilo inline** (5 arquivos contra 28), e o
+  inline não alcança `:hover`, `:focus-visible` nem media query. Uma passada de
+  acessibilidade — contraste e foco de teclado, que importam para o público
+  deste sistema — tocaria 28 arquivos em vez do bloco de tokens do `index.css`.

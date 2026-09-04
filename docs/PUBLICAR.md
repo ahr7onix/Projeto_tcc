@@ -124,6 +124,51 @@ qualquer coisa.
 
 ---
 
+## Trocar o banco por um sem prazo
+
+O banco do Render tem 30 dias de validade e leva a demonstração junto quando
+vence. Neon e Supabase têm plano gratuito sem prazo. A troca leva poucos
+minutos porque o `preparar-banco.mjs` monta a estrutura inteira do zero — não é
+preciso migrar dado nenhum enquanto o ambiente for de demonstração.
+
+**1. Crie o banco no provedor novo** e copie a string de conexão. Ela se parece
+com `postgres://usuario:senha@host/base?sslmode=require`.
+
+**2. No Render**, abra o serviço **nutricare-adj-api** → *Environment* e troque:
+
+| Variável | Valor |
+|---|---|
+| `DATABASE_URL` | a string de conexão do provedor novo |
+| `DATABASE_SSL` | `no-verify` para Supabase; `true` para Neon |
+
+O `no-verify` existe para provedores que servem certificado próprio. Se a API
+subir e o `/status` responder `banco: indisponivel` com erro de certificado, é
+esse valor que está errado — os modos aceitos estão comentados no
+`apps/api/src/database/database.module.ts`.
+
+**3. Salve.** O Render republica sozinho, e o `preparar-banco.mjs` roda no start:
+cria as tabelas, aplica as migrations e carrega o administrador inicial. Com
+`SEED_DEMO` em `true`, os pacientes fictícios voltam também.
+
+**4. Confira** em `/status` que o banco responde, e entre uma vez no painel para
+ver que o login funciona.
+
+**5. Fixe a mudança no repositório.** Trocar a variável só pelo painel do Render
+funciona, mas o `render.yaml` continuaria apontando para o banco antigo, e quem
+aplicasse o arquivo de novo voltaria atrás. Remova o bloco `databases:` do topo
+e troque o `fromDatabase` do `DATABASE_URL` por um `sync: false`, que diz ao
+Render para não gerenciar o valor:
+
+```yaml
+      - key: DATABASE_URL
+        sync: false
+```
+
+Se um dia houver dado que valha a pena preservar, aí sim é `pg_dump` do banco
+antigo e `psql` no novo, antes do passo 3.
+
+---
+
 ## Problemas comuns
 
 | O que acontece | Causa provável | O que fazer |
