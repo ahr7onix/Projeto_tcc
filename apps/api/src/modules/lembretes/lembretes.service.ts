@@ -22,7 +22,17 @@ export class LembretesService {
 
   private descreverQuando(r: Record<string, any>): string {
     if (!r.recorrente) {
-      return r.data_hora ? new Date(r.data_hora).toLocaleString('pt-BR') : 'sem data';
+      // Sem os segundos: um lembrete marcado para as 8h aparecia na tela do
+      // paciente como "21/08/2026, 08:00:25", que ninguem programou.
+      return r.data_hora
+        ? new Date(r.data_hora).toLocaleString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : 'sem data';
     }
     const hora = String(r.hora).slice(0, 5);
     const dias: number[] = r.dias_semana ?? [];

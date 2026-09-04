@@ -54,6 +54,25 @@ describe('LembretesService', () => {
       expect(data[0].quando).toBe('segunda, quarta, sexta às 08:00');
     });
 
+    it('should describe a one-off reminder without seconds', async () => {
+      const { pool } = criarPoolMock([
+        [
+          linhaLembrete({
+            recorrente: false,
+            hora: null,
+            dias_semana: null,
+            data_hora: '2026-08-21T11:00:00.000Z',
+          }),
+        ],
+      ]);
+      const service = new LembretesService(pool, criarVinculosMock());
+
+      const { data } = await service.listar(PACIENTE, {});
+
+      // Segundo nenhum: o paciente marca a hora, nao o instante.
+      expect(data[0].quando).toMatch(/^\d{2}\/\d{2}\/\d{4},? \d{2}:\d{2}$/);
+    });
+
     it('should treat an empty day list as every day', async () => {
       const { pool } = criarPoolMock([[linhaLembrete({ dias_semana: [] })]]);
       const service = new LembretesService(pool, criarVinculosMock());
