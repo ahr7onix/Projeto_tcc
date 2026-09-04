@@ -90,19 +90,28 @@ export default function ConteudosPage() {
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
-  const carregar = useCallback(async () => {
+  // `ativo` é opcional porque `carregar` também roda depois de salvar, fora de
+  // efeito: ali não há nada para cancelar. Sem o `setErro(null)`, um erro
+  // antigo ficava na tela mesmo depois de a lista recarregar com sucesso.
+  const carregar = useCallback(async (ativo: () => boolean = () => true) => {
     try {
       setLoading(true)
-      setConteudos(await listarConteudos(true))
+      setErro(null)
+      const lista = await listarConteudos(true)
+      if (ativo()) setConteudos(lista)
     } catch (err) {
-      setErro(extractError(err))
+      if (ativo()) setErro(extractError(err))
     } finally {
-      setLoading(false)
+      if (ativo()) setLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    carregar()
+    let cancelado = false
+    carregar(() => !cancelado)
+    return () => {
+      cancelado = true
+    }
   }, [carregar])
 
   async function abrirEdicao(c: Conteudo) {

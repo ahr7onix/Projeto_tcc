@@ -39,29 +39,47 @@ export default function AlimentacaoPage() {
   // vários blocos de refeições abertos ao mesmo tempo desfazem isso.
   const [expandidoId, setExpandidoId] = useState<string | null>(null)
 
-  const carregarPlanos = useCallback(async (pacienteId?: string) => {
-    try {
-      setLoading(true)
-      setErro(null)
-      setPlanos(await listarPlanos(pacienteId || undefined))
-    } catch (err) {
-      setErro(extractError(err))
-    } finally {
-      setLoading(false)
+  const carregarPlanos = useCallback(
+    async (pacienteId: string | undefined, ativo: () => boolean) => {
+      try {
+        setLoading(true)
+        setErro(null)
+        const lista = await listarPlanos(pacienteId || undefined)
+        if (ativo()) setPlanos(lista)
+      } catch (err) {
+        if (ativo()) setErro(extractError(err))
+      } finally {
+        if (ativo()) setLoading(false)
+      }
+    },
+    [],
+  )
+
+  useEffect(() => {
+    let cancelado = false
+    api
+      .get('/pacientes')
+      .then(({ data }) => {
+        if (cancelado) return
+        setPacientes(data.data.map((p: PacienteOption) => ({ id: p.id, nome: p.nome })))
+      })
+      .catch(() => {
+        if (!cancelado) setPacientes([])
+      })
+    return () => {
+      cancelado = true
     }
   }, [])
 
+  // Trocar de paciente antes de a lista anterior chegar deixava as duas
+  // respostas no ar: a mais lenta vencia e a tela mostrava os planos de um
+  // paciente com outro selecionado no filtro.
   useEffect(() => {
-    api
-      .get('/pacientes')
-      .then(({ data }) =>
-        setPacientes(data.data.map((p: PacienteOption) => ({ id: p.id, nome: p.nome }))),
-      )
-      .catch(() => setPacientes([]))
-  }, [])
-
-  useEffect(() => {
-    carregarPlanos(filtroPaciente)
+    let cancelado = false
+    carregarPlanos(filtroPaciente, () => !cancelado)
+    return () => {
+      cancelado = true
+    }
   }, [filtroPaciente, carregarPlanos])
 
   const ativos = useMemo(() => planos.filter((p) => p.ativo).length, [planos])

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AlertBanner, Badge, Btn, Card, EmptyState, StatTile } from '../../components/ui'
 import { api, extractError } from '../../lib/api'
@@ -49,7 +49,19 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
 
+  // Esta tela recarrega por três caminhos que não se coordenam: a montagem, o
+  // timer de 30s e cada evento de mensagem nova. Duas recargas podem ficar no
+  // ar ao mesmo tempo, e sem ordenação a mais lenta chegaria por último e
+  // devolveria números velhos ao painel.
+  //
+  // O contador diz qual é a recarga mais recente; as antigas descartam a
+  // própria resposta. Serve também de guarda de desmontagem: a limpeza do
+  // efeito avança o contador, então nada escreve estado depois de sair da tela.
+  const recargaAtual = useRef(0)
+
   const carregar = useCallback(async () => {
+    const minhaVez = ++recargaAtual.current
+    const atual = () => recargaAtual.current === minhaVez
     try {
       setErro(null)
       const [pacientesRes, alertasRes, registrosRes, mensagens] = await Promise.all([
@@ -58,14 +70,15 @@ export default function HomePage() {
         api.get('/registros', { params: { dias: 90, tipo: 'glicemia' } }),
         contarNaoLidas(),
       ])
+      if (!atual()) return
       setPacientes(pacientesRes.data.data ?? [])
       setResumo7(alertasRes)
       setRegistros(registrosRes.data.data ?? [])
       setNaoLidas(mensagens)
     } catch (err) {
-      setErro(extractError(err))
+      if (atual()) setErro(extractError(err))
     } finally {
-      setLoading(false)
+      if (atual()) setLoading(false)
     }
   }, [])
 
@@ -74,6 +87,7 @@ export default function HomePage() {
     const timer = window.setInterval(carregar, 30_000)
     const cancelarMensagens = assinarMensagens(() => { void carregar() })
     return () => {
+      recargaAtual.current++
       window.clearInterval(timer)
       cancelarMensagens()
     }

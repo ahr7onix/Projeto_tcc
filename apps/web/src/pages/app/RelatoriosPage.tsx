@@ -26,10 +26,20 @@ export default function RelatoriosPage() {
   const [erro, setErro] = useState<string | null>(null)
 
   useEffect(() => {
+    let cancelado = false
     api.get('/pacientes')
-      .then(({ data }) => setPacientes(data.data ?? []))
-      .catch((err) => setErro(extractError(err)))
-      .finally(() => setLoading(false))
+      .then(({ data }) => {
+        if (!cancelado) setPacientes(data.data ?? [])
+      })
+      .catch((err) => {
+        if (!cancelado) setErro(extractError(err))
+      })
+      .finally(() => {
+        if (!cancelado) setLoading(false)
+      })
+    return () => {
+      cancelado = true
+    }
   }, [])
 
   const filtrados = useMemo(() => {

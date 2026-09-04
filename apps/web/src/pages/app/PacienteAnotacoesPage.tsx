@@ -25,14 +25,27 @@ export default function PacienteAnotacoesPage() {
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
+  // Ir de um paciente para outro não desmonta esta tela — o React Router só
+  // troca o parâmetro da rota. Sem a guarda, as duas buscas ficavam no ar e a
+  // mais lenta vencia: dava para ver as anotações de um paciente no prontuário
+  // de outro.
   useEffect(() => {
+    let cancelado = false
     Promise.all([api.get(`/pacientes/${pacienteId}`), listarAnotacoes(pacienteId)])
       .then(([pacienteResponse, anotacoesData]) => {
+        if (cancelado) return
         setPaciente(pacienteResponse.data)
         setAnotacoes(anotacoesData)
       })
-      .catch((err) => setErro(extractError(err)))
-      .finally(() => setLoading(false))
+      .catch((err) => {
+        if (!cancelado) setErro(extractError(err))
+      })
+      .finally(() => {
+        if (!cancelado) setLoading(false)
+      })
+    return () => {
+      cancelado = true
+    }
   }, [pacienteId])
 
   async function salvar(event: FormEvent) {

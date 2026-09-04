@@ -49,7 +49,9 @@ export default function AdminPage() {
 
   const ehAdmin = user?.role === 'administrador'
 
-  const carregar = useCallback(async () => {
+  // `ativo` é opcional: `carregar` também roda como recarga depois de excluir
+  // um usuário, fora de efeito, onde não há filtro novo para invalidar.
+  const carregar = useCallback(async (ativo: () => boolean = () => true) => {
     try {
       setLoading(true)
       setErro(null)
@@ -57,22 +59,30 @@ export default function AdminPage() {
         obterMetricas(),
         listarUsuarios({ tipo: tipo || undefined, busca: busca || undefined }),
       ])
+      if (!ativo()) return
       setMetricas(m)
       setUsuarios(u)
     } catch (err) {
-      setErro(extractError(err))
+      if (ativo()) setErro(extractError(err))
     } finally {
-      setLoading(false)
+      if (ativo()) setLoading(false)
     }
   }, [tipo, busca])
 
+  // O debounce segura a consulta por tecla, mas não desfaz a que já saiu:
+  // trocar o tipo no meio de uma busca deixava as duas no ar e a mais lenta
+  // vencia, mostrando a lista do filtro anterior.
   useEffect(() => {
     if (!ehAdmin) {
       setLoading(false)
       return
     }
-    const timer = setTimeout(carregar, busca ? 300 : 0)
-    return () => clearTimeout(timer)
+    let cancelado = false
+    const timer = setTimeout(() => carregar(() => !cancelado), busca ? 300 : 0)
+    return () => {
+      cancelado = true
+      clearTimeout(timer)
+    }
   }, [carregar, ehAdmin, busca])
 
   async function excluir(u: UsuarioAdmin) {

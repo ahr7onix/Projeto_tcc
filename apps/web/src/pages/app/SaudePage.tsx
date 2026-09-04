@@ -85,7 +85,9 @@ function SaudeDetalhePage({ pacienteInicial = '' }: { pacienteInicial?: string }
   const [excluindoId, setExcluindoId] = useState<string | null>(null)
   const [suspendendoId, setSuspendendoId] = useState<string | null>(null)
 
-  const carregar = useCallback(async (id: string) => {
+  // `ativo` é opcional porque `carregar` também roda como recarga depois de uma
+  // ação do usuário, fora de efeito: ali não há troca de paciente para desfazer.
+  const carregar = useCallback(async (id: string, ativo: () => boolean = () => true) => {
     try {
       setLoading(true)
       setErro(null)
@@ -100,26 +102,38 @@ function SaudeDetalhePage({ pacienteInicial = '' }: { pacienteInicial?: string }
         listarMedicamentos(id),
         buscarResumoEmocional(id, 30),
       ])
+      if (!ativo()) return
       setRegistros(lista)
       setEvolucao(serie)
       setMedicamentos(remedios)
       setEmocional(resumo)
     } catch (err) {
-      setErro(extractError(err))
+      if (ativo()) setErro(extractError(err))
     } finally {
-      setLoading(false)
+      if (ativo()) setLoading(false)
     }
   }, [])
 
   useEffect(() => {
+    let cancelado = false
     api
       .get('/pacientes')
-      .then(({ data }) =>
-        setPacientes(data.data.map((p: PacienteOption) => ({ id: p.id, nome: p.nome }))),
-      )
-      .catch(() => setPacientes([]))
+      .then(({ data }) => {
+        if (cancelado) return
+        setPacientes(data.data.map((p: PacienteOption) => ({ id: p.id, nome: p.nome })))
+      })
+      .catch(() => {
+        if (!cancelado) setPacientes([])
+      })
+    return () => {
+      cancelado = true
+    }
   }, [])
 
+  // A guarda `cancelado` é o que impede a página de atribuir dado clínico ao
+  // paciente errado: trocar de paciente antes de as quatro consultas voltarem
+  // deixava dois conjuntos de respostas no ar, e o mais lento vencia — medidas,
+  // medicamentos e humor de um paciente apareciam sob o nome de outro.
   useEffect(() => {
     if (!pacienteId) {
       setRegistros([])
@@ -128,7 +142,11 @@ function SaudeDetalhePage({ pacienteInicial = '' }: { pacienteInicial?: string }
       setEmocional(null)
       return
     }
-    carregar(pacienteId)
+    let cancelado = false
+    carregar(pacienteId, () => !cancelado)
+    return () => {
+      cancelado = true
+    }
   }, [pacienteId, carregar])
 
   const pacienteNome = useMemo(
@@ -581,10 +599,20 @@ function SaudePacientesPage() {
   const [erro, setErro] = useState<string | null>(null)
 
   useEffect(() => {
+    let cancelado = false
     api.get('/pacientes')
-      .then(({ data }) => setPacientes(data.data ?? []))
-      .catch((err) => setErro(extractError(err)))
-      .finally(() => setLoading(false))
+      .then(({ data }) => {
+        if (!cancelado) setPacientes(data.data ?? [])
+      })
+      .catch((err) => {
+        if (!cancelado) setErro(extractError(err))
+      })
+      .finally(() => {
+        if (!cancelado) setLoading(false)
+      })
+    return () => {
+      cancelado = true
+    }
   }, [])
 
   const filtrados = useMemo(() => {
