@@ -1,7 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { AlertBanner, Btn, Paginacao, usePaginacao } from '../../components/ui'
+import { AlertBanner, Btn, Card, Paginacao, usePaginacao } from '../../components/ui'
+import GraficoLinha, { type PontoGrafico } from '../../components/GraficoLinha'
+import SaudePaciente from '../../components/SaudePaciente'
+import { CLASSIFICACAO_LABEL, MOMENTO_LABEL, type Classificacao, type Severidade } from '../../lib/alertas'
 import { api, extractError } from '../../lib/api'
+import { contar } from '../../lib/texto'
 import s from './PacienteDetalhePage.module.css'
 
 // Cada seção é uma tela própria, com URL própria: o nutricionista pode voltar
@@ -9,13 +13,6 @@ import s from './PacienteDetalhePage.module.css'
 type Secao = 'informacoes' | 'glicemia' | 'alimentacao' | 'saude'
 
 const SECOES: Secao[] = ['informacoes', 'glicemia', 'alimentacao', 'saude']
-
-const momentoLabel: Record<string, string> = {
-  jejum: 'Jejum',
-  pre: 'Pré-refeição',
-  pos: 'Pós-refeição',
-  aleatorio: 'Aleatório',
-}
 
 const refeicaoLabel: Record<string, string> = {
   cafe: 'Café da manhã',
@@ -25,12 +22,31 @@ const refeicaoLabel: Record<string, string> = {
   ceia: 'Ceia',
 }
 
-function imcStatus(imc: number) {
-  if (imc < 18.5) return { label: 'Abaixo do peso', color: 'var(--primary)', fill: imc / 40 }
-  if (imc < 25) return { label: 'Peso normal', color: 'var(--success)', fill: imc / 40 }
-  if (imc < 30) return { label: 'Sobrepeso', color: 'var(--warning)', fill: imc / 40 }
-  return { label: 'Obesidade', color: 'var(--danger)', fill: Math.min(imc / 40, 1) }
+/**
+ * A cor do registro sai da avaliação que a API devolve com ele, e não de um
+ * limite fixo. Antes a tela pintava de vermelho tudo acima de 126 mg/dL: 143
+ * antes de uma refeição (alvo 70-180) aparecia como problema, e 62 de
+ * madrugada -- hipoglicemia -- aparecia em verde.
+ */
+function classeDaSeveridade(severidade: Severidade | undefined): string {
+  if (severidade === 'critico') return s.badgeDanger
+  if (severidade === 'atencao') return s.badgeWarning
+  return s.badgeSuccess
 }
+
+/** Os registros chegam sem tipo do `/registros`, entao a chave entra como texto. */
+function rotuloClassificacao(classificacao: string): string {
+  return CLASSIFICACAO_LABEL[classificacao as Classificacao] ?? classificacao
+}
+
+function corDaSeveridade(severidade: Severidade | undefined): string | undefined {
+  if (severidade === 'critico') return 'var(--danger)'
+  if (severidade === 'atencao') return 'var(--warning)'
+  return undefined
+}
+
+/** Faixa geral usada como fundo do gráfico; a de cada momento vai na tabela. */
+const FAIXA_GERAL = { min: 70, max: 180 }
 
 function dataHora(iso: string) {
   return new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
@@ -87,8 +103,23 @@ export default function PacienteDetalhePage() {
   // Os hooks precisam vir antes de qualquer return condicional: a ordem de
   // chamada tem que ser a mesma em todo render.
   const pagGlicemia = usePaginacao(regsGlicemia, 15, abaAtual)
+
+  // A API entrega do mais recente para o mais antigo; o gráfico lê ao contrário.
+  // 30 pontos já enchem a largura do cartão -- mais que isso vira borrão.
+  const pontosGlicemia = useMemo<PontoGrafico[]>(
+    () =>
+      regsGlicemia
+        .filter((r) => r.valor != null && r.dataHora)
+        .slice(0, 30)
+        .reverse()
+        .map((r) => ({
+          data: r.dataHora,
+          valor: Number(r.valor),
+          cor: corDaSeveridade(r.alerta?.severidade),
+        })),
+    [regsGlicemia],
+  )
   const pagAlimentacao = usePaginacao(regsAlimentacao, 15, abaAtual)
-  const pagSaude = usePaginacao(saude, 10, abaAtual)
 
   if (loading) {
     return (
@@ -129,12 +160,12 @@ export default function PacienteDetalhePage() {
     },
     alimentacao: {
       title: 'Diário de refeições',
-      subtitle: `${regsAlimentacao.length} refeição${regsAlimentacao.length !== 1 ? 'ões' : ''} registrada${regsAlimentacao.length !== 1 ? 's' : ''}`,
+      subtitle: contar(regsAlimentacao.length, 'refeição registrada', 'refeições registradas'),
     },
     saude: {
       title: 'Dados de saúde',
       subtitle: ultimaSaude
-        ? `${saude.length} medição${saude.length !== 1 ? 'ões' : ''} registrada${saude.length !== 1 ? 's' : ''}`
+        ? contar(saude.length, 'medição registrada', 'medições registradas')
         : 'Nenhuma medição registrada',
     },
   }
@@ -251,6 +282,20 @@ export default function PacienteDetalhePage() {
       {abaAtual === 'glicemia' && (
         regsGlicemia.length > 0 ? (
           <div>
+            <Card
+              title="Evolução da glicemia (mg/dL)"
+              subtitle="Últimas 30 medições, com a faixa de referência geral (70–180 mg/dL) ao fundo. Cada ponto é avaliado pelo alvo do seu momento, que a tabela mostra abaixo."
+              style={{ marginBottom: 20 }}
+            >
+              <GraficoLinha
+                pontos={pontosGlicemia}
+                unidade=" mg/dL"
+                faixa={FAIXA_GERAL}
+                altura={240}
+                vazio="Registre ao menos uma medição para ver a evolução."
+              />
+            </Card>
+
             <div className={s.tableWrap}>
               <table className={s.dataTable}>
                 <thead>
@@ -258,18 +303,29 @@ export default function PacienteDetalhePage() {
                     <th>Data / Hora</th>
                     <th>Momento</th>
                     <th>Valor</th>
+                    <th>Situação</th>
                     <th>Observação</th>
                   </tr>
                 </thead>
                 <tbody>
                   {pagGlicemia.visiveis.map((r) => (
                     <tr key={r.id}>
-                      <td style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{dataHora(r.criadoEm)}</td>
-                      <td>{momentoLabel[r.momento] ?? r.momento ?? '—'}</td>
+                      <td style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{dataHora(r.dataHora)}</td>
+                      <td>{MOMENTO_LABEL[r.momento] ?? r.momento ?? '—'}</td>
                       <td>
-                        <span className={`${s.badge} ${r.valor > 126 ? s.badgeDanger : s.badgeSuccess}`}>
+                        <span className={`${s.badge} ${classeDaSeveridade(r.alerta?.severidade)}`}>
                           {r.valor} mg/dL
                         </span>
+                      </td>
+                      <td>
+                        {r.alerta ? (
+                          <>
+                            <div style={{ fontSize: 13 }}>{rotuloClassificacao(r.alerta.classificacao)}</div>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                              alvo {r.alerta.faixaReferencia.min}–{r.alerta.faixaReferencia.max}
+                            </div>
+                          </>
+                        ) : '—'}
                       </td>
                       <td style={{ color: 'var(--text-muted)', fontSize: 13 }}>{r.observacao || '—'}</td>
                     </tr>
@@ -313,8 +369,8 @@ export default function PacienteDetalhePage() {
                 <tbody>
                   {pagAlimentacao.visiveis.map((r) => (
                     <tr key={r.id}>
-                      <td style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{dataHora(r.criadoEm)}</td>
-                      <td style={{ fontWeight: 600 }}>{refeicaoLabel[r.tipo_refeicao] ?? r.tipo_refeicao ?? '—'}</td>
+                      <td style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{dataHora(r.dataHora)}</td>
+                      <td style={{ fontWeight: 600 }}>{refeicaoLabel[r.tipoRefeicao] ?? r.tipoRefeicao ?? '—'}</td>
                       <td style={{ color: 'var(--text-muted)' }}>{r.descricao || '—'}</td>
                       <td>{r.carboidratos ? `${r.carboidratos} g` : '—'}</td>
                     </tr>
@@ -342,85 +398,10 @@ export default function PacienteDetalhePage() {
       )}
 
       {/* ── SAÚDE ── */}
+      {/* Medidas, evolução em gráfico, medicamentos e bem-estar: tudo o que a
+          aba mostra vem do painel, que também sabe cadastrar uma nova medida. */}
       {abaAtual === 'saude' && (
-        ultimaSaude ? (
-          <div>
-            <div className={s.statGrid} style={{ marginBottom: 20 }}>
-              <div className={s.statCard}>
-                <div className={s.statLabel}>Peso</div>
-                <div className={s.statValue}>
-                  {ultimaSaude.peso}
-                  <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-muted)', marginLeft: 4 }}>kg</span>
-                </div>
-              </div>
-              <div className={s.statCard}>
-                <div className={s.statLabel}>Altura</div>
-                <div className={s.statValue}>
-                  {ultimaSaude.altura}
-                  <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-muted)', marginLeft: 4 }}>cm</span>
-                </div>
-              </div>
-              <div className={s.statCard}>
-                <div className={s.statLabel}>IMC</div>
-                <div className={s.statValue}>{ultimaSaude.imc}</div>
-                {ultimaSaude.imc && (() => {
-                  const st = imcStatus(Number(ultimaSaude.imc))
-                  return (
-                    <>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: st.color, marginTop: 4 }}>{st.label}</div>
-                      <div className={s.imcBar}>
-                        <div className={s.imcFill} style={{ width: `${st.fill * 100}%`, background: st.color }} />
-                      </div>
-                    </>
-                  )
-                })()}
-              </div>
-            </div>
-
-            {/* Histórico completo, da medição mais recente para a mais antiga. */}
-            <div className={s.tableWrap}>
-              <table className={s.dataTable}>
-                <thead>
-                  <tr>
-                    <th>Data</th>
-                    <th>Peso</th>
-                    <th>Altura</th>
-                    <th>IMC</th>
-                    <th>Observação</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pagSaude.visiveis.map((m: any, i: number) => (
-                    <tr key={m.id ?? i}>
-                      <td style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                        {new Date(m.criadoEm).toLocaleDateString('pt-BR')}
-                      </td>
-                      <td>{m.peso ? `${m.peso} kg` : '—'}</td>
-                      <td>{m.altura ? `${m.altura} cm` : '—'}</td>
-                      <td>{m.imc ?? '—'}</td>
-                      <td style={{ color: 'var(--text-muted)', fontSize: 13 }}>{m.observacao || '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <Paginacao
-              pagina={pagSaude.pagina}
-              totalPaginas={pagSaude.totalPaginas}
-              total={pagSaude.total}
-              primeiro={pagSaude.primeiro}
-              ultimo={pagSaude.ultimo}
-              onChange={pagSaude.irPara}
-              rotulo="medições"
-            />
-          </div>
-        ) : (
-          <div className={s.empty}>
-            <div className={s.emptyIcon}><HeartIcon /></div>
-            <p className={s.emptyTitle}>Sem dados antropométricos</p>
-            <p className={s.emptyMsg}>O paciente ainda não registrou peso, altura ou IMC no aplicativo.</p>
-          </div>
-        )
+        <SaudePaciente pacienteId={pacienteId} pacienteNome={paciente.nome} />
       )}
     </div>
   )

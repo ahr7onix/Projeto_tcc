@@ -1,23 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
 import {
   AlertBanner,
   Badge,
   Btn,
   Card,
   EmptyState,
-  PageHeader,
   Paginacao,
   ProgressBar,
-  Select,
   StatTile,
   usePaginacao,
-} from '../../components/ui'
-import GraficoLinha from '../../components/GraficoLinha'
-import MedidaModal from '../../components/MedidaModal'
-import MedicamentoModal from '../../components/MedicamentoModal'
-import { api, extractError } from '../../lib/api'
-import PatientPicker from '../../components/PatientPicker'
+} from './ui'
+import GraficoLinha from './GraficoLinha'
+import MedidaModal from './MedidaModal'
+import MedicamentoModal from './MedicamentoModal'
+import { extractError } from '../lib/api'
 import {
   buscarEvolucao,
   excluirAntropometria,
@@ -25,22 +21,21 @@ import {
   rotuloRisco,
   type EvolucaoAntropometrica,
   type RegistroAntropometrico,
-} from '../../lib/antropometria'
+} from '../lib/antropometria'
 import {
   listarMedicamentos,
   suspenderMedicamento,
   type Medicamento,
-} from '../../lib/medicamentos'
+} from '../lib/medicamentos'
 import {
   buscarResumoEmocional,
   TINT_ESTADO,
   type ResumoEmocional,
-} from '../../lib/emocional'
+} from '../lib/emocional'
 
-interface PacienteOption {
-  id: string
-  nome: string
-  email: string
+interface Props {
+  pacienteId: string
+  pacienteNome: string
 }
 
 function formatarData(iso: string): string {
@@ -67,11 +62,13 @@ function tintDoRisco(risco: string | null): 'success' | 'warning' | 'danger' {
   return 'warning'
 }
 
-function SaudeDetalhePage({ pacienteInicial = '' }: { pacienteInicial?: string }) {
-  const navigate = useNavigate()
-  const [pacientes, setPacientes] = useState<PacienteOption[]>([])
-  const [pacienteId, setPacienteId] = useState(pacienteInicial)
-
+/**
+ * Painel de saude de um paciente: medidas corporais com a evolucao em grafico,
+ * medicamentos e bem-estar. Mora dentro da aba "Saude" da ficha do paciente,
+ * por isso nao traz cabecalho de pagina nem seletor de paciente -- quem resolve
+ * as duas coisas e a ficha.
+ */
+export default function SaudePaciente({ pacienteId, pacienteNome }: Props) {
   const [registros, setRegistros] = useState<RegistroAntropometrico[]>([])
   const [evolucao, setEvolucao] = useState<EvolucaoAntropometrica | null>(null)
   const [medicamentos, setMedicamentos] = useState<Medicamento[]>([])
@@ -114,22 +111,6 @@ function SaudeDetalhePage({ pacienteInicial = '' }: { pacienteInicial?: string }
     }
   }, [])
 
-  useEffect(() => {
-    let cancelado = false
-    api
-      .get('/pacientes')
-      .then(({ data }) => {
-        if (cancelado) return
-        setPacientes(data.data.map((p: PacienteOption) => ({ id: p.id, nome: p.nome })))
-      })
-      .catch(() => {
-        if (!cancelado) setPacientes([])
-      })
-    return () => {
-      cancelado = true
-    }
-  }, [])
-
   // A guarda `cancelado` é o que impede a página de atribuir dado clínico ao
   // paciente errado: trocar de paciente antes de as quatro consultas voltarem
   // deixava dois conjuntos de respostas no ar, e o mais lento vencia — medidas,
@@ -148,11 +129,6 @@ function SaudeDetalhePage({ pacienteInicial = '' }: { pacienteInicial?: string }
       cancelado = true
     }
   }, [pacienteId, carregar])
-
-  const pacienteNome = useMemo(
-    () => pacientes.find((p) => p.id === pacienteId)?.nome ?? '',
-    [pacientes, pacienteId],
-  )
 
   // Uma lista por bloco: o nutricionista pode estar na pagina 3 das medidas sem
   // que isso mexa na lista de medicamentos ao lado.
@@ -216,59 +192,19 @@ function SaudeDetalhePage({ pacienteInicial = '' }: { pacienteInicial?: string }
 
   return (
     <div>
-      {pacienteInicial && (
-        <Btn variant="ghost" onClick={() => navigate('/saude')} style={{ marginBottom: 8 }}>
-          ← Voltar para Saúde
-        </Btn>
-      )}
-      <PageHeader
-        eyebrow="Indicadores"
-        title="Saúde"
-        subtitle="Medidas corporais, medicamentos e bem-estar de cada paciente."
-        action={
-          <Btn disabled={!pacienteId} onClick={() => setMedidaAberta(true)}>
-            + Nova medida
-          </Btn>
-        }
-      />
+      <div style={barraAcoes}>
+        {ultima && (
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+            Última medida em {formatarData(ultima.dataMedicao)} · {registros.length} registro
+            {registros.length === 1 ? '' : 's'} no histórico
+          </span>
+        )}
+        <Btn onClick={() => setMedidaAberta(true)}>+ Nova medida</Btn>
+      </div>
 
       {erro && <AlertBanner message={erro} />}
 
-      {!pacienteInicial && <Card style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', gap: 16, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-          <div style={{ minWidth: 280, flex: 1 }}>
-            <Select
-              value={pacienteId}
-              onChange={(e) => setPacienteId(e.target.value)}
-              label="Paciente"
-              options={[
-                { value: '', label: 'Selecione um paciente' },
-                ...pacientes.map((p) => ({ value: p.id, label: p.nome })),
-              ]}
-            />
-          </div>
-          {ultima && (
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-soft)' }}>
-                Última medida em {formatarData(ultima.dataMedicao)}
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                {registros.length} registro{registros.length === 1 ? '' : 's'} no histórico
-              </div>
-            </div>
-          )}
-        </div>
-      </Card>}
-
-      {!pacienteId ? (
-        <Card>
-          <EmptyState
-            icon={<HeartIcon />}
-            title="Escolha um paciente"
-            message="Selecione acima para ver as medidas, os medicamentos e o bem-estar registrados."
-          />
-        </Card>
-      ) : loading ? (
+      {loading ? (
         <Card>
           <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)' }}>
             Carregando dados do paciente...
@@ -568,7 +504,7 @@ function SaudeDetalhePage({ pacienteInicial = '' }: { pacienteInicial?: string }
         </div>
       )}
 
-      {medidaAberta && pacienteId && (
+      {medidaAberta && (
         <MedidaModal
           pacienteId={pacienteId}
           pacienteNome={pacienteNome}
@@ -578,7 +514,7 @@ function SaudeDetalhePage({ pacienteInicial = '' }: { pacienteInicial?: string }
         />
       )}
 
-      {medicamentoAberto && pacienteId && (
+      {medicamentoAberto && (
         <MedicamentoModal
           pacienteId={pacienteId}
           pacienteNome={pacienteNome}
@@ -591,83 +527,15 @@ function SaudeDetalhePage({ pacienteInicial = '' }: { pacienteInicial?: string }
   )
 }
 
-function SaudePacientesPage() {
-  const navigate = useNavigate()
-  const [pacientes, setPacientes] = useState<PacienteOption[]>([])
-  const [busca, setBusca] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [erro, setErro] = useState<string | null>(null)
 
-  useEffect(() => {
-    let cancelado = false
-    api.get('/pacientes')
-      .then(({ data }) => {
-        if (!cancelado) setPacientes(data.data ?? [])
-      })
-      .catch((err) => {
-        if (!cancelado) setErro(extractError(err))
-      })
-      .finally(() => {
-        if (!cancelado) setLoading(false)
-      })
-    return () => {
-      cancelado = true
-    }
-  }, [])
-
-  const filtrados = useMemo(() => {
-    const termo = busca.trim().toLocaleLowerCase()
-    return pacientes.filter((paciente) => paciente.nome.toLocaleLowerCase().includes(termo))
-  }, [busca, pacientes])
-
-  return (
-    <div>
-      <PageHeader eyebrow="Indicadores" title="Saúde" subtitle="Escolha um paciente para consultar medidas, medicamentos e bem-estar." />
-      {erro && <div style={{ marginBottom: 16 }}><AlertBanner message={erro} /></div>}
-      <div style={{ display: 'flex', alignItems: 'end', gap: 16, flexWrap: 'wrap', marginBottom: 24 }}>
-        <div style={{ flex: 1, minWidth: 240 }}>
-          <PatientPicker
-            patients={pacientes}
-            value={busca}
-            label="Localizar paciente"
-            placeholder="Digite o nome do paciente..."
-            onChange={setBusca}
-            onSelect={(patient) => navigate(`/saude/${patient.id}`)}
-          />
-        </div>
-        <span style={{ color: 'var(--text-muted)', fontSize: 13, paddingBottom: 10 }}>{filtrados.length} paciente{filtrados.length === 1 ? '' : 's'}</span>
-      </div>
-      {loading ? <div style={feedback}>Carregando pacientes...</div> : filtrados.length === 0 ? (
-        <EmptyState icon={<HeartIcon />} title={busca ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado'} message={busca ? 'Tente pesquisar por outro nome.' : 'Os pacientes cadastrados no aplicativo aparecerão aqui.'} />
-      ) : (
-        <div style={listaPacientes}>
-          {filtrados.map((paciente) => (
-            <div key={paciente.id} style={linhaPaciente}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-                <div style={avatarPaciente}>{paciente.nome.charAt(0).toUpperCase()}</div>
-                <div style={{ minWidth: 0 }}><div style={nomePaciente}>{paciente.nome}</div><div style={emailPaciente}>{paciente.email}</div></div>
-              </div>
-              <Btn size="sm" onClick={() => navigate(`/saude/${paciente.id}`)}>Ver Saúde</Btn>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
+const barraAcoes: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'flex-end',
+  gap: 12,
+  flexWrap: 'wrap',
+  marginBottom: 20,
 }
-
-export default function SaudePage() {
-  const { pacienteId } = useParams<{ pacienteId?: string }>()
-  return pacienteId ? <SaudeDetalhePage pacienteInicial={pacienteId} /> : <SaudePacientesPage />
-}
-
-const feedback: React.CSSProperties = { padding: 48, textAlign: 'center', color: 'var(--text-muted)' }
-const listaPacientes: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-card)' }
-const linhaPaciente: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '16px 20px', borderBottom: '1px solid var(--border)' }
-const avatarPaciente: React.CSSProperties = { width: 40, height: 40, borderRadius: '50%', background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }
-const nomePaciente: React.CSSProperties = { fontSize: 14, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
-const emailPaciente: React.CSSProperties = { fontSize: 12, color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
-
 
 const linha: React.CSSProperties = {
   display: 'flex',
@@ -738,13 +606,6 @@ function SmileIcon() {
       <circle cx="12" cy="12" r="9" />
       <path d="M8 14s1.5 2 4 2 4-2 4-2" />
       <path d="M9 9h.01M15 9h.01" />
-    </svg>
-  )
-}
-function HeartIcon() {
-  return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20.8 5.6a5.5 5.5 0 0 0-7.8 0L12 6.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 22l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z" />
     </svg>
   )
 }

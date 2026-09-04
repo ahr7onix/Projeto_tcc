@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
+import { GraficoLinha, type PontoGrafico } from '@/components/GraficoLinha';
 import { ScreenContainer } from '@/components/ScreenContainer';
 import { buscarEvolucao, listarAntropometria, rotuloRisco } from '@/lib/api/antropometria';
 import { buscarResumoEmocional, ESTADOS } from '@/lib/api/emocional';
@@ -14,6 +15,15 @@ import { colors, radius, spacing, typography } from '@/lib/theme';
 
 const DIAS_GLICEMIA = 7;
 
+/** Faixa geral de referência; o alvo de cada momento vem com o registro. */
+const FAIXA_GLICEMIA = { min: 70, max: 180 };
+
+const corDaSeveridade = (severidade: string | undefined): string | undefined => {
+  if (severidade === 'critico') return colors.danger;
+  if (severidade === 'atencao') return colors.warning;
+  return undefined;
+};
+
 const emojiDoEstado = (estado: string): string =>
   ESTADOS.find((e) => e.valor === estado)?.emoji ?? '🙂';
 
@@ -21,8 +31,16 @@ const emojiDoEstado = (estado: string): string =>
 const emojiDaMedia = (media: number): string =>
   ESTADOS[Math.min(ESTADOS.length - 1, Math.max(0, 5 - Math.round(media)))].emoji;
 
-const dataCurta = (iso: string): string =>
-  new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+/**
+ * A data da medição não tem hora, e a API a serializa como meia-noite UTC.
+ * Passar isso por `new Date` joga o dia para trás em qualquer fuso a oeste de
+ * Greenwich: uma medida de 21/08 aparecia como 20/08 no Brasil. Por isso o dia
+ * e o mês são lidos do próprio texto, sem converter para horário local.
+ */
+const dataCurta = (iso: string): string => {
+  const [, mes, dia] = iso.slice(0, 10).split('-');
+  return `${dia}/${mes}`;
+};
 
 export default function SaudeScreen() {
   const router = useRouter();
@@ -74,6 +92,21 @@ export default function SaudeScreen() {
       percentualAlvo: Math.round((noAlvo / valores.length) * 100),
     };
   }, [registros]);
+
+  // A API entrega do mais recente para o mais antigo; o gráfico lê ao contrário.
+  const pontosGlicemia = useMemo<PontoGrafico[]>(
+    () =>
+      (registros?.data ?? [])
+        .filter((r) => r.tipo === 'glicemia' && r.valor !== null)
+        .slice(0, 30)
+        .reverse()
+        .map((r) => ({
+          data: r.dataHora,
+          valor: r.valor as number,
+          cor: corDaSeveridade(r.alerta?.severidade),
+        })),
+    [registros],
+  );
 
   return (
     <ScreenContainer
@@ -148,6 +181,13 @@ export default function SaudeScreen() {
               </View>
             </View>
 
+            {(evolucao?.peso.length ?? 0) > 1 ? (
+              <View style={styles.grafico}>
+                <Text style={styles.graficoTitulo}>Evolução do peso (kg)</Text>
+                <GraficoLinha pontos={evolucao?.peso ?? []} unidade=" kg" />
+              </View>
+            ) : null}
+
             {evolucao?.variacaoPeso !== null && evolucao?.variacaoPeso !== undefined ? (
               <View style={styles.variacao}>
                 <Ionicons
@@ -207,6 +247,22 @@ export default function SaudeScreen() {
                 </Text>
               </View>
             </View>
+            {pontosGlicemia.length > 1 ? (
+              <View style={styles.grafico}>
+                <Text style={styles.graficoTitulo}>Evolução (mg/dL)</Text>
+                <GraficoLinha
+                  pontos={pontosGlicemia}
+                  unidade=" mg/dL"
+                  faixa={FAIXA_GLICEMIA}
+                />
+                <Text style={styles.graficoNota}>
+                  A faixa verde é a referência geral, de {FAIXA_GLICEMIA.min} a{' '}
+                  {FAIXA_GLICEMIA.max} mg/dL. Pontos em amarelo ou vermelho ficaram fora do
+                  alvo do seu momento.
+                </Text>
+              </View>
+            ) : null}
+
             <Text style={styles.rodapeCard}>
               {glicemia.total} {glicemia.total === 1 ? 'medição' : 'medições'} nos últimos{' '}
               {DIAS_GLICEMIA} dias.
@@ -337,6 +393,10 @@ const styles = StyleSheet.create({
   variacao: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   variacaoTexto: { ...typography.caption, color: colors.textSoft },
   rodapeCard: { ...typography.caption, color: colors.textMuted },
+
+  grafico: { marginTop: spacing.md, gap: spacing.xs },
+  graficoTitulo: { ...typography.caption, fontWeight: '600', color: colors.textSoft },
+  graficoNota: { ...typography.caption, fontSize: 12, color: colors.textMuted },
 
   humorTopo: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   humorEmoji: { fontSize: 34 },
