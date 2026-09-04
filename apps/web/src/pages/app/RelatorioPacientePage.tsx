@@ -4,6 +4,7 @@ import { AlertBanner, Badge, Btn, Card, EmptyState, PageHeader } from '../../com
 import { MOMENTO_LABEL } from '../../lib/alertas'
 import { extractError } from '../../lib/api'
 import { gerarRelatorio, type Relatorio, type RelatorioRegistroGlicemia, type RelatorioRegistroRefeicao } from '../../lib/relatorios'
+import { contar } from '../../lib/texto'
 
 const DIAS_HISTORICO = 3650
 const refeicaoLabel: Record<string, string> = {
@@ -85,13 +86,13 @@ export default function RelatorioPacientePage() {
           </div>
         </Card>
 
-        <Card title="Registros do profissional" subtitle={`${relatorio.anotacoes.length} anotação${relatorio.anotacoes.length === 1 ? '' : 'ões'} vinculada${relatorio.anotacoes.length === 1 ? '' : 's'} ao paciente`}>
+        <Card title="Registros do profissional" subtitle={`${contar(relatorio.anotacoes.length, 'anotação vinculada', 'anotações vinculadas')} ao paciente`}>
           {relatorio.anotacoes.length === 0 ? <EmptyState icon={<NoteIcon />} title="Nenhum registro complementar" message="Ainda não há observações, limitações ou recomendações registradas." /> : (
             <div style={styles.notes}>{relatorio.anotacoes.map((anotacao) => <article key={anotacao.id} style={styles.note}><div style={styles.noteHeader}><strong>{anotacaoLabel[anotacao.tipo] ?? anotacao.tipo}</strong><span>{new Date(anotacao.criadoEm).toLocaleString('pt-BR')}</span></div><div style={styles.noteText}>{anotacao.texto}</div>{anotacao.autorNome && <div style={styles.noteAuthor}>Registrado por {anotacao.autorNome}</div>}</article>)}</div>
           )}
         </Card>
 
-        <Card title="Controle glicêmico" subtitle={`${glicemia.total} medição${glicemia.total === 1 ? '' : 'ões'} registrada${glicemia.total === 1 ? '' : 's'}`}>
+        <Card title="Controle glicêmico" subtitle={contar(glicemia.total, 'medição registrada', 'medições registradas')}>
           {glicemia.total === 0 ? <EmptyState icon={<ChartIcon />} title="Nenhuma medição registrada" message="O paciente ainda não enviou medições pelo aplicativo." /> : (
             <>
               <div style={styles.metrics}>
@@ -104,7 +105,7 @@ export default function RelatorioPacientePage() {
           )}
         </Card>
 
-        <Card title="Alimentação" subtitle={`${alimentacao.total} refeição${alimentacao.total === 1 ? '' : 'ões'} registrada${alimentacao.total === 1 ? '' : 's'}`}>
+        <Card title="Alimentação" subtitle={contar(alimentacao.total, 'refeição registrada', 'refeições registradas')}>
           {alimentacao.total === 0 ? <EmptyState icon={<ForkIcon />} title="Nenhuma refeição registrada" message="O paciente ainda não registrou refeições no aplicativo." /> : (
             Object.entries(alimentacaoPorDia).map(([data, registros]) => <AlimentacaoDia key={data} data={data} registros={registros} />)
           )}
@@ -116,14 +117,14 @@ export default function RelatorioPacientePage() {
 
 function GlicemiaDia({ data, registros }: { data: string; registros: RelatorioRegistroGlicemia[] }) {
   return <div style={styles.dayBlock}>
-    <div style={styles.dayHeader}><strong>{data}</strong><span>{registros.length} medição{registros.length === 1 ? '' : 'ões'}</span></div>
+    <div style={styles.dayHeader}><strong>{data}</strong><span>{contar(registros.length, 'medição', 'medições')}</span></div>
     <div style={styles.tableScroll}><table style={styles.table}><thead><tr><th>Horário</th><th>Valor</th><th>Classificação</th><th>Momento</th><th>Observação</th></tr></thead><tbody>{registros.map((registro) => <tr key={registro.id}><td>{new Date(registro.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td><td><strong>{registro.valor} mg/dL</strong></td><td><Badge label={registro.classificacao} tint={corSeveridade(registro.severidade) as 'success' | 'warning' | 'danger'} /></td><td>{MOMENTO_LABEL[registro.momento] ?? registro.momento}</td><td>{registro.observacao || '—'}</td></tr>)}</tbody></table></div>
   </div>
 }
 
 function AlimentacaoDia({ data, registros }: { data: string; registros: RelatorioRegistroRefeicao[] }) {
   return <div style={styles.dayBlock}>
-    <div style={styles.dayHeader}><strong>{data}</strong><span>{registros.length} refeição{registros.length === 1 ? '' : 'ões'}</span></div>
+    <div style={styles.dayHeader}><strong>{data}</strong><span>{contar(registros.length, 'refeição', 'refeições')}</span></div>
     <div style={styles.tableScroll}><table style={styles.table}><thead><tr><th>Horário</th><th>Tipo de refeição</th><th>Alimentos consumidos</th><th>Quantidade / nutrição</th><th>Observação</th></tr></thead><tbody>{registros.map((registro) => <tr key={registro.id}><td>{new Date(registro.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td><td><strong>{refeicaoLabel[registro.tipoRefeicao] ?? registro.tipoRefeicao}</strong></td><td>{registro.descricao || '—'}</td><td>{registro.carboidratos != null ? `${registro.carboidratos} g de carboidratos` : '—'}</td><td>{registro.observacao || '—'}</td></tr>)}</tbody></table></div>
   </div>
 }

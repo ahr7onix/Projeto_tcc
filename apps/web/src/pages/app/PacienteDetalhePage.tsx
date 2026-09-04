@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { AlertBanner, Btn, Paginacao, usePaginacao } from '../../components/ui'
+import SaudePaciente from '../../components/SaudePaciente'
 import { api, extractError } from '../../lib/api'
+import { contar } from '../../lib/texto'
 import s from './PacienteDetalhePage.module.css'
 
 // Cada seção é uma tela própria, com URL própria: o nutricionista pode voltar
@@ -23,13 +25,6 @@ const refeicaoLabel: Record<string, string> = {
   lanche: 'Lanche',
   jantar: 'Jantar',
   ceia: 'Ceia',
-}
-
-function imcStatus(imc: number) {
-  if (imc < 18.5) return { label: 'Abaixo do peso', color: 'var(--primary)', fill: imc / 40 }
-  if (imc < 25) return { label: 'Peso normal', color: 'var(--success)', fill: imc / 40 }
-  if (imc < 30) return { label: 'Sobrepeso', color: 'var(--warning)', fill: imc / 40 }
-  return { label: 'Obesidade', color: 'var(--danger)', fill: Math.min(imc / 40, 1) }
 }
 
 function dataHora(iso: string) {
@@ -88,7 +83,6 @@ export default function PacienteDetalhePage() {
   // chamada tem que ser a mesma em todo render.
   const pagGlicemia = usePaginacao(regsGlicemia, 15, abaAtual)
   const pagAlimentacao = usePaginacao(regsAlimentacao, 15, abaAtual)
-  const pagSaude = usePaginacao(saude, 10, abaAtual)
 
   if (loading) {
     return (
@@ -129,12 +123,12 @@ export default function PacienteDetalhePage() {
     },
     alimentacao: {
       title: 'Diário de refeições',
-      subtitle: `${regsAlimentacao.length} refeição${regsAlimentacao.length !== 1 ? 'ões' : ''} registrada${regsAlimentacao.length !== 1 ? 's' : ''}`,
+      subtitle: contar(regsAlimentacao.length, 'refeição registrada', 'refeições registradas'),
     },
     saude: {
       title: 'Dados de saúde',
       subtitle: ultimaSaude
-        ? `${saude.length} medição${saude.length !== 1 ? 'ões' : ''} registrada${saude.length !== 1 ? 's' : ''}`
+        ? contar(saude.length, 'medição registrada', 'medições registradas')
         : 'Nenhuma medição registrada',
     },
   }
@@ -342,85 +336,10 @@ export default function PacienteDetalhePage() {
       )}
 
       {/* ── SAÚDE ── */}
+      {/* Medidas, evolução em gráfico, medicamentos e bem-estar: tudo o que a
+          aba mostra vem do painel, que também sabe cadastrar uma nova medida. */}
       {abaAtual === 'saude' && (
-        ultimaSaude ? (
-          <div>
-            <div className={s.statGrid} style={{ marginBottom: 20 }}>
-              <div className={s.statCard}>
-                <div className={s.statLabel}>Peso</div>
-                <div className={s.statValue}>
-                  {ultimaSaude.peso}
-                  <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-muted)', marginLeft: 4 }}>kg</span>
-                </div>
-              </div>
-              <div className={s.statCard}>
-                <div className={s.statLabel}>Altura</div>
-                <div className={s.statValue}>
-                  {ultimaSaude.altura}
-                  <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-muted)', marginLeft: 4 }}>cm</span>
-                </div>
-              </div>
-              <div className={s.statCard}>
-                <div className={s.statLabel}>IMC</div>
-                <div className={s.statValue}>{ultimaSaude.imc}</div>
-                {ultimaSaude.imc && (() => {
-                  const st = imcStatus(Number(ultimaSaude.imc))
-                  return (
-                    <>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: st.color, marginTop: 4 }}>{st.label}</div>
-                      <div className={s.imcBar}>
-                        <div className={s.imcFill} style={{ width: `${st.fill * 100}%`, background: st.color }} />
-                      </div>
-                    </>
-                  )
-                })()}
-              </div>
-            </div>
-
-            {/* Histórico completo, da medição mais recente para a mais antiga. */}
-            <div className={s.tableWrap}>
-              <table className={s.dataTable}>
-                <thead>
-                  <tr>
-                    <th>Data</th>
-                    <th>Peso</th>
-                    <th>Altura</th>
-                    <th>IMC</th>
-                    <th>Observação</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pagSaude.visiveis.map((m: any, i: number) => (
-                    <tr key={m.id ?? i}>
-                      <td style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                        {new Date(m.criadoEm).toLocaleDateString('pt-BR')}
-                      </td>
-                      <td>{m.peso ? `${m.peso} kg` : '—'}</td>
-                      <td>{m.altura ? `${m.altura} cm` : '—'}</td>
-                      <td>{m.imc ?? '—'}</td>
-                      <td style={{ color: 'var(--text-muted)', fontSize: 13 }}>{m.observacao || '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <Paginacao
-              pagina={pagSaude.pagina}
-              totalPaginas={pagSaude.totalPaginas}
-              total={pagSaude.total}
-              primeiro={pagSaude.primeiro}
-              ultimo={pagSaude.ultimo}
-              onChange={pagSaude.irPara}
-              rotulo="medições"
-            />
-          </div>
-        ) : (
-          <div className={s.empty}>
-            <div className={s.emptyIcon}><HeartIcon /></div>
-            <p className={s.emptyTitle}>Sem dados antropométricos</p>
-            <p className={s.emptyMsg}>O paciente ainda não registrou peso, altura ou IMC no aplicativo.</p>
-          </div>
-        )
+        <SaudePaciente pacienteId={pacienteId} pacienteNome={paciente.nome} />
       )}
     </div>
   )
