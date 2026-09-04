@@ -175,7 +175,16 @@ input::placeholder, textarea::placeholder {
   .msg-voltar { display: inline-flex !important; }
 }
 
+/* Blocos que so fazem sentido no papel: o historico corrido do relatorio,
+   que na tela e substituido pelo calendario. */
+.somente-impressao {
+  display: none;
+}
+
 @media print {
+  .somente-impressao {
+    display: block;
+  }
   .no-print,
   aside,
   nav {
