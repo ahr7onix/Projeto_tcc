@@ -100,6 +100,90 @@ describe('EmocionalService', () => {
     });
   });
 
+  describe('porDia', () => {
+    const emocionais = [
+      { dia: '2026-09-03', estado: 'muito_bem', fatores: 'dormi bem' },
+      { dia: '2026-09-01', estado: 'mal', fatores: 'noite mal dormida, trabalho' },
+      { dia: '2026-09-01', estado: 'mal', fatores: 'trabalho' },
+    ];
+
+    const glicemias = [
+      // dia bom: as duas dentro da faixa
+      { dia: '2026-09-03', valor: '98', momento: 'jejum' },
+      { dia: '2026-09-03', valor: '120', momento: 'pos_prandial' },
+      // dia ruim: uma acima do alvo
+      { dia: '2026-09-01', valor: '210', momento: 'pos_prandial' },
+      { dia: '2026-09-01', valor: '150', momento: 'jejum' },
+      // dia sem humor registrado: nao entra na lista
+      { dia: '2026-08-28', valor: '300', momento: 'jejum' },
+    ];
+
+    it('junta humor e glicemia do mesmo dia', async () => {
+      const { pool } = criarPoolMock([emocionais, glicemias]);
+      const service = new EmocionalService(pool, criarVinculosMock());
+
+      const { dias } = await service.porDia(PACIENTE);
+
+      // Do mais recente para o mais antigo, e sem o dia que so tem glicemia.
+      expect(dias.map((d) => d.dia)).toEqual(['2026-09-03', '2026-09-01']);
+
+      const bom = dias[0];
+      expect(bom.escalaDoDia).toBe(5);
+      expect(bom.glicemia).toEqual({
+        total: 2,
+        media: 109,
+        minima: 98,
+        maxima: 120,
+        foraDaFaixa: 0,
+      });
+
+      const ruim = dias[1];
+      expect(ruim.escalaDoDia).toBe(2);
+      expect(ruim.glicemia?.foraDaFaixa).toBe(1);
+      expect(ruim.fatores).toEqual(['noite mal dormida', 'trabalho']);
+    });
+
+    it('pede a data ao banco ja como texto ISO', async () => {
+      const { pool, query } = criarPoolMock([[], []]);
+      const service = new EmocionalService(pool, criarVinculosMock());
+
+      await service.porDia(PACIENTE);
+
+      // Com `data_hora::date` o driver devolve um objeto Date, e o dia virava
+      // "Wed Sep 02" -- a ordenacao e a formatacao na tela iam junto.
+      expect(query.mock.calls[0][0]).toContain("to_char(data_hora, 'YYYY-MM-DD')");
+      expect(query.mock.calls[1][0]).toContain("to_char(data_hora, 'YYYY-MM-DD')");
+    });
+
+    it('compara os dias bons com os ruins dizendo sobre quantos dias', async () => {
+      const { pool } = criarPoolMock([emocionais, glicemias]);
+      const service = new EmocionalService(pool, criarVinculosMock());
+
+      const { comparativo } = await service.porDia(PACIENTE);
+
+      expect(comparativo).toEqual({
+        diasComparaveis: 2,
+        diasBem: 1,
+        diasMal: 1,
+        mediaGlicemiaDiasBem: 109,
+        mediaGlicemiaDiasMal: 180,
+      });
+    });
+
+    it('mantem o dia com humor e sem glicemia, com glicemia nula', async () => {
+      const { pool } = criarPoolMock([[emocionais[0]], []]);
+      const service = new EmocionalService(pool, criarVinculosMock());
+
+      const { dias, comparativo } = await service.porDia(PACIENTE);
+
+      expect(dias).toHaveLength(1);
+      expect(dias[0].glicemia).toBeNull();
+      // Sem os dois lados nao ha o que comparar.
+      expect(comparativo.diasComparaveis).toBe(0);
+      expect(comparativo.mediaGlicemiaDiasBem).toBeNull();
+    });
+  });
+
   describe('remover', () => {
     it('should throw NotFoundException when nothing was deleted', async () => {
       const query = jest.fn().mockResolvedValueOnce({ rows: [], rowCount: 0 });

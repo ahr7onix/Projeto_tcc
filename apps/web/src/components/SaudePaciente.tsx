@@ -28,8 +28,10 @@ import {
   type Medicamento,
 } from '../lib/medicamentos'
 import {
+  buscarHumorGlicemia,
   buscarResumoEmocional,
   TINT_ESTADO,
+  type HumorGlicemia,
   type ResumoEmocional,
 } from '../lib/emocional'
 
@@ -73,6 +75,7 @@ export default function SaudePaciente({ pacienteId, pacienteNome }: Props) {
   const [evolucao, setEvolucao] = useState<EvolucaoAntropometrica | null>(null)
   const [medicamentos, setMedicamentos] = useState<Medicamento[]>([])
   const [emocional, setEmocional] = useState<ResumoEmocional | null>(null)
+  const [humorGlicemia, setHumorGlicemia] = useState<HumorGlicemia | null>(null)
 
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
@@ -90,7 +93,7 @@ export default function SaudePaciente({ pacienteId, pacienteNome }: Props) {
       setErro(null)
       // Os quatro blocos da página são independentes: buscar em paralelo evita
       // que a tela apareça em pedaços.
-      const [lista, serie, remedios, resumo] = await Promise.all([
+      const [lista, serie, remedios, resumo, cruzamento] = await Promise.all([
         // 365 é o teto aceito pela API. Antes buscávamos 60: com a lista
         // paginada o contador precisa refletir o histórico inteiro, senão ele
         // diria "de 60" para um paciente que tem mais medidas que isso.
@@ -98,12 +101,14 @@ export default function SaudePaciente({ pacienteId, pacienteNome }: Props) {
         buscarEvolucao(id),
         listarMedicamentos(id),
         buscarResumoEmocional(id, 30),
+        buscarHumorGlicemia(id, 30),
       ])
       if (!ativo()) return
       setRegistros(lista)
       setEvolucao(serie)
       setMedicamentos(remedios)
       setEmocional(resumo)
+      setHumorGlicemia(cruzamento)
     } catch (err) {
       if (ativo()) setErro(extractError(err))
     } finally {
@@ -121,6 +126,7 @@ export default function SaudePaciente({ pacienteId, pacienteNome }: Props) {
       setEvolucao(null)
       setMedicamentos([])
       setEmocional(null)
+      setHumorGlicemia(null)
       return
     }
     let cancelado = false
@@ -431,6 +437,105 @@ export default function SaudePaciente({ pacienteId, pacienteNome }: Props) {
             </Card>
           </div>
 
+          <Card
+            title="Humor e glicemia, dia a dia"
+            subtitle="Últimos 30 dias em que o paciente registrou como se sentiu."
+          >
+            {!humorGlicemia?.dias.length ? (
+              <EmptyState
+                icon={<SmileIcon />}
+                title="Sem dias para comparar"
+                message="Assim que o paciente registrar o humor, os dias aparecem aqui com a glicemia daquele dia ao lado."
+              />
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {/* A comparação vem com o número de dias porque uma média sobre
+                    dois dias não vale o mesmo que uma sobre trinta, e quem lê
+                    precisa enxergar isso antes de tirar conclusão. */}
+                {humorGlicemia.comparativo.diasComparaveis > 0 && (
+                  <div style={comparativo}>
+                    <div style={{ flex: 1, minWidth: 160 }}>
+                      <div style={subtitulo}>Dias em que se sentiu bem</div>
+                      <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--success)' }}>
+                        {humorGlicemia.comparativo.mediaGlicemiaDiasBem ?? '—'}
+                        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}> mg/dL</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                        média de {humorGlicemia.comparativo.diasBem} dia
+                        {humorGlicemia.comparativo.diasBem === 1 ? '' : 's'}
+                      </div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 160 }}>
+                      <div style={subtitulo}>Dias em que se sentiu mal</div>
+                      <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--warning)' }}>
+                        {humorGlicemia.comparativo.mediaGlicemiaDiasMal ?? '—'}
+                        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}> mg/dL</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                        média de {humorGlicemia.comparativo.diasMal} dia
+                        {humorGlicemia.comparativo.diasMal === 1 ? '' : 's'}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {humorGlicemia.dias.map((d) => (
+                    <div key={d.dia} style={linha}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>
+                            {formatarData(d.dia)}
+                          </span>
+                          {d.estados.map((e, i) => (
+                            <Badge
+                              key={`${d.dia}-${e.estado}-${i}`}
+                              label={e.rotulo}
+                              tint={TINT_ESTADO[e.estado] ?? 'primary'}
+                            />
+                          ))}
+                        </div>
+                        {d.fatores.length > 0 && (
+                          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                            {d.fatores.join(' · ')}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        {d.glicemia ? (
+                          <>
+                            <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)' }}>
+                              {d.glicemia.media} mg/dL
+                            </div>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                              {d.glicemia.total} medi{d.glicemia.total === 1 ? 'ção' : 'ções'}
+                              {/* Com uma medição só, a faixa repetiria a média: "99 · 99–99". */}
+                              {d.glicemia.total > 1 && ` · ${d.glicemia.minima}–${d.glicemia.maxima}`}
+                            </div>
+                            {d.glicemia.foraDaFaixa > 0 && (
+                              <div style={{ fontSize: 11, color: 'var(--warning)', fontWeight: 600 }}>
+                                {d.glicemia.foraDaFaixa} fora da faixa
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                            sem medição no dia
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={rodape}>
+                  Os dois registros aparecem lado a lado para leitura clínica. O sistema
+                  não estabelece relação de causa entre humor e glicemia.
+                </div>
+              </div>
+            )}
+          </Card>
+
           <Card title="Histórico de medidas">
             {registros.length === 0 ? (
               <EmptyState
@@ -547,6 +652,15 @@ const linha: React.CSSProperties = {
   background: 'var(--surface-alt)',
   flexWrap: 'wrap',
 }
+const comparativo: React.CSSProperties = {
+  display: 'flex',
+  gap: 16,
+  flexWrap: 'wrap',
+  padding: '14px 16px',
+  borderRadius: 'var(--radius-md)',
+  background: 'var(--surface-alt)',
+}
+
 const subtitulo: React.CSSProperties = {
   fontSize: 11,
   fontWeight: 600,

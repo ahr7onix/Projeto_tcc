@@ -2,6 +2,7 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
 import type { JwtPayload } from '../../common/guards/jwt.guard';
+import { avaliarGlicemia } from '../../common/glicemia/glicemia';
 import { VinculosService } from '../vinculos/vinculos.service';
 import { CreateEmocionalDto } from './dto/create-emocional.dto';
 
@@ -126,6 +127,139 @@ export class EmocionalService {
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5)
         .map(([fator, vezes]) => ({ fator, vezes })),
+    };
+  }
+
+  /**
+   * Humor e glicemia lado a lado, dia a dia.
+   *
+   * O briefing pede o registro emocional "para análise de possíveis relações
+   * com alterações glicêmicas". Os dois dados existiam em tabelas separadas e
+   * nunca se encontravam — este método os põe na mesma linha.
+   *
+   * O agrupamento e a média são feitos aqui, e não em SQL, porque contar
+   * quantas medições ficaram fora da faixa exige o alvo de cada momento do
+   * dia, que mora em common/glicemia. Refazer aquelas regras em SQL seria ter
+   * duas fontes de verdade para a mesma decisão clínica.
+   *
+   * ATENÇÃO: isto é descrição, não correlação. O número de dias costuma ser
+   * pequeno e nada aqui estabelece causa. Quem interpreta é o profissional.
+   */
+  async porDia(user: JwtPayload, pacienteId?: string, dias = 30) {
+    const { idPaciente } = await this.vinculos.resolverPacienteAlvo(user, pacienteId);
+    const janela = Math.min(Math.max(dias, 1), 365);
+
+    const [emocionais, glicemias] = await Promise.all([
+      this.pool.query(
+        // `data_hora::date` volta como objeto Date do driver, e "2026-09-02"
+        // virava "Wed Sep 02" ao ser recortado -- o que quebrava a ordenacao
+        // dos dias e a formatacao na tela. `to_char` devolve o texto ISO.
+        `SELECT to_char(data_hora, 'YYYY-MM-DD') AS dia, estado, fatores
+           FROM registro_emocional
+          WHERE id_paciente = $1
+            AND data_hora >= NOW() - ($2 || ' days')::interval
+          ORDER BY data_hora`,
+        [idPaciente, janela],
+      ),
+      this.pool.query(
+        `SELECT to_char(data_hora, 'YYYY-MM-DD') AS dia, valor, momento
+           FROM registro_glicemia
+          WHERE id_paciente = $1
+            AND data_hora >= NOW() - ($2 || ' days')::interval
+          ORDER BY data_hora`,
+        [idPaciente, janela],
+      ),
+    ]);
+
+    const porDia = new Map<
+      string,
+      {
+        estados: string[];
+        fatores: Set<string>;
+        valores: number[];
+        foraDaFaixa: number;
+      }
+    >();
+
+    const garantir = (dia: string) => {
+      if (!porDia.has(dia)) {
+        porDia.set(dia, { estados: [], fatores: new Set(), valores: [], foraDaFaixa: 0 });
+      }
+      return porDia.get(dia)!;
+    };
+
+    for (const r of emocionais.rows) {
+      const dia = String(r.dia);
+      const entrada = garantir(dia);
+      entrada.estados.push(r.estado);
+      for (const bruto of String(r.fatores ?? '').split(',')) {
+        const fator = bruto.trim().toLowerCase();
+        if (fator) entrada.fatores.add(fator);
+      }
+    }
+
+    for (const r of glicemias.rows) {
+      const dia = String(r.dia);
+      // Só interessam os dias que têm humor registrado: sem os dois lados não
+      // há o que comparar, e a lista encheria de dias sem informação nenhuma.
+      if (!porDia.has(dia)) continue;
+      const entrada = porDia.get(dia)!;
+      const valor = Number(r.valor);
+      entrada.valores.push(valor);
+      if (avaliarGlicemia(valor, r.momento).severidade !== 'normal') {
+        entrada.foraDaFaixa += 1;
+      }
+    }
+
+    const media = (valores: number[]) =>
+      valores.length
+        ? Math.round(valores.reduce((s, v) => s + v, 0) / valores.length)
+        : null;
+
+    const linhas = [...porDia.entries()]
+      .map(([dia, d]) => {
+        const somaPesos = d.estados.reduce((s, e) => s + (PESOS[e] ?? 3), 0);
+        const escalaDoDia = d.estados.length
+          ? Math.round((somaPesos / d.estados.length) * 10) / 10
+          : null;
+        return {
+          dia,
+          estados: d.estados.map((estado) => ({
+            estado,
+            rotulo: ROTULOS[estado] ?? estado,
+          })),
+          escalaDoDia,
+          fatores: [...d.fatores],
+          glicemia: d.valores.length
+            ? {
+                total: d.valores.length,
+                media: media(d.valores),
+                minima: Math.min(...d.valores),
+                maxima: Math.max(...d.valores),
+                foraDaFaixa: d.foraDaFaixa,
+              }
+            : null,
+        };
+      })
+      .sort((a, b) => (a.dia < b.dia ? 1 : -1));
+
+    // Comparativo grosseiro entre os dias bons e os ruins. Vem acompanhado da
+    // contagem de dias justamente para o profissional ver sobre quantos dias
+    // cada média foi calculada antes de dar qualquer peso a ela.
+    const comDados = linhas.filter((l) => l.glicemia && l.escalaDoDia !== null);
+    const bem = comDados.filter((l) => (l.escalaDoDia as number) >= 4);
+    const mal = comDados.filter((l) => (l.escalaDoDia as number) <= 2);
+
+    return {
+      periodoDias: janela,
+      dias: linhas,
+      comparativo: {
+        diasComparaveis: comDados.length,
+        diasBem: bem.length,
+        diasMal: mal.length,
+        mediaGlicemiaDiasBem: media(bem.map((l) => l.glicemia!.media as number)),
+        mediaGlicemiaDiasMal: media(mal.map((l) => l.glicemia!.media as number)),
+      },
     };
   }
 
