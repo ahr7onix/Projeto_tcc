@@ -33,8 +33,13 @@ export interface GlicemiaInput {
 }
 
 export interface RefeicaoInput {
-  descricao: string;
+  /** Opcional quando vem um alimento: a API monta a descricao pelo nome dele. */
+  descricao?: string;
   tipo_refeicao: string;
+  /** Alimento da tabela nutricional; com ele a API calcula os macronutrientes. */
+  alimentoId?: string;
+  quantidadeG?: number;
+  /** Estimativa do paciente, usada so no registro por texto livre. */
   carboidratos?: number;
   observacao?: string;
 }
@@ -48,6 +53,12 @@ export interface RegistroItem {
   descricao: string | null;
   tipoRefeicao: string | null;
   carboidratos: number | null;
+  proteinas: number | null;
+  lipidios: number | null;
+  kcal: number | null;
+  quantidadeG: number | null;
+  /** Preenchido so quando o registro veio da tabela, e nao de texto livre. */
+  alimento: { id: string; nome: string } | null;
   observacao: string | null;
   dataHora: string;
 }

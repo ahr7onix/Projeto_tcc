@@ -17,6 +17,12 @@ export class AdminController {
     return this.admin.metricas();
   }
 
+  /** Analise do grupo atendido: perfil, controle glicemico e acompanhamento. */
+  @Get('analise')
+  analise(@Query('dias') dias?: string) {
+    return this.admin.analise(dias ? Number(dias) : undefined);
+  }
+
   @Get('usuarios')
   listarUsuarios(
     @Query('tipo') tipo?: string,

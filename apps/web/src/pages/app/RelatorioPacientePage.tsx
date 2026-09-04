@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import CalendarioGlicemia from '../../components/CalendarioGlicemia'
 import { AlertBanner, Badge, Btn, Card, EmptyState, PageHeader } from '../../components/ui'
-import { MOMENTO_LABEL } from '../../lib/alertas'
+import { CLASSIFICACAO_LABEL, MOMENTO_LABEL, type Classificacao } from '../../lib/alertas'
 import { extractError } from '../../lib/api'
 import { gerarRelatorio, type Relatorio, type RelatorioRegistroGlicemia, type RelatorioRegistroRefeicao } from '../../lib/relatorios'
 import { contar } from '../../lib/texto'
@@ -13,6 +14,15 @@ const refeicaoLabel: Record<string, string> = {
   lanche: 'Lanche',
   jantar: 'Jantar',
   ceia: 'Ceia',
+}
+
+/** A API guarda a chave do enum; o relatorio e lido por gente. */
+const diabetesLabel: Record<string, string> = {
+  tipo1: 'Tipo 1',
+  tipo2: 'Tipo 2',
+  gestacional: 'Gestacional',
+  pre: 'Pré-diabetes',
+  outro: 'Outro',
 }
 
 const anotacaoLabel: Record<string, string> = {
@@ -30,6 +40,10 @@ function agruparPorDia<T extends { dataHora: string }>(registros: T[]) {
     return grupos
   }, {})
 }
+
+/** A API manda a chave crua ("hiperglicemia"); a tela mostra o rotulo. */
+const rotuloClassificacao = (classificacao: string): string =>
+  CLASSIFICACAO_LABEL[classificacao as Classificacao] ?? classificacao
 
 function corSeveridade(severidade: string) {
   if (severidade === 'critico') return 'danger'
@@ -77,7 +91,14 @@ export default function RelatorioPacientePage() {
           <div style={styles.infoGrid}>
             <Campo label="Nome" valor={paciente.nome} />
             <Campo label="E-mail" valor={paciente.email} />
-            <Campo label="Tipo de diabetes" valor={paciente.tipoDiabetes ?? 'Não informado'} />
+            <Campo
+              label="Tipo de diabetes"
+              valor={
+                paciente.tipoDiabetes
+                  ? diabetesLabel[paciente.tipoDiabetes] ?? paciente.tipoDiabetes
+                  : 'Não informado'
+              }
+            />
             <Campo label="Peso" valor={paciente.peso != null ? `${paciente.peso} kg` : 'Não informado'} />
             <Campo label="Altura" valor={paciente.altura != null ? `${paciente.altura} m` : 'Não informado'} />
             <Campo label="IMC" valor={paciente.imc != null ? String(paciente.imc) : 'Não informado'} />
@@ -100,14 +121,20 @@ export default function RelatorioPacientePage() {
                 <Metrica label="Mínimo / máximo" valor={glicemia.minimo != null ? `${glicemia.minimo} / ${glicemia.maximo} mg/dL` : '—'} />
                 <Metrica label="Na faixa" valor={glicemia.percentualNaFaixa != null ? `${glicemia.percentualNaFaixa}%` : '—'} />
               </div>
-              {Object.entries(glicemiaPorDia).map(([data, registros]) => <GlicemiaDia key={data} data={data} registros={registros} />)}
+              <CalendarioGlicemia registros={glicemia.registros} />
+              {/* Na tela o profissional navega pelo calendario; no papel ele
+                  precisa do historico inteiro, entao a lista corrida vai junto
+                  na impressao. */}
+              <div className="somente-impressao">
+                <TabelaGlicemia porDia={glicemiaPorDia} />
+              </div>
             </>
           )}
         </Card>
 
         <Card title="Alimentação" subtitle={contar(alimentacao.total, 'refeição registrada', 'refeições registradas')}>
           {alimentacao.total === 0 ? <EmptyState icon={<ForkIcon />} title="Nenhuma refeição registrada" message="O paciente ainda não registrou refeições no aplicativo." /> : (
-            Object.entries(alimentacaoPorDia).map(([data, registros]) => <AlimentacaoDia key={data} data={data} registros={registros} />)
+            <TabelaAlimentacao porDia={alimentacaoPorDia} />
           )}
         </Card>
       </div>
@@ -115,18 +142,110 @@ export default function RelatorioPacientePage() {
   )
 }
 
-function GlicemiaDia({ data, registros }: { data: string; registros: RelatorioRegistroGlicemia[] }) {
-  return <div style={styles.dayBlock}>
-    <div style={styles.dayHeader}><strong>{data}</strong><span>{contar(registros.length, 'medição', 'medições')}</span></div>
-    <div style={styles.tableScroll}><table style={styles.table}><thead><tr><th>Horário</th><th>Valor</th><th>Classificação</th><th>Momento</th><th>Observação</th></tr></thead><tbody>{registros.map((registro) => <tr key={registro.id}><td>{new Date(registro.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td><td><strong>{registro.valor} mg/dL</strong></td><td><Badge label={registro.classificacao} tint={corSeveridade(registro.severidade) as 'success' | 'warning' | 'danger'} /></td><td>{MOMENTO_LABEL[registro.momento] ?? registro.momento}</td><td>{registro.observacao || '—'}</td></tr>)}</tbody></table></div>
-  </div>
+const hora = (iso: string): string =>
+  new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+
+/**
+ * Uma tabela para o periodo inteiro, com o dia virando uma faixa de separacao.
+ *
+ * Antes cada dia montava a propria tabela, com o proprio cabecalho: num
+ * relatorio de cinquenta medicoes o cabecalho aparecia cinquenta vezes, e como
+ * cada tabela calculava a largura das colunas por conta, elas nao se alinhavam
+ * entre um dia e outro. Com uma tabela so, o cabecalho aparece uma vez na tela
+ * e o navegador o repete sozinho a cada pagina na impressao, que e o formato em
+ * que este relatorio costuma sair.
+ */
+function TabelaGlicemia({ porDia }: { porDia: Record<string, RelatorioRegistroGlicemia[]> }) {
+  return (
+    <div style={styles.tableScroll}>
+      <table style={styles.table}>
+        <thead>
+          <tr>
+            <th style={styles.th}>Horário</th>
+            <th style={styles.th}>Valor</th>
+            <th style={styles.th}>Classificação</th>
+            <th style={styles.th}>Momento</th>
+            <th style={styles.th}>Observação</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Object.entries(porDia).map(([data, registros]) => (
+            <Fragment key={data}>
+              <tr>
+                <td colSpan={5} style={styles.diaLinha}>
+                  <strong>{data}</strong>
+                  <span style={styles.diaContagem}>
+                    {contar(registros.length, 'medição', 'medições')}
+                  </span>
+                </td>
+              </tr>
+              {registros.map((registro) => (
+                <tr key={registro.id}>
+                  <td style={styles.td}>{hora(registro.dataHora)}</td>
+                  <td style={styles.td}>
+                    <strong>{registro.valor} mg/dL</strong>
+                  </td>
+                  <td style={styles.td}>
+                    <Badge
+                      label={rotuloClassificacao(registro.classificacao)}
+                      tint={corSeveridade(registro.severidade) as 'success' | 'warning' | 'danger'}
+                    />
+                  </td>
+                  <td style={styles.td}>{MOMENTO_LABEL[registro.momento] ?? registro.momento}</td>
+                  <td style={styles.tdSuave}>{registro.observacao || '—'}</td>
+                </tr>
+              ))}
+            </Fragment>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
 }
 
-function AlimentacaoDia({ data, registros }: { data: string; registros: RelatorioRegistroRefeicao[] }) {
-  return <div style={styles.dayBlock}>
-    <div style={styles.dayHeader}><strong>{data}</strong><span>{contar(registros.length, 'refeição', 'refeições')}</span></div>
-    <div style={styles.tableScroll}><table style={styles.table}><thead><tr><th>Horário</th><th>Tipo de refeição</th><th>Alimentos consumidos</th><th>Quantidade / nutrição</th><th>Observação</th></tr></thead><tbody>{registros.map((registro) => <tr key={registro.id}><td>{new Date(registro.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td><td><strong>{refeicaoLabel[registro.tipoRefeicao] ?? registro.tipoRefeicao}</strong></td><td>{registro.descricao || '—'}</td><td>{registro.carboidratos != null ? `${registro.carboidratos} g de carboidratos` : '—'}</td><td>{registro.observacao || '—'}</td></tr>)}</tbody></table></div>
-  </div>
+function TabelaAlimentacao({ porDia }: { porDia: Record<string, RelatorioRegistroRefeicao[]> }) {
+  return (
+    <div style={styles.tableScroll}>
+      <table style={styles.table}>
+        <thead>
+          <tr>
+            <th style={styles.th}>Horário</th>
+            <th style={styles.th}>Refeição</th>
+            <th style={styles.th}>Alimentos consumidos</th>
+            <th style={styles.th}>Carboidratos</th>
+            <th style={styles.th}>Observação</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Object.entries(porDia).map(([data, registros]) => (
+            <Fragment key={data}>
+              <tr>
+                <td colSpan={5} style={styles.diaLinha}>
+                  <strong>{data}</strong>
+                  <span style={styles.diaContagem}>
+                    {contar(registros.length, 'refeição', 'refeições')}
+                  </span>
+                </td>
+              </tr>
+              {registros.map((registro) => (
+                <tr key={registro.id}>
+                  <td style={styles.td}>{hora(registro.dataHora)}</td>
+                  <td style={styles.td}>
+                    <strong>{refeicaoLabel[registro.tipoRefeicao] ?? registro.tipoRefeicao}</strong>
+                  </td>
+                  <td style={styles.td}>{registro.descricao || '—'}</td>
+                  <td style={styles.td}>
+                    {registro.carboidratos != null ? `${registro.carboidratos} g` : '—'}
+                  </td>
+                  <td style={styles.tdSuave}>{registro.observacao || '—'}</td>
+                </tr>
+              ))}
+            </Fragment>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
 }
 
 function Campo({ label, valor }: { label: string; valor: string }) { return <div><div style={styles.label}>{label}</div><div style={styles.value}>{valor}</div></div> }
@@ -142,10 +261,29 @@ const styles: Record<string, React.CSSProperties> = {
   label: { color: 'var(--text-muted)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 },
   value: { color: 'var(--text)', fontSize: 14, fontWeight: 600, overflowWrap: 'anywhere' },
   metric: { color: 'var(--text)', fontSize: 20, fontWeight: 700 },
-  dayBlock: { borderTop: '1px solid var(--border)', paddingTop: 14, marginTop: 8 },
-  dayHeader: { display: 'flex', justifyContent: 'space-between', gap: 12, color: 'var(--text)', fontSize: 13, marginBottom: 10, flexWrap: 'wrap' },
   tableScroll: { overflowX: 'auto' },
   table: { borderCollapse: 'collapse', width: '100%', minWidth: 680, fontSize: 13 },
+  th: {
+    textAlign: 'left',
+    padding: '8px 12px',
+    fontSize: 11,
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    color: 'var(--text-muted)',
+    borderBottom: '1px solid var(--border)',
+    whiteSpace: 'nowrap',
+  },
+  td: { padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text)', verticalAlign: 'top' },
+  tdSuave: { padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', verticalAlign: 'top' },
+  diaLinha: {
+    padding: '10px 12px',
+    background: 'var(--surface-alt)',
+    color: 'var(--text)',
+    fontSize: 13,
+    borderBottom: '1px solid var(--border)',
+  },
+  diaContagem: { color: 'var(--text-muted)', marginLeft: 10, fontSize: 12 },
   feedback: { padding: 48, textAlign: 'center', color: 'var(--text-muted)' },
   notes: { display: 'flex', flexDirection: 'column', gap: 10 },
   note: { padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface-alt)' },

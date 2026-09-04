@@ -117,6 +117,8 @@ export default function TabsLayout() {
           ),
         }}
       />
+      <Tabs.Screen name="alimentacao/alimentos/index" options={{ href: null }} />
+      <Tabs.Screen name="alimentacao/alimentos/[id]" options={{ href: null }} />
       <Tabs.Screen name="alimentacao/receitas/index" options={{ href: null }} />
       <Tabs.Screen name="alimentacao/receitas/[id]" options={{ href: null }} />
       <Tabs.Screen name="alimentacao/conteudos/index" options={{ href: null }} />
@@ -124,6 +126,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="alimentacao/restricoes" options={{ href: null }} />
       <Tabs.Screen name="registros/glicemia" options={{ href: null }} />
       <Tabs.Screen name="registros/refeicao" options={{ href: null }} />
+      <Tabs.Screen name="saude/lembretes" options={{ href: null }} />
       <Tabs.Screen name="saude/medidas" options={{ href: null }} />
       <Tabs.Screen name="saude/humor" options={{ href: null }} />
       <Tabs.Screen name="saude/medicamentos" options={{ href: null }} />

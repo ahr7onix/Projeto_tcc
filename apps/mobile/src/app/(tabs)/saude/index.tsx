@@ -121,6 +121,12 @@ export default function SaudeScreen() {
           </View>
           <Text style={styles.acaoTexto}>Registrar medidas</Text>
         </Pressable>
+        <Pressable style={styles.acao} onPress={() => router.push('/(tabs)/saude/lembretes')}>
+          <View style={styles.acaoIcone}>
+            <Ionicons name="alarm-outline" size={18} color={colors.primary} />
+          </View>
+          <Text style={styles.acaoTexto}>Lembretes</Text>
+        </Pressable>
         <Pressable style={styles.acao} onPress={() => router.push('/(tabs)/saude/humor')}>
           <View style={styles.acaoIcone}>
             <Ionicons name="happy-outline" size={18} color={colors.primary} />

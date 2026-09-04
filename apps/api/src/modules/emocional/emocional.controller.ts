@@ -37,6 +37,16 @@ export class EmocionalController {
     return this.emocional.resumo(user, pacienteId, dias ? Number(dias) : undefined);
   }
 
+  /** Humor e glicemia dia a dia, para a leitura do RF06 do briefing. */
+  @Get('glicemia')
+  porDia(
+    @CurrentUser() user: JwtPayload,
+    @Query('pacienteId') pacienteId?: string,
+    @Query('dias') dias?: string,
+  ) {
+    return this.emocional.porDia(user, pacienteId, dias ? Number(dias) : undefined);
+  }
+
   @Post()
   @HttpCode(HttpStatus.CREATED)
   criar(@CurrentUser() user: JwtPayload, @Body() dto: CreateEmocionalDto) {

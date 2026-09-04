@@ -53,9 +53,19 @@ describe('AlimentosService', () => {
       await new AlimentosService(pool).listar({ busca: ' arroz ', grupo: 'cereais' });
 
       const [sql, params] = query.mock.calls[0];
-      expect(sql).toContain('nome ILIKE $1');
       expect(sql).toContain('grupo = $2');
       expect(params).toEqual(['%arroz%', 'cereais', 100]);
+    });
+
+    it('should ignore accents on both sides of the search', async () => {
+      const { pool, query } = criarPoolMock([[]]);
+      await new AlimentosService(pool).listar({ busca: 'pao' });
+
+      // Sem isto, buscar "pao" nao acha "Pao frances" nem "Pao de forma".
+      const [sql] = query.mock.calls[0];
+      expect(sql).toContain('translate(lower(nome)');
+      expect(sql).toContain('translate(lower($1)');
+      expect(sql).not.toContain('nome ILIKE');
     });
 
     it('should clamp the limit to the accepted range', async () => {

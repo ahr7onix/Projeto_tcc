@@ -248,6 +248,7 @@ CREATE TABLE registro_refeicao (
     lipidios      NUMERIC(6,1),
     kcal          NUMERIC(7,1),
     id_alimento   BIGINT       REFERENCES alimento(id_alimento) ON DELETE SET NULL,
+    quantidade_g  NUMERIC(7,2) CHECK (quantidade_g IS NULL OR quantidade_g > 0),
     observacao    TEXT,
     data_hora     TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );

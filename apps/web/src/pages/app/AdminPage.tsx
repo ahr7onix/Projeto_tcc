@@ -10,12 +10,17 @@ import {
   Select,
   StatTile,
 } from '../../components/ui'
+import GraficoBarras, { type BarraDados } from '../../components/GraficoBarras'
+import GraficoLinha from '../../components/GraficoLinha'
 import { useAuth } from '../../contexts/AuthContext'
 import { extractError } from '../../lib/api'
 import {
   listarUsuarios,
+  obterAnalise,
   obterMetricas,
   removerUsuario,
+  type AnaliseAdmin,
+  type CategoriaAnalise,
   type MetricasAdmin,
   type UsuarioAdmin,
 } from '../../lib/admin'
@@ -33,6 +38,21 @@ const TINT_TIPO: Record<string, 'primary' | 'success' | 'warning'> = {
   administrador: 'warning',
 }
 
+/** "2026-09" vira "set/26": o eixo do grafico precisa de algo curto. */
+function rotuloMes(mes: string): string {
+  const [ano, m] = mes.split('-')
+  const nomes = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
+  return `${nomes[Number(m) - 1]}/${ano.slice(2)}`
+}
+
+/**
+ * As barras de perfil sao magnitude, nao identidade: uma categoria nao "e" azul
+ * nem verde, so tem mais ou menos casos. Por isso a serie inteira usa um tom so,
+ * e o que diferencia cada linha e o rotulo escrito ao lado.
+ */
+const paraBarras = (categorias: CategoriaAnalise[]): BarraDados[] =>
+  categorias.map((c) => ({ rotulo: c.rotulo, valor: c.total }))
+
 function formatarData(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR')
 }
@@ -40,6 +60,7 @@ function formatarData(iso: string): string {
 export default function AdminPage() {
   const { user } = useAuth()
   const [metricas, setMetricas] = useState<MetricasAdmin | null>(null)
+  const [analise, setAnalise] = useState<AnaliseAdmin | null>(null)
   const [usuarios, setUsuarios] = useState<UsuarioAdmin[]>([])
   const [tipo, setTipo] = useState('')
   const [busca, setBusca] = useState('')
@@ -55,13 +76,15 @@ export default function AdminPage() {
     try {
       setLoading(true)
       setErro(null)
-      const [m, u] = await Promise.all([
+      const [m, u, an] = await Promise.all([
         obterMetricas(),
         listarUsuarios({ tipo: tipo || undefined, busca: busca || undefined }),
+        obterAnalise(90),
       ])
       if (!ativo()) return
       setMetricas(m)
       setUsuarios(u)
+      setAnalise(an)
     } catch (err) {
       if (ativo()) setErro(extractError(err))
     } finally {
@@ -158,6 +181,126 @@ export default function AdminPage() {
           tint="warning"
         />
       </div>
+
+      {analise && (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20, marginBottom: 20 }}>
+            <Card
+              title="Quem a associação atende"
+              subtitle={`${analise.perfil.totalPacientes} paciente${analise.perfil.totalPacientes === 1 ? '' : 's'} cadastrado${analise.perfil.totalPacientes === 1 ? '' : 's'}, por tipo de diabetes`}
+            >
+              <GraficoBarras
+                dados={paraBarras(analise.perfil.porTipoDiabetes)}
+                maximo={analise.perfil.totalPacientes}
+                vazio="Nenhum paciente cadastrado ainda."
+              />
+            </Card>
+
+            <Card title="Faixa etária" subtitle="Idade dos pacientes cadastrados">
+              <GraficoBarras
+                dados={paraBarras(analise.perfil.porFaixaEtaria)}
+                maximo={analise.perfil.totalPacientes}
+                vazio="Nenhum paciente cadastrado ainda."
+              />
+            </Card>
+          </div>
+
+          <Card
+            title="Controle glicêmico do grupo"
+            subtitle={`${analise.controle.totalMedicoes} medições nos últimos ${analise.periodoDias} dias`}
+            style={{ marginBottom: 20 }}
+          >
+            {analise.controle.totalMedicoes === 0 ? (
+              <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+                Sem medições registradas no período.
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+                <div>
+                  {/* Um número só, e grande: é a resposta da pergunta que a
+                      associação faz primeiro. Gráfico aqui seria enfeite. */}
+                  <div style={{ fontSize: 44, fontWeight: 700, color: 'var(--success)', lineHeight: 1 }}>
+                    {analise.controle.percentualNaFaixa}
+                    <span style={{ fontSize: 20, color: 'var(--text-muted)' }}>%</span>
+                  </div>
+                  <div style={{ fontSize: 13, color: 'var(--text-soft)', marginTop: 6, marginBottom: 18 }}>
+                    das medições ficaram dentro da faixa esperada para o momento do dia
+                  </div>
+
+                  <GraficoBarras
+                    dados={analise.controle.porClassificacao.map((c) => ({
+                      rotulo: c.rotulo,
+                      valor: c.total,
+                      tint:
+                        c.severidade === 'critico'
+                          ? 'danger'
+                          : c.severidade === 'atencao'
+                            ? 'warning'
+                            : 'success',
+                    }))}
+                    maximo={analise.controle.totalMedicoes}
+                  />
+                </div>
+
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-soft)', marginBottom: 10 }}>
+                    Evolução mês a mês
+                  </div>
+                  <GraficoLinha
+                    pontos={analise.controle.evolucaoMensal
+                      .filter((m) => m.percentualNaFaixa !== null)
+                      .map((m) => ({ data: `${m.mes}-01`, valor: m.percentualNaFaixa as number }))}
+                    unidade="%"
+                    cor="var(--success)"
+                    altura={200}
+                    limites={{ min: 0, max: 100 }}
+                    rotuloData={(iso) => rotuloMes(iso.slice(0, 7))}
+                    vazio="Ainda não há meses suficientes para comparar."
+                  />
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
+                    Percentual de medições dentro da faixa em cada mês:{' '}
+                    {analise.controle.evolucaoMensal
+                      .filter((m) => m.percentualNaFaixa !== null)
+                      .map((m) => `${rotuloMes(m.mes)} ${m.percentualNaFaixa}%`)
+                      .join(' · ') || 'sem dados'}
+                  </div>
+                </div>
+              </div>
+            )}
+          </Card>
+
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 24 }}>
+            <StatTile
+              label="Registraram nos últimos 7 dias"
+              value={analise.acompanhamento.ativos7d}
+              icon={<ChartIcon />}
+              tint="success"
+              sub={`de ${analise.acompanhamento.totalPacientes} pacientes`}
+            />
+            <StatTile
+              label="Registraram nos últimos 30 dias"
+              value={analise.acompanhamento.ativos30d}
+              icon={<ChartIcon />}
+              tint="primary"
+              sub={`de ${analise.acompanhamento.totalPacientes} pacientes`}
+            />
+            <StatTile
+              label="Sem registro há mais de 30 dias"
+              value={analise.acompanhamento.semRegistro30d}
+              icon={<UsersIcon />}
+              tint={analise.acompanhamento.semRegistro30d > 0 ? 'warning' : 'success'}
+              sub="pacientes a procurar"
+            />
+            <StatTile
+              label="Sem nutricionista"
+              value={analise.acompanhamento.semNutricionista}
+              icon={<LinkIcon />}
+              tint={analise.acompanhamento.semNutricionista > 0 ? 'warning' : 'success'}
+              sub="sem acompanhamento vinculado"
+            />
+          </div>
+        </>
+      )}
 
       <Card style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>

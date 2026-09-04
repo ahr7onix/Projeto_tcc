@@ -364,6 +364,7 @@ export default function PacienteDetalhePage() {
                     <th>Refeição</th>
                     <th>Descrição</th>
                     <th>Carb.</th>
+                    <th>Origem</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -373,6 +374,22 @@ export default function PacienteDetalhePage() {
                       <td style={{ fontWeight: 600 }}>{refeicaoLabel[r.tipoRefeicao] ?? r.tipoRefeicao ?? '—'}</td>
                       <td style={{ color: 'var(--text-muted)' }}>{r.descricao || '—'}</td>
                       <td>{r.carboidratos ? `${r.carboidratos} g` : '—'}</td>
+                      {/* Carboidrato calculado pela tabela e carboidrato que o
+                          paciente estimou de cabeça não têm o mesmo peso na
+                          consulta: a coluna diz de onde veio o número. */}
+                      <td>
+                        {r.alimento ? (
+                          <>
+                            <span className={`${s.badge} ${s.badgeSuccess}`}>Tabela</span>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                              {r.alimento.nome}
+                              {r.quantidadeG ? ` · ${r.quantidadeG} g` : ''}
+                            </div>
+                          </>
+                        ) : r.carboidratos ? (
+                          <span className={`${s.badge} ${s.badgeWarning}`}>Estimado</span>
+                        ) : '—'}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
