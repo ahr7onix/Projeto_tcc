@@ -117,6 +117,8 @@ export default function TabsLayout() {
           ),
         }}
       />
+      <Tabs.Screen name="alimentacao/alimentos/index" options={{ href: null }} />
+      <Tabs.Screen name="alimentacao/alimentos/[id]" options={{ href: null }} />
       <Tabs.Screen name="alimentacao/receitas/index" options={{ href: null }} />
       <Tabs.Screen name="alimentacao/receitas/[id]" options={{ href: null }} />
       <Tabs.Screen name="alimentacao/conteudos/index" options={{ href: null }} />

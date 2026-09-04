@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -7,6 +8,8 @@ import {
 import type { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
 import { avaliarGlicemia } from '../../common/glicemia/glicemia';
+import { valoresParaQuantidade } from '../../common/nutricao/nutricao';
+import { AlimentosService } from '../alimentos/alimentos.service';
 import { PushService } from '../push/push.service';
 import { VinculosService } from '../vinculos/vinculos.service';
 import type { CreateGlicemiaDto } from './dto/create-glicemia.dto';
@@ -23,6 +26,7 @@ export class RegistrosService {
     @Inject(PG_POOL) private readonly pool: Pool,
     private readonly push: PushService,
     private readonly vinculos: VinculosService,
+    private readonly alimentos: AlimentosService,
   ) {}
 
   async findAll(
@@ -76,11 +80,18 @@ export class RegistrosService {
                  rr.descricao,
                  rr.tipo_refeicao,
                  rr.carboidratos,
+                 rr.proteinas,
+                 rr.lipidios,
+                 rr.kcal,
+                 rr.quantidade_g,
+                 a.id_alimento,
+                 a.nome AS alimento_nome,
                  rr.observacao,
                  rr.data_hora,
                  u.id_usuario AS paciente_id,
                  u.nome AS paciente_nome
                FROM registro_refeicao rr
+               LEFT JOIN alimento a ON a.id_alimento = rr.id_alimento
                JOIN paciente p ON p.id_paciente = rr.id_paciente
                JOIN usuario u ON u.id_usuario = p.id_usuario
                WHERE ${refeicaoConditions.join(' AND ')}
@@ -106,6 +117,16 @@ export class RegistrosService {
         descricao: r.descricao ?? null,
         tipoRefeicao: r.tipo_refeicao ?? null,
         carboidratos: r.carboidratos != null ? Number(r.carboidratos) : null,
+        proteinas: r.proteinas != null ? Number(r.proteinas) : null,
+        lipidios: r.lipidios != null ? Number(r.lipidios) : null,
+        kcal: r.kcal != null ? Number(r.kcal) : null,
+        quantidadeG: r.quantidade_g != null ? Number(r.quantidade_g) : null,
+        // Sem alimento vinculado o registro veio de texto livre, e aí os
+        // macronutrientes acima são o que o paciente informou, não uma conta.
+        alimento:
+          r.id_alimento != null
+            ? { id: String(r.id_alimento), nome: r.alimento_nome }
+            : null,
         observacao: r.observacao ?? null,
         dataHora: r.data_hora,
         pacienteId: String(r.paciente_id),
@@ -251,6 +272,15 @@ export class RegistrosService {
     };
   }
 
+  /**
+   * Registro de refeição em dois caminhos:
+   *
+   * - texto livre, com os carboidratos que o paciente informa de cabeça;
+   * - alimento da tabela nutricional mais a quantidade, e aí a conta é do
+   *   sistema. É este segundo caminho que sustenta a contagem de carboidratos
+   *   do briefing: o paciente escolhe "pão integral, 50 g" e não precisa saber
+   *   quantos gramas de carboidrato isso dá.
+   */
   async createRefeicao(idUsuario: string, dto: CreateRefeicaoDto) {
     const pacienteResult = await this.pool.query<{ id_paciente: string }>(
       'SELECT id_paciente FROM paciente WHERE id_usuario = $1',
@@ -259,11 +289,60 @@ export class RegistrosService {
     if (!pacienteResult.rows[0]) throw new NotFoundException('Perfil de paciente não encontrado');
     const idPaciente = pacienteResult.rows[0].id_paciente;
 
+    let descricao = dto.descricao?.trim() || null;
+    let idAlimento: string | null = null;
+    let quantidadeG: number | null = null;
+    let carboidratos = dto.carboidratos ?? null;
+    let proteinas: number | null = null;
+    let lipidios: number | null = null;
+    let kcal: number | null = null;
+
+    if (dto.alimentoId) {
+      if (!dto.quantidadeG) {
+        throw new BadRequestException(
+          'Informe a quantidade consumida do alimento escolhido',
+        );
+      }
+      // `buscar` recusa alimento inexistente ou desativado, então o registro
+      // nunca aponta para uma linha que sumiu da tabela.
+      const alimento = await this.alimentos.buscar(dto.alimentoId);
+      const calculado = valoresParaQuantidade(alimento, dto.quantidadeG);
+
+      idAlimento = alimento.id;
+      quantidadeG = calculado.quantidadeG;
+      // O que o paciente digitou não compete com a tabela: vale a conta.
+      carboidratos = calculado.carboidratosG;
+      proteinas = calculado.proteinasG;
+      lipidios = calculado.lipidiosG;
+      kcal = calculado.kcal;
+      descricao = descricao ?? `${alimento.nome} (${calculado.quantidadeG} g)`;
+    }
+
+    if (!descricao) {
+      throw new BadRequestException(
+        'Descreva a refeição ou escolha um alimento da tabela',
+      );
+    }
+
     const result = await this.pool.query(
-      `INSERT INTO registro_refeicao (id_paciente, descricao, tipo_refeicao, carboidratos, observacao)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id_registro, descricao, tipo_refeicao, carboidratos, observacao, data_hora`,
-      [idPaciente, dto.descricao, dto.tipo_refeicao, dto.carboidratos ?? null, dto.observacao ?? null],
+      `INSERT INTO registro_refeicao
+         (id_paciente, descricao, tipo_refeicao, carboidratos, proteinas,
+          lipidios, kcal, id_alimento, quantidade_g, observacao)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING id_registro, descricao, tipo_refeicao, carboidratos, proteinas,
+                 lipidios, kcal, id_alimento, quantidade_g, observacao, data_hora`,
+      [
+        idPaciente,
+        descricao,
+        dto.tipo_refeicao,
+        carboidratos,
+        proteinas,
+        lipidios,
+        kcal,
+        idAlimento,
+        quantidadeG,
+        dto.observacao ?? null,
+      ],
     );
 
     const r = result.rows[0];
@@ -273,6 +352,11 @@ export class RegistrosService {
       descricao: r.descricao,
       tipoRefeicao: r.tipo_refeicao,
       carboidratos: r.carboidratos != null ? Number(r.carboidratos) : null,
+      proteinas: r.proteinas != null ? Number(r.proteinas) : null,
+      lipidios: r.lipidios != null ? Number(r.lipidios) : null,
+      kcal: r.kcal != null ? Number(r.kcal) : null,
+      alimentoId: r.id_alimento != null ? String(r.id_alimento) : null,
+      quantidadeG: r.quantidade_g != null ? Number(r.quantidade_g) : null,
       observacao: r.observacao,
       dataHora: r.data_hora,
     };

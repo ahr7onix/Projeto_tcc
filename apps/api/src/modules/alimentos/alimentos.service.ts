@@ -14,6 +14,23 @@ import { UpdateAlimentoDto } from './dto/update-alimento.dto';
 
 const PERFIS_EDITORES = ['administrador', 'nutricionista'];
 
+const COM_ACENTO = 'áàâãäéèêëíìîïóòôõöúùûüçñ';
+const SEM_ACENTO = 'aaaaaeeeeiiiiooooouuuucn';
+
+/**
+ * Compara texto ignorando acento dos dois lados.
+ *
+ * No teclado do celular o paciente digita "pao" e "feijao"; a tabela guarda
+ * "Pão" e "Feijão", e o ILIKE puro não casava nenhum dos dois — buscar por
+ * "pao" devolvia lista vazia com dois pães cadastrados.
+ *
+ * A extensão `unaccent` resolveria isso com menos código, mas exige
+ * `CREATE EXTENSION` e o banco do plano gratuito pode não permitir. O
+ * `translate` funciona em qualquer instalação de Postgres.
+ */
+const semAcento = (expressao: string): string =>
+  `translate(lower(${expressao}), '${COM_ACENTO}', '${SEM_ACENTO}')`;
+
 @Injectable()
 export class AlimentosService {
   constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
@@ -65,7 +82,7 @@ export class AlimentosService {
     }
     if (filtros.busca?.trim()) {
       params.push(`%${filtros.busca.trim()}%`);
-      where.push(`nome ILIKE $${params.length}`);
+      where.push(`${semAcento('nome')} LIKE ${semAcento(`$${params.length}`)}`);
     }
     if (filtros.grupo?.trim()) {
       params.push(filtros.grupo.trim());

@@ -160,6 +160,17 @@ export default function AlimentacaoScreen() {
 
       <Pressable
         style={styles.atalhoFull}
+        onPress={() => router.push('/(tabs)/alimentacao/alimentos')}
+      >
+        <View style={styles.atalhoIcone}>
+          <Ionicons name="nutrition-outline" size={18} color={colors.primary} />
+        </View>
+        <Text style={styles.atalhoTexto}>Consultar alimentos</Text>
+        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+      </Pressable>
+
+      <Pressable
+        style={styles.atalhoFull}
         onPress={() => router.push('/(tabs)/alimentacao/receitas')}
       >
         <View style={styles.atalhoIcone}>
