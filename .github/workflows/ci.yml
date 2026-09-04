@@ -1,6 +1,7 @@
-# Verificacao automatica dos tres projetos, a cada push e a cada pull request.
+# Verificacao automatica das tres aplicacoes e do banco, a cada push e a cada
+# pull request.
 #
-# Sao tres jobs separados, e nao um so com varios passos, por dois motivos:
+# Sao quatro jobs separados, e nao um so com varios passos, por dois motivos:
 # rodam em paralelo, e quando algo quebra a propria lista de jobs ja diz qual
 # aplicacao quebrou, sem precisar abrir o log.
 #
@@ -75,3 +76,46 @@ jobs:
         working-directory: apps/mobile
       - run: npm run lint
         working-directory: apps/mobile
+
+  banco:
+    name: Banco (schema.sql x migrations)
+    runs-on: ubuntu-latest
+    # A estrutura do banco tem duas fontes de verdade — o schema.sql, que cria
+    # o banco novo, e as migrations, que atualizam o banco que ja existe — e
+    # nada obrigava as duas a concordarem. Ja divergiram: a tabela `mensagem`
+    # entrou so na migration e nunca no schema.sql, entao todo banco novo
+    # nascia sem ela e /mensagens respondia 500. Este job monta os dois
+    # caminhos num Postgres de verdade e compara.
+    services:
+      postgres:
+        # Mesma imagem do docker-compose.yml, pela mesma razao que os outros
+        # jobs usam Node 20: verificar num Postgres diferente do que o time
+        # roda na maquina nao prova nada.
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tcc
+          POSTGRES_PASSWORD: tcc
+          POSTGRES_DB: tcc
+        ports:
+          - 5432:5432
+        # Sem o healthcheck o job comeca antes de o Postgres aceitar conexao e
+        # falha na primeira consulta, por motivo nenhum.
+        options: >-
+          --health-cmd "pg_isready -U tcc -d tcc"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: apps/api/package-lock.json
+      # O verificar-schema.mjs usa o `pg`, que e dependencia da API.
+      - run: npm ci
+        working-directory: apps/api
+      - run: node verificar-schema.mjs
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgres://tcc:tcc@127.0.0.1:5432/tcc

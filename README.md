@@ -39,6 +39,7 @@ para não precisar entrar em cada pasta:
 | `npm test` | testes da API |
 | `npm run dev:api` · `dev:web` · `dev:mobile` | sobe cada aplicação |
 | `npm run db:preparar` | cria e atualiza as tabelas do banco |
+| `npm run db:verificar` | confere se o `schema.sql` está em dia com as migrations |
 
 Cada projeto mantém o seu próprio `package.json` e `package-lock.json`. A raiz
 só delega — não são workspaces do npm, de propósito: o Render instala cada
@@ -50,20 +51,42 @@ O passo a passo detalhado, projeto por projeto:
 
 ```bash
 createdb nutricare
-psql nutricare -f database/schema.sql
-psql nutricare -f database/migrations/001_registro_refeicao.sql
-psql nutricare -f database/migrations/002_nutricionista_paciente.sql
-psql nutricare -f database/migrations/003_mensagem.sql
-psql nutricare -f database/migrations/004_nutricionista_crn_opcional.sql
-psql nutricare -f database/migrations/005_administrador.sql
-psql nutricare -f database/migrations/006_push_token.sql
-psql nutricare -f database/migrations/007_briefing_nutricao.sql
-psql nutricare -f database/seeds_admin.sql
-psql nutricare -f database/seeds_alimentos.sql
+DATABASE_URL=postgres://localhost/nutricare npm run db:preparar
 ```
 
-O `schema.sql` já contém tudo para uma instalação nova. As migrations existem para
-atualizar bancos que já estavam rodando — aplique-as apenas nesse caso.
+O `db:preparar` aplica o `schema.sql` num banco vazio, roda as migrations que
+ainda faltam e carrega os dados iniciais. Pode ser executado quantas vezes for
+preciso: ele anota na tabela `migracao_aplicada` o que já passou.
+
+#### As duas fontes de verdade
+
+A estrutura do banco está escrita em dois lugares que precisam concordar:
+
+| Arquivo | Para que serve |
+| --- | --- |
+| `database/schema.sql` | o retrato completo, aplicado em banco vazio |
+| `database/migrations/*.sql` | os deltas, aplicados em banco que já existe |
+
+Toda migration nova tem que ser levada **também** para o `schema.sql` — e a
+migration continua onde está, porque os bancos que já rodam dependem dela.
+
+Isso não é preciosismo: a tabela `mensagem` entrou só na migration 003 e nunca
+no `schema.sql`, então todo banco novo nascia sem ela e qualquer chamada a
+`/mensagens` respondia 500. A migration 014 existe só para remendar aquilo.
+
+Quem garante que não acontece de novo é o `npm run db:verificar`, que monta os
+dois caminhos em bancos descartáveis e compara a estrutura resultante. Ele roda
+no CI a cada push, no job **Banco (schema.sql x migrations)**. Precisa de um
+PostgreSQL onde dê para criar bancos — o do `docker-compose` serve:
+
+```bash
+docker compose up -d postgres
+npm run db:verificar
+```
+
+Enquanto essa verificação estiver verde, os três caminhos de instalação
+(`schema.sql` puro, `db:preparar` e o `docker-compose`) produzem a mesma
+estrutura.
 
 O `seeds_alimentos.sql` carrega 36 alimentos com valores **aproximados**, só para o
 sistema não nascer vazio. Eles ficam marcados com `fonte = 'exemplo'` e devem ser

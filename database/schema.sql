@@ -116,7 +116,11 @@ CREATE TABLE conteudo_educativo (
     conteudo      TEXT         NOT NULL CHECK (length(trim(conteudo)) > 0),
     categoria     VARCHAR(60)  NOT NULL DEFAULT 'geral',
     publicado     BOOLEAN      NOT NULL DEFAULT FALSE,
-    publico       VARCHAR(30)  NOT NULL DEFAULT 'todos',
+    -- O nome da restricao e o mesmo da migration 012 de proposito: e assim que
+    -- o verificar-schema.mjs reconhece as duas como a mesma coisa.
+    publico       VARCHAR(30)  NOT NULL DEFAULT 'todos'
+        CONSTRAINT conteudo_publico_check
+        CHECK (publico IN ('todos', 'pacientes_diabetes', 'adultos')),
     agendado_em   TIMESTAMPTZ,
     imagem_capa   TEXT,
     criado_em     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
