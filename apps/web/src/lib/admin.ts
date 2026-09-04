@@ -29,6 +29,47 @@ export async function obterMetricas(): Promise<MetricasAdmin> {
   return data
 }
 
+export interface CategoriaAnalise {
+  chave: string
+  rotulo: string
+  total: number
+}
+
+export interface AnaliseAdmin {
+  periodoDias: number
+  perfil: {
+    totalPacientes: number
+    porTipoDiabetes: CategoriaAnalise[]
+    porFaixaEtaria: CategoriaAnalise[]
+  }
+  controle: {
+    totalMedicoes: number
+    /** Percentual das leituras dentro do alvo do proprio momento do dia. */
+    percentualNaFaixa: number | null
+    porClassificacao: {
+      classificacao: string
+      rotulo: string
+      severidade: 'critico' | 'atencao' | 'normal'
+      total: number
+    }[]
+    evolucaoMensal: { mes: string; total: number; percentualNaFaixa: number | null }[]
+  }
+  acompanhamento: {
+    totalPacientes: number
+    ativos7d: number
+    ativos30d: number
+    /** Cadastrados que nao registraram nada no ultimo mes. */
+    semRegistro30d: number
+    semNutricionista: number
+  }
+}
+
+/** Analise do grupo atendido, para a associacao. */
+export async function obterAnalise(dias = 90): Promise<AnaliseAdmin> {
+  const { data } = await api.get('/admin/analise', { params: { dias } })
+  return data
+}
+
 export async function listarUsuarios(params: { tipo?: string; busca?: string } = {}): Promise<UsuarioAdmin[]> {
   const { data } = await api.get('/admin/usuarios', { params })
   return data.data

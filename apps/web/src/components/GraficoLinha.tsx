@@ -25,6 +25,13 @@ interface Props {
   /** Mensagem exibida quando ainda não há medidas suficientes. */
   vazio?: string
   faixa?: FaixaAlvo
+  /**
+   * Trava a escala. Numa serie de porcentagem a folga automatica levava o eixo
+   * a marcar 100,7%, que nao existe.
+   */
+  limites?: { min?: number; max?: number }
+  /** Como escrever a data no eixo. O padrao e "dd/mm". */
+  rotuloData?: (iso: string) => string
 }
 
 const LARGURA = 640
@@ -50,6 +57,8 @@ export default function GraficoLinha({
   altura = 220,
   vazio = 'Sem medidas suficientes para montar o gráfico.',
   faixa,
+  limites,
+  rotuloData = formatarData,
 }: Props) {
   const desenho = useMemo(() => {
     if (pontos.length === 0) return null
@@ -62,8 +71,8 @@ export default function GraficoLinha({
     const menor = Math.min(...valores)
     // Série constante viraria uma linha colada na borda: abre uma folga fixa.
     const folga = maior === menor ? Math.max(1, maior * 0.05) : (maior - menor) * 0.15
-    const topo = maior + folga
-    const base = menor - folga
+    const topo = Math.min(maior + folga, limites?.max ?? Infinity)
+    const base = Math.max(menor - folga, limites?.min ?? -Infinity)
 
     const larguraUtil = LARGURA - MARGEM.esquerda - MARGEM.direita
     const alturaUtil = altura - MARGEM.topo - MARGEM.base
@@ -101,7 +110,7 @@ export default function GraficoLinha({
       : null
 
     return { coordenadas, linha, area, marcas, faixaDesenhada }
-  }, [pontos, altura, faixa])
+  }, [pontos, altura, faixa, limites])
 
   if (!desenho) {
     return (
@@ -132,7 +141,7 @@ export default function GraficoLinha({
       style={{ display: 'block', height: 'auto' }}
       role="img"
       aria-label={`Evolução: ${desenho.coordenadas
-        .map((p) => `${formatarData(p.data)} ${formatarValor(p.valor)}${unidade}`)
+        .map((p) => `${rotuloData(p.data)} ${formatarValor(p.valor)}${unidade}`)
         .join(', ')}`}
     >
       {desenho.faixaDesenhada && faixa && (
@@ -208,7 +217,7 @@ export default function GraficoLinha({
               fontSize="11"
               fill="var(--text-muted)"
             >
-              {formatarData(p.data)}
+              {rotuloData(p.data)}
             </text>
           )}
         </g>
