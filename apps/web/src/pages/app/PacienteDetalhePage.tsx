@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { AlertBanner, Btn, Paginacao, usePaginacao } from '../../components/ui'
+import { AlertBanner, Btn, Card, Paginacao, usePaginacao } from '../../components/ui'
+import GraficoLinha, { type PontoGrafico } from '../../components/GraficoLinha'
 import SaudePaciente from '../../components/SaudePaciente'
+import { CLASSIFICACAO_LABEL, MOMENTO_LABEL, type Classificacao, type Severidade } from '../../lib/alertas'
 import { api, extractError } from '../../lib/api'
 import { contar } from '../../lib/texto'
 import s from './PacienteDetalhePage.module.css'
@@ -12,13 +14,6 @@ type Secao = 'informacoes' | 'glicemia' | 'alimentacao' | 'saude'
 
 const SECOES: Secao[] = ['informacoes', 'glicemia', 'alimentacao', 'saude']
 
-const momentoLabel: Record<string, string> = {
-  jejum: 'Jejum',
-  pre: 'Pré-refeição',
-  pos: 'Pós-refeição',
-  aleatorio: 'Aleatório',
-}
-
 const refeicaoLabel: Record<string, string> = {
   cafe: 'Café da manhã',
   almoco: 'Almoço',
@@ -26,6 +21,32 @@ const refeicaoLabel: Record<string, string> = {
   jantar: 'Jantar',
   ceia: 'Ceia',
 }
+
+/**
+ * A cor do registro sai da avaliação que a API devolve com ele, e não de um
+ * limite fixo. Antes a tela pintava de vermelho tudo acima de 126 mg/dL: 143
+ * antes de uma refeição (alvo 70-180) aparecia como problema, e 62 de
+ * madrugada -- hipoglicemia -- aparecia em verde.
+ */
+function classeDaSeveridade(severidade: Severidade | undefined): string {
+  if (severidade === 'critico') return s.badgeDanger
+  if (severidade === 'atencao') return s.badgeWarning
+  return s.badgeSuccess
+}
+
+/** Os registros chegam sem tipo do `/registros`, entao a chave entra como texto. */
+function rotuloClassificacao(classificacao: string): string {
+  return CLASSIFICACAO_LABEL[classificacao as Classificacao] ?? classificacao
+}
+
+function corDaSeveridade(severidade: Severidade | undefined): string | undefined {
+  if (severidade === 'critico') return 'var(--danger)'
+  if (severidade === 'atencao') return 'var(--warning)'
+  return undefined
+}
+
+/** Faixa geral usada como fundo do gráfico; a de cada momento vai na tabela. */
+const FAIXA_GERAL = { min: 70, max: 180 }
 
 function dataHora(iso: string) {
   return new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
@@ -82,6 +103,22 @@ export default function PacienteDetalhePage() {
   // Os hooks precisam vir antes de qualquer return condicional: a ordem de
   // chamada tem que ser a mesma em todo render.
   const pagGlicemia = usePaginacao(regsGlicemia, 15, abaAtual)
+
+  // A API entrega do mais recente para o mais antigo; o gráfico lê ao contrário.
+  // 30 pontos já enchem a largura do cartão -- mais que isso vira borrão.
+  const pontosGlicemia = useMemo<PontoGrafico[]>(
+    () =>
+      regsGlicemia
+        .filter((r) => r.valor != null && r.dataHora)
+        .slice(0, 30)
+        .reverse()
+        .map((r) => ({
+          data: r.dataHora,
+          valor: Number(r.valor),
+          cor: corDaSeveridade(r.alerta?.severidade),
+        })),
+    [regsGlicemia],
+  )
   const pagAlimentacao = usePaginacao(regsAlimentacao, 15, abaAtual)
 
   if (loading) {
@@ -245,6 +282,20 @@ export default function PacienteDetalhePage() {
       {abaAtual === 'glicemia' && (
         regsGlicemia.length > 0 ? (
           <div>
+            <Card
+              title="Evolução da glicemia (mg/dL)"
+              subtitle="Últimas 30 medições, com a faixa de referência geral (70–180 mg/dL) ao fundo. Cada ponto é avaliado pelo alvo do seu momento, que a tabela mostra abaixo."
+              style={{ marginBottom: 20 }}
+            >
+              <GraficoLinha
+                pontos={pontosGlicemia}
+                unidade=" mg/dL"
+                faixa={FAIXA_GERAL}
+                altura={240}
+                vazio="Registre ao menos uma medição para ver a evolução."
+              />
+            </Card>
+
             <div className={s.tableWrap}>
               <table className={s.dataTable}>
                 <thead>
@@ -252,18 +303,29 @@ export default function PacienteDetalhePage() {
                     <th>Data / Hora</th>
                     <th>Momento</th>
                     <th>Valor</th>
+                    <th>Situação</th>
                     <th>Observação</th>
                   </tr>
                 </thead>
                 <tbody>
                   {pagGlicemia.visiveis.map((r) => (
                     <tr key={r.id}>
-                      <td style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{dataHora(r.criadoEm)}</td>
-                      <td>{momentoLabel[r.momento] ?? r.momento ?? '—'}</td>
+                      <td style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{dataHora(r.dataHora)}</td>
+                      <td>{MOMENTO_LABEL[r.momento] ?? r.momento ?? '—'}</td>
                       <td>
-                        <span className={`${s.badge} ${r.valor > 126 ? s.badgeDanger : s.badgeSuccess}`}>
+                        <span className={`${s.badge} ${classeDaSeveridade(r.alerta?.severidade)}`}>
                           {r.valor} mg/dL
                         </span>
+                      </td>
+                      <td>
+                        {r.alerta ? (
+                          <>
+                            <div style={{ fontSize: 13 }}>{rotuloClassificacao(r.alerta.classificacao)}</div>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                              alvo {r.alerta.faixaReferencia.min}–{r.alerta.faixaReferencia.max}
+                            </div>
+                          </>
+                        ) : '—'}
                       </td>
                       <td style={{ color: 'var(--text-muted)', fontSize: 13 }}>{r.observacao || '—'}</td>
                     </tr>
@@ -307,8 +369,8 @@ export default function PacienteDetalhePage() {
                 <tbody>
                   {pagAlimentacao.visiveis.map((r) => (
                     <tr key={r.id}>
-                      <td style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{dataHora(r.criadoEm)}</td>
-                      <td style={{ fontWeight: 600 }}>{refeicaoLabel[r.tipo_refeicao] ?? r.tipo_refeicao ?? '—'}</td>
+                      <td style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{dataHora(r.dataHora)}</td>
+                      <td style={{ fontWeight: 600 }}>{refeicaoLabel[r.tipoRefeicao] ?? r.tipoRefeicao ?? '—'}</td>
                       <td style={{ color: 'var(--text-muted)' }}>{r.descricao || '—'}</td>
                       <td>{r.carboidratos ? `${r.carboidratos} g` : '—'}</td>
                     </tr>

@@ -3,6 +3,17 @@ import { useMemo } from 'react'
 export interface PontoGrafico {
   data: string
   valor: number
+  /**
+   * Cor só deste ponto, quando ele destoa da série. É o que deixa uma
+   * glicemia fora da faixa vermelha no meio de uma linha azul.
+   */
+  cor?: string
+}
+
+/** Faixa alvo pintada ao fundo, para ler o gráfico sem conferir número a número. */
+export interface FaixaAlvo {
+  min: number
+  max: number
 }
 
 interface Props {
@@ -13,6 +24,7 @@ interface Props {
   altura?: number
   /** Mensagem exibida quando ainda não há medidas suficientes. */
   vazio?: string
+  faixa?: FaixaAlvo
 }
 
 const LARGURA = 640
@@ -37,11 +49,15 @@ export default function GraficoLinha({
   cor = 'var(--primary)',
   altura = 220,
   vazio = 'Sem medidas suficientes para montar o gráfico.',
+  faixa,
 }: Props) {
   const desenho = useMemo(() => {
     if (pontos.length === 0) return null
 
+    // A faixa entra na escala: sem isso, uma série inteira dentro do alvo
+    // deixaria a faixa fora da área desenhada e o fundo apareceria vazio.
     const valores = pontos.map((p) => p.valor)
+    if (faixa) valores.push(faixa.min, faixa.max)
     const maior = Math.max(...valores)
     const menor = Math.min(...valores)
     // Série constante viraria uma linha colada na borda: abre uma folga fixa.
@@ -65,13 +81,27 @@ export default function GraficoLinha({
       coordenadas[coordenadas.length - 1].cx
     },${MARGEM.topo + alturaUtil}`
 
-    const marcas = [topo, (topo + base) / 2, base].map((valor) => ({
-      valor,
-      y: y(valor),
-    }))
+    // Com faixa alvo, as marcas do eixo são os limites dela: ler "180" e "70"
+    // diz alguma coisa, ler a média entre o maior e o menor valor não diz nada.
+    const valoresDeMarca = faixa
+      ? [topo, faixa.max, faixa.min, base]
+      : [topo, (topo + base) / 2, base]
 
-    return { coordenadas, linha, area, marcas }
-  }, [pontos, altura])
+    const marcas = valoresDeMarca
+      .map((valor) => ({
+        valor,
+        y: y(valor),
+        limiteDaFaixa: faixa ? valor === faixa.max || valor === faixa.min : false,
+      }))
+      // Dois rótulos a menos de 14px viram um borrão: fica o de cima.
+      .filter((marca, i, todas) => i === 0 || marca.y - todas[i - 1].y > 14)
+
+    const faixaDesenhada = faixa
+      ? { topo: y(faixa.max), base: y(faixa.min) }
+      : null
+
+    return { coordenadas, linha, area, marcas, faixaDesenhada }
+  }, [pontos, altura, faixa])
 
   if (!desenho) {
     return (
@@ -105,6 +135,19 @@ export default function GraficoLinha({
         .map((p) => `${formatarData(p.data)} ${formatarValor(p.valor)}${unidade}`)
         .join(', ')}`}
     >
+      {desenho.faixaDesenhada && faixa && (
+        <g>
+          <rect
+            x={MARGEM.esquerda}
+            y={desenho.faixaDesenhada.topo}
+            width={LARGURA - MARGEM.esquerda - MARGEM.direita}
+            height={desenho.faixaDesenhada.base - desenho.faixaDesenhada.topo}
+            fill="var(--success)"
+            fillOpacity="0.1"
+          />
+        </g>
+      )}
+
       <defs>
         <linearGradient id={gradienteId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={cor} stopOpacity="0.22" />
@@ -119,8 +162,9 @@ export default function GraficoLinha({
             y1={marca.y}
             x2={LARGURA - MARGEM.direita}
             y2={marca.y}
-            stroke="var(--border)"
+            stroke={marca.limiteDaFaixa ? 'var(--success)' : 'var(--border)'}
             strokeWidth="1"
+            strokeDasharray={marca.limiteDaFaixa ? '4 4' : undefined}
           />
           <text
             x={MARGEM.esquerda - 8}
@@ -147,7 +191,14 @@ export default function GraficoLinha({
 
       {desenho.coordenadas.map((p, i) => (
         <g key={`${p.data}-${i}`}>
-          <circle cx={p.cx} cy={p.cy} r="4" fill="var(--surface)" stroke={cor} strokeWidth="2" />
+          <circle
+            cx={p.cx}
+            cy={p.cy}
+            r="4"
+            fill="var(--surface)"
+            stroke={p.cor ?? cor}
+            strokeWidth="2"
+          />
           {/* Só as pontas ganham rótulo: com muitas medidas o eixo vira borrão. */}
           {(i === 0 || i === desenho.coordenadas.length - 1) && (
             <text
