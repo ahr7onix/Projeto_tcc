@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/logging/all-exceptions.filter';
 import { logger } from './common/logging/logger.service';
@@ -18,9 +19,12 @@ async function bootstrap() {
   const config = app.get(ConfigService);
 
   // No Render a requisição chega por um proxy: sem isto, o IP de todo usuário
-  // seria o do proxy, e o limite de tentativas de login trataria todo mundo
-  // como uma pessoa só.
+  // seria o do proxy, e os limites de tentativa tratariam todo mundo como uma
+  // pessoa só.
   app.set('trust proxy', 1);
+
+  // Cabeçalhos de segurança; também remove o X-Powered-By: Express.
+  app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
   // CORS_ORIGIN aceita uma lista separada por vírgula, porque em produção o
   // painel web e o app ficam em endereços diferentes da API.

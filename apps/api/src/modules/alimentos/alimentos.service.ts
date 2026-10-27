@@ -32,6 +32,17 @@ const ROTULOS_CAMPOS: Record<string, string> = {
   indiceGlicemico: 'índice glicêmico',
 };
 
+/**
+ * Carboidratos, proteínas e lipídios de uma porção não podem pesar mais que a
+ * própria porção. Vale para o cadastro manual e para cada linha da importação.
+ */
+const MENSAGEM_MACROS_EXCEDEM =
+  'Carboidratos, proteínas e lipídios somam mais que o peso da porção';
+
+function macrosExcedemPorcao(porcaoG: number, carb: number, prot: number, lip: number): boolean {
+  return carb + prot + lip > porcaoG;
+}
+
 function descreverErros(erros: ValidationError[]): string {
   const campos = erros.map((e) => ROTULOS_CAMPOS[e.property] ?? e.property);
   return `Valor ausente ou inválido em: ${campos.join(', ')}`;
@@ -171,8 +182,17 @@ export class AlimentosService {
     };
   }
 
+  /** Macros de uma porção não podem pesar mais que a própria porção. */
+  private validarMacros(porcaoG: number, carb: number, prot: number, lip: number) {
+    if (macrosExcedemPorcao(porcaoG, carb, prot, lip)) {
+      throw new BadRequestException(MENSAGEM_MACROS_EXCEDEM);
+    }
+  }
+
   async criar(user: JwtPayload, dto: CreateAlimentoDto) {
     this.podeEditar(user);
+
+    this.validarMacros(dto.porcaoG ?? 100, dto.carboidratosG, dto.proteinasG, dto.lipidiosG);
 
     const fonte = dto.fonte?.trim() || 'manual';
     const duplicado = await this.pool.query(
@@ -243,6 +263,17 @@ export class AlimentosService {
       // para converter "1 concha" em gramas.
       if (item.medidaCaseira?.trim() && item.medidaCaseiraG === undefined) {
         recusados.push({ indice, nome, motivo: 'Informe os gramas da medida caseira' });
+        return;
+      }
+      if (
+        macrosExcedemPorcao(
+          item.porcaoG ?? 100,
+          item.carboidratosG,
+          item.proteinasG,
+          item.lipidiosG,
+        )
+      ) {
+        recusados.push({ indice, nome, motivo: MENSAGEM_MACROS_EXCEDEM });
         return;
       }
       // Duas linhas com o mesmo nome no mesmo envio: a segunda sobrescreveria
@@ -319,6 +350,13 @@ export class AlimentosService {
   async atualizar(user: JwtPayload, id: string, dto: UpdateAlimentoDto) {
     this.podeEditar(user);
     const atual = await this.buscar(id);
+
+    this.validarMacros(
+      dto.porcaoG ?? atual.porcaoG,
+      dto.carboidratosG ?? atual.carboidratosG,
+      dto.proteinasG ?? atual.proteinasG,
+      dto.lipidiosG ?? atual.lipidiosG,
+    );
 
     const { rows } = await this.pool.query(
       `UPDATE alimento SET

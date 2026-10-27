@@ -29,12 +29,17 @@ services:
     plan: free
     region: oregon
     rootDir: apps/api
-    buildCommand: npm ci && npm run build
+    # `--include=dev` porque NODE_ENV=production (abaixo) vale também no build, e
+    # com ele o npm deixa de instalar as devDependencies — entre elas o
+    # @nestjs/cli e o typescript, sem os quais o `nest build` falha.
+    buildCommand: npm ci --include=dev && npm run build
     # O preparar-banco.mjs cria as tabelas na primeira vez e não faz nada nas
     # seguintes, então pode ficar no start sem problema.
     startCommand: node preparar-banco.mjs && node dist/main.js
     healthCheckPath: /status
     envVars:
+      - key: NODE_ENV
+        value: production
       - key: NODE_VERSION
         value: "20"
       # Endereço do banco criado acima — preenchido pelo próprio Render.

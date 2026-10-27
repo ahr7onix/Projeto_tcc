@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   ForbiddenException,
   Inject,
@@ -8,6 +7,7 @@ import {
 import * as bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 import type { Pool } from 'pg';
+import { normalizarDataNascimento } from '../../common/data-nascimento';
 import { PG_POOL } from '../../database/database.module';
 import { ContasService } from '../contas/contas.service';
 import { VinculosService } from '../vinculos/vinculos.service';
@@ -29,12 +29,12 @@ export class PacientesService {
    * no aplicativo, como em qualquer convite (LGPD).
    */
   async cadastrar(idUsuarioNutri: string, dto: CadastrarPacienteDto) {
+    // A mesma regra do cadastro pelo app: recusa data inexistente, futura ou
+    // de mais de 120 anos.
+    const dataNascimento = normalizarDataNascimento(dto.dataNascimento);
     const idNutricionista = await this.vinculos.resolveNutricionistaId(idUsuarioNutri);
     const email = dto.email.trim().toLowerCase();
     const nome = dto.nome.trim().replace(/\s+/g, ' ');
-    if (dto.dataNascimento && new Date(dto.dataNascimento) > new Date()) {
-      throw new BadRequestException('A data de nascimento não pode estar no futuro');
-    }
     // Senha que ninguém conhece: a conta só ganha senha pelo link do e-mail.
     const senhaHash = await bcrypt.hash(randomBytes(24).toString('hex'), 10);
 
@@ -54,7 +54,7 @@ export class PacientesService {
         `INSERT INTO paciente (id_usuario, data_nascimento, genero, tipo_diabetes)
          VALUES ($1, $2, $3, $4)
          RETURNING id_paciente`,
-        [idUsuario, dto.dataNascimento ?? null, dto.sexo ?? null, dto.tipoDiabetes ?? null],
+        [idUsuario, dataNascimento, dto.sexo ?? null, dto.tipoDiabetes ?? null],
       );
       await client.query(
         `INSERT INTO solicitacao_vinculo (id_nutricionista, id_paciente) VALUES ($1, $2)`,

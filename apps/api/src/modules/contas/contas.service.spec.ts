@@ -40,20 +40,23 @@ describe('ContasService', () => {
   });
 
   describe('enviarBoasVindas', () => {
-    it('should never hand the link back in production', async () => {
-      const { service } = montar({ NODE_ENV: 'production', SMTP_HOST: 'smtp.exemplo' });
+    it('should never hand the link back in production, even if asked', async () => {
+      const { service } = montar({
+        NODE_ENV: 'production',
+        RESET_LINK_NA_RESPOSTA: 'true',
+        SMTP_HOST: 'smtp.exemplo',
+      });
       await expect(service.enviarBoasVindas(envio)).resolves.toEqual({ emailEnviado: true });
     });
 
-    it('should never hand the link back when NODE_ENV is not set', async () => {
-      // É o caso do Render: sem NODE_ENV, o servidor publicado contava como
-      // "não produção" e devolvia o link.
+    it('should never hand the link back unless the environment asks for it', async () => {
+      // É o caso do Render: sem a variável, o link não pode voltar na resposta.
       const { service } = montar({ SMTP_HOST: 'smtp.exemplo' });
       await expect(service.enviarBoasVindas(envio)).resolves.toEqual({ emailEnviado: true });
     });
 
-    it('should hand the link back in development, for testing', async () => {
-      const { service } = montar({ NODE_ENV: 'development', SMTP_HOST: 'smtp.exemplo' });
+    it('should hand the link back in development when asked, for testing', async () => {
+      const { service } = montar({ RESET_LINK_NA_RESPOSTA: 'true', SMTP_HOST: 'smtp.exemplo' });
       await expect(service.enviarBoasVindas(envio)).resolves.toEqual({
         emailEnviado: true,
         linkDefinirSenha: envio.link,

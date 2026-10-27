@@ -254,6 +254,25 @@ describe('AlimentosService', () => {
       ]);
     });
 
+    it('should refuse a line whose macros weigh more than the portion', async () => {
+      // Mesma regra do cadastro manual: a importação não pode ser um atalho
+      // para gravar o que o formulário recusa.
+      const { pool } = criarPoolDeImportacao([true]);
+      const resultado = await new AlimentosService(pool).importar(usuario('nutricionista'), {
+        fonte: 'TACO',
+        itens: [item('Arroz'), item('Erro de digitação', { carboidratosG: 98, proteinasG: 5 })],
+      });
+
+      expect(resultado.inseridos).toBe(1);
+      expect(resultado.recusados).toEqual([
+        {
+          indice: 1,
+          nome: 'Erro de digitação',
+          motivo: 'Carboidratos, proteínas e lipídios somam mais que o peso da porção',
+        },
+      ]);
+    });
+
     it('should refuse a household measure without its weight in grams', async () => {
       const { pool, connect } = criarPoolDeImportacao([]);
       const resultado = await new AlimentosService(pool).importar(usuario('nutricionista'), {

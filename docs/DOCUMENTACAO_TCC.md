@@ -317,7 +317,7 @@ de glicemia — antes de qualquer uso com paciente real.
 | RN16 | Conta desativada não faz login | Verificação de `usuario.desativado_em` |
 | RN17 | O vínculo só nasce quando o paciente aceita o convite do nutricionista; o paciente pode encerrá-lo quando quiser | `ConvitesService` + tabela `solicitacao_vinculo` |
 | RN18 | Nutricionista que se cadastra sozinho só entra no painel depois que a administração aprova | `auth.service.ts` + coluna `nutricionista.aprovado_em` |
-| RN19 | O link de criar ou redefinir senha só vai para o e-mail do dono da conta; nunca volta na resposta da API fora de desenvolvimento | `ContasService` e `expoeLinksDeTeste` |
+| RN19 | O link de criar ou redefinir senha só vai para o e-mail do dono da conta; nunca volta na resposta da API fora de desenvolvimento | `ContasService` e `expoeLinkDeSenha` (`RESET_LINK_NA_RESPOSTA`) |
 
 ## 2.4 Tipos de usuário e permissões
 

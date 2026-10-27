@@ -1,4 +1,4 @@
-import { chaveDaTentativa } from './limite-tentativas.guard';
+import { chaveDaTentativa } from './limite-por-minuto.guard';
 
 describe('chaveDaTentativa', () => {
   it('should separate people on the same network by e-mail', () => {

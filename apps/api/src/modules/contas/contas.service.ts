@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHash, randomBytes } from 'crypto';
 import type { Pool } from 'pg';
-import { expoeLinksDeTeste } from '../../common/ambiente';
+import { expoeLinkDeSenha } from '../../common/ambiente';
 import { logger } from '../../common/logging/logger.service';
 import { MailService } from '../mail/mail.service';
 
@@ -47,8 +47,8 @@ export class ContasService {
    * cadastrou: com ele qualquer pessoa define a senha, e o nutricionista
    * poderia entrar como o paciente e aceitar o próprio convite.
    *
-   * Em desenvolvimento (NODE_ENV=development, dito explicitamente) a resposta
-   * traz o link, como o "esqueci a senha", para testar sem caixa de e-mail.
+   * Em desenvolvimento, com RESET_LINK_NA_RESPOSTA=true, a resposta traz o
+   * link, como o "esqueci a senha", para testar sem caixa de e-mail.
    */
   async enviarBoasVindas(opts: {
     para: string;
@@ -69,9 +69,7 @@ export class ContasService {
 
     return {
       emailEnviado,
-      ...(expoeLinksDeTeste(this.config.get<string>('NODE_ENV'))
-        ? { linkDefinirSenha: opts.link }
-        : {}),
+      ...(expoeLinkDeSenha(this.config) ? { linkDefinirSenha: opts.link } : {}),
     };
   }
 }

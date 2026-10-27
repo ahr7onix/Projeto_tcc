@@ -4,10 +4,14 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Req,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
-import { LimiteTentativasGuard } from '../../common/guards/limite-tentativas.guard';
+import type { Request } from 'express';
+import { LimitePorMinutoGuard } from '../../common/guards/limite-por-minuto.guard';
+import { LimiteTentativas } from '../../common/limite-tentativas';
 import { AuthService } from './auth.service';
 import { CadastroDto } from './dto/cadastro.dto';
 import { EsqueciSenhaDto } from './dto/esqueci-senha.dto';
@@ -17,14 +21,22 @@ import { RedefinirSenhaDto } from './dto/redefinir-senha.dto';
 import { RefreshDto } from './dto/refresh.dto';
 
 /**
- * Limite de tentativas em toda rota que confere senha, cria conta ou manda
- * e-mail: sem ele, adivinhar a senha de uma conta era só questão de repetir o
- * pedido. Renovar e encerrar a sessão ficam de fora — o app renova o token a
+ * Dois limites, cada um no seu lugar:
+ *
+ * - o login conta só as FALHAS (`LimiteTentativas`): quem erra a senha de uma
+ *   conta muitas vezes fica bloqueado, e um login certo zera a contagem;
+ * - as outras rotas que criam conta ou mandam e-mail (cadastros, Google,
+ *   esqueci e redefinir senha) aceitam 5 pedidos por minuto
+ *   (`LimitePorMinutoGuard`), para ninguém disparar e-mails ou contas em massa.
+ *
+ * Renovar e encerrar a sessão ficam de fora dos dois: o app renova o token a
  * cada 15 minutos e não pode ser barrado por isso.
  */
 @Controller('auth')
-@UseGuards(LimiteTentativasGuard)
+@UseGuards(LimitePorMinutoGuard)
 export class AuthController {
+  private readonly tentativas = new LimiteTentativas();
+
   constructor(private readonly auth: AuthService) {}
 
   /** App mobile — sempre cria paciente. */
@@ -54,9 +66,19 @@ export class AuthController {
   }
 
   @Post('login')
+  @SkipThrottle()
   @HttpCode(HttpStatus.OK)
-  login(@Body() dto: LoginDto) {
-    return this.auth.login(dto);
+  async login(@Body() dto: LoginDto, @Req() req: Request) {
+    const chave = `${req.ip}|${dto.email.trim().toLowerCase()}`;
+    this.tentativas.verificar(chave);
+    try {
+      const sessao = await this.auth.login(dto);
+      this.tentativas.sucesso(chave);
+      return sessao;
+    } catch (err) {
+      if (err instanceof UnauthorizedException) this.tentativas.falhou(chave);
+      throw err;
+    }
   }
 
   // O app mobile envia `idToken`; o botão da web (Google Identity Services)

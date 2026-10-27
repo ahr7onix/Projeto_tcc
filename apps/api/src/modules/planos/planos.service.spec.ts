@@ -160,7 +160,7 @@ describe('PlanosService', () => {
       // 33,3 + 33,3 + 33,4 fecha 100 na prática; recusar seria falso negativo.
       const { service } = criarServico(
         [[{ id_nutricionista: '7' }], [{ id_paciente: '5' }], [linhaPlano()], []],
-        [[], [{ id_plano: '42' }], [{ id_refeicao: '90' }], []],
+        [[], [], [{ id_plano: '42' }], [{ id_refeicao: '90' }], []],
       );
       await expect(
         service.create(
@@ -175,18 +175,18 @@ describe('PlanosService', () => {
     it('should save the meal inside a transaction and trim the text fields', async () => {
       const { service, clientQuery, release } = criarServico(
         [[{ id_nutricionista: '7' }], [{ id_paciente: '5' }], [linhaPlano()], []],
-        [[], [{ id_plano: '42' }], [{ id_refeicao: '90' }], []],
+        [[], [], [{ id_plano: '42' }], [{ id_refeicao: '90' }], []],
       );
       await service.create('1', dtoBase());
 
       expect(clientQuery.mock.calls[0][0]).toBe('BEGIN');
-      expect(clientQuery.mock.calls[2][1]).toEqual([
+      expect(clientQuery.mock.calls[3][1]).toEqual([
         '42',
         'Café da manhã',
         '07:00',
         'Pão e queijo',
       ]);
-      expect(clientQuery.mock.calls[3][0]).toBe('COMMIT');
+      expect(clientQuery.mock.calls[4][0]).toBe('COMMIT');
       expect(release).toHaveBeenCalled();
     });
 
@@ -194,6 +194,7 @@ describe('PlanosService', () => {
       const { service, clientQuery } = criarServico(
         [[{ id_nutricionista: '7' }], [{ id_paciente: '5' }], [linhaPlano()], []],
         [
+          [],
           [],
           [{ id_plano: '42' }],
           [{ id_alimento: '3', nome: 'Arroz branco cozido' }],
@@ -215,14 +216,14 @@ describe('PlanosService', () => {
         } as Partial<CreatePlanoDto>),
       );
 
-      const [, params] = clientQuery.mock.calls[3];
+      const [, params] = clientQuery.mock.calls[4];
       expect(params[3]).toBe('150 g de Arroz branco cozido');
     });
 
     it('should refuse a food that is not in the table and roll the transaction back', async () => {
       const { service, clientQuery, release } = criarServico(
         [[{ id_nutricionista: '7' }], [{ id_paciente: '5' }]],
-        [[], [{ id_plano: '42' }], []],
+        [[], [], [{ id_plano: '42' }], []],
       );
       await expect(
         service.create(
@@ -246,7 +247,7 @@ describe('PlanosService', () => {
     it('should refuse an item with neither food nor description', async () => {
       const { service } = criarServico(
         [[{ id_nutricionista: '7' }], [{ id_paciente: '5' }]],
-        [[], [{ id_plano: '42' }]],
+        [[], [], [{ id_plano: '42' }]],
       );
       await expect(
         service.create(

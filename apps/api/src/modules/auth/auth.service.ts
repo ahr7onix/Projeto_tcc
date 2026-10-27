@@ -7,12 +7,13 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { normalizarDataNascimento } from '../../common/data-nascimento';
 import * as bcrypt from 'bcryptjs';
 import { randomBytes, createHash } from 'crypto';
 import { OAuth2Client, TokenPayload } from 'google-auth-library';
 import type { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
-import { expoeLinksDeTeste } from '../../common/ambiente';
+import { expoeLinkDeSenha } from '../../common/ambiente';
 import { logger } from '../../common/logging/logger.service';
 import { perfilEstaCompleto } from '../../common/perfil-completo';
 import { MailService } from '../mail/mail.service';
@@ -143,6 +144,9 @@ export class AuthService {
       // corrida. Nos dois caminhos o cliente recebe o mesmo 409.
       if (ehEmailDuplicado(err)) {
         throw new ConflictException('E-mail ja cadastrado');
+      }
+      if ((err as { constraint?: string })?.constraint === 'nutricionista_crn_key') {
+        throw new ConflictException('CRN já cadastrado');
       }
       throw err;
     } finally {
@@ -344,6 +348,18 @@ export class AuthService {
     );
   }
 
+  /**
+   * O link de redefinição só vai na resposta quando o ambiente pede
+   * (RESET_LINK_NA_RESPOSTA=true, no .env de desenvolvimento) e nunca em
+   * produção. Antes bastava NODE_ENV não ser "production": um deploy sem a
+   * variável deixava qualquer um trocar a senha de outra pessoa só pelo e-mail.
+   */
+  private expoeLinkReset(): boolean {
+    // A regra mora em common/ambiente.ts porque o link de boas-vindas dos
+    // cadastros feitos pelo painel (ContasService) segue a mesma.
+    return expoeLinkDeSenha(this.config);
+  }
+
   async esqueciSenha(email: string): Promise<{
     message: string;
     previewUrl?: string;
@@ -397,19 +413,20 @@ export class AuthService {
         resetUrl,
       });
 
-      // O link na resposta é atalho de desenvolvimento: fora dele, quem pede
-      // o "esqueci a senha" de outra pessoa receberia a chave da conta dela.
       return {
         message,
-        ...(expoeLinksDeTeste(this.config.get<string>('NODE_ENV'))
-          ? { previewUrl: envio.previewUrl, resetUrl }
+        ...(this.expoeLinkReset()
+          ? {
+              previewUrl: envio.previewUrl,
+              resetUrl,
+            }
           : {}),
       };
     } catch (err) {
       // Em falha de e-mail, ainda devolve mensagem genérica (e o link em dev).
       return {
         message,
-        ...(expoeLinksDeTeste(this.config.get<string>('NODE_ENV')) ? { resetUrl } : {}),
+        ...(this.expoeLinkReset() ? { resetUrl } : {}),
       };
     }
   }
@@ -574,10 +591,6 @@ export class AuthService {
   }
 
   private parseBrDate(value?: string): string | null {
-    if (!value) return null;
-    const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-    if (!match) return null;
-    const [, dd, mm, yyyy] = match;
-    return `${yyyy}-${mm}-${dd}`;
+    return normalizarDataNascimento(value);
   }
 }

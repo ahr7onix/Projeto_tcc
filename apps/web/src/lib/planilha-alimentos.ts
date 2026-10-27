@@ -192,6 +192,12 @@ export function lerPlanilha(texto: string): PlanilhaLida {
     if (numeros.indiceGlicemico !== undefined && numeros.indiceGlicemico > 150) {
       problemas.push('índice glicêmico acima de 150')
     }
+    // Mesma regra da API: os macros não podem pesar mais que a porção.
+    const somaMacros =
+      (numeros.carboidratosG ?? 0) + (numeros.proteinasG ?? 0) + (numeros.lipidiosG ?? 0)
+    if (somaMacros > (numeros.porcaoG ?? 100)) {
+      problemas.push('carboidratos, proteínas e lipídios somam mais que a porção')
+    }
 
     const chave = nome.toLowerCase()
     const repetida = primeiraLinhaDoNome.get(chave)

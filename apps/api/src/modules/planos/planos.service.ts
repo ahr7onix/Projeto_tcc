@@ -476,7 +476,7 @@ export class PlanosService {
         WHERE up.id_usuario = $1
           AND pa.data_inicio <= CURRENT_DATE
           AND (pa.data_fim IS NULL OR pa.data_fim >= CURRENT_DATE)
-        ORDER BY pa.data_inicio DESC
+        ORDER BY pa.data_inicio DESC, pa.id_plano DESC
         LIMIT 1`,
       [alvo],
     );
@@ -510,6 +510,17 @@ export class PlanosService {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
+
+      // Plano novo substitui o vigente: encerra o anterior na véspera, para o
+      // paciente não continuar vendo o plano antigo como ativo.
+      await client.query(
+        `UPDATE plano_alimentar
+            SET data_fim = GREATEST(data_inicio, $2::date - 1)
+          WHERE id_paciente = $1
+            AND data_inicio <= $2::date
+            AND (data_fim IS NULL OR data_fim >= $2::date)`,
+        [idPaciente, dto.dataInicio],
+      );
 
       const { rows } = await client.query(
         `INSERT INTO plano_alimentar

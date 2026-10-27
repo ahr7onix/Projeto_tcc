@@ -120,8 +120,9 @@ links) já vêm do `render.yaml`. Para conferir, use "Esqueceu a senha?" no logi
 do painel com uma conta sua.
 
 > O link de criar ou redefinir senha **nunca** volta na resposta da API no
-> servidor publicado — só com `NODE_ENV=development` ou `test`, para testar sem
-> caixa de e-mail. Variável ausente conta como produção.
+> servidor publicado: só em desenvolvimento, com `RESET_LINK_NA_RESPOSTA=true`,
+> para testar sem caixa de e-mail. Com `NODE_ENV=production` (que o `render.yaml`
+> define) ele não sai nem com a variável ligada.
 
 ---
 
