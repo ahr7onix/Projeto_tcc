@@ -306,8 +306,8 @@ A classificação usada em alertas e relatórios está em
 
 | Momento | Faixa alvo (mg/dL) |
 |---|---|
-| Jejum | 70 – 130 |
-| Pré-refeição | 70 – 130 |
+| Jejum | 70 – 180 |
+| Pré-refeição | 70 – 180 |
 | Pós-refeição | 70 – 180 |
 | Antes de dormir | 90 – 150 |
 | Madrugada | 70 – 140 |
