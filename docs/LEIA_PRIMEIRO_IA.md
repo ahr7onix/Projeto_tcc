@@ -45,6 +45,16 @@ e avise a equipe antes.
 | Limites de tentativa (`common/limite-tentativas.ts`, `LimitePorMinutoGuard`) | Ficam na memória de uma instância. Com mais de uma réplica da API deixam de proteger; troque por armazenamento compartilhado antes de escalar. |
 | Versões do Expo / React Native no app | Foram testadas juntas. Atualizar sem testar no celular pode quebrar o app. |
 
+## Ao rodar o projeto (armadilhas)
+
+- **Login com Google:** o `apps/web/.env.example` vem com um Client ID de mentira. Quem só copia o
+  arquivo vê "Configure VITE_GOOGLE_CLIENT_ID no .env..." na tela de login. É preciso colocar o ID
+  real (em `docs/LOGIN_GOOGLE.md`) em `VITE_GOOGLE_CLIENT_ID` no `apps/web/.env` e o mesmo valor em
+  `GOOGLE_CLIENT_ID` no `apps/api/.env`, e reiniciar o painel e a API. Não troque o ID nem a
+  credencial no Google sem a equipe, e nunca coloque a chave secreta do cliente no repositório.
+- **App mobile:** em `EXPO_PUBLIC_API_URL` use o IP da máquina na rede, não `localhost`.
+- **Dados de demonstração:** só existem se o banco for preparado com `SEED_DEMO=true`.
+
 ## O que já está feito
 
 Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RESUMO_ENTREGA.md`.

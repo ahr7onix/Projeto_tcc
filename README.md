@@ -126,6 +126,10 @@ npm run start:dev
 
 Sobe em `http://localhost:3000`.
 
+> **Login com Google:** para o botão funcionar, coloque o Client ID também aqui, em
+> `GOOGLE_CLIENT_ID` (o mesmo valor do painel). Sem isso a API recusa o login social, e o resto do
+> sistema continua normal. Detalhes em `docs/LOGIN_GOOGLE.md`.
+
 ### 3. Painel web
 
 ```bash
@@ -136,6 +140,13 @@ npm run dev
 ```
 
 Acesse `http://localhost:5173`.
+
+> **Atenção, login com Google:** o `.env.example` traz `VITE_GOOGLE_CLIENT_ID` com um valor de
+> mentira (`SEU_CLIENT_ID_AQUI...`). Se você só copiar o arquivo, a tela de login mostra
+> "Configure VITE_GOOGLE_CLIENT_ID no .env para ativar o login com Google". Troque pelo Client ID
+> real, que está em `docs/LOGIN_GOOGLE.md` (ele não é segredo), e **reinicie o `npm run dev`**,
+> porque o Vite só lê o `.env` ao iniciar. O Google só aceita `http://localhost:5173` ou
+> `http://127.0.0.1:5173`, e hoje só entram as contas cadastradas como usuário de teste.
 
 ### 4. App mobile
 

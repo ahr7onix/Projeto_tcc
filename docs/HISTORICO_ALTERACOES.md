@@ -2,6 +2,16 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-27 — Aviso sobre o login com Google no README
+- Quem: equipe, com apoio de IA
+- PR/branch: #11, `docs/ia-e-limpeza`
+- O que foi adicionado: aviso no `README.md` (passos da API e do painel) e seção "Ao rodar o
+  projeto (armadilhas)" em `docs/LEIA_PRIMEIRO_IA.md`. Explica por que aparece "Configure
+  VITE_GOOGLE_CLIENT_ID no .env" e como resolver.
+- O que foi modificado: nada em código.
+- Atenção para quem vier depois: o Client ID não é segredo; a chave secreta do cliente nunca vai
+  para o repositório.
+
 ## 2026-10-27 — Documentação para IA e limpeza de comentários
 - Quem: equipe, com apoio de IA
 - PR/branch: `docs/ia-e-limpeza`
