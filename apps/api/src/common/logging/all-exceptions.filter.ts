@@ -111,11 +111,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
     });
   }
 
-  /**
-   * Erros que não são defeito do servidor e antes viravam 500: id fora do
-   * formato (Postgres 22P02), registro duplicado (23505) e corpo grande demais
-   * (body-parser, 413).
-   */
+  // Erros que não são culpa do servidor: id fora do formato (22P02), registro
+  // duplicado (23505) e corpo grande demais (413).
   private erroPrevisto(excecao: unknown): { status: number; message: string } | null {
     const e = excecao as { code?: string; status?: number; statusCode?: number; type?: string };
     if (e?.code === '22P02' || e?.code === '22003') {

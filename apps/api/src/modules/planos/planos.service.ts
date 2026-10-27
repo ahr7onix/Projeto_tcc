@@ -511,8 +511,7 @@ export class PlanosService {
     try {
       await client.query('BEGIN');
 
-      // Plano novo substitui o vigente: encerra o anterior na véspera, para o
-      // paciente não continuar vendo o plano antigo como ativo.
+      // plano novo encerra o vigente, senão o paciente continua vendo o antigo
       await client.query(
         `UPDATE plano_alimentar
             SET data_fim = GREATEST(data_inicio, $2::date - 1)

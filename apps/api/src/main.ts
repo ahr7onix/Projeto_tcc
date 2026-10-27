@@ -23,7 +23,7 @@ async function bootstrap() {
   // pessoa só.
   app.set('trust proxy', 1);
 
-  // Cabeçalhos de segurança; também remove o X-Powered-By: Express.
+  // helmet também tira o X-Powered-By
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
   // CORS_ORIGIN aceita uma lista separada por vírgula, porque em produção o
