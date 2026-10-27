@@ -45,7 +45,14 @@ describe('ContasService', () => {
       await expect(service.enviarBoasVindas(envio)).resolves.toEqual({ emailEnviado: true });
     });
 
-    it('should hand the link back outside production, for testing', async () => {
+    it('should never hand the link back when NODE_ENV is not set', async () => {
+      // É o caso do Render: sem NODE_ENV, o servidor publicado contava como
+      // "não produção" e devolvia o link.
+      const { service } = montar({ SMTP_HOST: 'smtp.exemplo' });
+      await expect(service.enviarBoasVindas(envio)).resolves.toEqual({ emailEnviado: true });
+    });
+
+    it('should hand the link back in development, for testing', async () => {
       const { service } = montar({ NODE_ENV: 'development', SMTP_HOST: 'smtp.exemplo' });
       await expect(service.enviarBoasVindas(envio)).resolves.toEqual({
         emailEnviado: true,

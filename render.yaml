@@ -55,6 +55,25 @@ services:
       # Endereço do painel, para o navegador liberar as chamadas.
       - key: CORS_ORIGIN
         value: https://nutricare-adj-painel.onrender.com
+      # Os links de criar e de redefinir senha que vão por e-mail apontam para
+      # cá. Sem isto apontavam para localhost:5173.
+      - key: WEB_APP_URL
+        value: https://nutricare-adj-painel.onrender.com
+      # E-mail de verdade (docs/PUBLICAR.md, seção "E-mail"). Sem SMTP_HOST o
+      # servidor usa o Ethereal, que só gera uma prévia no log: ninguém recebe
+      # o link de criar senha do cadastro de paciente e de nutricionista, nem o
+      # de "esqueci a senha". `sync: false` = o valor é preenchido no painel do
+      # Render e nunca fica no repositório.
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
       # Mesmo Client ID do painel (ver docs/LOGIN_GOOGLE.md).
       - key: GOOGLE_CLIENT_ID
         value: 579066584754-mjlmqjmtscn5lgs7depm8uvovn92lm5d.apps.googleusercontent.com

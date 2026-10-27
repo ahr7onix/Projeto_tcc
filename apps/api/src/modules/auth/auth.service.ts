@@ -12,6 +12,7 @@ import { randomBytes, createHash } from 'crypto';
 import { OAuth2Client, TokenPayload } from 'google-auth-library';
 import type { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
+import { expoeLinksDeTeste } from '../../common/ambiente';
 import { logger } from '../../common/logging/logger.service';
 import { perfilEstaCompleto } from '../../common/perfil-completo';
 import { MailService } from '../mail/mail.service';
@@ -396,22 +397,19 @@ export class AuthService {
         resetUrl,
       });
 
-      const isProd = this.config.get<string>('NODE_ENV') === 'production';
+      // O link na resposta é atalho de desenvolvimento: fora dele, quem pede
+      // o "esqueci a senha" de outra pessoa receberia a chave da conta dela.
       return {
         message,
-        ...(isProd
-          ? {}
-          : {
-              previewUrl: envio.previewUrl,
-              resetUrl,
-            }),
+        ...(expoeLinksDeTeste(this.config.get<string>('NODE_ENV'))
+          ? { previewUrl: envio.previewUrl, resetUrl }
+          : {}),
       };
     } catch (err) {
       // Em falha de e-mail, ainda devolve mensagem genérica (e o link em dev).
-      const isProd = this.config.get<string>('NODE_ENV') === 'production';
       return {
         message,
-        ...(isProd ? {} : { resetUrl }),
+        ...(expoeLinksDeTeste(this.config.get<string>('NODE_ENV')) ? { resetUrl } : {}),
       };
     }
   }
