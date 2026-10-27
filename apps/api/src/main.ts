@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/logging/all-exceptions.filter';
 import { logger } from './common/logging/logger.service';
@@ -10,8 +11,16 @@ import { HealthService } from './modules/health/health.service';
 async function bootstrap() {
   // O logger da aplicação é também o do Nest: avisos do framework e da API
   // saem no mesmo formato e vão para o mesmo arquivo.
-  const app = await NestFactory.create(AppModule, { cors: false, logger });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    cors: false,
+    logger,
+  });
   const config = app.get(ConfigService);
+
+  // No Render a requisição chega por um proxy: sem isto, o IP de todo usuário
+  // seria o do proxy, e o limite de tentativas de login trataria todo mundo
+  // como uma pessoa só.
+  app.set('trust proxy', 1);
 
   // CORS_ORIGIN aceita uma lista separada por vírgula, porque em produção o
   // painel web e o app ficam em endereços diferentes da API.

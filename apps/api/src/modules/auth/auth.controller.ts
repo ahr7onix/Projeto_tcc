@@ -4,7 +4,10 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  UseGuards,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
+import { LimiteTentativasGuard } from '../../common/guards/limite-tentativas.guard';
 import { AuthService } from './auth.service';
 import { CadastroDto } from './dto/cadastro.dto';
 import { EsqueciSenhaDto } from './dto/esqueci-senha.dto';
@@ -13,7 +16,14 @@ import { LoginDto } from './dto/login.dto';
 import { RedefinirSenhaDto } from './dto/redefinir-senha.dto';
 import { RefreshDto } from './dto/refresh.dto';
 
+/**
+ * Limite de tentativas em toda rota que confere senha, cria conta ou manda
+ * e-mail: sem ele, adivinhar a senha de uma conta era só questão de repetir o
+ * pedido. Renovar e encerrar a sessão ficam de fora — o app renova o token a
+ * cada 15 minutos e não pode ser barrado por isso.
+ */
 @Controller('auth')
+@UseGuards(LimiteTentativasGuard)
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
@@ -77,12 +87,14 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @SkipThrottle()
   @HttpCode(HttpStatus.OK)
   refresh(@Body() dto: RefreshDto) {
     return this.auth.refresh(dto.refreshToken);
   }
 
   @Post('logout')
+  @SkipThrottle()
   @HttpCode(HttpStatus.NO_CONTENT)
   async logout(@Body() dto: RefreshDto) {
     await this.auth.logout(dto.refreshToken);

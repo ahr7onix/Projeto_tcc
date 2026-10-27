@@ -1,5 +1,10 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
+import {
+  JANELA_TENTATIVAS_MS,
+  LIMITE_TENTATIVAS,
+} from './common/guards/limite-tentativas.guard';
 import { HttpLoggerMiddleware } from './common/logging/http-logger.middleware';
 import { MonitoringModule } from './common/monitoring/monitoring.module';
 import { DatabaseModule } from './database/database.module';
@@ -32,6 +37,12 @@ import { VinculosModule } from './modules/vinculos/vinculos.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    // Só vale onde o LimiteTentativasGuard é aplicado (rotas de autenticação):
+    // não há guard global, então as demais rotas não são limitadas.
+    ThrottlerModule.forRoot({
+      throttlers: [{ ttl: JANELA_TENTATIVAS_MS, limit: LIMITE_TENTATIVAS }],
+      errorMessage: 'Muitas tentativas seguidas. Aguarde um minuto e tente de novo.',
+    }),
     DatabaseModule,
     MonitoringModule,
     HealthModule,
