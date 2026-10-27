@@ -8,8 +8,9 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 - O que foi adicionado: `CLAUDE.md`, `AGENTS.md`, `docs/LEIA_PRIMEIRO_IA.md` e este histórico.
 - O que foi modificado: comentários dos arquivos que a IA alterou no PR #6 (e no PR #10, na
   branch dele), deixados curtos e no jeito do resto do código. Nenhuma função foi alterada.
-- O que foi removido: rodapés de ferramenta nas descrições dos PRs e nos commits ainda não
-  mesclados. O commit já mesclado do PR #6 não foi mexido (reescrever a `main` não é seguro).
+- O que foi removido: rodapé de ferramenta nas descrições dos PRs #6, #7 e #10. Os commits que
+  já existem (`45c1e4c` na `main` e `170dca3` na branch do PR #10) continuam com o rodapé, porque
+  tirar isso exigiria reescrever histórico com force-push. Commits novos saem sem rodapé.
 - Atenção para quem vier depois: antes de mexer em qualquer coisa, leia as regras de "não mexa".
 
 ## 2026-10-27 — Barra lateral nova do painel web (PR #10, aberto)
