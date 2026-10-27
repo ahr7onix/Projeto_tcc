@@ -11,6 +11,9 @@
 # Não há nada para preencher à mão: o endereço do banco e os endereços dos dois
 # serviços já estão amarrados aqui dentro. Basta o Render aplicar o arquivo.
 #
+# Existe uma segunda cópia, para outra conta do Render, em render-tcc.yaml
+# (docs/PUBLICAR.md, "Segunda cópia"). Mudou algo aqui? Mude lá também.
+#
 # ATENÇÃO: o banco gratuito do Render expira em 30 dias. Antes disso é preciso
 # trocar para o plano pago ou criar um banco novo. Para uso além da demonstração,
 # vale migrar para um provedor com plano gratuito sem prazo (Neon, Supabase).

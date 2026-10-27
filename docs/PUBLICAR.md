@@ -213,6 +213,45 @@ antigo e `psql` no novo, antes do passo 3.
 
 ---
 
+## Segunda cópia, em outra conta do Render
+
+O plano gratuito do Render não deixa convidar ninguém para a conta: só quem
+publicou a cópia acima consegue mudar as configurações dela, como as do e-mail.
+Para outra pessoa do grupo ter um ambiente que ela mesma administra, existe o
+`render-tcc.yaml`, na raiz do projeto. Ele é igual ao `render.yaml` fora os
+nomes, e por isso os endereços:
+
+| Peça | Endereço |
+|---|---|
+| Painel web | <https://nutricare-tcc-painel.onrender.com> |
+| API | <https://nutricare-tcc-api.onrender.com> |
+
+As duas cópias não se atrapalham: cada conta do Render lê só o seu arquivo. O
+banco também é separado — as contas de exemplo existem nas duas, mas o que for
+cadastrado numa não aparece na outra.
+
+1. Criar conta em <https://render.com> usando o **GitHub** de quem tem acesso
+   ao repositório.
+2. **New +** > **Blueprint** e escolher o `Projeto_tcc`. Se ele não aparecer na
+   lista (o repositório é de outra conta do GitHub), fazer um *fork* dele e
+   escolher o fork. Nesse caso, quando a `main` mudar, é preciso clicar em
+   **Sync fork** no GitHub para a cópia receber a mudança.
+3. No caminho do arquivo do Blueprint, informar `render-tcc.yaml`.
+4. O Render pede `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS` e `SMTP_FROM`: são os
+   valores da seção "E-mail". Preencher e clicar em **Deploy Blueprint**.
+5. Conferir `/status` como em "Conferir se está tudo de pé", com o endereço
+   desta cópia.
+
+O "Entrar com Google" só funciona nesta cópia depois de autorizar
+`https://nutricare-tcc-painel.onrender.com` no console do Google (seção "Login
+com Google"). Até lá, entrar com e-mail e senha funciona normalmente. O
+aplicativo do celular escolhe qual API usar pelo `EXPO_PUBLIC_API_URL` do
+`apps/mobile/.env`.
+
+**Mudou algo no `render.yaml`? Mude no `render-tcc.yaml` também.**
+
+---
+
 ## Problemas comuns
 
 | O que acontece | Causa provável | O que fazer |

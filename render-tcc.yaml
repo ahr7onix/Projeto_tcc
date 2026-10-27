@@ -1,0 +1,114 @@
+# Segunda cópia do NutriCare no Render, para publicar em outra conta.
+#
+# O render.yaml é o da cópia que já está no ar (nutricare-adj-*). O plano
+# gratuito do Render não deixa convidar outras pessoas para a conta, então quem
+# precisa mexer nas configurações sem acesso a ela monta esta cópia na própria
+# conta. O passo a passo está em docs/PUBLICAR.md, seção "Segunda cópia".
+#
+# Ao criar o Blueprint, informe o caminho deste arquivo: render-tcc.yaml
+#
+# São as mesmas três peças do render.yaml, com outros nomes (que viram o
+# endereço do site e são únicos no mundo todo):
+#   nutricare-tcc-db      o banco de dados PostgreSQL
+#   nutricare-tcc-api     a API (NestJS)
+#   nutricare-tcc-painel  o painel web da nutricionista, site estático
+#
+# MUDOU ALGO NO render.yaml? Mude aqui também. Fora os nomes e os endereços,
+# os dois arquivos são iguais.
+#
+# ATENÇÃO: o banco gratuito do Render expira em 30 dias (ver docs/PUBLICAR.md,
+# "Trocar o banco por um sem prazo").
+
+databases:
+  - name: nutricare-tcc-db
+    plan: free
+    region: oregon
+    databaseName: nutricare
+    user: nutricare
+
+services:
+  - type: web
+    name: nutricare-tcc-api
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: apps/api
+    # `--include=dev` porque NODE_ENV=production (abaixo) vale também no build, e
+    # com ele o npm deixa de instalar as devDependencies — entre elas o
+    # @nestjs/cli e o typescript, sem os quais o `nest build` falha.
+    buildCommand: npm ci --include=dev && npm run build
+    # O preparar-banco.mjs cria as tabelas na primeira vez e não faz nada nas
+    # seguintes, então pode ficar no start sem problema.
+    startCommand: node preparar-banco.mjs && node dist/main.js
+    healthCheckPath: /status
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "20"
+      # Endereço do banco criado acima — preenchido pelo próprio Render.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nutricare-tcc-db
+          property: connectionString
+      # O banco do Render usa certificado próprio, por isso "no-verify".
+      - key: DATABASE_SSL
+        value: no-verify
+      # Gerado pelo próprio Render, ninguém precisa saber o valor.
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 15m
+      - key: REFRESH_TOKEN_TTL_DAYS
+        value: "30"
+      # Endereço do painel desta cópia, para o navegador liberar as chamadas.
+      - key: CORS_ORIGIN
+        value: https://nutricare-tcc-painel.onrender.com
+      # Os links de criar e de redefinir senha que vão por e-mail apontam para cá.
+      - key: WEB_APP_URL
+        value: https://nutricare-tcc-painel.onrender.com
+      # E-mail de verdade (docs/PUBLICAR.md, seção "E-mail"). O Render pede os
+      # quatro valores ao criar o Blueprint; `sync: false` = ficam só no painel
+      # do Render, nunca no repositório.
+      - key: SMTP_HOST
+        sync: false
+      # 2525, e não 587: o plano gratuito do Render bloqueia as portas 25, 465
+      # e 587 desde setembro de 2025. O Brevo atende na 2525.
+      - key: SMTP_PORT
+        value: "2525"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      # Mesmo Client ID da outra cópia. O "Entrar com Google" só funciona aqui
+      # depois de autorizar o endereço deste painel no console do Google
+      # (docs/PUBLICAR.md, "Login com Google").
+      - key: GOOGLE_CLIENT_ID
+        value: 579066584754-mjlmqjmtscn5lgs7depm8uvovn92lm5d.apps.googleusercontent.com
+      # "true" carrega pacientes fictícios para o cliente ter o que testar.
+      # Troque para "false" antes de qualquer uso com paciente de verdade.
+      - key: SEED_DEMO
+        value: "true"
+
+  - type: web
+    name: nutricare-tcc-painel
+    runtime: static
+    rootDir: apps/web
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # A API desta cópia — não a do render.yaml.
+      - key: VITE_API_URL
+        value: https://nutricare-tcc-api.onrender.com
+      - key: VITE_GOOGLE_CLIENT_ID
+        value: 579066584754-mjlmqjmtscn5lgs7depm8uvovn92lm5d.apps.googleusercontent.com
+    # O painel é uma página só: qualquer endereço interno (/login, /pacientes)
+    # tem que devolver o index.html, senão o servidor responde "404".
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
