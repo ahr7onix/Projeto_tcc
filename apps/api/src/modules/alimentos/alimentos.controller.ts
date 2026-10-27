@@ -7,6 +7,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt.guard';
 import type { JwtPayload } from '../../common/guards/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CreateAlimentoDto } from './dto/create-alimento.dto';
+import { ImportarAlimentosDto } from './dto/importar-alimentos.dto';
 import { UpdateAlimentoDto } from './dto/update-alimento.dto';
 import { AlimentosService } from './alimentos.service';
 
@@ -49,6 +50,12 @@ export class AlimentosController {
   @HttpCode(HttpStatus.CREATED)
   criar(@CurrentUser() user: JwtPayload, @Body() dto: CreateAlimentoDto) {
     return this.alimentos.criar(user, dto);
+  }
+
+  @Post('importar')
+  @HttpCode(HttpStatus.OK)
+  importar(@CurrentUser() user: JwtPayload, @Body() dto: ImportarAlimentosDto) {
+    return this.alimentos.importar(user, dto);
   }
 
   @Patch(':id')

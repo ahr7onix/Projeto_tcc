@@ -72,6 +72,25 @@ export async function atualizarAlimento(
   return data
 }
 
+/** Uma linha da planilha já convertida; a fonte vale para a planilha inteira. */
+export type ItemImportacao = Omit<AlimentoPayload, 'fonte'>
+
+export interface ResultadoImportacao {
+  fonte: string
+  inseridos: number
+  atualizados: number
+  /** `indice` é a posição do item na lista enviada naquele lote. */
+  recusados: { indice: number; nome: string | null; motivo: string }[]
+}
+
+export async function importarAlimentos(
+  fonte: string,
+  itens: ItemImportacao[],
+): Promise<ResultadoImportacao> {
+  const { data } = await api.post('/alimentos/importar', { fonte, itens })
+  return data
+}
+
 /** O alimento não é apagado: fica inativo, porque planos antigos apontam para ele. */
 export async function desativarAlimento(id: string): Promise<void> {
   await api.delete(`/alimentos/${id}`)
