@@ -40,7 +40,7 @@ e avise a equipe antes.
 | Exclusão de conta feita pelo paciente (`desativado_em`) | É suave de propósito: não troque por `DELETE`, o histórico de saúde precisa ficar. (A remoção feita pelo administrador é definitiva, e isso também é intencional.) |
 | Plano alimentar "ativo" | É calculado pelas datas de início e fim, não por coluna. Criar plano novo encerra o anterior. |
 | Raiz do repositório sem npm workspaces | O Render instala cada serviço isolado pelo `rootDir`. Workspaces quebram o deploy. |
-| `render.yaml` (`NODE_ENV=production`) e `RESET_LINK_NA_RESPOSTA` | Em produção o link de criar/redefinir senha nunca pode vir na resposta da API (`common/ambiente.ts`). Não ligue `RESET_LINK_NA_RESPOSTA` fora do desenvolvimento. |
+| `render.yaml` e `render-tcc.yaml` (`NODE_ENV=production`) e `RESET_LINK_NA_RESPOSTA` | Em produção o link de criar/redefinir senha nunca pode vir na resposta da API (`common/ambiente.ts`). Não ligue `RESET_LINK_NA_RESPOSTA` fora do desenvolvimento. |
 | Segredos (`.env`, `JWT_SECRET`, senhas) | Nunca vão para o Git. A senha do admin do seed vale só em desenvolvimento. |
 | Limites de tentativa (`common/limite-tentativas.ts`, `LimitePorMinutoGuard`) | Ficam na memória de uma instância. Com mais de uma réplica da API deixam de proteger; troque por armazenamento compartilhado antes de escalar. |
 | Versões do Expo / React Native no app | Foram testadas juntas. Atualizar sem testar no celular pode quebrar o app. |
@@ -52,6 +52,7 @@ e avise a equipe antes.
   real (em `docs/LOGIN_GOOGLE.md`) em `VITE_GOOGLE_CLIENT_ID` no `apps/web/.env` e o mesmo valor em
   `GOOGLE_CLIENT_ID` no `apps/api/.env`, e reiniciar o painel e a API. Não troque o ID nem a
   credencial no Google sem a equipe, e nunca coloque a chave secreta do cliente no repositório.
+  O `render-tcc.yaml` usa outro ID de propósito: é o cliente da segunda cópia, em outra conta.
 - **App mobile:** em `EXPO_PUBLIC_API_URL` use o IP da máquina na rede, não `localhost`.
 - **Dados de demonstração:** só existem se o banco for preparado com `SEED_DEMO=true`.
 
@@ -69,6 +70,9 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
 - Correções do teste funcional (PR #6): plano novo encerra o anterior, histórico de notificações
   dos alertas críticos, validação de data de nascimento, peso e altura, erros 500 que viraram
   400/409/413, `helmet`, link de redefinir senha só com opt-in.
+- Segunda cópia publicada pelo `render-tcc.yaml`, na conta do Render do Natan
+  (`nutricare-tcc-painel.onrender.com`), com e-mail pelo Brevo e login Google em cliente próprio.
+  A cópia do `render.yaml` continua sem e-mail.
 
 ## Em andamento
 

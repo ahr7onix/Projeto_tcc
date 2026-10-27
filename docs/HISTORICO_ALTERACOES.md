@@ -2,6 +2,31 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-27 — Login com Google próprio na segunda cópia
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/render-tcc-google`
+- O que foi adicionado: cliente "NutriCare - Painel Web" no projeto `nutricare-tcc` do Google
+  Cloud, na conta do Natan, com a origem `https://nutricare-tcc-painel.onrender.com`.
+- O que foi modificado: `GOOGLE_CLIENT_ID` e `VITE_GOOGLE_CLIENT_ID` no `render-tcc.yaml` passam a
+  usar esse cliente. O ID da equipe (`render.yaml`, `.env` de desenvolvimento) não mudou.
+- Arquivos principais: `render-tcc.yaml`, `docs/LOGIN_GOOGLE.md`, `docs/PUBLICAR.md`.
+- Atenção para quem vier depois: os usuários de teste dessa cópia ficam no projeto
+  `nutricare-tcc`, não no projeto do cliente original.
+
+## 2026-10-27 — Segunda cópia no Render (`render-tcc.yaml`)
+- Quem: Natan, com apoio de IA
+- PR/branch: commit `2290c6d`, que entrou direto na `main`, sem PR (a branch local
+  `feat/render-tcc` seguia a `origin/main` por engano). O CI passou.
+- O que foi adicionado: `render-tcc.yaml`, igual ao `render.yaml` fora os nomes
+  (`nutricare-tcc-*`) e os endereços. Foi publicado como Blueprint na conta do Render do Natan,
+  porque o plano gratuito não deixa convidar ninguém para a conta da cópia original. Essa cópia
+  já envia e-mail pelo Brevo, na porta 2525.
+- O que foi modificado: comentário no topo do `render.yaml` apontando para a segunda cópia; nova
+  seção "Segunda cópia" no `docs/PUBLICAR.md`.
+- Atenção para quem vier depois: mudou o `render.yaml`? Mude o `render-tcc.yaml` também. O banco
+  da segunda cópia nasceu em 27/10 e o gratuito do Render vence em 30 dias. O commit `2290c6d`
+  ficou com rodapé de ferramenta; tirar exigiria reescrever a `main`.
+
 ## 2026-10-27 — Aviso sobre o login com Google no README
 - Quem: equipe, com apoio de IA
 - PR/branch: #11, `docs/ia-e-limpeza`

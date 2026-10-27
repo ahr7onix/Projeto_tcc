@@ -100,6 +100,31 @@ teste é suficiente.
 5. Copiar o "ID do cliente" para os dois `.env` da tabela lá em cima.
 6. Adicionar os e-mails em **Usuários de teste**.
 
+### Segunda cópia (`render-tcc.yaml`)
+
+A segunda cópia publicada (ver [PUBLICAR.md](PUBLICAR.md), "Segunda cópia") fica
+em outra conta e tem cliente próprio, criado do zero como acima. O cliente de
+cima continua sendo o da cópia original e o de quem roda o projeto na máquina.
+
+Projeto no Google Cloud: `nutricare-tcc`, na conta Google do Natan.
+
+Credencial — tipo **Aplicativo da Web**, nome **"NutriCare - Painel Web"**:
+
+```
+358396813214-n1fmvb21ph02u56f71ns4v02i4o6r9fd.apps.googleusercontent.com
+```
+
+Origens JavaScript autorizadas:
+
+```
+https://nutricare-tcc-painel.onrender.com
+http://localhost:5173
+```
+
+O mesmo valor está em `GOOGLE_CLIENT_ID` e `VITE_GOOGLE_CLIENT_ID` no
+`render-tcc.yaml`. Os usuários de teste são outra lista: para liberar alguém
+nessa cópia, adicione o e-mail no projeto `nutricare-tcc`.
+
 ---
 
 ## Como testar

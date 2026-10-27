@@ -13,8 +13,8 @@
 #   nutricare-tcc-api     a API (NestJS)
 #   nutricare-tcc-painel  o painel web da nutricionista, site estático
 #
-# MUDOU ALGO NO render.yaml? Mude aqui também. Fora os nomes e os endereços,
-# os dois arquivos são iguais.
+# MUDOU ALGO NO render.yaml? Mude aqui também. Fora os nomes, os endereços e o
+# Client ID do Google, os dois arquivos são iguais.
 #
 # ATENÇÃO: o banco gratuito do Render expira em 30 dias (ver docs/PUBLICAR.md,
 # "Trocar o banco por um sem prazo").
@@ -82,11 +82,11 @@ services:
         sync: false
       - key: SMTP_FROM
         sync: false
-      # Mesmo Client ID da outra cópia. O "Entrar com Google" só funciona aqui
-      # depois de autorizar o endereço deste painel no console do Google
-      # (docs/PUBLICAR.md, "Login com Google").
+      # Cliente próprio desta cópia, no projeto nutricare-tcc do Google Cloud
+      # (docs/LOGIN_GOOGLE.md). O do render.yaml é de outra conta e não autoriza
+      # o endereço deste painel.
       - key: GOOGLE_CLIENT_ID
-        value: 579066584754-mjlmqjmtscn5lgs7depm8uvovn92lm5d.apps.googleusercontent.com
+        value: 358396813214-n1fmvb21ph02u56f71ns4v02i4o6r9fd.apps.googleusercontent.com
       # "true" carrega pacientes fictícios para o cliente ter o que testar.
       # Troque para "false" antes de qualquer uso com paciente de verdade.
       - key: SEED_DEMO
@@ -105,7 +105,7 @@ services:
       - key: VITE_API_URL
         value: https://nutricare-tcc-api.onrender.com
       - key: VITE_GOOGLE_CLIENT_ID
-        value: 579066584754-mjlmqjmtscn5lgs7depm8uvovn92lm5d.apps.googleusercontent.com
+        value: 358396813214-n1fmvb21ph02u56f71ns4v02i4o6r9fd.apps.googleusercontent.com
     # O painel é uma página só: qualquer endereço interno (/login, /pacientes)
     # tem que devolver o index.html, senão o servidor responde "404".
     routes:
