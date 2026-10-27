@@ -178,8 +178,8 @@ O arquivo `render.yaml` na raiz descreve as três peças — banco, API e painel
 limitações do plano gratuito em [docs/PUBLICAR.md](docs/PUBLICAR.md).
 
 **Esse ambiente é só para demonstração, com dados fictícios.** O banco gratuito
-expira em 30 dias e o sistema ainda não pede autorização do paciente para ser
-acompanhado por um nutricionista (LGPD).
+expira em 30 dias, e os parâmetros clínicos ainda aguardam a validação da equipe
+de Nutrição ([docs/CONFERENCIA_NUTRICAO.md](docs/CONFERENCIA_NUTRICAO.md)).
 
 Para preparar um banco novo, em vez de rodar os arquivos `.sql` na mão:
 
@@ -221,7 +221,7 @@ npm run test:cov      # com cobertura
 | RF04 | Registro de alimentação | Implementado |
 | RF05 | Registro de peso e dados de saúde | Implementado |
 | RF06 | Histórico de registros | Implementado |
-| RF07 | Nutricionista visualiza dados do paciente | Implementado |
+| RF07 | Nutricionista visualiza dados do paciente | Implementado — só depois que o paciente aceita o convite |
 | RF08 | Planos alimentares personalizados | Implementado |
 | RF09 | Acompanhamento da evolução | Implementado |
 | RF10 | Relatórios (CSV e PDF via impressão) | Implementado |
@@ -229,6 +229,9 @@ npm run test:cov      # com cobertura
 | RF12 | Conteúdos educativos | Implementado |
 | RF13 | Gestão administrativa | Implementado |
 | RF14 | Integração web + mobile | Implementado |
+| RF15 | Importação de tabela nutricional (CSV, cabeçalho da TACO reconhecido) | Implementado — falta a tabela oficial |
+| RF16 | Consentimento do paciente no vínculo (convite, aceite, encerramento) | Implementado |
+| RF17 | Cadastro de paciente pelo nutricionista e de nutricionista pela administração, com aprovação do CRN | Implementado |
 
 ---
 
@@ -238,6 +241,8 @@ npm run test:cov      # com cobertura
 |---|---|
 | RN01 — paciente só acessa os próprios dados | `planos.service.ts`, `relatorios.service.ts`, filtros por `id_usuario` |
 | RN02 — nutricionista só acessa pacientes vinculados | `vinculos.service.ts` + tabela `nutricionista_paciente` |
+| RN17 — o vínculo só nasce quando o paciente aceita o convite (LGPD) | `convites.service.ts` + tabela `solicitacao_vinculo` |
+| RN18 — nutricionista só entra no painel depois de aprovado pela administração | `auth.service.ts` + `nutricionista.aprovado_em` |
 | RN05 — apenas nutricionistas criam planos | `@Roles('nutricionista')` + `RolesGuard` |
 | RN06 — apenas administradores gerenciam usuários | `@Roles('administrador')` no `AdminController` |
 | RN07 — registros vão para o histórico | Tabelas `registro_glicemia` e `registro_refeicao` |
@@ -256,12 +261,20 @@ POST   /auth/google                   Login social
 POST   /auth/refresh                  Renovação do access token
 
 GET    /pacientes                     Pacientes vinculados ao nutricionista
-GET    /pacientes/disponiveis         Pacientes ainda não vinculados
+POST   /pacientes                     Cadastra paciente e envia convite (nutricionista)
 GET    /pacientes/:id                 Detalhe (exige vínculo)
 
 GET    /vinculos                      Lista vínculos ativos
-POST   /vinculos                      Vincula paciente
-DELETE /vinculos/:pacienteId          Encerra vínculo
+DELETE /vinculos/:pacienteId          Encerra vínculo (nutricionista)
+POST   /vinculos/convites             Convida paciente pelo e-mail (nutricionista)
+GET    /vinculos/convites             Convites pendentes (enviados ou recebidos)
+PATCH  /vinculos/convites/:id/aceitar Paciente aceita o acompanhamento
+PATCH  /vinculos/convites/:id/recusar Paciente recusa
+DELETE /vinculos/convites/:id         Nutricionista cancela o convite
+GET    /vinculos/nutricionistas       Quem acompanha o paciente
+DELETE /vinculos/nutricionistas/:id   Paciente encerra o acompanhamento
+
+POST   /alimentos/importar            Importa tabela nutricional (CSV lido no painel)
 
 GET    /planos                        Planos (filtrado por perfil)
 GET    /planos/ativo                  Plano vigente hoje
@@ -290,8 +303,10 @@ PATCH  /conteudos/:id                 Atualiza
 DELETE /conteudos/:id                 Remove
 
 GET    /admin/metricas                Métricas do sistema (admin)
-GET    /admin/usuarios                Lista usuários (admin)
+GET    /admin/usuarios                Lista usuários (admin; ?pendentes=true)
 DELETE /admin/usuarios/:id            Remove usuário (admin)
+POST   /admin/nutricionistas          Cadastra nutricionista já aprovado (admin)
+PATCH  /admin/nutricionistas/:id/aprovar  Libera o painel após conferir o CRN
 
 POST   /push/token                    Registra token de push
 DELETE /push/token                    Remove token
@@ -323,10 +338,18 @@ idade, gestação e condição individual do paciente.
 
 ## Limitações conhecidas
 
-- As mensagens usam polling (15 s na conversa, 30 s na lista), não WebSocket
+- As mensagens chegam por SSE (`GET /mensagens/stream`), não WebSocket: o
+  servidor empurra, mas o cliente só recebe
 - O PDF é gerado pelo diálogo de impressão do navegador, não no servidor
-- Não há aprovação do paciente ao ser vinculado por um nutricionista
-- O CRN não é validado junto ao conselho profissional
+- O CRN não é consultado automaticamente no conselho (não há consulta pública
+  automatizada): a administração confere à mão antes de aprovar o nutricionista
+- Sem SMTP configurado nenhum e-mail sai do sistema — nem o link de criar senha
+  de quem é cadastrado pelo painel. Ver [docs/PUBLICAR.md](docs/PUBLICAR.md)
+- Remover um usuário pela administração apaga a conta de vez, com tudo o que
+  depende dela — no caso do paciente, o histórico clínico. A exclusão feita pelo
+  próprio paciente, no app, é suave e preserva o histórico
+- O limite de tentativas de login guarda a contagem na memória do servidor:
+  vale para uma instância só, como a do plano gratuito do Render
 - A cobertura de testes concentra-se nas regras críticas, não na API inteira
 
 ### Arquitetura
@@ -353,7 +376,7 @@ foram corrigidos, e o primeiro deles hoje tem verificação automática no CI.
 
 - **O painel e o app não têm teste de comportamento**, só `typecheck` e lint no
   CI. A escolha se sustenta enquanto a regra de negócio estiver toda na API, que
-  é onde ficam os 182 testes e as fórmulas de `common/glicemia` e
+  é onde ficam os 238 testes e as fórmulas de `common/glicemia` e
   `common/nutricao`; deixa de se sustentar no dia em que os clientes ganharem
   lógica própria.
 
