@@ -35,6 +35,8 @@ services:
     startCommand: node preparar-banco.mjs && node dist/main.js
     healthCheckPath: /status
     envVars:
+      - key: NODE_ENV
+        value: production
       - key: NODE_VERSION
         value: "20"
       # Endereço do banco criado acima — preenchido pelo próprio Render.

@@ -13,6 +13,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  Max,
   Min,
   MinLength,
 } from 'class-validator';
@@ -36,8 +37,8 @@ class UpdatePacienteDto {
   @IsOptional() @IsString() dataNascimento?: string;
   @IsOptional() @IsString() sexo?: string;
   @IsOptional() @IsString() tipoDiabetes?: string;
-  @IsOptional() @IsNumber() @Min(0) peso?: number;
-  @IsOptional() @IsNumber() @Min(0) altura?: number;
+  @IsOptional() @IsNumber() @Min(1, { message: 'Peso fora do intervalo aceito' }) @Max(399, { message: 'Peso fora do intervalo aceito' }) peso?: number;
+  @IsOptional() @IsNumber() @Min(0.51, { message: 'Altura deve estar em metros (ex: 1.70)' }) @Max(2.59, { message: 'Altura deve estar em metros (ex: 1.70)' }) altura?: number;
   @IsOptional() @IsString() restricoesAlergias?: string;
 }
 

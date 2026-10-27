@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/logging/all-exceptions.filter';
 import { logger } from './common/logging/logger.service';
@@ -12,6 +13,9 @@ async function bootstrap() {
   // saem no mesmo formato e vão para o mesmo arquivo.
   const app = await NestFactory.create(AppModule, { cors: false, logger });
   const config = app.get(ConfigService);
+
+  // Cabeçalhos de segurança; também remove o X-Powered-By: Express.
+  app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
   // CORS_ORIGIN aceita uma lista separada por vírgula, porque em produção o
   // painel web e o app ficam em endereços diferentes da API.

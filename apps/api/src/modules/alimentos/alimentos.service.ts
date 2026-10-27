@@ -138,8 +138,19 @@ export class AlimentosService {
     };
   }
 
+  /** Macros de uma porção não podem pesar mais que a própria porção. */
+  private validarMacros(porcaoG: number, carb: number, prot: number, lip: number) {
+    if (carb + prot + lip > porcaoG) {
+      throw new BadRequestException(
+        'Carboidratos, proteínas e lipídios somam mais que o peso da porção',
+      );
+    }
+  }
+
   async criar(user: JwtPayload, dto: CreateAlimentoDto) {
     this.podeEditar(user);
+
+    this.validarMacros(dto.porcaoG ?? 100, dto.carboidratosG, dto.proteinasG, dto.lipidiosG);
 
     const fonte = dto.fonte?.trim() || 'manual';
     const duplicado = await this.pool.query(
@@ -183,6 +194,13 @@ export class AlimentosService {
   async atualizar(user: JwtPayload, id: string, dto: UpdateAlimentoDto) {
     this.podeEditar(user);
     const atual = await this.buscar(id);
+
+    this.validarMacros(
+      dto.porcaoG ?? atual.porcaoG,
+      dto.carboidratosG ?? atual.carboidratosG,
+      dto.proteinasG ?? atual.proteinasG,
+      dto.lipidiosG ?? atual.lipidiosG,
+    );
 
     const { rows } = await this.pool.query(
       `UPDATE alimento SET

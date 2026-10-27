@@ -50,6 +50,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
       return;
     }
 
+    const previsto = this.erroPrevisto(excecao);
+    if (previsto) {
+      if (!res.headersSent) {
+        res.status(previsto.status).json({
+          statusCode: previsto.status,
+          message: previsto.message,
+        });
+      }
+      return;
+    }
+
     const erro = excecao as Error;
     const status = HttpStatus.INTERNAL_SERVER_ERROR;
 
@@ -92,5 +103,28 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message: 'Erro interno do servidor',
       requestId,
     });
+  }
+
+  /**
+   * Erros que não são defeito do servidor e antes viravam 500: id fora do
+   * formato (Postgres 22P02), registro duplicado (23505) e corpo grande demais
+   * (body-parser, 413).
+   */
+  private erroPrevisto(excecao: unknown): { status: number; message: string } | null {
+    const e = excecao as { code?: string; status?: number; statusCode?: number; type?: string };
+    if (e?.code === '22P02' || e?.code === '22003') {
+      return { status: HttpStatus.BAD_REQUEST, message: 'Identificador ou valor em formato inválido' };
+    }
+    if (e?.code === '23505') {
+      return { status: HttpStatus.CONFLICT, message: 'Registro já existe' };
+    }
+    const http = e?.status ?? e?.statusCode;
+    if (typeof http === 'number' && http >= 400 && http < 500 && typeof e?.type === 'string') {
+      return {
+        status: http,
+        message: http === 413 ? 'Corpo da requisição grande demais' : 'Requisição inválida',
+      };
+    }
+    return null;
   }
 }

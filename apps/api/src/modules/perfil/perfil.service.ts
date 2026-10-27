@@ -8,6 +8,7 @@ import * as bcrypt from 'bcryptjs';
 import type { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
 import { logger } from '../../common/logging/logger.service';
+import { normalizarDataNascimento } from '../../common/data-nascimento';
 import { perfilEstaCompleto } from '../../common/perfil-completo';
 
 @Injectable()
@@ -161,8 +162,6 @@ export class PerfilService {
    * antes de gravar; o que já vier em ISO passa direto.
    */
   private normalizarData(valor?: string): string | null {
-    if (!valor) return null;
-    const br = valor.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-    return br ? `${br[3]}-${br[2]}-${br[1]}` : valor;
+    return normalizarDataNascimento(valor);
   }
 }
