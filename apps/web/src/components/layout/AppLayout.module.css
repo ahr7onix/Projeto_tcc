@@ -3,8 +3,7 @@
  *
  * A lateral é branca com uma borda de 1px — o contraste vem do fundo cinza da
  * página, não de sombra ou degradê. Nada aqui pisca, flutua ou anima sozinho:
- * é uma ferramenta de trabalho usada o dia inteiro. Não há marca no topo: ali
- * fica o perfil de quem está logado.
+ * é uma ferramenta de trabalho usada o dia inteiro.
  */
 
 .shell {
@@ -104,7 +103,7 @@
   flex-direction: column;
 }
 
-/* Os grupos se separam por um fio e pelo nome em texto normal — sem caixa-alta. */
+/* grupos separados por um fio */
 .grupo {
   display: flex;
   flex-direction: column;
@@ -154,8 +153,7 @@
   outline-offset: 2px;
 }
 
-/* Página atual: o ícone vira um quadrado azul cheio — é o único destaque forte
-   do menu; o resto fica em fundo e texto discretos. */
+/* página atual: ícone em quadrado azul */
 .navItemActive,
 .navItemActive:hover {
   background: var(--primary-soft);
@@ -279,7 +277,7 @@
   gap: 0;
 }
 
-/* Sem espaço para o título, o grupo fica só com o fio separador. */
+/* recolhido: sem título, só o fio */
 .sidebarCollapsed .grupoTitulo {
   display: none;
 }
@@ -288,7 +286,7 @@
   padding-top: 10px;
 }
 
-/* O contador vira uma bolinha no canto do ícone. */
+/* recolhido: o contador vira uma bolinha no canto do ícone */
 .sidebarCollapsed .badge {
   position: absolute;
   top: 4px;

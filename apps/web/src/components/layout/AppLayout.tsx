@@ -84,8 +84,7 @@ export default function AppLayout() {
   const grupos = user?.role === 'administrador' ? NAV_ADMINISTRADOR : NAV_NUTRICIONISTA
   const rotuloPerfil = ROTULO_PERFIL[user?.role ?? ''] ?? 'Nutricionista'
 
-  // Contador de mensagens não lidas no menu: atualiza ao trocar de tela e a
-  // cada minuto. Só o nutricionista tem conversas; falha de rede não derruba nada.
+  // contador de mensagens não lidas: atualiza ao trocar de tela e a cada minuto
   const temConversas = user?.role === 'nutricionista'
   useEffect(() => {
     if (!temConversas) return
@@ -111,7 +110,7 @@ export default function AppLayout() {
           collapsed ? s.sidebarCollapsed : '',
         ].filter(Boolean).join(' ')}
       >
-        {/* Perfil no topo, no lugar da marca: é o caminho para /perfil. */}
+        {/* perfil no topo, leva para /perfil */}
         <NavLink
           to="/perfil"
           className={({ isActive }) => `${s.perfil} ${isActive ? s.perfilActive : ''}`}
