@@ -1,14 +1,92 @@
-import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
+import * as bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
 import type { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
+import { ContasService } from '../contas/contas.service';
 import { VinculosService } from '../vinculos/vinculos.service';
+import { CadastrarPacienteDto } from './dto/cadastrar-paciente.dto';
 
 @Injectable()
 export class PacientesService {
   constructor(
     @Inject(PG_POOL) private readonly pool: Pool,
     private readonly vinculos: VinculosService,
+    private readonly contas: ContasService,
   ) {}
+
+  /**
+   * Cadastro pelo nutricionista, para quem chega ao consultório sem conta.
+   *
+   * A conta, o paciente e o convite de acompanhamento nascem juntos, na mesma
+   * transação. O vínculo, não: ele continua dependendo do aceite do paciente
+   * no aplicativo, como em qualquer convite (LGPD).
+   */
+  async cadastrar(idUsuarioNutri: string, dto: CadastrarPacienteDto) {
+    const idNutricionista = await this.vinculos.resolveNutricionistaId(idUsuarioNutri);
+    const email = dto.email.trim().toLowerCase();
+    const nome = dto.nome.trim().replace(/\s+/g, ' ');
+    if (dto.dataNascimento && new Date(dto.dataNascimento) > new Date()) {
+      throw new BadRequestException('A data de nascimento não pode estar no futuro');
+    }
+    // Senha que ninguém conhece: a conta só ganha senha pelo link do e-mail.
+    const senhaHash = await bcrypt.hash(randomBytes(24).toString('hex'), 10);
+
+    const client = await this.pool.connect();
+    let idUsuario: string;
+    let link: string;
+    try {
+      await client.query('BEGIN');
+      const { rows: usuario } = await client.query<{ id_usuario: string }>(
+        `INSERT INTO usuario (nome, email, senha, tipo)
+         VALUES ($1, $2, $3, 'paciente')
+         RETURNING id_usuario`,
+        [nome, email, senhaHash],
+      );
+      idUsuario = String(usuario[0].id_usuario);
+      const { rows: paciente } = await client.query<{ id_paciente: string }>(
+        `INSERT INTO paciente (id_usuario, data_nascimento, genero, tipo_diabetes)
+         VALUES ($1, $2, $3, $4)
+         RETURNING id_paciente`,
+        [idUsuario, dto.dataNascimento ?? null, dto.sexo ?? null, dto.tipoDiabetes ?? null],
+      );
+      await client.query(
+        `INSERT INTO solicitacao_vinculo (id_nutricionista, id_paciente) VALUES ($1, $2)`,
+        [idNutricionista, paciente[0].id_paciente],
+      );
+      link = await this.contas.gerarLinkDefinirSenha(client, idUsuario);
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK').catch(() => undefined);
+      if ((err as { code?: string })?.code === '23505') {
+        throw new ConflictException(
+          'Já existe uma conta com este e-mail. Se for de um paciente, envie um convite.',
+        );
+      }
+      throw err;
+    } finally {
+      client.release();
+    }
+
+    const { rows: autor } = await this.pool.query('SELECT nome FROM usuario WHERE id_usuario = $1', [
+      idUsuarioNutri,
+    ]);
+    const envio = await this.contas.enviarBoasVindas({
+      para: email,
+      nome,
+      link,
+      autor: autor[0]?.nome ?? 'Seu nutricionista',
+      perfil: 'paciente',
+    });
+
+    return { paciente: { id: idUsuario, nome, email }, ...envio };
+  }
 
   async findAll(idUsuarioNutri: string, busca?: string) {
     const params: string[] = [idUsuarioNutri];

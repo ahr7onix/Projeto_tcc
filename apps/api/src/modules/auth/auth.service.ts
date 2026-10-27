@@ -392,11 +392,17 @@ export class AuthService {
     }
   }
 
-  async redefinirSenha(token: string, novaSenha: string): Promise<{ message: string }> {
+  async redefinirSenha(
+    token: string,
+    novaSenha: string,
+  ): Promise<{ message: string; perfil: string }> {
     const tokenHash = this.hashToken(token);
     const senhaHash = await bcrypt.hash(novaSenha, 10);
 
     const client = await this.pool.connect();
+    // A tela usa o perfil para mandar cada um para o lugar certo: o paciente
+    // entra pelo aplicativo, e o login do painel recusa paciente.
+    let perfil: string;
     try {
       await client.query('BEGIN');
 
@@ -425,10 +431,13 @@ export class AuthService {
         );
       }
 
-      await client.query(
-        'UPDATE usuario SET senha = $1, atualizado_em = NOW() WHERE id_usuario = $2',
+      const atualizado = await client.query<{ tipo: string }>(
+        `UPDATE usuario SET senha = $1, atualizado_em = NOW()
+          WHERE id_usuario = $2
+          RETURNING tipo`,
         [senhaHash, row.id_usuario],
       );
+      perfil = atualizado.rows[0].tipo;
       // Revoga sessões ativas depois da troca de senha.
       await client.query(
         `UPDATE refresh_token SET revogado_em = NOW()
@@ -444,7 +453,7 @@ export class AuthService {
       client.release();
     }
 
-    return { message: 'Senha atualizada com sucesso. Você já pode entrar.' };
+    return { message: 'Senha atualizada com sucesso. Você já pode entrar.', perfil };
   }
 
   private async issueSession(user: UserRow): Promise<AuthResponse> {
