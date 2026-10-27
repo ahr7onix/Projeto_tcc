@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useId } from 'react'
 
 /*
  * Componentes compartilhados do painel.
@@ -242,8 +242,14 @@ const campoBase: React.CSSProperties = {
 }
 const anelFoco = '0 0 0 3px var(--primary-soft)'
 
-function Rotulo({ children }: { children: React.ReactNode }) {
-  return <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-soft)' }}>{children}</label>
+// O `htmlFor` liga o rótulo ao campo: sem ele o leitor de tela anunciava só
+// "caixa de texto", sem dizer qual, e clicar no rótulo não levava ao campo.
+function Rotulo({ children, htmlFor }: { children: React.ReactNode; htmlFor: string }) {
+  return (
+    <label htmlFor={htmlFor} style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-soft)' }}>
+      {children}
+    </label>
+  )
 }
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -252,9 +258,11 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   icon?: React.ReactNode
 }
 export function Input({ label, error, icon, style, ...props }: InputProps) {
+  const idGerado = useId()
+  const id = props.id ?? idGerado
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      {label && <Rotulo>{label}</Rotulo>}
+      {label && <Rotulo htmlFor={id}>{label}</Rotulo>}
       <div style={{ position: 'relative' }}>
         {icon && (
           <span style={{
@@ -264,6 +272,7 @@ export function Input({ label, error, icon, style, ...props }: InputProps) {
         )}
         <input
           {...props}
+          id={id}
           style={{
             ...campoBase,
             paddingLeft: icon ? 38 : 12,
@@ -291,11 +300,14 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
   label?: string
 }
 export function Textarea({ label, style, ...props }: TextareaProps) {
+  const idGerado = useId()
+  const id = props.id ?? idGerado
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      {label && <Rotulo>{label}</Rotulo>}
+      {label && <Rotulo htmlFor={id}>{label}</Rotulo>}
       <textarea
         {...props}
+        id={id}
         style={{ ...campoBase, resize: 'vertical', minHeight: 88, fontFamily: 'inherit', ...style }}
         onFocus={(e) => {
           e.target.style.borderColor = 'var(--primary)'
@@ -317,11 +329,14 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   options: { value: string; label: string }[]
 }
 export function Select({ label, options, style, ...props }: SelectProps) {
+  const idGerado = useId()
+  const id = props.id ?? idGerado
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      {label && <Rotulo>{label}</Rotulo>}
+      {label && <Rotulo htmlFor={id}>{label}</Rotulo>}
       <select
         {...props}
+        id={id}
         style={{ ...campoBase, cursor: 'pointer', appearance: 'none', paddingRight: 32,
           // Seta desenhada em CSS para o campo ficar igual em todos os navegadores.
           backgroundImage: 'linear-gradient(45deg, transparent 50%, var(--text-muted) 50%), linear-gradient(135deg, var(--text-muted) 50%, transparent 50%)',
