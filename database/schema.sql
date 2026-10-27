@@ -54,7 +54,10 @@ CREATE TABLE nutricionista (
     perfil_completo  BOOLEAN      NOT NULL DEFAULT FALSE,
     especialidade    VARCHAR(120),
     criado_em        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-    atualizado_em    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    atualizado_em    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    -- NULL = aguardando a administração conferir o CRN e aprovar o acesso.
+    -- Espelha migrations/017_aprovacao_nutricionista.sql.
+    aprovado_em      TIMESTAMPTZ
 );
 
 -- ---------- Tabela: nutricionista_paciente ----------

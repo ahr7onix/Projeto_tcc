@@ -1,5 +1,9 @@
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import type { Pool } from 'pg';
+import type { ContasService } from '../contas/contas.service';
 import { AdminService } from './admin.service';
+
+const semContas = {} as ContasService;
 
 function criarPoolMock(respostas: unknown[][]) {
   const query = jest.fn();
@@ -28,8 +32,92 @@ function servico(opcoes: {
       },
     ],
   ]);
-  return { service: new AdminService(pool), query };
+  return { service: new AdminService(pool, semContas), query };
 }
+
+describe('AdminService.aprovarNutricionista', () => {
+  it('aprova só quem está aguardando, com conta ativa', async () => {
+    const aprovadoEm = new Date();
+    const { pool, query } = criarPoolMock([[{ aprovado_em: aprovadoEm }]]);
+
+    await expect(new AdminService(pool, semContas).aprovarNutricionista('9')).resolves.toEqual({
+      aprovado: true,
+      aprovadoEm,
+    });
+    const [sql, params] = query.mock.calls[0];
+    expect(sql).toContain('n.aprovado_em IS NULL');
+    expect(sql).toContain('u.desativado_em IS NULL');
+    expect(params).toEqual(['9']);
+  });
+
+  it('responde 404 para quem já foi aprovado ou não é nutricionista', async () => {
+    const { pool } = criarPoolMock([[]]);
+    await expect(new AdminService(pool, semContas).aprovarNutricionista('9')).rejects.toThrow(
+      NotFoundException,
+    );
+  });
+});
+
+describe('AdminService.cadastrarNutricionista', () => {
+  function montar(falha?: { code: string; constraint: string }) {
+    const clientQuery = jest.fn(async (sql: string, _params?: unknown[]) => {
+      if (sql.includes('INTO usuario')) {
+        if (falha) throw Object.assign(new Error('duplicado'), falha);
+        return { rows: [{ id_usuario: 50 }], rowCount: 1 };
+      }
+      return { rows: [], rowCount: 0 };
+    });
+    const pool = {
+      query: jest.fn(async () => ({ rows: [{ nome: 'Administração ADJ' }], rowCount: 1 })),
+      connect: jest.fn(async () => ({ query: clientQuery, release: jest.fn() })),
+    } as unknown as Pool;
+    const contas = {
+      gerarLinkDefinirSenha: jest.fn(async () => 'http://painel/redefinir-senha?token=x&boasvindas=1'),
+      enviarBoasVindas: jest.fn(async () => ({ emailEnviado: true })),
+    };
+    return {
+      service: new AdminService(pool, contas as unknown as ContasService),
+      clientQuery,
+      contas,
+    };
+  }
+
+  it('cria a conta já aprovada e manda o link só para o e-mail do nutricionista', async () => {
+    const { service, clientQuery, contas } = montar();
+
+    const resposta = await service.cadastrarNutricionista('1', {
+      nome: ' Ana  Lima ',
+      email: 'ANA@nutri.com',
+      crn: ' CRN-3/999 ',
+    });
+
+    const insertNutri = clientQuery.mock.calls.find(([sql]) => sql.includes('INTO nutricionista'));
+    expect(insertNutri?.[0]).toContain('NOW()');
+    expect(insertNutri?.[1]).toEqual(['50', 'CRN-3/999', null, true]);
+    expect(contas.enviarBoasVindas).toHaveBeenCalledWith(
+      expect.objectContaining({ para: 'ana@nutri.com', perfil: 'nutricionista', autor: 'Administração ADJ' }),
+    );
+    expect(resposta).toEqual({
+      nutricionista: { id: '50', nome: 'Ana Lima', email: 'ana@nutri.com', crn: 'CRN-3/999' },
+      emailEnviado: true,
+    });
+  });
+
+  it('diz qual dado repetiu: o CRN ou o e-mail', async () => {
+    await expect(
+      montar({ code: '23505', constraint: 'nutricionista_crn_key' }).service.cadastrarNutricionista('1', {
+        nome: 'Ana',
+        email: 'ana@nutri.com',
+      }),
+    ).rejects.toThrow('Já existe um nutricionista com este CRN');
+    await expect(
+      montar({ code: '23505', constraint: 'usuario_email_key' }).service.cadastrarNutricionista('1', {
+        nome: 'Ana',
+        email: 'ana@nutri.com',
+      }),
+    ).rejects.toThrow(ConflictException);
+  });
+});
 
 describe('AdminService.analise', () => {
   it('classifica cada leitura pelo alvo do seu momento do dia', async () => {

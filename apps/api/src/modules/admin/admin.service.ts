@@ -1,12 +1,17 @@
 import {
   BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import * as bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
 import type { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
 import { avaliarGlicemia } from '../../common/glicemia/glicemia';
+import { ContasService } from '../contas/contas.service';
+import { CadastrarNutricionistaDto } from './dto/cadastrar-nutricionista.dto';
 
 const LIMITE_PADRAO = 50;
 const LIMITE_MAXIMO = 200;
@@ -70,7 +75,10 @@ function ordenar(
 
 @Injectable()
 export class AdminService {
-  constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
+  constructor(
+    @Inject(PG_POOL) private readonly pool: Pool,
+    private readonly contas: ContasService,
+  ) {}
 
   async metricas() {
     const { rows } = await this.pool.query(
@@ -234,10 +242,16 @@ export class AdminService {
     tipo?: string;
     busca?: string;
     limite?: number;
+    /** Só nutricionistas que se cadastraram e esperam a conferência do CRN. */
+    pendentes?: boolean;
   } = {}) {
     const params: unknown[] = [];
     const condicoes: string[] = [];
 
+    if (filtros.pendentes) {
+      condicoes.push('n.id_nutricionista IS NOT NULL AND n.aprovado_em IS NULL');
+      condicoes.push('u.desativado_em IS NULL');
+    }
     if (filtros.tipo && ['paciente', 'nutricionista', 'administrador'].includes(filtros.tipo)) {
       params.push(filtros.tipo);
       condicoes.push(`u.tipo = $${params.length}::tipo_usuario`);
@@ -253,7 +267,7 @@ export class AdminService {
 
     const { rows } = await this.pool.query(
       `SELECT u.id_usuario, u.nome, u.email, u.tipo, u.criado_em,
-              n.crn, n.perfil_completo,
+              n.crn, n.perfil_completo, n.especialidade, n.aprovado_em,
               (SELECT COUNT(*) FROM nutricionista_paciente np
                 WHERE np.ativo
                   AND (np.id_nutricionista = n.id_nutricionista
@@ -275,10 +289,96 @@ export class AdminService {
         tipo: r.tipo,
         criadoEm: r.criado_em,
         crn: r.crn ?? null,
+        especialidade: r.especialidade ?? null,
         perfilCompleto: r.perfil_completo ?? null,
+        // Só faz sentido para nutricionista; para os outros perfis fica null.
+        aprovado: r.tipo === 'nutricionista' ? r.aprovado_em !== null : null,
         vinculos: Number(r.vinculos ?? 0),
       })),
     };
+  }
+
+  /**
+   * Libera o painel para um nutricionista que se cadastrou sozinho. O CRN não
+   * tem consulta pública automatizada, então a conferência é do administrador,
+   * antes de clicar aqui.
+   */
+  async aprovarNutricionista(idUsuario: string) {
+    const { rows } = await this.pool.query(
+      `UPDATE nutricionista n
+          SET aprovado_em = NOW()
+         FROM usuario u
+        WHERE n.id_usuario = u.id_usuario
+          AND n.id_usuario = $1
+          AND n.aprovado_em IS NULL
+          AND u.desativado_em IS NULL
+        RETURNING n.aprovado_em`,
+      [idUsuario],
+    );
+    if (!rows[0]) {
+      throw new NotFoundException('Nenhum nutricionista aguardando aprovação com este id');
+    }
+    return { aprovado: true, aprovadoEm: rows[0].aprovado_em };
+  }
+
+  /**
+   * Cadastro do nutricionista pela administração: já nasce aprovado, e a
+   * senha fica para o próprio nutricionista criar pelo link do e-mail, como no
+   * cadastro de paciente pelo nutricionista.
+   */
+  async cadastrarNutricionista(idAdmin: string, dto: CadastrarNutricionistaDto) {
+    const email = dto.email.trim().toLowerCase();
+    const nome = dto.nome.trim().replace(/\s+/g, ' ');
+    const crn = dto.crn?.trim() || null;
+    const senhaHash = await bcrypt.hash(randomBytes(24).toString('hex'), 10);
+
+    const client = await this.pool.connect();
+    let idUsuario: string;
+    let link: string;
+    try {
+      await client.query('BEGIN');
+      const { rows } = await client.query<{ id_usuario: string }>(
+        `INSERT INTO usuario (nome, email, senha, tipo)
+         VALUES ($1, $2, $3, 'nutricionista')
+         RETURNING id_usuario`,
+        [nome, email, senhaHash],
+      );
+      idUsuario = String(rows[0].id_usuario);
+      await client.query(
+        `INSERT INTO nutricionista
+           (id_usuario, crn, especialidade, perfil_completo, aprovado_em)
+         VALUES ($1, $2, $3, $4, NOW())`,
+        [idUsuario, crn, dto.especialidade?.trim() || null, crn !== null],
+      );
+      link = await this.contas.gerarLinkDefinirSenha(client, idUsuario);
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK').catch(() => undefined);
+      const e = err as { code?: string; constraint?: string };
+      if (e?.code === '23505') {
+        throw new ConflictException(
+          (e.constraint ?? '').includes('crn')
+            ? 'Já existe um nutricionista com este CRN'
+            : 'Já existe uma conta com este e-mail',
+        );
+      }
+      throw err;
+    } finally {
+      client.release();
+    }
+
+    const { rows: autor } = await this.pool.query('SELECT nome FROM usuario WHERE id_usuario = $1', [
+      idAdmin,
+    ]);
+    const envio = await this.contas.enviarBoasVindas({
+      para: email,
+      nome,
+      link,
+      autor: autor[0]?.nome ?? 'A administração',
+      perfil: 'nutricionista',
+    });
+
+    return { nutricionista: { id: idUsuario, nome, email, crn }, ...envio };
   }
 
   async removerUsuario(idAdmin: string, idUsuario: string) {

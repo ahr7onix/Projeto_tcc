@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   UnauthorizedException,
@@ -42,6 +43,21 @@ export interface AuthResponse {
 }
 
 /**
+ * Nutricionista recém-cadastrado não recebe sessão: o acesso ao painel só abre
+ * depois que a administração confere o CRN e aprova (migration 017).
+ */
+export interface CadastroAguardandoAprovacao {
+  aguardandoAprovacao: true;
+  message: string;
+}
+
+const AGUARDANDO_APROVACAO: CadastroAguardandoAprovacao = {
+  aguardandoAprovacao: true,
+  message:
+    'Cadastro recebido. Você poderá entrar no painel assim que a administração conferir seu registro profissional e aprovar o acesso.',
+};
+
+/**
  * `23505` e o unique_violation do PostgreSQL. Serve para tratar a corrida entre
  * dois cadastros do mesmo e-mail: o `SELECT ... WHERE email = $1` que vem antes
  * do `INSERT` nao segura nada, e sem isto o segundo pedido virava 500.
@@ -70,7 +86,7 @@ export class AuthService {
   async cadastro(
     dto: CadastroDto,
     papel: 'paciente' | 'nutricionista',
-  ): Promise<AuthResponse> {
+  ): Promise<AuthResponse | CadastroAguardandoAprovacao> {
     const email = dto.email.trim().toLowerCase();
     const nome = dto.nome.trim().replace(/\s+/g, ' ');
 
@@ -118,6 +134,7 @@ export class AuthService {
       }
 
       await client.query('COMMIT');
+      if (papel === 'nutricionista') return AGUARDANDO_APROVACAO;
       return this.issueSession(user);
     } catch (err) {
       await client.query('ROLLBACK').catch(() => undefined);
@@ -148,13 +165,14 @@ export class AuthService {
     }
     // Só depois de conferir a senha: dizer antes revelaria quais e-mails existem.
     this.recusarSeDesativada(user);
+    await this.recusarSeNaoAprovado(user);
     return this.issueSession(user);
   }
 
   async loginGoogle(
     idToken: string,
     perfilCadastro: 'paciente' | 'nutricionista' = 'paciente',
-  ): Promise<AuthResponse> {
+  ): Promise<AuthResponse | CadastroAguardandoAprovacao> {
     if (!this.googleClientId) {
       throw new UnauthorizedException(
         'Login com Google não está configurado nesta instalação: defina GOOGLE_CLIENT_ID no .env da API.',
@@ -205,6 +223,7 @@ export class AuthService {
 
         let user = result.rows[0];
         if (user) this.recusarSeDesativada(user);
+        const criadoAgora = !user;
 
         if (!user) {
           const randomPass = randomBytes(16).toString('hex');
@@ -236,6 +255,11 @@ export class AuthService {
         }
 
         await client.query('COMMIT');
+        // Pelo Google vale a mesma regra do cadastro por e-mail: quem acabou
+        // de criar a conta de nutricionista ouve "aguardando aprovação"; quem
+        // já tinha conta e ainda não foi aprovado recebe a mesma recusa do login.
+        if (criadoAgora && user.tipo === 'nutricionista') return AGUARDANDO_APROVACAO;
+        await this.recusarSeNaoAprovado(user);
         return this.issueSession(user);
       } catch (err) {
         await client.query('ROLLBACK').catch(() => undefined);
@@ -502,6 +526,24 @@ export class AuthService {
    * Conta encerrada pelo próprio dono não emite sessão nova. Chamar só depois
    * de a credencial já ter sido validada, para não virar sonda de e-mails.
    */
+  /**
+   * Nutricionista só entra depois da aprovação da administração. Vem depois
+   * da senha conferida, como a desativação: antes disso, dizer "aguardando
+   * aprovação" revelaria quais e-mails estão cadastrados.
+   */
+  private async recusarSeNaoAprovado(user: UserRow): Promise<void> {
+    if (user.tipo !== 'nutricionista') return;
+    const { rows } = await this.pool.query<{ aprovado_em: Date | null }>(
+      'SELECT aprovado_em FROM nutricionista WHERE id_usuario = $1',
+      [user.id_usuario],
+    );
+    if (rows[0] && rows[0].aprovado_em === null) {
+      throw new ForbiddenException(
+        'Seu cadastro ainda está aguardando a aprovação da administração.',
+      );
+    }
+  }
+
   private recusarSeDesativada(user: UserRow): void {
     if (user.desativado_em) {
       throw new UnauthorizedException(
