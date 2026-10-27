@@ -179,9 +179,10 @@ pela equipe de Nutrição, está com o bloco de assinatura em branco. Os 36 alim
 no banco estão gravados com origem `exemplo`. **O sistema não deve ser usado com pacientes
 reais enquanto essa validação não ocorrer.**
 
-**2. O vínculo entre nutricionista e paciente é automático.** Ao se cadastrar, o paciente é
-vinculado a todos os nutricionistas já registrados no sistema. Não existe pedido de
-consentimento. Para o uso em produção com dados reais, isso precisa virar uma solicitação que o
+**2. O vínculo entre nutricionista e paciente é feito pelo nutricionista.** O vínculo automático
+com todos os nutricionistas foi removido (expunha dados de saúde a qualquer profissional
+cadastrado). Hoje o nutricionista busca o paciente e o vincula em `/vinculos`. Ainda não existe
+pedido de consentimento: para uso com dados reais, isso precisa virar uma solicitação que o
 paciente aceita.
 
 **3. O registro profissional não é verificado.** O CRN é digitado livremente no cadastro do

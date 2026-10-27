@@ -4,7 +4,11 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Req,
+  UnauthorizedException,
 } from '@nestjs/common';
+import type { Request } from 'express';
+import { LimiteTentativas } from '../../common/limite-tentativas';
 import { AuthService } from './auth.service';
 import { CadastroDto } from './dto/cadastro.dto';
 import { EsqueciSenhaDto } from './dto/esqueci-senha.dto';
@@ -15,6 +19,8 @@ import { RefreshDto } from './dto/refresh.dto';
 
 @Controller('auth')
 export class AuthController {
+  private readonly tentativas = new LimiteTentativas();
+
   constructor(private readonly auth: AuthService) {}
 
   /** App mobile — sempre cria paciente. */
@@ -45,8 +51,17 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  login(@Body() dto: LoginDto) {
-    return this.auth.login(dto);
+  async login(@Body() dto: LoginDto, @Req() req: Request) {
+    const chave = `${req.ip}|${dto.email.trim().toLowerCase()}`;
+    this.tentativas.verificar(chave);
+    try {
+      const sessao = await this.auth.login(dto);
+      this.tentativas.sucesso(chave);
+      return sessao;
+    } catch (err) {
+      if (err instanceof UnauthorizedException) this.tentativas.falhou(chave);
+      throw err;
+    }
   }
 
   // O app mobile envia `idToken`; o botão da web (Google Identity Services)

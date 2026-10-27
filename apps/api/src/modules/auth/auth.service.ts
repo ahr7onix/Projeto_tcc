@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { normalizarDataNascimento } from '../../common/data-nascimento';
 import * as bcrypt from 'bcryptjs';
 import { randomBytes, createHash } from 'crypto';
 import { OAuth2Client, TokenPayload } from 'google-auth-library';
@@ -99,25 +100,12 @@ export class AuthService {
 
       if (papel === 'paciente') {
         const dataNascimento = this.parseBrDate(dto.dataNascimento);
-        const pacienteIns = await client.query<{ id_paciente: string }>(
+        await client.query(
           `INSERT INTO paciente (id_usuario, data_nascimento, genero, tipo_diabetes)
-           VALUES ($1, $2, $3, $4)
-           RETURNING id_paciente`,
+           VALUES ($1, $2, $3, $4)`,
           [user.id_usuario, dataNascimento, dto.sexo ?? null, dto.tipoDiabetes ?? null],
         );
-        // Paciente novo já aparece na lista do nutricionista (vínculo automático).
-        await client.query(
-          `INSERT INTO nutricionista_paciente (id_nutricionista, id_paciente)
-           SELECT n.id_nutricionista, $1
-             FROM nutricionista n
-            WHERE NOT EXISTS (
-              SELECT 1 FROM nutricionista_paciente np
-               WHERE np.id_nutricionista = n.id_nutricionista
-                 AND np.id_paciente = $1
-                 AND np.ativo = TRUE
-            )`,
-          [pacienteIns.rows[0].id_paciente],
-        );
+        // Sem vínculo automático: o nutricionista vincula o paciente em /vinculos.
       } else {
         const crn = dto.crn?.trim() || null;
         await client.query(
@@ -135,6 +123,9 @@ export class AuthService {
       // corrida. Nos dois caminhos o cliente recebe o mesmo 409.
       if (ehEmailDuplicado(err)) {
         throw new ConflictException('E-mail ja cadastrado');
+      }
+      if ((err as { constraint?: string })?.constraint === 'nutricionista_crn_key') {
+        throw new ConflictException('CRN já cadastrado');
       }
       throw err;
     } finally {
@@ -230,23 +221,10 @@ export class AuthService {
           user = inserted.rows[0];
 
           if (papel === 'paciente') {
-            const pacienteIns = await client.query<{ id_paciente: string }>(
-              `INSERT INTO paciente (id_usuario, data_nascimento, genero, tipo_diabetes)
-               VALUES ($1, NULL, NULL, NULL)
-               RETURNING id_paciente`,
-              [user.id_usuario],
-            );
             await client.query(
-              `INSERT INTO nutricionista_paciente (id_nutricionista, id_paciente)
-               SELECT n.id_nutricionista, $1
-                 FROM nutricionista n
-                WHERE NOT EXISTS (
-                  SELECT 1 FROM nutricionista_paciente np
-                   WHERE np.id_nutricionista = n.id_nutricionista
-                     AND np.id_paciente = $1
-                     AND np.ativo = TRUE
-                )`,
-              [pacienteIns.rows[0].id_paciente],
+              `INSERT INTO paciente (id_usuario, data_nascimento, genero, tipo_diabetes)
+               VALUES ($1, NULL, NULL, NULL)`,
+              [user.id_usuario],
             );
           } else {
             await client.query(
@@ -341,6 +319,19 @@ export class AuthService {
     );
   }
 
+  /**
+   * O link de redefinição só vai na resposta quando o ambiente pede
+   * (RESET_LINK_NA_RESPOSTA=true, no .env de desenvolvimento) e nunca em
+   * produção. Antes bastava NODE_ENV não ser "production": um deploy sem a
+   * variável deixava qualquer um trocar a senha de outra pessoa só pelo e-mail.
+   */
+  private expoeLinkReset(): boolean {
+    return (
+      this.config.get<string>('RESET_LINK_NA_RESPOSTA') === 'true' &&
+      this.config.get<string>('NODE_ENV') !== 'production'
+    );
+  }
+
   async esqueciSenha(email: string): Promise<{
     message: string;
     previewUrl?: string;
@@ -394,22 +385,20 @@ export class AuthService {
         resetUrl,
       });
 
-      const isProd = this.config.get<string>('NODE_ENV') === 'production';
       return {
         message,
-        ...(isProd
-          ? {}
-          : {
+        ...(this.expoeLinkReset()
+          ? {
               previewUrl: envio.previewUrl,
               resetUrl,
-            }),
+            }
+          : {}),
       };
     } catch (err) {
       // Em falha de e-mail, ainda devolve mensagem genérica (e o link em dev).
-      const isProd = this.config.get<string>('NODE_ENV') === 'production';
       return {
         message,
-        ...(isProd ? {} : { resetUrl }),
+        ...(this.expoeLinkReset() ? { resetUrl } : {}),
       };
     }
   }
@@ -547,10 +536,6 @@ export class AuthService {
   }
 
   private parseBrDate(value?: string): string | null {
-    if (!value) return null;
-    const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-    if (!match) return null;
-    const [, dd, mm, yyyy] = match;
-    return `${yyyy}-${mm}-${dd}`;
+    return normalizarDataNascimento(value);
   }
 }

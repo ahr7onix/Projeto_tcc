@@ -124,6 +124,15 @@ export class PushService {
 
     let total = 0;
     for (const row of rows) {
+      // Guarda o histórico mesmo sem token de celular: é ele que alimenta a
+      // lista de notificações do painel. Falha aqui não pode barrar o push.
+      await this.pool
+        .query(
+          `INSERT INTO notificacao (id_usuario, tipo, titulo, mensagem)
+           VALUES ($1, $2, $3, $4)`,
+          [row.id_usuario, String(payload.dados?.tipo ?? 'sistema'), payload.titulo, payload.corpo],
+        )
+        .catch((err) => this.logger.warn(`Falha ao gravar notificação: ${String(err)}`));
       total += await this.enviarPara(String(row.id_usuario), payload);
     }
     return total;
