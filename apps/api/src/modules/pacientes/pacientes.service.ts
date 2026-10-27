@@ -78,6 +78,14 @@ export class PacientesService {
                AND np.ativo = TRUE
                AND n.id_usuario = $1
           )
+          AND NOT EXISTS (
+            SELECT 1
+              FROM convite_vinculo c
+              JOIN nutricionista n ON n.id_nutricionista = c.id_nutricionista
+             WHERE c.id_paciente = p.id_paciente
+               AND c.status = 'pendente'
+               AND n.id_usuario = $1
+          )
           ${where}
         ORDER BY u.nome
         LIMIT 50`,

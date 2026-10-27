@@ -4,7 +4,7 @@ import PatientPicker from './PatientPicker'
 import { extractError } from '../lib/api'
 import {
   buscarDisponiveis,
-  vincularPaciente,
+  convidarPaciente,
   type PacienteDisponivel,
 } from '../lib/vinculos'
 
@@ -39,7 +39,7 @@ export default function VincularPacienteModal({ onClose, onVinculado }: Props) {
     try {
       setVinculandoId(paciente.id)
       setErro(null)
-      await vincularPaciente(paciente.id)
+      await convidarPaciente(paciente.id)
       setPacientes((atual) => atual.filter((p) => p.id !== paciente.id))
       onVinculado()
     } catch (err) {
@@ -54,9 +54,9 @@ export default function VincularPacienteModal({ onClose, onVinculado }: Props) {
       <div style={modal} onClick={(e) => e.stopPropagation()}>
         <div style={header}>
           <div>
-            <div style={eyebrow}>Vincular</div>
+            <div style={eyebrow}>Convite</div>
             <h2 style={{ fontSize: 20, fontWeight: 600, color: 'var(--text)' }}>
-              Adicionar paciente
+              Convidar paciente
             </h2>
           </div>
           <button onClick={onClose} style={closeBtn} aria-label="Fechar">
@@ -66,6 +66,9 @@ export default function VincularPacienteModal({ onClose, onVinculado }: Props) {
 
         <div style={body}>
           {erro && <AlertBanner message={erro} />}
+          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+            O paciente recebe o convite no app e você só passa a ver os dados dele depois que ele aceitar.
+          </div>
 
           <PatientPicker
             patients={pacientes}
@@ -86,7 +89,7 @@ export default function VincularPacienteModal({ onClose, onVinculado }: Props) {
               message={
                 busca
                   ? 'Nenhum paciente encontrado com esse termo.'
-                  : 'Todos os pacientes cadastrados já estão vinculados a você.'
+                  : 'Todos os pacientes cadastrados já estão vinculados a você ou têm convite pendente.'
               }
             />
           ) : (
@@ -114,7 +117,7 @@ export default function VincularPacienteModal({ onClose, onVinculado }: Props) {
                     loading={vinculandoId === p.id}
                     onClick={() => handleVincular(p)}
                   >
-                    Vincular
+                    Convidar
                   </Btn>
                 </div>
               ))}

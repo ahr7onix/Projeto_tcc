@@ -30,8 +30,21 @@ export class VinculosController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  vincular(@CurrentUser() user: JwtPayload, @Body() dto: VincularPacienteDto) {
-    return this.vinculos.vincular(user.sub, dto.pacienteId);
+  convidar(@CurrentUser() user: JwtPayload, @Body() dto: VincularPacienteDto) {
+    return this.vinculos.convidar(user.sub, dto.pacienteId);
+  }
+
+  @Get('convites')
+  convitesEnviados(@CurrentUser() user: JwtPayload) {
+    return this.vinculos.listarConvitesEnviados(user.sub);
+  }
+
+  @Delete('convites/:conviteId')
+  cancelarConvite(
+    @CurrentUser() user: JwtPayload,
+    @Param('conviteId') conviteId: string,
+  ) {
+    return this.vinculos.cancelarConvite(user.sub, conviteId);
   }
 
   @Delete(':pacienteId')
@@ -40,5 +53,30 @@ export class VinculosController {
     @Param('pacienteId') pacienteId: string,
   ) {
     return this.vinculos.desvincular(user.sub, pacienteId);
+  }
+}
+
+/** Lado do paciente: vê os convites recebidos e aceita ou recusa. */
+@Controller('convites')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('paciente')
+export class ConvitesController {
+  constructor(private readonly vinculos: VinculosService) {}
+
+  @Get()
+  listar(@CurrentUser() user: JwtPayload) {
+    return this.vinculos.listarConvitesRecebidos(user.sub);
+  }
+
+  @Post(':conviteId/aceitar')
+  @HttpCode(HttpStatus.OK)
+  aceitar(@CurrentUser() user: JwtPayload, @Param('conviteId') conviteId: string) {
+    return this.vinculos.responderConvite(user.sub, conviteId, true);
+  }
+
+  @Post(':conviteId/recusar')
+  @HttpCode(HttpStatus.OK)
+  recusar(@CurrentUser() user: JwtPayload, @Param('conviteId') conviteId: string) {
+    return this.vinculos.responderConvite(user.sub, conviteId, false);
   }
 }

@@ -13,8 +13,26 @@ export async function buscarDisponiveis(busca?: string): Promise<PacienteDisponi
   return data.data
 }
 
-export async function vincularPaciente(pacienteId: string): Promise<void> {
+export interface ConviteEnviado {
+  conviteId: string
+  pacienteId: string
+  nome: string
+  email: string
+  enviadoEm: string
+}
+
+/** O vínculo só passa a valer quando o paciente aceita o convite. */
+export async function convidarPaciente(pacienteId: string): Promise<void> {
   await api.post('/vinculos', { pacienteId })
+}
+
+export async function listarConvitesEnviados(): Promise<ConviteEnviado[]> {
+  const { data } = await api.get('/vinculos/convites')
+  return data.data
+}
+
+export async function cancelarConvite(conviteId: string): Promise<void> {
+  await api.delete(`/vinculos/convites/${conviteId}`)
 }
 
 export async function desvincularPaciente(pacienteId: string): Promise<void> {

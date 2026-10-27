@@ -55,31 +55,97 @@ describe('VinculosService', () => {
     });
   });
 
-  describe('vincular', () => {
-    it('should throw ConflictException when the link already exists', async () => {
+  describe('convidar', () => {
+    it('should throw ConflictException when the patient is already linked', async () => {
       const { pool } = criarPoolMock([
         [{ id_nutricionista: 1 }],
         [{ id_paciente: 2 }],
-        [{ id_vinculo: 5 }],
+        [{ '?column?': 1 }],
       ]);
       const service = new VinculosService(pool);
-      await expect(service.vincular('1', '2')).rejects.toThrow(ConflictException);
+      await expect(service.convidar('1', '2')).rejects.toThrow(ConflictException);
     });
 
-    it('should create the link when none exists', async () => {
+    it('should throw ConflictException when an invite is already pending', async () => {
+      const query = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [{ id_nutricionista: 1 }] })
+        .mockResolvedValueOnce({ rows: [{ id_paciente: 2 }] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockRejectedValueOnce(Object.assign(new Error('dup'), { code: '23505' }));
+      const service = new VinculosService({ query } as unknown as Pool);
+      await expect(service.convidar('1', '2')).rejects.toThrow(ConflictException);
+    });
+
+    it('should create a pending invite and NOT the link', async () => {
       const criadoEm = new Date();
-      const { pool } = criarPoolMock([
+      const { pool, query } = criarPoolMock([
         [{ id_nutricionista: 1 }],
         [{ id_paciente: 2 }],
         [],
-        [{ id_vinculo: 10, criado_em: criadoEm }],
+        [{ id_convite: 10, criado_em: criadoEm }],
+        [{ nome: 'Dra. Ana' }],
+        [],
       ]);
       const service = new VinculosService(pool);
-      await expect(service.vincular('1', '2')).resolves.toEqual({
-        vinculoId: '10',
+      await expect(service.convidar('1', '2')).resolves.toEqual({
+        conviteId: '10',
         pacienteId: '2',
-        vinculadoEm: criadoEm,
+        status: 'pendente',
+        enviadoEm: criadoEm,
       });
+      const sqls = query.mock.calls.map((c) => String(c[0]));
+      expect(sqls.some((q) => q.includes('INSERT INTO convite_vinculo'))).toBe(true);
+      expect(sqls.some((q) => q.includes('INSERT INTO nutricionista_paciente'))).toBe(false);
+    });
+  });
+
+  describe('responderConvite', () => {
+    function criarComClient(respostas: unknown[][]) {
+      const clientQuery = jest.fn();
+      respostas.forEach((rows) =>
+        clientQuery.mockResolvedValueOnce({ rows, rowCount: rows.length }),
+      );
+      const release = jest.fn();
+      const query = jest.fn().mockResolvedValue({ rows: [], rowCount: 0 });
+      const pool = {
+        query,
+        connect: jest.fn().mockResolvedValue({ query: clientQuery, release }),
+      } as unknown as Pool;
+      return { service: new VinculosService(pool), clientQuery };
+    }
+    const convite = {
+      id_convite: 5,
+      id_nutricionista: 1,
+      id_paciente: 2,
+      id_usuario_nutri: 9,
+      nome: 'João',
+    };
+
+    it('should create the link when the patient accepts', async () => {
+      const { service, clientQuery } = criarComClient([[], [convite], [], [], []]);
+      await expect(service.responderConvite('3', '5', true)).resolves.toEqual({
+        status: 'aceito',
+      });
+      const sqls = clientQuery.mock.calls.map((c) => String(c[0]));
+      expect(sqls.some((q) => q.includes('INSERT INTO nutricionista_paciente'))).toBe(true);
+      expect(sqls.at(-1)).toBe('COMMIT');
+    });
+
+    it('should not create the link when the patient declines', async () => {
+      const { service, clientQuery } = criarComClient([[], [convite], [], []]);
+      await expect(service.responderConvite('3', '5', false)).resolves.toEqual({
+        status: 'recusado',
+      });
+      const sqls = clientQuery.mock.calls.map((c) => String(c[0]));
+      expect(sqls.some((q) => q.includes('INSERT INTO nutricionista_paciente'))).toBe(false);
+    });
+
+    it('should throw NotFoundException for an unknown or already answered invite', async () => {
+      const { service } = criarComClient([[], [], []]);
+      await expect(service.responderConvite('3', '5', true)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

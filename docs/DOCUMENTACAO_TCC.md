@@ -179,11 +179,10 @@ pela equipe de Nutrição, está com o bloco de assinatura em branco. Os 36 alim
 no banco estão gravados com origem `exemplo`. **O sistema não deve ser usado com pacientes
 reais enquanto essa validação não ocorrer.**
 
-**2. O vínculo entre nutricionista e paciente é feito pelo nutricionista.** O vínculo automático
-com todos os nutricionistas foi removido (expunha dados de saúde a qualquer profissional
-cadastrado). Hoje o nutricionista busca o paciente e o vincula em `/vinculos`. Ainda não existe
-pedido de consentimento: para uso com dados reais, isso precisa virar uma solicitação que o
-paciente aceita.
+**2. O vínculo entre nutricionista e paciente depende do aceite do paciente.** O nutricionista
+envia um convite (`POST /vinculos`); o paciente o vê na tela inicial do aplicativo e aceita ou
+recusa (`/convites`). O acesso aos dados só começa no aceite. Ainda falta o paciente poder
+encerrar sozinho um vínculo já aceito: hoje só o nutricionista desvincula.
 
 **3. O registro profissional não é verificado.** O CRN é digitado livremente no cadastro do
 nutricionista e não é conferido junto ao conselho, porque não há consulta pública automatizada.
@@ -1697,7 +1696,7 @@ ser recusada no login. O histórico clínico não é apagado.
 | Não há limite de tentativas de login | Não implementado; nenhuma biblioteca de *rate limiting* está instalada |
 | Não há verificação de e-mail no cadastro | Não implementado |
 | O CRN do nutricionista não é verificado | É um campo de texto; não há consulta ao conselho |
-| Vínculo automático no cadastro | Descrito na seção 5.4; é uma decisão a rever antes de uso real |
+| Vínculo sem iniciativa do paciente | Resolvido com convite e aceite; falta o paciente encerrar o vínculo por conta própria |
 | Não há cifragem de dado em repouso além da do provedor | Depende do banco gerenciado |
 | Não houve teste de segurança por terceiro | Nenhuma auditoria externa foi feita |
 
@@ -2238,7 +2237,7 @@ automático no cadastro e a ausência de limite de tentativas de login.
 
 7. Carregar a tabela nutricional oficial no lugar dos 36 alimentos de exemplo;
 8. Aplicar as faixas de referência validadas e as fórmulas escolhidas;
-9. Rever a decisão do vínculo automático, substituindo-a por um convite aceito pelo paciente.
+9. ~~Rever a decisão do vínculo automático~~ — feito: convite aceito pelo paciente. Falta o paciente encerrar o vínculo sozinho.
 
 **Longo prazo:**
 

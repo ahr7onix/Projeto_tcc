@@ -118,43 +118,179 @@ export class VinculosService {
     };
   }
 
-  async vincular(idUsuarioNutri: string, idUsuarioPaciente: string) {
+  /** Grava o aviso no histórico de notificações do painel/app. */
+  private async avisar(idUsuario: string, titulo: string, mensagem: string) {
+    await this.pool
+      .query(
+        `INSERT INTO notificacao (id_usuario, tipo, titulo, mensagem)
+         VALUES ($1, 'sistema', $2, $3)`,
+        [idUsuario, titulo, mensagem],
+      )
+      .catch(() => undefined);
+  }
+
+  /**
+   * O nutricionista só convida: o vínculo (e o acesso aos dados) nasce quando o
+   * paciente aceita, em `responderConvite`.
+   */
+  async convidar(idUsuarioNutri: string, idUsuarioPaciente: string) {
     const idNutricionista = await this.resolveNutricionistaId(idUsuarioNutri);
     const idPaciente = await this.resolvePacienteId(idUsuarioPaciente);
 
-    const { rows: existentes } = await this.pool.query(
-      `SELECT id_vinculo FROM nutricionista_paciente
-        WHERE id_nutricionista = $1 AND id_paciente = $2 AND ativo = TRUE`,
-      [idNutricionista, idPaciente],
-    );
-    if (existentes.length) {
+    if (await this.existeVinculo(idUsuarioNutri, idUsuarioPaciente)) {
       throw new ConflictException('Paciente já vinculado a você');
     }
 
-    // A checagem acima resolve o caso comum. Dois cliques no mesmo instante
-    // passam pelos dois SELECT antes de qualquer INSERT: quem chega em segundo
-    // esbarra no indice unico parcial `idx_vinculo_ativo_unico` (23505), e sem
-    // este tratamento a resposta virava 500 em vez do mesmo 409.
-    let rows: Array<{ id_vinculo: string; criado_em: Date }>;
+    // Dois cliques no mesmo instante passam pela checagem: o índice único
+    // parcial `idx_convite_pendente_unico` (23505) devolve o mesmo 409.
+    let rows: Array<{ id_convite: string; criado_em: Date }>;
     try {
       ({ rows } = await this.pool.query(
-        `INSERT INTO nutricionista_paciente (id_nutricionista, id_paciente)
+        `INSERT INTO convite_vinculo (id_nutricionista, id_paciente)
          VALUES ($1, $2)
-         RETURNING id_vinculo, criado_em`,
+         RETURNING id_convite, criado_em`,
         [idNutricionista, idPaciente],
       ));
     } catch (err) {
       if ((err as { code?: string })?.code === '23505') {
-        throw new ConflictException('Paciente ja vinculado a voce');
+        throw new ConflictException('Já existe um convite pendente para este paciente');
       }
       throw err;
     }
 
+    const { rows: nome } = await this.pool.query(
+      'SELECT nome FROM usuario WHERE id_usuario = $1',
+      [idUsuarioNutri],
+    );
+    await this.avisar(
+      idUsuarioPaciente,
+      'Convite de acompanhamento',
+      `${nome[0]?.nome ?? 'Um nutricionista'} convidou você para acompanhamento nutricional.`,
+    );
+
     return {
-      vinculoId: String(rows[0].id_vinculo),
+      conviteId: String(rows[0].id_convite),
       pacienteId: idUsuarioPaciente,
-      vinculadoEm: rows[0].criado_em,
+      status: 'pendente',
+      enviadoEm: rows[0].criado_em,
     };
+  }
+
+  async listarConvitesEnviados(idUsuarioNutri: string) {
+    const { rows } = await this.pool.query(
+      `SELECT c.id_convite, c.criado_em, u.id_usuario, u.nome, u.email
+         FROM convite_vinculo c
+         JOIN nutricionista n ON n.id_nutricionista = c.id_nutricionista
+         JOIN paciente p      ON p.id_paciente = c.id_paciente
+         JOIN usuario u       ON u.id_usuario = p.id_usuario
+        WHERE n.id_usuario = $1 AND c.status = 'pendente'
+        ORDER BY c.criado_em DESC`,
+      [idUsuarioNutri],
+    );
+    return {
+      data: rows.map((r) => ({
+        conviteId: String(r.id_convite),
+        pacienteId: String(r.id_usuario),
+        nome: r.nome,
+        email: r.email,
+        enviadoEm: r.criado_em,
+      })),
+    };
+  }
+
+  async cancelarConvite(idUsuarioNutri: string, idConvite: string) {
+    const { rowCount } = await this.pool.query(
+      `UPDATE convite_vinculo c
+          SET status = 'cancelado', respondido_em = NOW()
+         FROM nutricionista n
+        WHERE c.id_nutricionista = n.id_nutricionista
+          AND n.id_usuario = $1
+          AND c.id_convite = $2
+          AND c.status = 'pendente'`,
+      [idUsuarioNutri, idConvite],
+    );
+    if (!rowCount) throw new NotFoundException('Convite não encontrado');
+    return { cancelado: true };
+  }
+
+  async listarConvitesRecebidos(idUsuarioPaciente: string) {
+    const { rows } = await this.pool.query(
+      `SELECT c.id_convite, c.criado_em, u.nome, n.crn, n.especialidade
+         FROM convite_vinculo c
+         JOIN paciente p      ON p.id_paciente = c.id_paciente
+         JOIN nutricionista n ON n.id_nutricionista = c.id_nutricionista
+         JOIN usuario u       ON u.id_usuario = n.id_usuario
+        WHERE p.id_usuario = $1 AND c.status = 'pendente'
+        ORDER BY c.criado_em DESC`,
+      [idUsuarioPaciente],
+    );
+    return {
+      data: rows.map((r) => ({
+        conviteId: String(r.id_convite),
+        nutricionistaNome: r.nome,
+        crn: r.crn ?? null,
+        especialidade: r.especialidade ?? null,
+        enviadoEm: r.criado_em,
+      })),
+    };
+  }
+
+  /** Aceite cria o vínculo; recusa só encerra o convite. */
+  async responderConvite(
+    idUsuarioPaciente: string,
+    idConvite: string,
+    aceitar: boolean,
+  ) {
+    const client = await this.pool.connect();
+    let idUsuarioNutri: string;
+    let nomePaciente: string;
+    try {
+      await client.query('BEGIN');
+      const { rows } = await client.query(
+        `SELECT c.id_convite, c.id_nutricionista, c.id_paciente,
+                n.id_usuario AS id_usuario_nutri, u.nome
+           FROM convite_vinculo c
+           JOIN paciente p      ON p.id_paciente = c.id_paciente
+           JOIN nutricionista n ON n.id_nutricionista = c.id_nutricionista
+           JOIN usuario u       ON u.id_usuario = p.id_usuario
+          WHERE c.id_convite = $1 AND p.id_usuario = $2 AND c.status = 'pendente'
+          FOR UPDATE OF c`,
+        [idConvite, idUsuarioPaciente],
+      );
+      const convite = rows[0];
+      if (!convite) throw new NotFoundException('Convite não encontrado');
+      await client.query(
+        `UPDATE convite_vinculo SET status = $2, respondido_em = NOW()
+          WHERE id_convite = $1`,
+        [idConvite, aceitar ? 'aceito' : 'recusado'],
+      );
+      if (aceitar) {
+        await client.query(
+          `INSERT INTO nutricionista_paciente (id_nutricionista, id_paciente)
+           SELECT $1, $2
+            WHERE NOT EXISTS (
+              SELECT 1 FROM nutricionista_paciente
+               WHERE id_nutricionista = $1 AND id_paciente = $2 AND ativo = TRUE
+            )`,
+          [convite.id_nutricionista, convite.id_paciente],
+        );
+      }
+      await client.query('COMMIT');
+      idUsuarioNutri = String(convite.id_usuario_nutri);
+      nomePaciente = convite.nome;
+    } catch (err) {
+      await client.query('ROLLBACK').catch(() => undefined);
+      throw err;
+    } finally {
+      client.release();
+    }
+
+    await this.avisar(
+      idUsuarioNutri,
+      aceitar ? 'Convite aceito' : 'Convite recusado',
+      `${nomePaciente} ${aceitar ? 'aceitou' : 'recusou'} o seu convite de acompanhamento.`,
+    );
+    return { status: aceitar ? 'aceito' : 'recusado' };
   }
 
   async desvincular(idUsuarioNutri: string, idUsuarioPaciente: string) {

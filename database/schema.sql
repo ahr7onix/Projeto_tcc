@@ -78,6 +78,25 @@ CREATE INDEX idx_vinculo_nutricionista
 CREATE INDEX idx_vinculo_paciente
     ON nutricionista_paciente(id_paciente) WHERE ativo = TRUE;
 
+-- ---------- Tabela: convite_vinculo ----------
+-- Convite do nutricionista que o paciente aceita ou recusa; o vínculo só nasce
+-- no aceite. Espelha migrations/016_convite_vinculo.sql.
+CREATE TABLE convite_vinculo (
+    id_convite       BIGSERIAL   PRIMARY KEY,
+    id_nutricionista BIGINT      NOT NULL
+        REFERENCES nutricionista(id_nutricionista) ON DELETE CASCADE,
+    id_paciente      BIGINT      NOT NULL
+        REFERENCES paciente(id_paciente) ON DELETE CASCADE,
+    status           VARCHAR(12) NOT NULL DEFAULT 'pendente'
+        CHECK (status IN ('pendente', 'aceito', 'recusado', 'cancelado')),
+    criado_em        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    respondido_em    TIMESTAMPTZ
+);
+CREATE UNIQUE INDEX idx_convite_pendente_unico
+    ON convite_vinculo(id_nutricionista, id_paciente) WHERE status = 'pendente';
+CREATE INDEX idx_convite_paciente
+    ON convite_vinculo(id_paciente) WHERE status = 'pendente';
+
 -- ---------- Tabela: mensagem ----------
 -- Conversa entre nutricionista e paciente, presa ao vinculo entre os dois.
 -- Faltava aqui: como o preparar-banco.mjs marca as migrations como aplicadas

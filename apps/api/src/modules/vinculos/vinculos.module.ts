@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { VinculosController } from './vinculos.controller';
+import { ConvitesController, VinculosController } from './vinculos.controller';
 import { VinculosService } from './vinculos.service';
 
 @Module({
-  controllers: [VinculosController],
+  controllers: [VinculosController, ConvitesController],
   providers: [VinculosService],
   exports: [VinculosService],
 })

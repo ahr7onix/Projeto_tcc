@@ -3,7 +3,12 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { PageHeader, EmptyState, AlertBanner, Btn } from '../../components/ui'
 import { api, extractError } from '../../lib/api'
 import VincularPacienteModal from '../../components/VincularPacienteModal'
-import { desvincularPaciente } from '../../lib/vinculos'
+import {
+  cancelarConvite,
+  desvincularPaciente,
+  listarConvitesEnviados,
+  type ConviteEnviado,
+} from '../../lib/vinculos'
 import PatientPicker from '../../components/PatientPicker'
 
 interface Paciente {
@@ -43,6 +48,21 @@ export default function PacientesPage() {
   const [error, setError] = useState<string | null>(null)
   const [vincularAberto, setVincularAberto] = useState(false)
   const [desvinculandoId, setDesvinculandoId] = useState<string | null>(null)
+  const [convites, setConvites] = useState<ConviteEnviado[]>([])
+
+  const carregarConvites = useCallback(() => {
+    listarConvitesEnviados().then(setConvites).catch(() => setConvites([]))
+  }, [])
+  useEffect(() => { carregarConvites() }, [carregarConvites])
+
+  async function handleCancelarConvite(c: ConviteEnviado) {
+    try {
+      await cancelarConvite(c.conviteId)
+      setConvites(atual => atual.filter(x => x.conviteId !== c.conviteId))
+    } catch (err) {
+      setError(extractError(err))
+    }
+  }
 
   const fetchPacientes = useCallback(async (q: string, ativo: () => boolean) => {
     setError(null)
@@ -110,11 +130,27 @@ export default function PacientesPage() {
       <PageHeader
         eyebrow="Gerenciamento"
         title={acompanhamento ? 'Acompanhamento' : 'Pacientes'}
-        subtitle={acompanhamento ? 'Selecione um paciente para registrar e acompanhar todas as informações em uma única ficha.' : 'Pacientes vinculados a você. Novos cadastros pelo app mobile aparecem automaticamente aqui.'}
-        action={<Btn onClick={() => setVincularAberto(true)}>+ Vincular paciente</Btn>}
+        subtitle={acompanhamento ? 'Selecione um paciente para registrar e acompanhar todas as informações em uma única ficha.' : 'Pacientes vinculados a você. O vínculo começa quando o paciente aceita o seu convite.'}
+        action={<Btn onClick={() => setVincularAberto(true)}>+ Convidar paciente</Btn>}
       />
 
       {error && <div style={{ marginBottom: 16 }}><AlertBanner message={error} /></div>}
+
+      {convites.length > 0 && (
+        <div style={{ marginBottom: 24, padding: '12px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+            Convites aguardando resposta ({convites.length})
+          </div>
+          {convites.map(c => (
+            <div key={c.conviteId} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '6px 0' }}>
+              <div style={{ flex: 1, minWidth: 0, fontSize: 14, color: 'var(--text)' }}>
+                {c.nome} <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>{c.email}</span>
+              </div>
+              <Btn size="sm" variant="secondary" onClick={() => handleCancelarConvite(c)}>Cancelar convite</Btn>
+            </div>
+          ))}
+        </div>
+      )}
 
       {}
       {!loading && pacientes.length > 0 && (
@@ -255,7 +291,7 @@ export default function PacientesPage() {
             <EmptyState
               icon={<PatientsIcon />}
               title="Nenhum paciente encontrado"
-              message={busca ? 'Tente um nome diferente.' : 'Clique em "Vincular paciente" para começar a acompanhar alguém.'}
+              message={busca ? 'Tente um nome diferente.' : 'Clique em "Convidar paciente" para começar a acompanhar alguém.'}
             />
           </div>
         )}
@@ -266,7 +302,7 @@ export default function PacientesPage() {
       {vincularAberto && (
         <VincularPacienteModal
           onClose={() => setVincularAberto(false)}
-          onVinculado={() => fetchPacientes(busca, () => true)}
+          onVinculado={() => { fetchPacientes(busca, () => true); carregarConvites() }}
         />
       )}
     </div>
