@@ -179,37 +179,33 @@ pela equipe de Nutrição, está com o bloco de assinatura em branco. Os 36 alim
 no banco estão gravados com origem `exemplo`. **O sistema não deve ser usado com pacientes
 reais enquanto essa validação não ocorrer.**
 
-**2. O vínculo entre nutricionista e paciente é feito pelo nutricionista.** O vínculo automático
-com todos os nutricionistas foi removido (expunha dados de saúde a qualquer profissional
-cadastrado). Hoje o nutricionista busca o paciente e o vincula em `/vinculos`. Ainda não existe
-pedido de consentimento: para uso com dados reais, isso precisa virar uma solicitação que o
-paciente aceita.
+**2. O registro profissional é conferido à mão.** O CRN é digitado no cadastro do
+nutricionista e não há consulta pública automatizada ao conselho. Por isso o acesso ao painel só
+abre depois que um administrador confere o registro e aprova o cadastro. A conferência é tão
+boa quanto o cuidado de quem aprova.
 
-**3. O registro profissional não é verificado.** O CRN é digitado livremente no cadastro do
-nutricionista e não é conferido junto ao conselho, porque não há consulta pública automatizada.
-A solução prevista é a aprovação manual de cada profissional pela administração.
+**3. O envio de e-mail depende de configuração.** Sem servidor SMTP configurado, nenhum e-mail
+sai do sistema — nem o link de criar senha de quem é cadastrado pelo painel, nem o de
+recuperação de senha. O painel avisa isso ao cadastrar alguém, em vez de dizer que o e-mail foi
+enviado.
 
-**4. Os lembretes não têm tela.** A funcionalidade existe inteira no servidor — tabela, rotas e
-testes — mas nem o aplicativo nem o painel oferecem tela para criar um lembrete.
+**4. A remoção pela administração é definitiva.** Quando o administrador remove um usuário, a
+conta é apagada com tudo o que depende dela — no caso do paciente, o histórico clínico. A
+exclusão feita pelo próprio paciente, no aplicativo, é suave e preserva o histórico.
 
-**5. Há poucos gráficos.** O painel tem um único gráfico, na tela inicial, mostrando a evolução
-diária dos alertas. Não existe gráfico de evolução da glicemia nem do peso em tela alcançável, e
-o aplicativo não tem gráfico nenhum.
+**5. Não há testes automatizados de interface.** A API tem 238 testes automatizados; o aplicativo
+e o painel não têm testes de unidade. A conferência dessas duas partes é feita por testes ponta a
+ponta com Playwright, que percorrem o painel e o aplicativo no navegador, e por testes manuais.
 
-**6. Parte do painel web ficou inalcançável.** Cerca de 1.643 linhas de código do painel — entre
-elas a tela de saúde do paciente, o componente de gráfico de linha e os formulários web de
-medidas corporais e medicamentos — não são referenciadas por nenhuma rota. O código existe, mas
-nenhum usuário consegue abri-lo.
+**6. Funcionalidades que ainda não foram conferidas num celular de verdade.** A entrega das
+notificações push, o disparo dos lembretes no horário e o login pelo Google no aplicativo foram
+conferidos no modo web do aplicativo, não num aparelho.
 
-**7. Não há testes automatizados no front-end.** A API tem 168 testes automatizados; o
-aplicativo e o painel não têm nenhum. A conferência dessas duas partes é feita manualmente e por
-um teste de fumaça que percorre as telas principais.
-
-**8. O ambiente publicado é de demonstração.** O sistema está no ar em um plano gratuito, no
+**7. O ambiente publicado é de demonstração.** O sistema está no ar em um plano gratuito, no
 qual o servidor hiberna quando fica ocioso — a primeira requisição depois disso leva cerca de
 50 segundos — e o banco de dados expira em 30 dias.
 
-**9. No painel, a sessão fica guardada no armazenamento local do navegador.** É a solução mais
+**8. No painel, a sessão fica guardada no armazenamento local do navegador.** É a solução mais
 simples, mas expõe o token caso alguma falha de injeção de script apareça. A alternativa
 (cookie com marcação `HttpOnly`) exigiria mudar o fluxo de autenticação.
 
@@ -252,29 +248,33 @@ na API, tela no aplicativo ou no painel, e persistência no banco.
 | RF26 | Relatório do paciente, com exportação em planilha e em PDF | Implementado |
 | RF27 | Métricas gerais e gestão de usuários pelo administrador | Implementado |
 | RF28 | Exclusão da própria conta pelo paciente | Implementado |
-| RF29 | Lembretes programáveis pelo paciente | **Parcial** — existe na API e no banco; não existe tela |
-| RF30 | Gráficos de evolução da glicemia e do peso | **Não implementado** — só existe o gráfico de alertas |
+| RF29 | Lembretes programáveis pelo paciente | Implementado — tela no aplicativo, notificação local no aparelho |
+| RF30 | Gráficos de evolução da glicemia e do peso | Implementado — no painel e no aplicativo |
+| RF31 | Importação da tabela nutricional por planilha (CSV), com prévia e recusa por linha | Implementado |
+| RF32 | Consentimento do paciente no vínculo: convite, aceite, recusa e encerramento pelo paciente | Implementado |
+| RF33 | Cadastro de paciente pelo nutricionista, com link de criar senha enviado ao paciente | Implementado |
+| RF34 | Aprovação do nutricionista pela administração e cadastro de nutricionista pelo administrador | Implementado |
 
 ### Comparação com o briefing da equipe de Nutrição
 
 O briefing recebido do curso de Nutrição trazia dez requisitos. A situação atual de cada um:
 
-| Nº do briefing | Requisito | Situação em 30/08/2026 |
+| Nº do briefing | Requisito | Situação em 27/10/2026 |
 |---|---|---|
-| 1 | Tabela de alimentos com valores nutricionais | Atendido na estrutura; os 36 itens carregados são exemplos e precisam ser trocados pela tabela oficial |
+| 1 | Importação de tabelas de alimentos com valores nutricionais | Atendido — importação por planilha; os 36 itens carregados são exemplos e precisam ser trocados pela tabela oficial |
 | 2 | Cálculo da necessidade energética diária | Atendido (Mifflin-St Jeor e Harris-Benedict) — a fórmula a adotar ainda depende de definição clínica |
 | 3 | Distribuição de macronutrientes no plano | Atendido — os percentuais padrão ainda dependem de definição clínica |
 | 4 | Peso, altura, IMC e circunferências, com histórico | Atendido |
-| 5 | Registro e histórico de glicemia com gráfico | Registro e histórico atendidos; **falta o gráfico** |
-| 6 | Registro emocional do paciente | Atendido, em escala de cinco pontos com fatores em texto livre |
-| 7 | Alertas e lembretes configuráveis | Alertas atendidos; **lembretes sem tela** |
-| 8 | Visualização dos indicadores em gráficos | **Não atendido**, exceto o gráfico de alertas |
+| 5 | Registro e histórico de glicemia com gráfico | Atendido |
+| 6 | Registro emocional do paciente | Atendido, em escala de cinco pontos com fatores em texto livre, ao lado da glicemia do dia |
+| 7 | Alertas e lembretes configuráveis | Atendido |
+| 8 | Visualização dos indicadores em gráficos | Atendido |
 | 9 | Repositório de receitas e orientações | Atendido |
-| 10 | Controle de acesso por perfil | Atendido |
+| 10 | Controle de acesso por perfil | Atendido, com consentimento do paciente e aprovação do nutricionista |
 
-Sete dos dez requisitos estão atendidos, um está atendido em parte e dois não estão. Os três
-pontos em aberto são os gráficos, os lembretes e a substituição da tabela de alimentos de
-exemplo pela tabela oficial.
+Os dez requisitos estão atendidos no software. Quatro deles (1, 2, 3 e 5) ainda dependem da
+validação clínica da equipe de Nutrição — a tabela oficial, a fórmula, os percentuais e as faixas
+de glicemia — antes de qualquer uso com paciente real.
 
 ## 2.2 Requisitos não funcionais
 
@@ -292,7 +292,8 @@ exemplo pela tabela oficial.
 | RNF10 | O sistema precisa ter uma sonda de disponibilidade | Rotas `/status` e `/health`, sem autenticação e sem dado de paciente |
 | RNF11 | As regras clínicas precisam estar em um lugar só | Concentradas em `common/glicemia/glicemia.ts` e `common/nutricao/nutricao.ts` |
 | RNF12 | Alterações no banco precisam ser reproduzíveis | Migrations numeradas e tabela de controle `migracao_aplicada` |
-| RNF13 | O código precisa ter cobertura automatizada na camada de regras | 168 testes automatizados na API |
+| RNF13 | O código precisa ter cobertura automatizada na camada de regras | 238 testes automatizados na API |
+| RNF14 | Adivinhar senha por repetição não pode ser viável | Limite de 5 tentativas por minuto nas rotas de autenticação, contadas por IP e e-mail |
 
 ## 2.3 Regras de negócio
 
@@ -314,7 +315,9 @@ exemplo pela tabela oficial.
 | RN14 | O paciente só entra pelo aplicativo; o painel é para nutricionista e administrador | `LoginPage.tsx` recusa o perfil paciente com mensagem explicativa |
 | RN15 | Um token de recuperação de senha vale uma hora e só pode ser usado uma vez | Tabela `senha_reset_token`, com consumo em transação |
 | RN16 | Conta desativada não faz login | Verificação de `usuario.desativado_em` |
-| RN17 | Ao se cadastrar, o paciente é vinculado automaticamente a todos os nutricionistas existentes | `auth.service.ts` — ver limitação 2 da seção 1.8 |
+| RN17 | O vínculo só nasce quando o paciente aceita o convite do nutricionista; o paciente pode encerrá-lo quando quiser | `ConvitesService` + tabela `solicitacao_vinculo` |
+| RN18 | Nutricionista que se cadastra sozinho só entra no painel depois que a administração aprova | `auth.service.ts` + coluna `nutricionista.aprovado_em` |
+| RN19 | O link de criar ou redefinir senha só vai para o e-mail do dono da conta; nunca volta na resposta da API fora de desenvolvimento | `ContasService` e `expoeLinkDeSenha` (`RESET_LINK_NA_RESPOSTA`) |
 
 ## 2.4 Tipos de usuário e permissões
 
@@ -531,7 +534,7 @@ classificação:
   cálculo de macronutrientes, IMC, relação cintura-quadril e conversão de porções.
 
 Manter esses cálculos fora dos controllers é o que torna possível testá-los isoladamente — a
-maior parte dos 168 testes automatizados incide sobre eles.
+maior parte dos 238 testes automatizados incide sobre eles.
 
 ## 3.5 Funcionamento da API
 
@@ -884,18 +887,26 @@ ou seja, só as contas incluídas nessa lista conseguem entrar por esse caminho.
 Há duas rotas de cadastro, uma por perfil.
 
 **Paciente** (`POST /auth/cadastro/paciente`, usado pelo aplicativo): cria a conta em `usuario`
-com tipo `paciente` e o perfil correspondente em `paciente`. Em seguida — e este ponto merece
-destaque — **vincula o novo paciente a todos os nutricionistas já cadastrados**. Foi uma decisão
-de projeto para que o paciente já aparecesse na lista de alguém logo após o cadastro, e está
-coberta pelo teste de fumaça. Para uso com dados reais, precisa ser substituída por um pedido
-que o paciente aceita (ver seção 1.8).
+com tipo `paciente` e o perfil correspondente em `paciente`. O paciente novo **não fica vinculado
+a ninguém**: o nutricionista o convida pelo e-mail, e o vínculo só nasce quando o paciente aceita
+o convite no aplicativo (`POST /vinculos/convites` e `PATCH /vinculos/convites/:id/aceitar`).
+Até outubro de 2026 o cadastro vinculava o paciente a todos os nutricionistas do sistema, sem
+pedir autorização; a mudança atende ao consentimento exigido pela LGPD para dado de saúde.
 
 **Nutricionista** (`POST /auth/cadastro/nutricionista`, usado pelo painel): cria a conta com
-tipo `nutricionista` e o perfil em `nutricionista`, com CRN e especialidade opcionais no
-primeiro momento, completados depois.
+tipo `nutricionista` e o perfil em `nutricionista`, com CRN e especialidade. A conta nasce
+**aguardando aprovação**: a resposta não abre sessão, e o login só é liberado depois que um
+administrador confere o CRN e aprova o cadastro.
 
 Em ambos os casos, a senha é transformada em hash com bcrypt antes de qualquer gravação, e o
 e-mail é único no banco.
+
+**Cadastro feito por outra pessoa.** O nutricionista pode cadastrar um paciente que ainda não
+tem conta (`POST /pacientes`), e o administrador pode cadastrar um nutricionista
+(`POST /admin/nutricionistas`, já aprovado). A conta nasce sem senha que alguém conheça, e o dono
+cria a sua por um link de uso único, válido por 7 dias, que vai **só para o próprio e-mail** —
+quem tem o link define a senha, e devolvê-lo a quem cadastrou permitiria entrar no lugar do
+paciente e aceitar o próprio convite.
 
 Depois do primeiro acesso, o aplicativo leva o paciente para a tela de complemento de perfil
 (`onboarding/paciente`), onde ele informa data de nascimento, tipo de diabetes, peso, altura e
@@ -1694,10 +1705,9 @@ ser recusada no login. O histórico clínico não é apagado.
 
 | Limitação | Situação |
 |---|---|
-| Não há limite de tentativas de login | Não implementado; nenhuma biblioteca de *rate limiting* está instalada |
-| Não há verificação de e-mail no cadastro | Não implementado |
-| O CRN do nutricionista não é verificado | É um campo de texto; não há consulta ao conselho |
-| Vínculo automático no cadastro | Descrito na seção 5.4; é uma decisão a rever antes de uso real |
+| Não há verificação de e-mail no cadastro feito pelo próprio usuário | Não implementado. No cadastro feito pelo painel, a conta só ganha senha pelo link enviado ao e-mail, o que confirma o endereço |
+| O CRN do nutricionista não é consultado no conselho | Não há consulta pública automatizada; a administração confere à mão antes de aprovar o acesso |
+| O limite de tentativas de login fica na memória do servidor | Vale para uma instância só, como a do plano gratuito; com mais de uma, precisaria de um armazenamento compartilhado |
 | Não há cifragem de dado em repouso além da do provedor | Depende do banco gerenciado |
 | Não houve teste de segurança por terceiro | Nenhuma auditoria externa foi feita |
 
@@ -2005,7 +2015,8 @@ Estão implementadas, ligadas às telas e cobertas pelos testes onde indicado:
 
 | Item | Situação |
 |---|---|
-| **Lembretes** | Tabela, seis rotas e onze testes prontos. **Não há tela em lugar nenhum** — nem no painel, nem no aplicativo. Falta apenas a interface |
+| **Ambiente publicado** | O banco gratuito do Render expirou; a API precisa de um banco novo num provedor sem prazo (ver `docs/PUBLICAR.md`) |
+| **Envio de e-mail em produção** | Código pronto; falta configurar o SMTP no servidor publicado. Sem ele, os links de criar e de redefinir senha não chegam a ninguém |
 | **Notificação push pelo servidor** | Tabelas, registro de token e disparo implementados; **[PENDENTE DE CONFIRMAÇÃO]** falta comprovar a entrega em aparelho físico |
 | **Login pelo Google no aplicativo** | Código e credenciais configurados; **[PENDENTE DE CONFIRMAÇÃO]** não foi possível verificar o fluxo completo em aparelho |
 | **Monitoramento** | Existe o serviço `monitoramento-nutricare`, hoje desligado por configuração |
@@ -2016,21 +2027,23 @@ Estão implementadas, ligadas às telas e cobertas pelos testes onde indicado:
 
 | Item | Observação |
 |---|---|
-| **Gráficos de glicemia, peso e IMC** | É a lacuna mais visível. A API já devolve as séries prontas (`/antropometria/evolucao`), e existe um componente de gráfico de linha escrito no painel — mas ele está em código não alcançável por nenhuma rota. Falta ligá-lo às telas |
-| Gráficos no aplicativo | Não há nenhum, nem biblioteca para isso |
-| Verificação de e-mail no cadastro | Não implementada |
-| Verificação do CRN | Não implementada |
-| Limite de tentativas de login | Não implementado |
+| Verificação de e-mail no autocadastro | Não implementada |
+| Consulta automática do CRN ao conselho | Não existe consulta pública; a conferência é manual, na aprovação do nutricionista |
 | Integração com glicosímetro ou dispositivo | Fora do escopo desta versão |
 | Videochamada ou teleconsulta | Fora do escopo |
 | Aplicativo próprio para o nutricionista | Fora do escopo; o profissional usa o painel |
-| Testes automatizados no painel e no aplicativo | Não há nenhum; ver 10.6 |
+| Testes de unidade no painel e no aplicativo | Não há; a conferência é por testes ponta a ponta no navegador (ver 10.6) |
 | Publicação nas lojas de aplicativos | Não feita; a distribuição é pelo Expo |
 
 ## 10.6 Testes realizados
 
-**Testes automatizados.** A API tem **168 testes em 12 arquivos**, executados com Jest. Todos
-passaram na última execução, em cerca de 17 segundos.
+**Testes automatizados.** A API tem **238 testes em 21 arquivos**, executados com Jest. Todos
+passaram na última execução, em 27/10/2026. Além dos listados abaixo, cobrem o consentimento no
+vínculo (`convites.service.spec.ts`), o cadastro de paciente pelo nutricionista
+(`pacientes.service.spec.ts`), o link de criar senha (`contas.service.spec.ts`), a aprovação de
+nutricionistas (`admin.service.spec.ts`), o limite de tentativas de login
+(`limite-tentativas.guard.spec.ts`) e a regra que impede o link de senha de aparecer na resposta
+da API fora de desenvolvimento (`ambiente.spec.ts`).
 
 | Arquivo de teste | O que cobre |
 |---|---|
@@ -2201,56 +2214,52 @@ Em números, o que existe hoje:
 
 | | |
 |---|---|
-| Tabelas no banco | 24, mais o controle de migrações |
-| Migrações | 14 |
-| Módulos na API | 26 |
-| Rotas na API | cerca de 90 |
-| Testes automatizados | 168, em 12 arquivos, todos passando |
+| Tabelas no banco | 25, mais o controle de migrações |
+| Migrações | 17 |
+| Módulos na API | 27 |
+| Rotas na API | 115 |
+| Testes automatizados | 238, em 21 arquivos, todos passando |
 | Telas no painel web | 15 alcançáveis |
-| Telas no aplicativo | 32 arquivos de rota |
-| Commits | 198 |
+| Telas no aplicativo | 31 arquivos de rota |
+| Commits | 238 |
 
-Comparando com o pedido original da área de Nutrição, das dez necessidades levantadas, **seis
-estão atendidas** (tabela nutricional em estrutura, cálculo de VET, distribuição de
-macronutrientes, receitas, registro emocional e plano alimentar completo), **três estão
-parcialmente atendidas** por dependerem de definição clínica (os valores da tabela nutricional,
-a validação das faixas de glicemia e a escolha das fórmulas) e **uma continua em aberto** (os
-gráficos de evolução).
+Comparando com o pedido original da área de Nutrição, **as dez necessidades levantadas estão
+atendidas no software** — tela, servidor e banco de dados (seção 2.1). Quatro delas ainda
+dependem de definição clínica para valer em atendimento real: os valores da tabela nutricional,
+a escolha das fórmulas, os percentuais de macronutrientes e a validação das faixas de glicemia.
 
-O que se pode afirmar com evidência: o sistema funciona tecnicamente. O que **não** se pode
-afirmar: que ele está pronto para uso com pacientes reais. Faltam a validação clínica dos
-valores de referência, a substituição da tabela de alimentos de exemplo pela oficial, e o
-tratamento das pendências de segurança listadas na seção 9.1 — principalmente o vínculo
-automático no cadastro e a ausência de limite de tentativas de login.
+O que se pode afirmar com evidência: o sistema funciona tecnicamente, e as duas pendências de
+proteção de dados que impediam o uso real — o vínculo sem consentimento e o registro profissional
+sem conferência — foram resolvidas. O que **não** se pode afirmar: que ele está pronto para uso
+com pacientes reais. Falta a validação clínica dos valores de referência e a substituição da
+tabela de alimentos de exemplo pela oficial.
 
 ## 12.2 Trabalhos futuros
 
-**Curto prazo, para completar o que já está quase pronto:**
+**Curto prazo, para a demonstração:**
 
-1. Ligar o componente de gráfico às telas de glicemia, peso e IMC — a API já devolve os dados;
-2. Criar as telas de lembretes, cuja API já existe e está testada;
-3. Remover o código não alcançável do painel;
-4. Corrigir a duplicação do cartão na tela de relatório;
-5. Confirmar a entrega das notificações push e o login pelo Google em aparelho físico;
-6. Commitar o trabalho pendente e integrar o ramo de desenvolvimento a `main`.
+1. Recriar o banco do ambiente publicado num provedor sem prazo e configurar o envio de e-mail;
+2. Confirmar a entrega das notificações push, o disparo dos lembretes e o login pelo Google em
+   aparelho físico;
+3. Gerar uma versão instalável do aplicativo para Android.
 
 **Médio prazo, dependente da área de Nutrição:**
 
-7. Carregar a tabela nutricional oficial no lugar dos 36 alimentos de exemplo;
-8. Aplicar as faixas de referência validadas e as fórmulas escolhidas;
-9. Rever a decisão do vínculo automático, substituindo-a por um convite aceito pelo paciente.
+4. Importar a tabela nutricional oficial no lugar dos 36 alimentos de exemplo — a importação por
+   planilha já existe;
+5. Aplicar as faixas de referência validadas e as fórmulas escolhidas.
 
 **Longo prazo:**
 
-10. Limite de tentativas de login e verificação de e-mail no cadastro;
-11. Verificação do CRN junto ao conselho;
-12. Testes automatizados no painel e no aplicativo;
-13. Gráficos no aplicativo;
-14. Publicação nas lojas, com o nome e o identificador corrigidos (hoje o aplicativo ainda se
-    identifica como "Projeto TCC");
-15. Auditoria de acessibilidade;
-16. Integração com glicosímetros e dispositivos de medição contínua;
-17. Se a API passar a rodar em mais de um processo, substituir o barramento de eventos em
+6. Verificação de e-mail no autocadastro;
+7. Consulta automática do CRN, se o conselho passar a oferecer;
+8. Testes de unidade no painel e no aplicativo;
+9. Publicação nas lojas, com o identificador do aplicativo corrigido (o nome exibido já é
+   "NutriCare"; o `scheme` e o pacote Android ainda são os do projeto inicial e estão
+   cadastrados no login Google);
+10. Auditoria de acessibilidade;
+11. Integração com glicosímetros e dispositivos de medição contínua;
+12. Se a API passar a rodar em mais de um processo, substituir o barramento de eventos em
     memória por um canal compartilhado no banco.
 
 ## 12.3 Considerações finais

@@ -56,6 +56,67 @@ export class MailService {
     return { enviado: true, previewUrl: previewUrl || undefined };
   }
 
+  /**
+   * Há servidor de e-mail de verdade? Sem SMTP o envio cai no Ethereal, que
+   * só gera uma prévia no log: a tela não pode dizer "enviamos" nesse caso.
+   */
+  get envioReal(): boolean {
+    return Boolean(this.config.get<string>('SMTP_HOST')?.trim());
+  }
+
+  /** Conta criada por outra pessoa: o link serve para o dono criar a senha. */
+  async enviarBoasVindas(opts: {
+    para: string;
+    nome: string;
+    link: string;
+    autor: string;
+    perfil: 'paciente' | 'nutricionista';
+    validadeDias: number;
+  }): Promise<EnvioEmailResultado> {
+    const transporter = await this.getTransporter();
+    const from =
+      this.config.get<string>('SMTP_FROM') ||
+      this.config.get<string>('SMTP_USER') ||
+      'NutriCare <onboarding@resend.dev>';
+    const primeiroNome = opts.nome.trim().split(/\s+/)[0] || opts.nome;
+
+    const paragrafos =
+      opts.perfil === 'paciente'
+        ? [
+            `${opts.autor} cadastrou você no NutriCare, o aplicativo de acompanhamento nutricional para pessoas com diabetes.`,
+            `Crie sua senha pelo link abaixo (válido por ${opts.validadeDias} dias). Depois, entre no aplicativo NutriCare com este e-mail e a senha criada.`,
+            `No aplicativo, você decide se aceita o acompanhamento de ${opts.autor}: nada dos seus dados de saúde fica visível antes disso.`,
+          ]
+        : [
+            `${opts.autor} cadastrou você no painel profissional do NutriCare.`,
+            `Crie sua senha pelo link abaixo (válido por ${opts.validadeDias} dias) e depois entre no painel com este e-mail.`,
+          ];
+
+    const info = await transporter.sendMail({
+      from,
+      to: opts.para,
+      subject: 'NutriCare — crie sua senha',
+      text: [
+        `Olá, ${primeiroNome}.`,
+        '',
+        ...paragrafos.flatMap((p) => [p, '']),
+        opts.link,
+        '',
+        'Se você não esperava este e-mail, pode ignorá-lo.',
+        '',
+        '— Equipe NutriCare',
+      ].join('\n'),
+      html: buildBoasVindasHtml({ nome: primeiroNome, paragrafos, link: opts.link }),
+    });
+
+    const previewUrl = nodemailer.getTestMessageUrl(info) || undefined;
+    if (previewUrl) {
+      this.logger.log(`Prévia do e-mail (Ethereal): ${previewUrl}`);
+    }
+    this.logger.log(`E-mail de boas-vindas enviado para ${opts.para}`);
+    return { enviado: true, previewUrl: previewUrl || undefined };
+  }
+
   private getTransporter(): Promise<Transporter> {
     if (!this.transporterPromise) {
       this.transporterPromise = this.createTransporter();
@@ -99,6 +160,42 @@ function escapeHtml(value: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+function buildBoasVindasHtml(opts: { nome: string; paragrafos: string[]; link: string }): string {
+  const link = escapeHtml(opts.link);
+  const corpo = opts.paragrafos
+    .map(
+      (p) =>
+        `<p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#475467;">${escapeHtml(p)}</p>`,
+    )
+    .join('\n');
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Crie sua senha — NutriCare</title></head>
+<body style="margin:0;padding:24px 12px;background:#f5f7fa;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:#ffffff;border:1px solid #e2e7ee;border-radius:12px;">
+        <tr><td style="padding:32px;">
+          <p style="margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#005eb8;">NutriCare</p>
+          <h1 style="margin:0 0 18px;font-size:24px;line-height:1.3;color:#101828;">Olá, ${escapeHtml(opts.nome)}</h1>
+          ${corpo}
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:10px 0 24px;">
+            <tr><td bgcolor="#005eb8" style="border-radius:999px;">
+              <a href="${link}" style="display:inline-block;padding:14px 30px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:999px;">Criar minha senha</a>
+            </td></tr>
+          </table>
+          <p style="margin:0 0 6px;font-size:12px;color:#78829d;">Se o botão não funcionar, copie este link no navegador:</p>
+          <p style="margin:0 0 20px;font-size:12px;word-break:break-all;"><a href="${link}" style="color:#005eb8;">${link}</a></p>
+          <p style="margin:0;font-size:13px;color:#78829d;">Se você não esperava este e-mail, pode ignorá-lo.</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
 }
 
 function buildResetEmailHtml(opts: { nome: string; resetUrl: string }): string {

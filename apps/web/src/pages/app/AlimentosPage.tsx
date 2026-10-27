@@ -10,6 +10,7 @@ import {
   Select,
 } from '../../components/ui'
 import AlimentoModal from '../../components/AlimentoModal'
+import ImportarAlimentosModal from '../../components/ImportarAlimentosModal'
 import { extractError } from '../../lib/api'
 import {
   desativarAlimento,
@@ -34,6 +35,7 @@ export default function AlimentosPage() {
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
   const [modalAberto, setModalAberto] = useState(false)
+  const [importando, setImportando] = useState(false)
   const [editando, setEditando] = useState<Alimento | null>(null)
   const [desativandoId, setDesativandoId] = useState<string | null>(null)
 
@@ -106,6 +108,13 @@ export default function AlimentosPage() {
       .catch(() => undefined)
   }
 
+  function handleImportado() {
+    carregar(busca, grupo, () => true)
+    listarGrupos()
+      .then(setGrupos)
+      .catch(() => undefined)
+  }
+
   async function handleDesativar(alimento: Alimento) {
     const confirmado = window.confirm(
       `Remover "${alimento.nome}" da tabela? Ele deixa de aparecer nas buscas, mas continua nos planos já montados.`,
@@ -129,7 +138,14 @@ export default function AlimentosPage() {
         eyebrow="Tabela nutricional"
         title="Alimentos"
         subtitle="Consulte os valores por porção e mantenha a tabela usada no cálculo dos planos."
-        action={<Btn onClick={abrirNovo}>+ Novo alimento</Btn>}
+        action={
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Btn variant="secondary" onClick={() => setImportando(true)}>
+              Importar planilha
+            </Btn>
+            <Btn onClick={abrirNovo}>+ Novo alimento</Btn>
+          </div>
+        }
       />
 
       {erro && <AlertBanner message={erro} />}
@@ -257,6 +273,13 @@ export default function AlimentosPage() {
           alimento={editando}
           onClose={() => setModalAberto(false)}
           onSaved={handleSaved}
+        />
+      )}
+
+      {importando && (
+        <ImportarAlimentosModal
+          onClose={() => setImportando(false)}
+          onImportado={handleImportado}
         />
       )}
     </div>

@@ -57,6 +57,16 @@ describe('AlimentosService', () => {
       expect(params).toEqual(['%arroz%', 'cereais', 100]);
     });
 
+    it('should look for each word on its own, as TACO names have commas', async () => {
+      const { pool, query } = criarPoolMock([[]]);
+      await new AlimentosService(pool).listar({ busca: 'arroz  integral,' });
+
+      // "Arroz, integral, cozido" tem as duas palavras, mas não a frase.
+      const [sql, params] = query.mock.calls[0];
+      expect(sql).toContain('AND');
+      expect(params).toEqual(['%arroz%', '%integral%', 100]);
+    });
+
     it('should ignore accents on both sides of the search', async () => {
       const { pool, query } = criarPoolMock([[]]);
       await new AlimentosService(pool).listar({ busca: 'pao' });
@@ -146,6 +156,146 @@ describe('AlimentosService', () => {
 
       expect(query.mock.calls[0][1]).toEqual(['Arroz branco cozido', 'manual']);
       expect(criado.nome).toBe('Arroz branco cozido');
+    });
+  });
+
+  describe('importar', () => {
+    /**
+     * Pool com transação: cada INSERT responde, na ordem, se inseriu (true) ou
+     * atualizou (false) — o que o `xmax = 0` devolve no banco de verdade.
+     */
+    function criarPoolDeImportacao(inseriu: boolean[], falharNoInsert?: number) {
+      const fila = [...inseriu];
+      let inserts = 0;
+      const clientQuery = jest.fn(async (sql: string, _params?: unknown[]) => {
+        if (sql.trim().startsWith('INSERT')) {
+          inserts++;
+          if (inserts === falharNoInsert) throw new Error('conexão perdida');
+          return { rows: [{ inserido: fila.shift() }], rowCount: 1 };
+        }
+        return { rows: [], rowCount: 0 };
+      });
+      const release = jest.fn();
+      const connect = jest.fn(async () => ({ query: clientQuery, release }));
+      return { pool: { connect, query: jest.fn() } as unknown as Pool, clientQuery, connect, release };
+    }
+
+    const item = (nome: string, extra: Record<string, unknown> = {}) => ({
+      nome,
+      kcal: 128,
+      carboidratosG: 28.1,
+      proteinasG: 2.5,
+      lipidiosG: 0.2,
+      ...extra,
+    });
+
+    const comandos = (clientQuery: jest.Mock) =>
+      clientQuery.mock.calls.map(([sql]) => String(sql).trim().split(/\s+/)[0]);
+
+    it('should refuse a patient trying to import a table', async () => {
+      const { pool, connect } = criarPoolDeImportacao([]);
+      await expect(
+        new AlimentosService(pool).importar(usuario('paciente'), {
+          fonte: 'TACO',
+          itens: [item('Arroz')],
+        }),
+      ).rejects.toThrow(ForbiddenException);
+      expect(connect).not.toHaveBeenCalled();
+    });
+
+    it('should refuse an invalid line and still import the others', async () => {
+      const { pool, clientQuery } = criarPoolDeImportacao([true, true]);
+      const resultado = await new AlimentosService(pool).importar(usuario('nutricionista'), {
+        fonte: 'TACO',
+        itens: [item('Arroz'), item('Feijão', { carboidratosG: 'muito' }), item('Banana')],
+      });
+
+      expect(resultado.inseridos).toBe(2);
+      expect(resultado.recusados).toEqual([
+        { indice: 1, nome: 'Feijão', motivo: 'Valor ausente ou inválido em: carboidratos' },
+      ]);
+      expect(comandos(clientQuery)).toEqual(['BEGIN', 'INSERT', 'INSERT', 'COMMIT']);
+    });
+
+    it('should count a food that already existed in the source as updated', async () => {
+      const { pool } = criarPoolDeImportacao([false, true]);
+      const resultado = await new AlimentosService(pool).importar(usuario('administrador'), {
+        fonte: 'TACO',
+        itens: [item('Arroz'), item('Banana')],
+      });
+
+      expect(resultado).toMatchObject({ inseridos: 1, atualizados: 1, recusados: [] });
+    });
+
+    it('should upsert by name and source, using the source of the request', async () => {
+      const { pool, clientQuery } = criarPoolDeImportacao([true]);
+      await new AlimentosService(pool).importar(usuario('nutricionista'), {
+        fonte: '  TACO 4ª edição ',
+        itens: [item('Arroz', { fonte: 'outra' })],
+      });
+
+      const [sql, params = []] = clientQuery.mock.calls[1];
+      expect(sql).toContain('ON CONFLICT (lower(trim(nome)), fonte) DO UPDATE');
+      // A fonte da linha é ignorada: a planilha inteira vem de uma fonte só.
+      expect(params[11]).toBe('TACO 4ª edição');
+      expect(params[1]).toBe('outros');
+    });
+
+    it('should refuse a name repeated in the same sheet', async () => {
+      const { pool } = criarPoolDeImportacao([true]);
+      const resultado = await new AlimentosService(pool).importar(usuario('nutricionista'), {
+        fonte: 'TACO',
+        itens: [item('Arroz branco'), item(' arroz BRANCO ')],
+      });
+
+      expect(resultado.inseridos).toBe(1);
+      expect(resultado.recusados).toEqual([
+        { indice: 1, nome: 'arroz BRANCO', motivo: 'Alimento repetido na planilha' },
+      ]);
+    });
+
+    it('should refuse a line whose macros weigh more than the portion', async () => {
+      // Mesma regra do cadastro manual: a importação não pode ser um atalho
+      // para gravar o que o formulário recusa.
+      const { pool } = criarPoolDeImportacao([true]);
+      const resultado = await new AlimentosService(pool).importar(usuario('nutricionista'), {
+        fonte: 'TACO',
+        itens: [item('Arroz'), item('Erro de digitação', { carboidratosG: 98, proteinasG: 5 })],
+      });
+
+      expect(resultado.inseridos).toBe(1);
+      expect(resultado.recusados).toEqual([
+        {
+          indice: 1,
+          nome: 'Erro de digitação',
+          motivo: 'Carboidratos, proteínas e lipídios somam mais que o peso da porção',
+        },
+      ]);
+    });
+
+    it('should refuse a household measure without its weight in grams', async () => {
+      const { pool, connect } = criarPoolDeImportacao([]);
+      const resultado = await new AlimentosService(pool).importar(usuario('nutricionista'), {
+        fonte: 'TACO',
+        itens: [item('Feijão', { medidaCaseira: '1 concha' })],
+      });
+
+      expect(resultado.recusados[0].motivo).toBe('Informe os gramas da medida caseira');
+      // Nenhuma linha válida: nem abre transação.
+      expect(connect).not.toHaveBeenCalled();
+    });
+
+    it('should roll everything back when the database fails in the middle', async () => {
+      const { pool, clientQuery, release } = criarPoolDeImportacao([true, true], 2);
+      await expect(
+        new AlimentosService(pool).importar(usuario('nutricionista'), {
+          fonte: 'TACO',
+          itens: [item('Arroz'), item('Banana')],
+        }),
+      ).rejects.toThrow('conexão perdida');
+
+      expect(comandos(clientQuery)).toEqual(['BEGIN', 'INSERT', 'INSERT', 'ROLLBACK']);
+      expect(release).toHaveBeenCalled();
     });
   });
 

@@ -46,7 +46,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
           metadados: { requestId },
         });
       }
-      if (!res.headersSent) res.status(status).json(excecao.getResponse());
+      // Exceção criada só com texto (o limite de tentativas, por exemplo)
+      // devolve uma string em getResponse(). O filtro padrão do Nest embrulha
+      // esse caso em { statusCode, message }, e é nesse formato que o painel e o
+      // app procuram a mensagem: sem isto, o usuário via um erro genérico.
+      const corpo = excecao.getResponse();
+      const resposta = typeof corpo === 'string' ? { statusCode: status, message: corpo } : corpo;
+      if (!res.headersSent) res.status(status).json(resposta);
       return;
     }
 

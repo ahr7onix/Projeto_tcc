@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ConvitesAcompanhamento } from '@/components/ConvitesAcompanhamento';
 import { GlicemicStatusBanner } from '@/components/GlicemicStatusBanner';
 import { useAccessibleMode } from '@/hooks/use-accessible-mode';
 import { useGlycemicWatch } from '@/hooks/use-glycemic-watch';
@@ -244,6 +245,8 @@ export default function HomeScreen() {
             </Text>
             <Text style={styles.heroSub}>{heroSub}</Text>
           </View>
+
+          <ConvitesAcompanhamento />
 
           <GlicemicStatusBanner />
 

@@ -94,6 +94,38 @@ Se `banco` vier como `indisponivel`, o banco de dados caiu ou expirou.
 
 ---
 
+## E-mail
+
+Sem servidor de e-mail configurado, **nenhum e-mail sai do sistema**: nem o
+link de criar senha de quem é cadastrado pelo painel (paciente cadastrado pelo
+nutricionista, nutricionista cadastrado pelo administrador), nem o de "esqueci
+a senha". A API cai no Ethereal, que só gera uma prévia no log, e o painel avisa
+isso ao cadastrar alguém.
+
+Uma conta Gmail com **senha de app** resolve:
+
+1. Na conta Google que vai enviar, ativar a verificação em duas etapas.
+2. Gerar uma senha de app em <https://myaccount.google.com/apppasswords>.
+3. No Render, serviço **nutricare-adj-api** → *Environment*, preencher:
+
+| Variável | Valor |
+|---|---|
+| `SMTP_HOST` | `smtp.gmail.com` |
+| `SMTP_USER` | o endereço Gmail |
+| `SMTP_PASS` | a senha de app (16 letras, sem espaços) |
+| `SMTP_FROM` | `NutriCare <o endereço Gmail>` |
+
+`SMTP_PORT` (587) e `WEB_APP_URL` (o endereço do painel, para onde apontam os
+links) já vêm do `render.yaml`. Para conferir, use "Esqueceu a senha?" no login
+do painel com uma conta sua.
+
+> O link de criar ou redefinir senha **nunca** volta na resposta da API no
+> servidor publicado: só em desenvolvimento, com `RESET_LINK_NA_RESPOSTA=true`,
+> para testar sem caixa de e-mail. Com `NODE_ENV=production` (que o `render.yaml`
+> define) ele não sai nem com a variável ligada.
+
+---
+
 ## Login com Google
 
 O botão "Entrar com Google" só funciona em endereços autorizados. O endereço do

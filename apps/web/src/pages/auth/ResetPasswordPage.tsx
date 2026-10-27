@@ -7,12 +7,16 @@ export default function ResetPasswordPage() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const token = useMemo(() => params.get('token')?.trim() || '', [params])
+  // Conta criada por outra pessoa (nutricionista ou administrador): a pessoa
+  // não está trocando de senha, está criando a primeira.
+  const boasVindas = params.get('boasvindas') === '1'
 
   const [senha, setSenha] = useState('')
   const [confirmar, setConfirmar] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [ehPaciente, setEhPaciente] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,9 +35,12 @@ export default function ResetPasswordPage() {
     }
     setLoading(true)
     try {
-      await api.post('/auth/redefinir-senha', { token, novaSenha: senha })
+      const { data } = await api.post('/auth/redefinir-senha', { token, novaSenha: senha })
       setSuccess(true)
-      setTimeout(() => navigate('/login'), 1800)
+      // O login do painel recusa paciente: mandá-lo para lá seria um beco sem
+      // saída. Paciente fica nesta tela, com a orientação de abrir o aplicativo.
+      if (data?.perfil === 'paciente') setEhPaciente(true)
+      else setTimeout(() => navigate('/login'), 1800)
     } catch (err) {
       setError(extractError(err))
     } finally {
@@ -45,10 +52,19 @@ export default function ResetPasswordPage() {
     <div className={styles.page}>
       <div className={styles.container} style={{ width: 480, minHeight: 420 }}>
         <div className={styles.formContainer} style={{ width: '100%', position: 'relative' }}>
-          {success ? (
+          {success && ehPaciente ? (
             <div className={styles.form}>
               <div className={styles.brand}>NutriCare</div>
-              <h1 className={styles.title}>Senha atualizada</h1>
+              <h1 className={styles.title}>{boasVindas ? 'Senha criada' : 'Senha atualizada'}</h1>
+              <p style={{ color: 'var(--text-soft)', fontSize: 14, lineHeight: 1.5 }}>
+                Tudo certo. Agora abra o aplicativo NutriCare no celular e entre com o seu
+                e-mail e a senha que você acabou de criar.
+              </p>
+            </div>
+          ) : success ? (
+            <div className={styles.form}>
+              <div className={styles.brand}>NutriCare</div>
+              <h1 className={styles.title}>{boasVindas ? 'Senha criada' : 'Senha atualizada'}</h1>
               <p style={{ color: 'var(--text-soft)', fontSize: 14, lineHeight: 1.5 }}>
                 Tudo certo. Redirecionando para o login...
               </p>
@@ -59,9 +75,11 @@ export default function ResetPasswordPage() {
           ) : (
             <form className={styles.form} onSubmit={handleSubmit} noValidate>
               <div className={styles.brand}>NutriCare</div>
-              <h1 className={styles.title}>Nova senha</h1>
+              <h1 className={styles.title}>{boasVindas ? 'Crie sua senha' : 'Nova senha'}</h1>
               <p style={{ color: 'var(--text-soft)', fontSize: 14, margin: '-8px 0 12px', lineHeight: 1.45 }}>
-                Escolha uma senha forte para sua conta.
+                {boasVindas
+                  ? 'Sua conta no NutriCare já existe. Falta só escolher uma senha.'
+                  : 'Escolha uma senha forte para sua conta.'}
               </p>
               {!token && (
                 <div className={styles.error}>

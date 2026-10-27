@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -115,45 +114,6 @@ export class VinculosService {
         email: r.email,
         vinculadoEm: r.criado_em,
       })),
-    };
-  }
-
-  async vincular(idUsuarioNutri: string, idUsuarioPaciente: string) {
-    const idNutricionista = await this.resolveNutricionistaId(idUsuarioNutri);
-    const idPaciente = await this.resolvePacienteId(idUsuarioPaciente);
-
-    const { rows: existentes } = await this.pool.query(
-      `SELECT id_vinculo FROM nutricionista_paciente
-        WHERE id_nutricionista = $1 AND id_paciente = $2 AND ativo = TRUE`,
-      [idNutricionista, idPaciente],
-    );
-    if (existentes.length) {
-      throw new ConflictException('Paciente já vinculado a você');
-    }
-
-    // A checagem acima resolve o caso comum. Dois cliques no mesmo instante
-    // passam pelos dois SELECT antes de qualquer INSERT: quem chega em segundo
-    // esbarra no indice unico parcial `idx_vinculo_ativo_unico` (23505), e sem
-    // este tratamento a resposta virava 500 em vez do mesmo 409.
-    let rows: Array<{ id_vinculo: string; criado_em: Date }>;
-    try {
-      ({ rows } = await this.pool.query(
-        `INSERT INTO nutricionista_paciente (id_nutricionista, id_paciente)
-         VALUES ($1, $2)
-         RETURNING id_vinculo, criado_em`,
-        [idNutricionista, idPaciente],
-      ));
-    } catch (err) {
-      if ((err as { code?: string })?.code === '23505') {
-        throw new ConflictException('Paciente ja vinculado a voce');
-      }
-      throw err;
-    }
-
-    return {
-      vinculoId: String(rows[0].id_vinculo),
-      pacienteId: idUsuarioPaciente,
-      vinculadoEm: rows[0].criado_em,
     };
   }
 
