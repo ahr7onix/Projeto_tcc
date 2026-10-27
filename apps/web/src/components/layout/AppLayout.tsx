@@ -1,5 +1,6 @@
-import { useState, type ReactNode } from 'react'
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { useEffect, useState, type ReactNode } from 'react'
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { contarNaoLidas } from '../../lib/mensagens'
 import { useAuth } from '../../contexts/AuthContext'
 import NotificationCenter from '../NotificationCenter'
 import s from './AppLayout.module.css'
@@ -77,9 +78,24 @@ export default function AppLayout() {
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
+  const [naoLidas, setNaoLidas] = useState(0)
+  const { pathname } = useLocation()
   const initial = (user?.nome ?? 'N').charAt(0).toUpperCase()
   const grupos = user?.role === 'administrador' ? NAV_ADMINISTRADOR : NAV_NUTRICIONISTA
   const rotuloPerfil = ROTULO_PERFIL[user?.role ?? ''] ?? 'Nutricionista'
+
+  // Contador de mensagens não lidas no menu: atualiza ao trocar de tela e a
+  // cada minuto. Só o nutricionista tem conversas; falha de rede não derruba nada.
+  const temConversas = user?.role === 'nutricionista'
+  useEffect(() => {
+    if (!temConversas) return
+    let ativo = true
+    const buscar = () => contarNaoLidas().then(n => ativo && setNaoLidas(n)).catch(() => {})
+    buscar()
+    const timer = setInterval(buscar, 60_000)
+    return () => { ativo = false; clearInterval(timer) }
+  }, [temConversas, pathname])
+  const badges: Record<string, number> = { '/mensagens': naoLidas }
 
   const handleLogout = () => { logout(); navigate('/login') }
   const fechar = () => setSidebarOpen(false)
@@ -95,22 +111,19 @@ export default function AppLayout() {
           collapsed ? s.sidebarCollapsed : '',
         ].filter(Boolean).join(' ')}
       >
-        <div className={s.brand}>
-          <div className={s.brandIcon}><PulseIcon /></div>
-          <div className={s.brandText}>
-            <div className={s.brandName}>NutriCare</div>
-            <div className={s.brandSub}>Painel clínico</div>
+        {/* Perfil no topo, no lugar da marca: é o caminho para /perfil. */}
+        <NavLink
+          to="/perfil"
+          className={({ isActive }) => `${s.perfil} ${isActive ? s.perfilActive : ''}`}
+          title={`${user?.nome ?? 'Nutricionista'} — abrir perfil`}
+          onClick={fechar}
+        >
+          <div className={s.userAvatar}>{initial}</div>
+          <div className={s.userInfo}>
+            <div className={s.userName}>{user?.nome ?? 'Nutricionista'}</div>
+            <div className={s.userRole}>{rotuloPerfil}</div>
           </div>
-          <button
-            type="button"
-            className={s.collapseBtn}
-            onClick={() => setCollapsed(v => !v)}
-            aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
-            title={collapsed ? 'Expandir' : 'Recolher'}
-          >
-            <CollapseIcon collapsed={collapsed} />
-          </button>
-        </div>
+        </NavLink>
 
         <nav className={s.nav} aria-label="Navegação principal">
           {grupos.map((grupo) => (
@@ -126,6 +139,11 @@ export default function AppLayout() {
                 >
                   <span className={s.navIcon}><item.icon /></span>
                   <span className={s.navLabel}>{item.label}</span>
+                  {badges[item.to] > 0 && (
+                    <span className={s.badge} aria-label={`${badges[item.to]} não lidas`}>
+                      {badges[item.to] > 99 ? '99+' : badges[item.to]}
+                    </span>
+                  )}
                 </NavLink>
               ))}
             </div>
@@ -133,23 +151,19 @@ export default function AppLayout() {
         </nav>
 
         <div className={s.sidebarFooter}>
-          {/* O cartão do usuário é o caminho para o perfil — por isso ele saiu
-              da lista de menus acima. */}
-          <NavLink
-            to="/perfil"
-            className={({ isActive }) => `${s.userCard} ${isActive ? s.userCardActive : ''}`}
-            title={`${user?.nome ?? 'Nutricionista'} — abrir perfil`}
-            onClick={fechar}
+          <button
+            type="button"
+            className={`${s.footerBtn} ${s.recolherBtn}`}
+            onClick={() => setCollapsed(v => !v)}
+            aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
+            title={collapsed ? 'Expandir menu' : 'Recolher menu'}
           >
-            <div className={s.userAvatar}>{initial}</div>
-            <div className={s.userInfo}>
-              <div className={s.userName}>{user?.nome ?? 'Nutricionista'}</div>
-              <div className={s.userRole}>{rotuloPerfil}</div>
-            </div>
-          </NavLink>
-          <button className={s.logoutBtn} onClick={handleLogout} title="Sair da conta">
+            <CollapseIcon collapsed={collapsed} />
+            <span className={s.footerLabel}>Recolher menu</span>
+          </button>
+          <button className={`${s.footerBtn} ${s.logoutBtn}`} onClick={handleLogout} title="Sair da conta">
             <LogoutIcon />
-            <span className={s.logoutLabel}>Sair da conta</span>
+            <span className={s.footerLabel}>Sair da conta</span>
           </button>
         </div>
       </aside>
