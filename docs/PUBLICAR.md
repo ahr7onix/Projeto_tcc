@@ -99,25 +99,37 @@ Se `banco` vier como `indisponivel`, o banco de dados caiu ou expirou.
 Sem servidor de e-mail configurado, **nenhum e-mail sai do sistema**: nem o
 link de criar senha de quem é cadastrado pelo painel (paciente cadastrado pelo
 nutricionista, nutricionista cadastrado pelo administrador), nem o de "esqueci
-a senha". A API cai no Ethereal, que só gera uma prévia no log, e o painel avisa
-isso ao cadastrar alguém.
+a senha". O painel avisa isso ao cadastrar alguém.
 
-Uma conta Gmail com **senha de app** resolve:
+> **Gmail não funciona no Render gratuito.** Desde setembro de 2025 o plano
+> gratuito bloqueia as portas 25, 465 e 587, que são as do Gmail
+> ([changelog do Render](https://render.com/changelog/free-web-services-will-no-longer-allow-outbound-traffic-to-smtp-ports)).
+> A saída é um serviço de e-mail que atenda em outra porta. O Brevo atende na
+> **2525** e o plano gratuito envia até 300 e-mails por dia.
 
-1. Na conta Google que vai enviar, ativar a verificação em duas etapas.
-2. Gerar uma senha de app em <https://myaccount.google.com/apppasswords>.
-3. No Render, serviço **nutricare-adj-api** → *Environment*, preencher:
+1. Criar uma conta gratuita em <https://www.brevo.com>.
+2. Em **Senders, Domains & Dedicated IPs → Senders**, cadastrar o endereço que
+   vai aparecer como remetente (pode ser um Gmail) e confirmar pelo código que
+   chega nele.
+3. Em **SMTP & API → SMTP**, gerar uma **chave SMTP** e anotar o login, que tem
+   o formato `xxxxxx@smtp-brevo.com` (não é o e-mail da conta).
+4. No Render, serviço **nutricare-adj-api** → *Environment*, preencher:
 
 | Variável | Valor |
 |---|---|
-| `SMTP_HOST` | `smtp.gmail.com` |
-| `SMTP_USER` | o endereço Gmail |
-| `SMTP_PASS` | a senha de app (16 letras, sem espaços) |
-| `SMTP_FROM` | `NutriCare <o endereço Gmail>` |
+| `SMTP_HOST` | `smtp-relay.brevo.com` |
+| `SMTP_USER` | o login `xxxxxx@smtp-brevo.com` |
+| `SMTP_PASS` | a chave SMTP (não a chave de API) |
+| `SMTP_FROM` | `NutriCare <o remetente confirmado no passo 2>` |
 
-`SMTP_PORT` (587) e `WEB_APP_URL` (o endereço do painel, para onde apontam os
+`SMTP_PORT` (2525) e `WEB_APP_URL` (o endereço do painel, para onde apontam os
 links) já vêm do `render.yaml`. Para conferir, use "Esqueceu a senha?" no login
-do painel com uma conta sua.
+do painel com uma conta sua e veja se o e-mail chega — inclusive na caixa de
+spam: remetente Gmail enviado por outro serviço costuma cair lá.
+
+Se o e-mail não chegar, a API não fica travada: ela desiste do servidor de
+e-mail em até 10 segundos e responde normalmente. O motivo fica no log do
+Render (serviço **nutricare-adj-api** → *Logs*).
 
 > O link de criar ou redefinir senha **nunca** volta na resposta da API no
 > servidor publicado: só em desenvolvimento, com `RESET_LINK_NA_RESPOSTA=true`,

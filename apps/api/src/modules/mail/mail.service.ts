@@ -8,6 +8,18 @@ export interface EnvioEmailResultado {
   previewUrl?: string;
 }
 
+/**
+ * Tempo máximo para falar com o servidor de e-mail. O padrão do nodemailer é
+ * 2 minutos: com a porta bloqueada (o plano gratuito do Render bloqueia 25,
+ * 465 e 587), o "esqueci a senha" ficava 2 minutos carregando antes de
+ * responder — conferido no servidor publicado, 121 segundos.
+ */
+export const LIMITES_SMTP = {
+  connectionTimeout: 10_000,
+  greetingTimeout: 10_000,
+  socketTimeout: 20_000,
+};
+
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
@@ -137,10 +149,21 @@ export class MailService {
         port,
         secure: port === 465,
         ...(user && pass ? { auth: { user, pass } } : {}),
+        ...LIMITES_SMTP,
       });
     }
 
-    // Sem SMTP: conta de teste Ethereal (e-mail "falso" com link de prévia).
+    // Em produção, sem SMTP não há para onde mandar: a prévia do Ethereal só
+    // vai para o log, que ninguém lê, e a porta dele é bloqueada no Render.
+    // Desiste na hora, e quem chamou trata como "e-mail não enviado".
+    if (this.config.get<string>('NODE_ENV') === 'production') {
+      this.logger.warn(
+        'SMTP não configurado em produção — nenhum e-mail será enviado. Ver docs/PUBLICAR.md, seção "E-mail".',
+      );
+      throw new Error('SMTP não configurado');
+    }
+
+    // Em desenvolvimento: conta de teste Ethereal (e-mail "falso" com link de prévia).
     this.logger.warn(
       'SMTP não configurado — usando Ethereal (prévia no log). Defina SMTP_HOST/SMTP_USER/SMTP_PASS para e-mail real.',
     );
@@ -150,6 +173,7 @@ export class MailService {
       port: test.smtp.port,
       secure: test.smtp.secure,
       auth: { user: test.user, pass: test.pass },
+      ...LIMITES_SMTP,
     });
   }
 }
