@@ -24,16 +24,11 @@ export class PacientesController {
     return this.pacientes.findAll(user.sub, busca);
   }
 
-  @Get('disponiveis')
-  findDisponiveis(
-    @CurrentUser() user: JwtPayload,
-    @Query('busca') busca?: string,
-  ) {
-    return this.pacientes.findDisponiveis(user.sub, busca);
-  }
-
   @Get(':id')
   async findOne(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    // Um id que não é número quebrava na conversão para bigint do Postgres e
+    // virava 500 — inclusive o antigo /pacientes/disponiveis, que caiu aqui.
+    if (!/^\d+$/.test(id)) throw new NotFoundException('Paciente não encontrado');
     const paciente = await this.pacientes.findOne(user.sub, id);
     if (!paciente) throw new NotFoundException('Paciente não encontrado');
     return paciente;

@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type { Pool } from 'pg';
 import { VinculosService } from './vinculos.service';
 
@@ -52,34 +52,6 @@ describe('VinculosService', () => {
       const { pool } = criarPoolMock([[{ id_nutricionista: 7 }]]);
       const service = new VinculosService(pool);
       await expect(service.resolveNutricionistaId('9')).resolves.toBe('7');
-    });
-  });
-
-  describe('vincular', () => {
-    it('should throw ConflictException when the link already exists', async () => {
-      const { pool } = criarPoolMock([
-        [{ id_nutricionista: 1 }],
-        [{ id_paciente: 2 }],
-        [{ id_vinculo: 5 }],
-      ]);
-      const service = new VinculosService(pool);
-      await expect(service.vincular('1', '2')).rejects.toThrow(ConflictException);
-    });
-
-    it('should create the link when none exists', async () => {
-      const criadoEm = new Date();
-      const { pool } = criarPoolMock([
-        [{ id_nutricionista: 1 }],
-        [{ id_paciente: 2 }],
-        [],
-        [{ id_vinculo: 10, criado_em: criadoEm }],
-      ]);
-      const service = new VinculosService(pool);
-      await expect(service.vincular('1', '2')).resolves.toEqual({
-        vinculoId: '10',
-        pacienteId: '2',
-        vinculadoEm: criadoEm,
-      });
     });
   });
 

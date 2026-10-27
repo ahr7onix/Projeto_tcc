@@ -122,7 +122,10 @@ async function main() {
     fail('API cadastro paciente novo', String(e.message || e));
   }
 
+  // Consentimento (LGPD): o paciente novo só entra na lista da Camila depois
+  // de aceitar o convite. Antes do aceite ele não pode aparecer.
   try {
+    const json = (r) => r.json();
     const loginNutri = await fetch(`${API}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -130,17 +133,37 @@ async function main() {
         email: 'camila.souza@nutri.com',
         senha: 'Senha123!',
       }),
-    }).then((r) => r.json());
-    const list = await fetch(`${API}/pacientes`, {
-      headers: { Authorization: `Bearer ${loginNutri.accessToken}` },
-    }).then((r) => r.json());
-    const found = (list.data || list || []).find(
-      (p) => p.email === newEmail || p.nome?.includes(`E2E Mobile ${stamp}`),
-    );
-    if (found) pass('API vínculo auto → lista Camila', `id=${found.id}`);
-    else fail('API vínculo auto → lista Camila', 'paciente não encontrado');
+    }).then(json);
+    const loginPaciente = await fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: newEmail, senha: 'Senha123!' }),
+    }).then(json);
+    const comToken = (token) => ({
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    });
+    const naLista = async () => {
+      const list = await fetch(`${API}/pacientes`, {
+        headers: comToken(loginNutri.accessToken),
+      }).then(json);
+      return (list.data || []).some((p) => p.email === newEmail);
+    };
+
+    if (await naLista()) throw new Error('paciente apareceu sem aceitar convite');
+    const convite = await fetch(`${API}/vinculos/convites`, {
+      method: 'POST',
+      headers: comToken(loginNutri.accessToken),
+      body: JSON.stringify({ email: newEmail }),
+    }).then(json);
+    await fetch(`${API}/vinculos/convites/${convite.id}/aceitar`, {
+      method: 'PATCH',
+      headers: comToken(loginPaciente.accessToken),
+    });
+    if (await naLista()) pass('API convite aceito → lista Camila', `convite=${convite.id}`);
+    else fail('API convite aceito → lista Camila', 'paciente não encontrado');
   } catch (e) {
-    fail('API vínculo auto → lista Camila', String(e.message || e));
+    fail('API convite aceito → lista Camila', String(e.message || e));
   }
 
   // --- WEB: login Camila + Pacientes page shows new patient ---

@@ -56,43 +56,6 @@ export class PacientesService {
     return { data: result.rows.map((r) => this.mapResumo(r)) };
   }
 
-  async findDisponiveis(idUsuarioNutri: string, busca?: string) {
-    const params: string[] = [idUsuarioNutri];
-    let where = '';
-    if (busca) {
-      params.push(`%${busca}%`);
-      where = `AND (u.nome ILIKE $${params.length} OR u.email ILIKE $${params.length})`;
-    }
-
-    const result = await this.pool.query(
-      `SELECT u.id_usuario, u.nome, u.email
-         FROM usuario u
-         JOIN paciente p ON p.id_usuario = u.id_usuario
-        WHERE u.tipo = 'paciente'
-          AND u.desativado_em IS NULL
-          AND NOT EXISTS (
-            SELECT 1
-              FROM nutricionista_paciente np
-              JOIN nutricionista n ON n.id_nutricionista = np.id_nutricionista
-             WHERE np.id_paciente = p.id_paciente
-               AND np.ativo = TRUE
-               AND n.id_usuario = $1
-          )
-          ${where}
-        ORDER BY u.nome
-        LIMIT 50`,
-      params,
-    );
-
-    return {
-      data: result.rows.map((r) => ({
-        id: String(r.id_usuario),
-        nome: r.nome,
-        email: r.email,
-      })),
-    };
-  }
-
   async findOne(idUsuarioNutri: string, idUsuarioPaciente: string) {
     const vinculado = await this.vinculos.existeVinculo(
       idUsuarioNutri,

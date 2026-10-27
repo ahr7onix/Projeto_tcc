@@ -99,24 +99,14 @@ export class AuthService {
 
       if (papel === 'paciente') {
         const dataNascimento = this.parseBrDate(dto.dataNascimento);
-        const pacienteIns = await client.query<{ id_paciente: string }>(
-          `INSERT INTO paciente (id_usuario, data_nascimento, genero, tipo_diabetes)
-           VALUES ($1, $2, $3, $4)
-           RETURNING id_paciente`,
-          [user.id_usuario, dataNascimento, dto.sexo ?? null, dto.tipoDiabetes ?? null],
-        );
-        // Paciente novo já aparece na lista do nutricionista (vínculo automático).
+        // Sem vínculo automático: até aqui o paciente novo era vinculado a
+        // todos os nutricionistas do sistema, que passavam a ver os dados de
+        // saúde dele sem autorização. Agora o vínculo nasce de um convite que
+        // o paciente aceita (ConvitesService).
         await client.query(
-          `INSERT INTO nutricionista_paciente (id_nutricionista, id_paciente)
-           SELECT n.id_nutricionista, $1
-             FROM nutricionista n
-            WHERE NOT EXISTS (
-              SELECT 1 FROM nutricionista_paciente np
-               WHERE np.id_nutricionista = n.id_nutricionista
-                 AND np.id_paciente = $1
-                 AND np.ativo = TRUE
-            )`,
-          [pacienteIns.rows[0].id_paciente],
+          `INSERT INTO paciente (id_usuario, data_nascimento, genero, tipo_diabetes)
+           VALUES ($1, $2, $3, $4)`,
+          [user.id_usuario, dataNascimento, dto.sexo ?? null, dto.tipoDiabetes ?? null],
         );
       } else {
         const crn = dto.crn?.trim() || null;
@@ -230,23 +220,11 @@ export class AuthService {
           user = inserted.rows[0];
 
           if (papel === 'paciente') {
-            const pacienteIns = await client.query<{ id_paciente: string }>(
-              `INSERT INTO paciente (id_usuario, data_nascimento, genero, tipo_diabetes)
-               VALUES ($1, NULL, NULL, NULL)
-               RETURNING id_paciente`,
-              [user.id_usuario],
-            );
+            // Sem vínculo automático, pelo mesmo motivo do cadastro por e-mail.
             await client.query(
-              `INSERT INTO nutricionista_paciente (id_nutricionista, id_paciente)
-               SELECT n.id_nutricionista, $1
-                 FROM nutricionista n
-                WHERE NOT EXISTS (
-                  SELECT 1 FROM nutricionista_paciente np
-                   WHERE np.id_nutricionista = n.id_nutricionista
-                     AND np.id_paciente = $1
-                     AND np.ativo = TRUE
-                )`,
-              [pacienteIns.rows[0].id_paciente],
+              `INSERT INTO paciente (id_usuario, data_nascimento, genero, tipo_diabetes)
+               VALUES ($1, NULL, NULL, NULL)`,
+              [user.id_usuario],
             );
           } else {
             await client.query(

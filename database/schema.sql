@@ -78,6 +78,27 @@ CREATE INDEX idx_vinculo_nutricionista
 CREATE INDEX idx_vinculo_paciente
     ON nutricionista_paciente(id_paciente) WHERE ativo = TRUE;
 
+-- ---------- Tabela: solicitacao_vinculo ----------
+-- Consentimento (LGPD): o nutricionista convida e o vínculo acima só nasce
+-- quando o paciente aceita. Espelha migrations/016_solicitacao_vinculo.sql.
+CREATE TABLE solicitacao_vinculo (
+    id_solicitacao   BIGSERIAL   PRIMARY KEY,
+    id_nutricionista BIGINT      NOT NULL
+        REFERENCES nutricionista(id_nutricionista) ON DELETE CASCADE,
+    id_paciente      BIGINT      NOT NULL
+        REFERENCES paciente(id_paciente) ON DELETE CASCADE,
+    status           VARCHAR(12) NOT NULL DEFAULT 'pendente'
+        CHECK (status IN ('pendente', 'aceita', 'recusada', 'cancelada')),
+    criado_em        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    respondido_em    TIMESTAMPTZ,
+    CONSTRAINT chk_solicitacao_resposta
+        CHECK ((status = 'pendente') = (respondido_em IS NULL))
+);
+CREATE UNIQUE INDEX idx_solicitacao_pendente_unica
+    ON solicitacao_vinculo (id_nutricionista, id_paciente) WHERE status = 'pendente';
+CREATE INDEX idx_solicitacao_paciente
+    ON solicitacao_vinculo (id_paciente) WHERE status = 'pendente';
+
 -- ---------- Tabela: mensagem ----------
 -- Conversa entre nutricionista e paciente, presa ao vinculo entre os dois.
 -- Faltava aqui: como o preparar-banco.mjs marca as migrations como aplicadas

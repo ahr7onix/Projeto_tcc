@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { PageHeader, EmptyState, AlertBanner, Btn } from '../../components/ui'
 import { api, extractError } from '../../lib/api'
-import VincularPacienteModal from '../../components/VincularPacienteModal'
-import { desvincularPaciente } from '../../lib/vinculos'
+import ConvidarPacienteModal from '../../components/ConvidarPacienteModal'
+import { desvincularPaciente, listarConvites } from '../../lib/vinculos'
 import PatientPicker from '../../components/PatientPicker'
 
 interface Paciente {
@@ -41,8 +41,21 @@ export default function PacientesPage() {
   const [busca, setBusca] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [vincularAberto, setVincularAberto] = useState(false)
+  const [convidarAberto, setConvidarAberto] = useState(false)
+  const [convitesPendentes, setConvitesPendentes] = useState(0)
   const [desvinculandoId, setDesvinculandoId] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelado = false
+    listarConvites()
+      .then((lista) => {
+        if (!cancelado) setConvitesPendentes(lista.length)
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelado = true
+    }
+  }, [])
 
   const fetchPacientes = useCallback(async (q: string, ativo: () => boolean) => {
     setError(null)
@@ -110,11 +123,20 @@ export default function PacientesPage() {
       <PageHeader
         eyebrow="Gerenciamento"
         title={acompanhamento ? 'Acompanhamento' : 'Pacientes'}
-        subtitle={acompanhamento ? 'Selecione um paciente para registrar e acompanhar todas as informações em uma única ficha.' : 'Pacientes vinculados a você. Novos cadastros pelo app mobile aparecem automaticamente aqui.'}
-        action={<Btn onClick={() => setVincularAberto(true)}>+ Vincular paciente</Btn>}
+        subtitle={acompanhamento ? 'Selecione um paciente para registrar e acompanhar todas as informações em uma única ficha.' : 'Pacientes que aceitaram o seu acompanhamento pelo aplicativo.'}
+        action={<Btn onClick={() => setConvidarAberto(true)}>+ Convidar paciente</Btn>}
       />
 
       {error && <div style={{ marginBottom: 16 }}><AlertBanner message={error} /></div>}
+
+      {convitesPendentes > 0 && (
+        <button type="button" onClick={() => setConvidarAberto(true)} style={avisoConvites}>
+          {convitesPendentes === 1
+            ? '1 convite aguardando resposta do paciente'
+            : `${convitesPendentes} convites aguardando resposta dos pacientes`}
+          {' · ver convites'}
+        </button>
+      )}
 
       {}
       {!loading && pacientes.length > 0 && (
@@ -255,22 +277,27 @@ export default function PacientesPage() {
             <EmptyState
               icon={<PatientsIcon />}
               title="Nenhum paciente encontrado"
-              message={busca ? 'Tente um nome diferente.' : 'Clique em "Vincular paciente" para começar a acompanhar alguém.'}
+              message={busca ? 'Tente um nome diferente.' : 'Clique em "Convidar paciente" para começar a acompanhar alguém.'}
             />
           </div>
         )}
       </div>
 
-      {/* A recarga depois de vincular é pontual e não compete com nada, então
-          passa uma guarda sempre ativa. */}
-      {vincularAberto && (
-        <VincularPacienteModal
-          onClose={() => setVincularAberto(false)}
-          onVinculado={() => fetchPacientes(busca, () => true)}
+      {convidarAberto && (
+        <ConvidarPacienteModal
+          onClose={() => setConvidarAberto(false)}
+          onConvitesAlterados={setConvitesPendentes}
         />
       )}
     </div>
   )
+}
+
+const avisoConvites: React.CSSProperties = {
+  display: 'block', width: '100%', textAlign: 'left', cursor: 'pointer',
+  marginBottom: 16, padding: '10px 14px', fontSize: 13, fontWeight: 600,
+  color: 'var(--primary)', background: 'var(--primary-soft)',
+  border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
 }
 
 function PatientsIcon() { return <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> }
