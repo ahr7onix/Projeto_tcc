@@ -182,7 +182,7 @@ export class AlimentosService {
     };
   }
 
-  /** Macros de uma porção não podem pesar mais que a própria porção. */
+  // os macros não podem passar do peso da porção
   private validarMacros(porcaoG: number, carb: number, prot: number, lip: number) {
     if (macrosExcedemPorcao(porcaoG, carb, prot, lip)) {
       throw new BadRequestException(MENSAGEM_MACROS_EXCEDEM);

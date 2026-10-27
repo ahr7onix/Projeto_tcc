@@ -1,10 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 
-/**
- * Converte a data de nascimento (DD/MM/AAAA ou AAAA-MM-DD) para ISO.
- * Recusa data inexistente (31/02), futura ou de mais de 120 anos, que antes
- * viravam 500 no banco ou idade negativa no cálculo do VET.
- */
+// Aceita DD/MM/AAAA ou AAAA-MM-DD e devolve ISO. Recusa data que não existe,
+// futura ou com mais de 120 anos.
 export function normalizarDataNascimento(valor?: string | null): string | null {
   if (!valor) return null;
   const br = valor.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);

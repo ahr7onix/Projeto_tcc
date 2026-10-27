@@ -1,10 +1,7 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 
-/**
- * Limite simples de tentativas de login em memória: depois de `maximo` falhas
- * numa `janelaMs`, a chave fica bloqueada até a janela vencer. Em memória de
- * propósito (uma instância só); com várias réplicas, trocar por Redis.
- */
+// Conta as falhas de login por chave. Passou do máximo dentro da janela, bloqueia
+// até a janela vencer. Fica em memória: só vale com uma instância da API.
 export class LimiteTentativas {
   private falhas = new Map<string, { total: number; desde: number }>();
 
