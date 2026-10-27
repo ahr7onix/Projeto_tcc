@@ -10,11 +10,17 @@ import { colors, radius, spacing, typography } from '@/lib/theme';
  * Convites de acompanhamento na tela inicial. O paciente precisa saber o que
  * está autorizando antes de aceitar, por isso o cartão diz o que o
  * nutricionista passa a ver — e que dá para voltar atrás.
+ *
+ * Aceitar ou recusar pede uma segunda confirmação (ideia trazida do PR #7):
+ * consentimento não deve sair de um toque acidental. A confirmação fica no
+ * próprio cartão, e não num Alert, porque no app em modo web o Alert com
+ * botões não aparece.
  */
 export function ConvitesAcompanhamento() {
   const queryClient = useQueryClient();
   const { isSimplified } = useAccessibleMode();
   const [erro, setErro] = useState<string | null>(null);
+  const [confirmando, setConfirmando] = useState<{ id: string; aceitar: boolean } | null>(null);
 
   const { data: convites = [] } = useQuery({
     queryKey: ['convites'],
@@ -26,6 +32,7 @@ export function ConvitesAcompanhamento() {
       aceitar ? aceitarConvite(id) : recusarConvite(id),
     onSuccess: () => {
       setErro(null);
+      setConfirmando(null);
       queryClient.invalidateQueries({ queryKey: ['convites'] });
       queryClient.invalidateQueries({ queryKey: ['meus-nutricionistas'] });
       queryClient.invalidateQueries({ queryKey: ['conversas'] });
@@ -66,11 +73,43 @@ export function ConvitesAcompanhamento() {
 
             {respondendo ? (
               <ActivityIndicator color={colors.primary} />
+            ) : confirmando?.id === convite.id ? (
+              <View style={styles.confirmacao}>
+                <Text style={[styles.confirmacaoTexto, isSimplified && styles.textoGrande]}>
+                  {confirmando.aceitar
+                    ? `Confirma que ${nutricionista.nome} pode acompanhar você e ver seus dados de saúde?`
+                    : `Recusar o convite de ${nutricionista.nome}? Essa pessoa não terá acesso aos seus dados.`}
+                </Text>
+                <View style={styles.botoes}>
+                  <Pressable
+                    style={({ pressed }) => [styles.botao, styles.recusar, pressed && styles.pressionado]}
+                    onPress={() => setConfirmando(null)}
+                    disabled={isPending}
+                    accessibilityRole="button"
+                  >
+                    <Text style={[styles.botaoTexto, styles.recusarTexto]}>Voltar</Text>
+                  </Pressable>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.botao,
+                      confirmando.aceitar ? styles.aceitar : styles.recusarConfirmado,
+                      pressed && styles.pressionado,
+                    ]}
+                    onPress={() => responder({ id: convite.id, aceitar: confirmando.aceitar })}
+                    disabled={isPending}
+                    accessibilityRole="button"
+                  >
+                    <Text style={[styles.botaoTexto, styles.aceitarTexto]}>
+                      {confirmando.aceitar ? 'Sim, aceitar' : 'Sim, recusar'}
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
             ) : (
               <View style={styles.botoes}>
                 <Pressable
                   style={({ pressed }) => [styles.botao, styles.recusar, pressed && styles.pressionado]}
-                  onPress={() => responder({ id: convite.id, aceitar: false })}
+                  onPress={() => setConfirmando({ id: convite.id, aceitar: false })}
                   disabled={isPending}
                   accessibilityRole="button"
                   accessibilityLabel={`Recusar o convite de ${nutricionista.nome}`}
@@ -79,7 +118,7 @@ export function ConvitesAcompanhamento() {
                 </Pressable>
                 <Pressable
                   style={({ pressed }) => [styles.botao, styles.aceitar, pressed && styles.pressionado]}
-                  onPress={() => responder({ id: convite.id, aceitar: true })}
+                  onPress={() => setConfirmando({ id: convite.id, aceitar: true })}
                   disabled={isPending}
                   accessibilityRole="button"
                   accessibilityLabel={`Aceitar o acompanhamento de ${nutricionista.nome}`}
@@ -130,6 +169,14 @@ const styles = StyleSheet.create({
   },
   aceitar: { backgroundColor: colors.primary },
   recusar: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  recusarConfirmado: { backgroundColor: colors.danger },
+  confirmacao: {
+    backgroundColor: colors.primarySoft,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    gap: spacing.md,
+  },
+  confirmacaoTexto: { ...typography.body, color: colors.text, lineHeight: 21 },
   pressionado: { opacity: 0.8 },
   botaoTexto: { fontSize: 15, fontWeight: '700' },
   aceitarTexto: { color: colors.textInverse },

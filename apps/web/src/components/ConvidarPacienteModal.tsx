@@ -16,7 +16,7 @@ import {
 interface Props {
   onClose: () => void
   /** Avisa a tela quando a lista de convites pendentes mudou. */
-  onConvitesAlterados: (total: number) => void
+  onConvitesAlterados: (convites: ConviteEnviado[]) => void
 }
 
 type Modo = 'convite' | 'cadastro'
@@ -55,7 +55,7 @@ export default function ConvidarPacienteModal({ onClose, onConvitesAlterados }: 
       const lista = await listarConvites()
       if (consulta !== ultimaConsulta.current) return
       setConvites(lista)
-      onConvitesAlterados(lista.length)
+      onConvitesAlterados(lista)
     } catch (err) {
       if (consulta === ultimaConsulta.current) setErro(extractError(err))
     } finally {
