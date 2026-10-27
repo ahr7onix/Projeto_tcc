@@ -219,7 +219,7 @@ O plano gratuito do Render não deixa convidar ninguém para a conta: só quem
 publicou a cópia acima consegue mudar as configurações dela, como as do e-mail.
 Para outra pessoa do grupo ter um ambiente que ela mesma administra, existe o
 `render-tcc.yaml`, na raiz do projeto. Ele é igual ao `render.yaml` fora os
-nomes, e por isso os endereços:
+nomes (e por isso os endereços) e o Client ID do Google:
 
 | Peça | Endereço |
 |---|---|
@@ -242,11 +242,11 @@ cadastrado numa não aparece na outra.
 5. Conferir `/status` como em "Conferir se está tudo de pé", com o endereço
    desta cópia.
 
-O "Entrar com Google" só funciona nesta cópia depois de autorizar
-`https://nutricare-tcc-painel.onrender.com` no console do Google (seção "Login
-com Google"). Até lá, entrar com e-mail e senha funciona normalmente. O
-aplicativo do celular escolhe qual API usar pelo `EXPO_PUBLIC_API_URL` do
-`apps/mobile/.env`.
+O "Entrar com Google" desta cópia usa um cliente próprio, no projeto
+`nutricare-tcc` do Google Cloud, porque o cliente da outra cópia é de outra conta
+(ver [LOGIN_GOOGLE.md](LOGIN_GOOGLE.md), "Segunda cópia"). Só entra quem estiver
+na lista de usuários de teste desse projeto. O aplicativo do celular escolhe qual
+API usar pelo `EXPO_PUBLIC_API_URL` do `apps/mobile/.env`.
 
 **Mudou algo no `render.yaml`? Mude no `render-tcc.yaml` também.**
 
