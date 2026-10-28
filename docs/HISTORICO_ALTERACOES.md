@@ -2,6 +2,22 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-28 — Análise de segurança, redes e LGPD
+- Quem: Natan, com apoio de IA
+- PR/branch: `docs/analise-seguranca-lgpd`
+- O que foi adicionado: `docs/ANALISE_SEGURANCA_LGPD.md` — análise da API, painel, app,
+  infraestrutura e conformidade LGPD. Metodologia: leitura do backend, 86 testes ativos contra
+  uma cópia local da API com banco Postgres isolado (criado e descartado só para o teste),
+  verificações passivas no deploy do time, `npm audit` e levantamento regulatório.
+- O que foi modificado: só documentação (este histórico e a lista de pendências do
+  `LEIA_PRIMEIRO_IA.md`). Nenhuma mudança em código.
+- Arquivos principais: `docs/ANALISE_SEGURANCA_LGPD.md`.
+- Atenção para quem vier depois: achado novo de autorização — `GET /planos/ativo?pacienteId=`
+  (`planos.service.ts`, `findAtivo`) não confere vínculo e entrega o plano de qualquer paciente
+  a nutricionista sem vínculo e ao administrador. É o único vazamento clínico encontrado; os
+  outros módulos estão corretos. Credenciais de demonstração (admin e exemplos) são públicas no
+  README e funcionam no site no ar — trocar antes de qualquer uso real.
+
 ## 2026-10-28 — Olho para mostrar a senha no login
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/olho-senha` (criada em cima de `feat/apk-eas`, PR #14)

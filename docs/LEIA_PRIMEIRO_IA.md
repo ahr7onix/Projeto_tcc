@@ -91,6 +91,10 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
 
 Bugs pequenos, podem ser corrigidos:
 
+- **Autorização:** `GET /planos/ativo?pacienteId=` (`planos.service.ts`, `findAtivo`) não passa
+  por `garantirVinculo` e entrega o plano alimentar de qualquer paciente a nutricionista sem
+  vínculo e ao administrador. É o único vazamento clínico achado na análise de segurança
+  (`docs/ANALISE_SEGURANCA_LGPD.md`, item 2.1). Corrigir no padrão do `findAll` do mesmo serviço.
 - `?dias=` inválido ou gigante responde 500 em `/registros`, `/emocional/resumo` e
   `/emocional/glicemia` (falta validar o número).
 - `tipo_refeicao` não é validado na API. O app usa `cafe`, `almoco`, `lanche`, `jantar` e `ceia`.
