@@ -248,7 +248,7 @@ na API, tela no aplicativo ou no painel, e persistência no banco.
 | RF26 | Relatório do paciente, com exportação em planilha e em PDF | Implementado |
 | RF27 | Métricas gerais e gestão de usuários pelo administrador | Implementado |
 | RF28 | Exclusão da própria conta pelo paciente | Implementado |
-| RF29 | Lembretes programáveis pelo paciente | Implementado — tela no aplicativo, notificação local no aparelho |
+| RF29 | Lembretes programáveis pelo paciente | Implementado — tela no aplicativo, notificação local no aparelho, com opção de tocar como alarme |
 | RF30 | Gráficos de evolução da glicemia e do peso | Implementado — no painel e no aplicativo |
 | RF31 | Importação da tabela nutricional por planilha (CSV), com prévia e recusa por linha | Implementado |
 | RF32 | Consentimento do paciente no vínculo: convite, aceite, recusa e encerramento pelo paciente | Implementado |
