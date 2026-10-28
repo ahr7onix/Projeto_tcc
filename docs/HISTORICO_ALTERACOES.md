@@ -2,6 +2,23 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-28 — Atualização do app pela internet (EAS Update)
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/atualizacao-pela-internet` (criada em cima de `feat/lembrete-alarme`)
+- O que foi adicionado: `expo-updates` (`~29.0.20`, a versão do Expo 54; nenhuma outra versão
+  mudou). O APK passa a buscar atualização no Expo toda vez que abre e aplica na abertura
+  seguinte. Script `npm run atualizar -- "o que mudou"` (`apps/mobile/scripts/publicar-atualizacao.mjs`),
+  que publica com as variáveis do perfil `preview` do `eas.json`, e não com o `.env` da máquina.
+- O que foi modificado: `app.json` ganhou `runtimeVersion` (`policy: appVersion`) e
+  `updates.url`; o perfil `preview` do `eas.json` ganhou `"channel": "preview"`.
+- Arquivos principais: `apps/mobile/app.json`, `apps/mobile/eas.json`,
+  `apps/mobile/scripts/publicar-atualizacao.mjs`, `docs/PUBLICAR.md`.
+- Atenção para quem vier depois: só JavaScript vai pela internet. Mudança nativa exige subir o
+  `version` do `app.json` e gerar APK novo, senão a atualização chega ao APK antigo e quebra o
+  app. O APK que já existia (sem `expo-updates`) não recebe atualização. Conferido no
+  `expo prebuild` (o manifesto do Android leva o endereço e a versão `0.1.0`); falta conferir
+  no celular com o próximo APK.
+
 ## 2026-10-28 — Lembretes podem tocar como alarme
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/lembrete-alarme` (criada em cima de `feat/login-google-apk`)

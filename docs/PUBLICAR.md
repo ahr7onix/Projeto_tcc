@@ -274,6 +274,26 @@ No plano gratuito o primeiro build levou 44 minutos (metade na fila). O link do
 APK expira: a página do build mostra quantos dias faltam (**Availability**).
 Baixe o `.apk` pelo menu **⋮ > Download** e guarde uma cópia.
 
+### Atualização pela internet (EAS Update)
+
+Mudança só de código JavaScript (telas, textos, regras do app) não precisa de APK
+novo: vai pela internet para quem já tem o APK instalado.
+
+1. Em `apps/mobile`, logado na conta do Expo: `npm run atualizar -- "o que mudou"`.
+   O script usa as variáveis do perfil `preview` do `eas.json`, não o `.env` da
+   máquina.
+2. No celular: abrir o app (ele baixa a atualização), fechar e abrir de novo (ela
+   passa a valer).
+
+Mudança nativa **precisa de APK novo**: pacote com código nativo, plugin ou som no
+`app.json`, ícone, permissões. Nesse caso, suba o `version` do `app.json` (por
+exemplo `0.1.0` para `0.2.0`) antes de gerar. A atualização só chega ao APK com o
+mesmo `version` (`runtimeVersion` com `policy: appVersion`); sem subir, uma
+atualização que precisa da peça nativa nova chegaria ao APK antigo e quebraria o app.
+
+O primeiro APK (o de 28/10/2026, sem o `expo-updates`) não recebe atualização:
+quem tem ele instalado precisa instalar um APK novo uma vez.
+
 ---
 
 ## Problemas comuns

@@ -67,6 +67,10 @@ e avise a equipe antes.
   primeira vez e ignora mudanças depois; para mudar, use outro id de canal
   (`apps/mobile/src/lib/agenda-lembretes.ts`). O som (`apps/mobile/assets/sounds/alarme.wav`)
   entra no APK pelo plugin do `expo-notifications` no `app.json`: trocar o som exige APK novo.
+- **Atualização pela internet (EAS Update):** só para mudança de JavaScript, com
+  `npm run atualizar -- "o que mudou"` em `apps/mobile`. Mudou algo nativo (pacote com código
+  nativo, plugin, som, ícone, permissão)? Suba o `version` do `app.json` e gere APK novo, senão
+  a atualização chega ao APK antigo e quebra o app (`docs/PUBLICAR.md`).
 - **Dados de demonstração:** só existem se o banco for preparado com `SEED_DEMO=true`.
 
 ## O que já está feito
@@ -87,8 +91,9 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
   (`nutricare-tcc-painel.onrender.com`), com e-mail pelo Brevo e login Google em cliente próprio.
   A cópia do `render.yaml` continua sem e-mail.
 - APK de demonstração gerado pelo EAS Build (`apps/mobile/eas.json`, perfil `preview`) e testado
-  num Android de verdade. O login com Google do APK (Google Sign-In nativo) e o modo alarme dos
-  lembretes estão no código e ainda precisam ser conferidos no celular, no próximo APK.
+  num Android de verdade. O login com Google do APK (Google Sign-In nativo), o modo alarme dos
+  lembretes e a atualização pela internet estão no código e ainda precisam ser conferidos no
+  celular, no próximo APK.
 
 ## Em andamento
 
