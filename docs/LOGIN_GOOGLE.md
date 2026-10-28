@@ -154,8 +154,37 @@ quanto o Vite leem essas variáveis só na inicialização.
 
 ## No aplicativo do celular
 
-O botão **Continuar com Google** usa `expo-auth-session` e envia o
-`id_token` para `POST /auth/google/paciente`.
+O botão **Continuar com Google** envia o `id_token` para
+`POST /auth/google/paciente`. O jeito de pegar o token depende de onde o app roda:
+
+| Onde | Como | O que precisa no Google Cloud |
+|---|---|---|
+| APK (Android) | Google Sign-In nativo (`@react-native-google-signin/google-signin`) | Cliente **Android** com o pacote e o SHA-1 da chave do APK |
+| Expo Go e iPhone | `expo-auth-session` | URIs de redirecionamento (abaixo) |
+| Navegador (Expo web) | Google Identity Services, em popup | Origem JavaScript (abaixo) |
+
+Nos três casos o token sai em nome do Client ID **web**, o mesmo que a API confere.
+
+### APK (Android)
+
+O cliente Android só serve para o Google reconhecer o app; o ID dele não vai no
+código. Ele tem que estar no mesmo projeto do Client ID web. Na segunda cópia
+(projeto `nutricare-tcc`) é o **"NutriCare - App Android"**:
+
+```
+Nome do pacote: com.projetotcc.mobile
+SHA-1:          86:B6:B4:86:BD:8C:31:51:C5:24:F0:53:06:6B:FA:5B:7A:5F:42:03
+```
+
+O SHA-1 é da chave de assinatura guardada no Expo (expo.dev > projeto-tcc-mobile >
+Credentials > Android). Se a chave mudar, cadastre o SHA-1 novo, senão o login com
+Google do APK para de funcionar.
+
+O Client ID web do APK fica no `apps/mobile/eas.json`
+(`EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`), porque o `.env` não vai para o Expo.
+
+Se o app mostrar "O Google não reconheceu este aplicativo", é o `DEVELOPER_ERROR`
+do Google: falta o cliente Android, ou o pacote ou o SHA-1 não batem.
 
 ### Variáveis no mobile
 
@@ -203,6 +232,5 @@ Na lista de **Usuários de teste**, use a mesma conta Google que vai entrar no a
 ### Limitações
 
 - No **Expo Go**, o fluxo OAuth funciona via `expo-auth-session`.
-- Client IDs nativos de Android/iOS (com SHA-1) melhoram o fluxo em builds
-  standalone; sem eles o app tenta o Client ID web.
+- No **APK**, sem o cliente Android no Google Cloud o login com Google falha.
 - Apple e Facebook continuam como "em breve".

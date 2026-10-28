@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import {
@@ -105,6 +106,51 @@ export function mountGoogleWebButton(
     container.innerHTML = '';
     window.google?.accounts.id.cancel();
   };
+}
+
+// No APK do Android o login usa o Google Sign-In nativo. O token sai em nome do
+// Client ID web, o mesmo que a API confere; o Google só libera se existir um
+// cliente Android com o pacote e o SHA-1 da chave do APK (docs/LOGIN_GOOGLE.md).
+// O Expo Go não tem esse módulo nativo e continua no expo-auth-session.
+const RODANDO_NO_EXPO_GO =
+  Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+
+export function usaGoogleNativo(): boolean {
+  return Platform.OS === 'android' && !RODANDO_NO_EXPO_GO;
+}
+
+// Devolve o id_token, ou null se a pessoa fechou a escolha de conta.
+export async function entrarComGoogleNativo(): Promise<string | null> {
+  // Carregado só aqui: no Expo Go o módulo quebra assim que é importado.
+  const { GoogleSignin, isErrorWithCode, statusCodes } = await import(
+    '@react-native-google-signin/google-signin'
+  );
+
+  GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID });
+  try {
+    await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+    // Sem isso o Google reaproveita a última conta e não deixa trocar.
+    await GoogleSignin.signOut();
+    const resposta = await GoogleSignin.signIn();
+    if (resposta.type !== 'success') return null;
+    if (!resposta.data.idToken) {
+      throw new Error('O Google não retornou o token de identidade.');
+    }
+    return resposta.data.idToken;
+  } catch (err) {
+    if (!isErrorWithCode(err)) throw err;
+    if (err.code === statusCodes.SIGN_IN_CANCELLED || err.code === statusCodes.IN_PROGRESS) {
+      return null;
+    }
+    if (err.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+      throw new Error('Este celular precisa do Google Play Services atualizado.');
+    }
+    // 10 é o DEVELOPER_ERROR: falta o cliente Android ou o SHA-1 não bate.
+    if (err.code === '10') {
+      throw new Error('O Google não reconheceu este aplicativo. Avise a equipe.');
+    }
+    throw new Error(err.message || 'Falha no login com Google.');
+  }
 }
 
 export function useNativeGoogleAuthRequest() {
