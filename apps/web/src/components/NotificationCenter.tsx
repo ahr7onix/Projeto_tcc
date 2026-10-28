@@ -51,6 +51,8 @@ export default function NotificationCenter() {
     const timer = window.setInterval(carregar, 5_000)
     const cancelar = assinarMensagens((evento: EventoMensagem) => {
       const mensagem: Mensagem = evento.mensagem
+      // O servidor manda o evento para os dois lados da conversa; quem escreveu não é avisado.
+      if (mensagem.propria) return
       const item: Item = { id: `mensagem-${mensagem.id}`, tipo: 'mensagem', prioridade: 'informativo', titulo: `Nova mensagem de ${mensagem.remetenteNome}`, descricao: mensagem.conteudo, criadoEm: mensagem.criadoEm, pacienteId: evento.contraparteId, pacienteNome: mensagem.remetenteNome, conversaId: evento.contraparteId, lida: false }
       setItens((atual) => [item, ...atual.filter((existente) => existente.id !== item.id)])
       setToast(item)

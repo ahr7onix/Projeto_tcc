@@ -1,12 +1,16 @@
 import { Redirect, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMensagensRealtime } from '@/hooks/use-mensagens-realtime';
 import { useAuthStore } from '@/stores/auth';
 import { colors } from '@/lib/theme';
 
 export default function TabsLayout() {
   const { token, user, isHydrated } = useAuthStore();
+  // No Android o app desenha por baixo da barra do sistema (os botões ◁ ○ □ ou a
+  // linha de gestos); a barra de abas soma essa altura para não ficar coberta.
+  const { bottom } = useSafeAreaInsets();
 
   // Uma conexao para o app inteiro: a lista de conversas e a conversa aberta
   // recebem mensagem nova mesmo com o usuario em outra aba.
@@ -29,9 +33,9 @@ export default function TabsLayout() {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
           borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 90 : 74,
+          height: Platform.OS === 'ios' ? 90 : 74 + bottom,
           paddingTop: 8,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 12,
+          paddingBottom: Platform.OS === 'ios' ? 28 : 12 + bottom,
           boxShadow: '0 -1px 2px rgba(16, 24, 40, 0.04)',
           elevation: 4,
         },

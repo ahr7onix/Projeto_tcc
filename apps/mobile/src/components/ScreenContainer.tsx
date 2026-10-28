@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import type { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing, typography } from '@/lib/theme';
 
@@ -52,15 +52,18 @@ export function ScreenContainer({
         </View>
       </SafeAreaView>
 
-      <View style={styles.sheet}>
+      {/* No Android o app ocupa a tela inteira (edge-to-edge) e o sistema não encolhe
+          mais a tela quando o teclado abre: quem abre espaço é este componente. */}
+      <KeyboardAvoidingView style={styles.sheet} behavior="padding">
         <Body
           style={styles.sheetScroll}
           contentContainerStyle={scrollable ? styles.sheetContent : undefined}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           {children}
         </Body>
-      </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }
