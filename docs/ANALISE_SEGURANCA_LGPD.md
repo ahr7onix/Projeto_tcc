@@ -372,7 +372,7 @@ da banca, com teste. Rodar o audit no CI ajudaria a não regredir.
 - **[CRÍTICO (operacional)] Repositório público + credenciais no README + site
   no ar com essas credenciais** — ver item 2.2. É a soma que importa: os três
   juntos é que dão o acesso.
-- **[MÉDIO] `sincronizar.ps1`** faz `git add . && commit && push` **a cada 10
+- **[MÉDIO] `sincronizar.ps1`** (removido do repositório em 28/10/2026) fazia `git add . && commit && push` **a cada 10
   segundos**. Foi assim que `.env` e `node_modules` foram parar no histórico
   (já corrigido no estado atual, mas ainda no histórico). Enquanto esse script
   rodar, qualquer segredo que cair na árvore vai para o repositório público em
