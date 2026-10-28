@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import type { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
-import { avaliarGlicemia } from '../../common/glicemia/glicemia';
+import { avaliarGlicemia, type SeveridadeAlerta } from '../../common/glicemia/glicemia';
 import { valoresParaQuantidade } from '../../common/nutricao/nutricao';
 import { AlimentosService } from '../alimentos/alimentos.service';
 import { PushService } from '../push/push.service';
@@ -19,6 +19,10 @@ const MOMENTO_MAP: Record<string, string> = {
   pre: 'pre_prandial',
   pos: 'pos_prandial',
 };
+
+// Períodos que a tela Início oferece: 7, 30 e 90 dias.
+const DIAS_PADRAO_RESUMO = 30;
+const DIAS_MAXIMO_RESUMO = 90;
 
 @Injectable()
 export class RegistrosService {
@@ -180,6 +184,82 @@ export class RegistrosService {
         minutosDesdeRegistro,
         avaliacao: avaliarGlicemia(valor, r.momento),
       },
+    };
+  }
+
+  /**
+   * O que a tela Início do painel mostra, já contado: medições e alertas por
+   * dia, a última medição de cada paciente e quantas ficaram fora da faixa no
+   * período anterior, para a comparação.
+   *
+   * A Início baixava todas as glicemias de 90 dias de todos os pacientes
+   * (10,8 MB com 50 pacientes) a cada 30 s só para contar isso no navegador
+   * (docs/ANALISE_DESEMPENHO.md, item 2.3). A classificação continua sendo a
+   * do `avaliarGlicemia`: a regra clínica não é repetida em SQL.
+   */
+  async resumoGlicemia(usuario: { sub: string; role: string }, diasInformado?: number) {
+    const dias =
+      diasInformado && Number.isInteger(diasInformado) && diasInformado > 0
+        ? Math.min(diasInformado, DIAS_MAXIMO_RESUMO)
+        : DIAS_PADRAO_RESUMO;
+    const params: unknown[] = [dias];
+    const escopo = await this.montarEscopo(usuario, undefined, params);
+
+    // O dia sai em UTC, como a tela agrupava antes (toISOString).
+    const { rows } = await this.pool.query<{
+      paciente_id: string;
+      valor: string;
+      momento: string;
+      dia: string;
+      no_periodo: boolean;
+    }>(
+      `SELECT u.id_usuario AS paciente_id,
+              rg.valor,
+              rg.momento,
+              to_char(rg.data_hora AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS dia,
+              rg.data_hora > NOW() - make_interval(days => $1::int) AS no_periodo
+         FROM registro_glicemia rg
+         JOIN paciente p ON p.id_paciente = rg.id_paciente
+         JOIN usuario u ON u.id_usuario = p.id_usuario
+        WHERE rg.data_hora > NOW() - make_interval(days => $1::int * 2)
+          AND ${escopo}
+        ORDER BY rg.data_hora DESC`,
+      params,
+    );
+
+    const porDia = new Map<string, { data: string; total: number; fora: number }>();
+    const ultimaPorPaciente = new Map<string, SeveridadeAlerta>();
+    let medicoes = 0;
+    let foraNoPeriodoAnterior = 0;
+
+    for (const r of rows) {
+      const { severidade } = avaliarGlicemia(Number(r.valor), r.momento);
+      const fora = severidade !== 'normal';
+      if (!r.no_periodo) {
+        if (fora) foraNoPeriodoAnterior += 1;
+        continue;
+      }
+      medicoes += 1;
+      // Da mais nova para a mais antiga: a primeira de cada paciente é a última dele.
+      const pacienteId = String(r.paciente_id);
+      if (!ultimaPorPaciente.has(pacienteId)) ultimaPorPaciente.set(pacienteId, severidade);
+      const dia = porDia.get(r.dia) ?? { data: r.dia, total: 0, fora: 0 };
+      dia.total += 1;
+      if (fora) dia.fora += 1;
+      porDia.set(r.dia, dia);
+    }
+
+    const serie = [...porDia.values()].sort((a, b) => a.data.localeCompare(b.data));
+    return {
+      dias,
+      medicoes,
+      foraNoPeriodo: serie.reduce((soma, d) => soma + d.fora, 0),
+      foraNoPeriodoAnterior,
+      porDia: serie,
+      ultimaPorPaciente: [...ultimaPorPaciente].map(([pacienteId, severidade]) => ({
+        pacienteId,
+        severidade,
+      })),
     };
   }
 

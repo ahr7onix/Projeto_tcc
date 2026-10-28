@@ -5,6 +5,7 @@ import { api, extractError } from '../../lib/api'
 import { resumoAlertas, type ResumoAlertas } from '../../lib/alertas'
 import { assinarMensagens } from '../../lib/mensagens-stream'
 import { contarNaoLidas } from '../../lib/mensagens'
+import { repetirEnquantoVisivel } from '../../lib/polling'
 
 interface Paciente {
   id: string
@@ -14,13 +15,14 @@ interface Paciente {
   status: 'ativo' | 'inativo'
 }
 
-interface Registro {
-  id: string
-  tipo: string
-  valor: number | null
-  alerta: { severidade: 'critico' | 'atencao' | 'normal' } | null
-  dataHora: string
-  pacienteId: string
+/** `GET /registros/resumo-glicemia`: as contagens desta tela, feitas na API. */
+interface ResumoGlicemia {
+  medicoes: number
+  foraNoPeriodo: number
+  foraNoPeriodoAnterior: number
+  /** Dia em UTC (`AAAA-MM-DD`), em ordem. */
+  porDia: { data: string; total: number; fora: number }[]
+  ultimaPorPaciente: { pacienteId: string; severidade: 'critico' | 'atencao' | 'normal' }[]
 }
 
 type Periodo = 7 | 30 | 90
@@ -43,7 +45,7 @@ export default function HomePage() {
   const navigate = useNavigate()
   const [pacientes, setPacientes] = useState<Paciente[]>([])
   const [resumo7, setResumo7] = useState<ResumoAlertas | null>(null)
-  const [registros, setRegistros] = useState<Registro[]>([])
+  const [resumo, setResumo] = useState<ResumoGlicemia | null>(null)
   const [naoLidas, setNaoLidas] = useState(0)
   const [periodo, setPeriodo] = useState<Periodo>(30)
   const [loading, setLoading] = useState(true)
@@ -64,53 +66,47 @@ export default function HomePage() {
     const atual = () => recargaAtual.current === minhaVez
     try {
       setErro(null)
-      const [pacientesRes, alertasRes, registrosRes, mensagens] = await Promise.all([
+      // Antes vinham todas as glicemias de 90 dias de todos os pacientes (10,8 MB
+      // com 50 pacientes) só para contar aqui; agora a API manda as contagens.
+      const [pacientesRes, alertasRes, resumoRes, mensagens] = await Promise.all([
         api.get('/pacientes'),
         resumoAlertas(7),
-        api.get('/registros', { params: { dias: 90, tipo: 'glicemia' } }),
+        api.get<ResumoGlicemia>('/registros/resumo-glicemia', { params: { dias: periodo } }),
         contarNaoLidas(),
       ])
       if (!atual()) return
       setPacientes(pacientesRes.data.data ?? [])
       setResumo7(alertasRes)
-      setRegistros(registrosRes.data.data ?? [])
+      setResumo(resumoRes.data)
       setNaoLidas(mensagens)
     } catch (err) {
       if (atual()) setErro(extractError(err))
     } finally {
       if (atual()) setLoading(false)
     }
-  }, [])
+  }, [periodo])
 
   useEffect(() => {
     carregar()
-    const timer = window.setInterval(carregar, 30_000)
+    const parar = repetirEnquantoVisivel(carregar, 30_000)
     const cancelarMensagens = assinarMensagens(() => { void carregar() })
     return () => {
       recargaAtual.current++
-      window.clearInterval(timer)
+      parar()
       cancelarMensagens()
     }
   }, [carregar])
 
-  const registrosPeriodo = useMemo(() => {
-    const limite = Date.now() - periodo * 86400000
-    return registros.filter((registro) => new Date(registro.dataHora).getTime() >= limite)
-  }, [periodo, registros])
-
   const situacao = useMemo(() => {
-    const ultimaPorPaciente = new Map<string, Registro>()
-    registrosPeriodo.forEach((registro) => {
-      if (!ultimaPorPaciente.has(registro.pacienteId)) ultimaPorPaciente.set(registro.pacienteId, registro)
-    })
+    const ultimaPorPaciente = new Map((resumo?.ultimaPorPaciente ?? []).map((item) => [item.pacienteId, item.severidade]))
     let faixa = 0
     let atencao = 0
     let critico = 0
     pacientes.forEach((paciente) => {
-      const registro = ultimaPorPaciente.get(paciente.id)
-      if (!registro) return
-      if (registro.alerta?.severidade === 'critico') critico += 1
-      else if (registro.alerta?.severidade === 'atencao') atencao += 1
+      const severidade = ultimaPorPaciente.get(paciente.id)
+      if (!severidade) return
+      if (severidade === 'critico') critico += 1
+      else if (severidade === 'atencao') atencao += 1
       else faixa += 1
     })
     const semRegistro = Math.max(pacientes.length - faixa - atencao - critico, 0)
@@ -120,33 +116,10 @@ export default function HomePage() {
       { label: 'Situação crítica', valor: critico, cor: 'var(--danger)' },
       { label: 'Sem registros recentes', valor: semRegistro, cor: 'var(--text-muted)' },
     ]
-  }, [pacientes, registrosPeriodo])
+  }, [pacientes, resumo])
 
-  const tendencia = useMemo(() => {
-    const agora = Date.now()
-    const inicio = agora - periodo * 86400000
-    const porDia = new Map<string, { data: Date; fora: number; total: number }>()
-    registros.filter((registro) => new Date(registro.dataHora).getTime() >= inicio).forEach((registro) => {
-      const data = new Date(registro.dataHora)
-      const chave = data.toISOString().slice(0, 10)
-      const item = porDia.get(chave) ?? { data, fora: 0, total: 0 }
-      item.total += 1
-      if (registro.alerta?.severidade !== 'normal') item.fora += 1
-      porDia.set(chave, item)
-    })
-    return [...porDia.values()].sort((a, b) => a.data.getTime() - b.data.getTime())
-  }, [periodo, registros])
-
-  const variacao = useMemo(() => {
-    const fimAtual = Date.now()
-    const inicioAtual = fimAtual - periodo * 86400000
-    const inicioAnterior = inicioAtual - periodo * 86400000
-    const fora = (inicio: number, fim: number) => registros.filter((registro) => {
-      const quando = new Date(registro.dataHora).getTime()
-      return quando >= inicio && quando < fim && registro.alerta?.severidade !== 'normal'
-    }).length
-    return pctMudanca(fora(inicioAtual, fimAtual), fora(inicioAnterior, inicioAtual))
-  }, [periodo, registros])
+  const medicoes = resumo?.medicoes ?? 0
+  const variacao = resumo ? pctMudanca(resumo.foraNoPeriodo, resumo.foraNoPeriodoAnterior) : null
   const semRegistro = situacao[3].valor
   const dentroFaixa = situacao[0].valor
 
@@ -178,15 +151,16 @@ export default function HomePage() {
 
       <div className="home-dashboard-charts" style={styles.charts}>
         <Card title="Situação dos pacientes" subtitle="Última medição disponível no período selecionado.">
-          {pacientes.length === 0 || registrosPeriodo.length === 0 ? <EmptyState icon={<ChartIcon />} title="Sem dados suficientes" message="Os indicadores aparecerão quando houver registros reais." /> : <div style={styles.distribution}>{situacao.map((item) => <div key={item.label} style={styles.barRow}><div style={styles.barLabel}><span>{item.label}</span><strong>{item.valor}</strong></div><div style={styles.track}><div style={{ ...styles.bar, width: `${Math.max((item.valor / pacientes.length) * 100, item.valor ? 4 : 0)}%`, background: item.cor }} /></div></div>)}</div>}
+          {pacientes.length === 0 || medicoes === 0 ? <EmptyState icon={<ChartIcon />} title="Sem dados suficientes" message="Os indicadores aparecerão quando houver registros reais." /> : <div style={styles.distribution}>{situacao.map((item) => <div key={item.label} style={styles.barRow}><div style={styles.barLabel}><span>{item.label}</span><strong>{item.valor}</strong></div><div style={styles.track}><div style={{ ...styles.bar, width: `${Math.max((item.valor / pacientes.length) * 100, item.valor ? 4 : 0)}%`, background: item.cor }} /></div></div>)}</div>}
         </Card>
 
         <Card title="Evolução dos alertas" subtitle="Medições fora da faixa por dia." action={<div style={styles.periods}>{([7, 30, 90] as Periodo[]).map((item) => <button key={item} type="button" onClick={() => setPeriodo(item)} style={{ ...styles.periodButton, ...(periodo === item ? styles.periodActive : {}) }}>{item === 90 ? '3 meses' : `${item} dias`}</button>)}</div>}>
-          <TrendChart pontos={tendencia.map((item) => ({ data: item.data.toISOString(), valor: item.fora }))} />
+          {/* Meio-dia local, para o rótulo dd/mm não cair no dia anterior pelo fuso. */}
+          <TrendChart pontos={(resumo?.porDia ?? []).map((item) => ({ data: `${item.data}T12:00:00`, valor: item.fora }))} />
         </Card>
       </div>
 
-      <div style={styles.footerLine}><span>Atualização automática a cada 30 segundos</span><span>{registrosPeriodo.length} medições analisadas · período de {periodo} dias</span></div>
+      <div style={styles.footerLine}><span>Atualização automática a cada 30 segundos</span><span>{medicoes} medições analisadas · período de {periodo} dias</span></div>
     </div>
   )
 }

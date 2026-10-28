@@ -72,7 +72,9 @@ Fora isso, o gargalo não são os pacientes, é o **painel da nutricionista**:
   leva **17 s** para abrir; com 4 nutricionistas, tudo passa de 20 s.
 - **Com três mudanças pequenas no painel e no login (seção 5), medido no mesmo
   servidor: 10 nutricionistas e 100 pacientes usando ao mesmo tempo**, com a tela
-  do app em ~30 ms no caso típico e ~1,3 s nas 5% mais lentas.
+  do app em ~30 ms no caso típico e ~1,3 s nas 5% mais lentas. Com as
+  nutricionistas paradas na Início, que é o pior caso, cabem de 2 a 5 com 50
+  pacientes.
 
 O banco **não** é o problema: os índices cobrem as consultas por paciente, e a
 consulta mais pesada do painel leva 4 ms no Postgres. O tempo vai no Node,
@@ -394,6 +396,22 @@ O que sobra de lento depois das correções é a entrada: 100 pessoas abrindo o 
 nos mesmos 10 s ainda fazem as telas mais lentas passarem de 9 s. Isso é o limite
 do 0,1 CPU, não do código.
 
+**Painel novo, de verdade** (branch `perf/painel-polling`: central a cada 30 s e
+Início com o resumo `/registros/resumo-glicemia` calculado na API), com as
+nutricionistas paradas na Início, que é o pior caso:
+
+| Pessoas ao mesmo tempo | Tela do app em regime (típica / lentas) | Central (típica / lentas) | Início (típica / lentas) | Tela do app na entrada (lentas) |
+|---|---|---|---|---|
+| 2 nutricionistas + 50 pacientes | 96 ms / 3,1 s | 1,5 s / 3,8 s | 2,8 s / 4,0 s | 9,3 s |
+| 5 nutricionistas + 50 pacientes | 111 ms / 6,2 s | 1,3 s / 6,1 s | 5,8 s / 8,0 s | 10,7 s |
+
+No código de hoje, 2 nutricionistas na Início com 50 pacientes deixavam a tela
+típica do app em 17 s. O resumo da Início custa ~1,1 s no "Render" (a rota antiga
+custava ~5,7 s) e devolve 3,5 KB em vez de 10,8 MB. Desse 1,1 s, só 0,2 s é
+banco; o resto é o Node classificando as ~15 mil glicemias de 60 dias com o
+`avaliarGlicemia`. Baixar mais exigiria gravar a severidade de cada glicemia no
+banco ao registrar (migration nova, decisão da equipe).
+
 ### 3.3 Canal de mensagens (SSE)
 
 Conexões abertas ao mesmo tempo, cada uma de um paciente, e 20 mensagens
@@ -423,7 +441,8 @@ seguem o código (levantamento em `apps/web` e `apps/mobile`):
 | Paciente usando o app (uma tela a cada 10–30 s) | ~6 por minuto | ~0,7% |
 | Nutricionista com o painel aberto em outra tela | 36 por minuto | ~8% |
 | Nutricionista com o painel na Início | 44 por minuto | **~29%** |
-| Nutricionista, com as correções da seção 5 | 6 a 14 por minuto | ~2% |
+| Nutricionista com o painel novo, fora da Início | 6 por minuto | ~1,3% |
+| Nutricionista com o painel novo, na Início | 14 por minuto | ~6% |
 
 A conta: custo de cada rota (seção 3.1) vezes a frequência com que o código a
 chama. Acima de ~70% da CPU, a fila cresce e as telas passam de 1 s. Acima de
@@ -448,7 +467,7 @@ medido):
 
 | Servidor | Código de hoje | Com as correções da seção 5 |
 |---|---|---|
-| Render gratuito (0,1 CPU) | 1 nutricionista na Início + ~50 pacientes ativos (~1.200 cadastrados); fora da Início, uns 5 a 8 nutricionistas sem sobrar espaço para pacientes | ~10 nutricionistas + ~100 pacientes ativos (~2.500 cadastrados, medido), ou ~20 nutricionistas + ~50 pacientes ativos |
+| Render gratuito (0,1 CPU) | 1 nutricionista na Início + ~50 pacientes ativos (~1.200 cadastrados); fora da Início, uns 5 a 8 nutricionistas sem sobrar espaço para pacientes | ~10 nutricionistas fora da Início + ~100 pacientes ativos (~2.500 cadastrados), ou de 2 a 5 nutricionistas paradas na Início + ~50 pacientes ativos (as duas medidas) |
 | Render pago de 0,5 CPU (Starter) | ~5 nutricionistas na Início | ~5x o gratuito |
 | Render pago de 1 CPU (Standard) | ~10 nutricionistas na Início | ~10x o gratuito |
 
@@ -480,11 +499,14 @@ verdade, as correções da seção 5 são o que separa "funciona" de "trava".
    anterior em andamento (2.2 e 2.4). Só espaçar não resolve a banda: o
    `/alertas` de 337 KB a cada 30 s ainda soma ~7 GB por mês por nutricionista
    em tempo integral. O ideal é recarregar só quando chegar um evento pelo SSE,
-   que já está aberto.
+   que já está aberto. **Feito** em `perf/painel-polling`: 30 s, parada com a
+   aba escondida e sem rodada sobreposta. Recarregar só pelo SSE fica para
+   depois (a API ainda não avisa glicemia nova pelo canal).
 3. **Início sem o `/registros?dias=90`:** trocar por um resumo calculado no
    servidor (contagens e médias por paciente e por dia), ou ao menos baixar para
    7 dias e recarregar só pelo SSE (2.3). É o item que mais derruba o servidor
-   gratuito e o que mais gasta banda.
+   gratuito e o que mais gasta banda. **Feito** em `perf/painel-polling`, com a
+   rota `/registros/resumo-glicemia` (seção 3.2, "Painel novo").
 
 **Depois (trabalho futuro / limitações da monografia):**
 
@@ -524,6 +546,8 @@ NODE_ENV=production PORT=3020 DATABASE_URL=".../tcc_perf" JWT_SECRET=teste node 
 # 3. testes
 node scripts/carga/teste-carga.mjs endpoints  --url http://127.0.0.1:3020 --niveis 1,10,50 --sem login
 node scripts/carga/teste-carga.mjs sessoes    --url http://127.0.0.1:3020 --mix 0:100,2:0,2:50
+# o painel de antes (central a cada 5 s, Início com 90 dias de glicemias):
+node scripts/carga/teste-carga.mjs sessoes    --url http://127.0.0.1:3020 --mix 2:50 --central-ms 5000 --inicio-antigo
 node scripts/carga/teste-carga.mjs sse        --url http://127.0.0.1:3020 --conexoes 100,500
 node scripts/carga/teste-carga.mjs travamento --url http://127.0.0.1:3020 --n 15
 ```

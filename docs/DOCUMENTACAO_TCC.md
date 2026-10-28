@@ -572,6 +572,7 @@ São cerca de 90 rotas. A tabela abaixo lista as principais, agrupadas por final
 | POST | `/registros/refeicao` | Grava uma refeição |
 | GET | `/registros` | Histórico, com filtro por tipo e período |
 | GET | `/registros/glicemia/ultimo` | Última medição, com quantos minutos se passaram |
+| GET | `/registros/resumo-glicemia` | Contagens da tela Início do painel: alertas por dia, última medição de cada paciente e período anterior |
 | GET/POST/DELETE | `/antropometria` | Medidas corporais e circunferências |
 | GET | `/antropometria/evolucao` | Série histórica de peso e IMC |
 | GET/POST/DELETE | `/emocional` | Registro emocional |

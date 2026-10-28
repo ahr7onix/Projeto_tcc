@@ -34,6 +34,12 @@ export class RegistrosController {
     });
   }
 
+  /** Contagens prontas para a tela Início do painel (ver o serviço). */
+  @Get('resumo-glicemia')
+  resumoGlicemia(@CurrentUser() user: JwtPayload, @Query('dias') dias?: string) {
+    return this.registros.resumoGlicemia(user, dias ? Number(dias) : undefined);
+  }
+
   @Get('glicemia/ultimo')
   ultimaGlicemia(
     @CurrentUser() user: JwtPayload,
