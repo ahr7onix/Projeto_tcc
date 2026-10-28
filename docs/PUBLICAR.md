@@ -94,6 +94,50 @@ Se `banco` vier como `indisponivel`, o banco de dados caiu ou expirou.
 
 ---
 
+## E-mail
+
+Sem servidor de e-mail configurado, **nenhum e-mail sai do sistema**: nem o
+link de criar senha de quem é cadastrado pelo painel (paciente cadastrado pelo
+nutricionista, nutricionista cadastrado pelo administrador), nem o de "esqueci
+a senha". O painel avisa isso ao cadastrar alguém.
+
+> **Gmail não funciona no Render gratuito.** Desde setembro de 2025 o plano
+> gratuito bloqueia as portas 25, 465 e 587, que são as do Gmail
+> ([changelog do Render](https://render.com/changelog/free-web-services-will-no-longer-allow-outbound-traffic-to-smtp-ports)).
+> A saída é um serviço de e-mail que atenda em outra porta. O Brevo atende na
+> **2525** e o plano gratuito envia até 300 e-mails por dia.
+
+1. Criar uma conta gratuita em <https://www.brevo.com>.
+2. Em **Senders, Domains & Dedicated IPs → Senders**, cadastrar o endereço que
+   vai aparecer como remetente (pode ser um Gmail) e confirmar pelo código que
+   chega nele.
+3. Em **SMTP & API → SMTP**, gerar uma **chave SMTP** e anotar o login, que tem
+   o formato `xxxxxx@smtp-brevo.com` (não é o e-mail da conta).
+4. No Render, serviço **nutricare-adj-api** → *Environment*, preencher:
+
+| Variável | Valor |
+|---|---|
+| `SMTP_HOST` | `smtp-relay.brevo.com` |
+| `SMTP_USER` | o login `xxxxxx@smtp-brevo.com` |
+| `SMTP_PASS` | a chave SMTP (não a chave de API) |
+| `SMTP_FROM` | `NutriCare <o remetente confirmado no passo 2>` |
+
+`SMTP_PORT` (2525) e `WEB_APP_URL` (o endereço do painel, para onde apontam os
+links) já vêm do `render.yaml`. Para conferir, use "Esqueceu a senha?" no login
+do painel com uma conta sua e veja se o e-mail chega — inclusive na caixa de
+spam: remetente Gmail enviado por outro serviço costuma cair lá.
+
+Se o e-mail não chegar, a API não fica travada: ela desiste do servidor de
+e-mail em até 10 segundos e responde normalmente. O motivo fica no log do
+Render (serviço **nutricare-adj-api** → *Logs*).
+
+> O link de criar ou redefinir senha **nunca** volta na resposta da API no
+> servidor publicado: só em desenvolvimento, com `RESET_LINK_NA_RESPOSTA=true`,
+> para testar sem caixa de e-mail. Com `NODE_ENV=production` (que o `render.yaml`
+> define) ele não sai nem com a variável ligada.
+
+---
+
 ## Login com Google
 
 O botão "Entrar com Google" só funciona em endereços autorizados. O endereço do
@@ -166,6 +210,69 @@ Render para não gerenciar o valor:
 
 Se um dia houver dado que valha a pena preservar, aí sim é `pg_dump` do banco
 antigo e `psql` no novo, antes do passo 3.
+
+---
+
+## Segunda cópia, em outra conta do Render
+
+O plano gratuito do Render não deixa convidar ninguém para a conta: só quem
+publicou a cópia acima consegue mudar as configurações dela, como as do e-mail.
+Para outra pessoa do grupo ter um ambiente que ela mesma administra, existe o
+`render-tcc.yaml`, na raiz do projeto. Ele é igual ao `render.yaml` fora os
+nomes (e por isso os endereços) e o Client ID do Google:
+
+| Peça | Endereço |
+|---|---|
+| Painel web | <https://nutricare-tcc-painel.onrender.com> |
+| API | <https://nutricare-tcc-api.onrender.com> |
+
+As duas cópias não se atrapalham: cada conta do Render lê só o seu arquivo. O
+banco também é separado — as contas de exemplo existem nas duas, mas o que for
+cadastrado numa não aparece na outra.
+
+1. Criar conta em <https://render.com> usando o **GitHub** de quem tem acesso
+   ao repositório.
+2. **New +** > **Blueprint** e escolher o `Projeto_tcc`. Se ele não aparecer na
+   lista (o repositório é de outra conta do GitHub), fazer um *fork* dele e
+   escolher o fork. Nesse caso, quando a `main` mudar, é preciso clicar em
+   **Sync fork** no GitHub para a cópia receber a mudança.
+3. No caminho do arquivo do Blueprint, informar `render-tcc.yaml`.
+4. O Render pede `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS` e `SMTP_FROM`: são os
+   valores da seção "E-mail". Preencher e clicar em **Deploy Blueprint**.
+5. Conferir `/status` como em "Conferir se está tudo de pé", com o endereço
+   desta cópia.
+
+O "Entrar com Google" desta cópia usa um cliente próprio, no projeto
+`nutricare-tcc` do Google Cloud, porque o cliente da outra cópia é de outra conta
+(ver [LOGIN_GOOGLE.md](LOGIN_GOOGLE.md), "Segunda cópia"). Só entra quem estiver
+na lista de usuários de teste desse projeto. O aplicativo do celular escolhe qual
+API usar pelo `EXPO_PUBLIC_API_URL` do `apps/mobile/.env`.
+
+**Mudou algo no `render.yaml`? Mude no `render-tcc.yaml` também.**
+
+---
+
+## APK do aplicativo (Android)
+
+O APK de demonstração é montado nos servidores do Expo (EAS Build), com o perfil
+`preview` do `apps/mobile/eas.json`. Ele usa a API da segunda cópia
+(`nutricare-tcc-api.onrender.com`); para apontar para outra, troque
+`EXPO_PUBLIC_API_URL` no `eas.json` e gere de novo.
+
+O projeto fica na conta do Expo do Natan (`@natanzinho23/projeto-tcc-mobile`,
+ligado pelo `owner` e pelo `extra.eas.projectId` do `app.json`). Quem for gerar
+precisa entrar nessa conta.
+
+1. Em `apps/mobile`: `npx eas-cli@latest login`.
+2. `npx eas-cli@latest build -p android --profile preview`. Na primeira vez ele
+   pergunta se cria a chave de assinatura (keystore): responder sim. A chave fica
+   guardada no Expo; sem ela não dá para atualizar o app instalado.
+3. No fim aparece um link e um QR code. Abrir no celular, tocar em **Install** e
+   aceitar os avisos do Android (o app não vem da Play Store).
+
+No plano gratuito o primeiro build levou 44 minutos (metade na fila). O link do
+APK expira: a página do build mostra quantos dias faltam (**Availability**).
+Baixe o `.apk` pelo menu **⋮ > Download** e guarde uma cópia.
 
 ---
 

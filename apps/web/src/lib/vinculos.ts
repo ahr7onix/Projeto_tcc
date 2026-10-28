@@ -1,20 +1,28 @@
 import { api } from './api'
 
-export interface PacienteDisponivel {
+/**
+ * O vínculo nasce de um convite que o paciente aceita pelo aplicativo (LGPD):
+ * o painel convida e acompanha a resposta, mas não vincula ninguém direto.
+ */
+export interface ConviteEnviado {
   id: string
-  nome: string
-  email: string
+  paciente: { id: string; nome: string; email: string }
+  criadoEm: string
 }
 
-export async function buscarDisponiveis(busca?: string): Promise<PacienteDisponivel[]> {
-  const { data } = await api.get('/pacientes/disponiveis', {
-    params: busca ? { busca } : undefined,
-  })
+export async function convidarPaciente(email: string): Promise<ConviteEnviado> {
+  const { data } = await api.post('/vinculos/convites', { email })
+  return data
+}
+
+/** Convites que ainda esperam a resposta do paciente. */
+export async function listarConvites(): Promise<ConviteEnviado[]> {
+  const { data } = await api.get('/vinculos/convites')
   return data.data
 }
 
-export async function vincularPaciente(pacienteId: string): Promise<void> {
-  await api.post('/vinculos', { pacienteId })
+export async function cancelarConvite(id: string): Promise<void> {
+  await api.delete(`/vinculos/convites/${id}`)
 }
 
 export async function desvincularPaciente(pacienteId: string): Promise<void> {

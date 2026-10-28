@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   UnauthorizedException,
@@ -12,6 +13,7 @@ import { randomBytes, createHash } from 'crypto';
 import { OAuth2Client, TokenPayload } from 'google-auth-library';
 import type { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
+import { expoeLinkDeSenha } from '../../common/ambiente';
 import { logger } from '../../common/logging/logger.service';
 import { perfilEstaCompleto } from '../../common/perfil-completo';
 import { MailService } from '../mail/mail.service';
@@ -43,6 +45,21 @@ export interface AuthResponse {
 }
 
 /**
+ * Nutricionista recém-cadastrado não recebe sessão: o acesso ao painel só abre
+ * depois que a administração confere o CRN e aprova (migration 017).
+ */
+export interface CadastroAguardandoAprovacao {
+  aguardandoAprovacao: true;
+  message: string;
+}
+
+const AGUARDANDO_APROVACAO: CadastroAguardandoAprovacao = {
+  aguardandoAprovacao: true,
+  message:
+    'Cadastro recebido. Você poderá entrar no painel assim que a administração conferir seu registro profissional e aprovar o acesso.',
+};
+
+/**
  * `23505` e o unique_violation do PostgreSQL. Serve para tratar a corrida entre
  * dois cadastros do mesmo e-mail: o `SELECT ... WHERE email = $1` que vem antes
  * do `INSERT` nao segura nada, e sem isto o segundo pedido virava 500.
@@ -71,11 +88,12 @@ export class AuthService {
   async cadastro(
     dto: CadastroDto,
     papel: 'paciente' | 'nutricionista',
-  ): Promise<AuthResponse> {
+  ): Promise<AuthResponse | CadastroAguardandoAprovacao> {
     const email = dto.email.trim().toLowerCase();
     const nome = dto.nome.trim().replace(/\s+/g, ' ');
 
     const client = await this.pool.connect();
+    let user: UserRow;
     try {
       await client.query('BEGIN');
 
@@ -96,16 +114,19 @@ export class AuthService {
          RETURNING id_usuario, nome, email, senha, tipo`,
         [nome, email, senhaHash, papel],
       );
-      const user = inserted.rows[0];
+      user = inserted.rows[0];
 
       if (papel === 'paciente') {
         const dataNascimento = this.parseBrDate(dto.dataNascimento);
+        // Sem vínculo automático: até aqui o paciente novo era vinculado a
+        // todos os nutricionistas do sistema, que passavam a ver os dados de
+        // saúde dele sem autorização. Agora o vínculo nasce de um convite que
+        // o paciente aceita (ConvitesService).
         await client.query(
           `INSERT INTO paciente (id_usuario, data_nascimento, genero, tipo_diabetes)
            VALUES ($1, $2, $3, $4)`,
           [user.id_usuario, dataNascimento, dto.sexo ?? null, dto.tipoDiabetes ?? null],
         );
-        // Sem vínculo automático: o nutricionista vincula o paciente em /vinculos.
       } else {
         const crn = dto.crn?.trim() || null;
         await client.query(
@@ -116,7 +137,6 @@ export class AuthService {
       }
 
       await client.query('COMMIT');
-      return this.issueSession(user);
     } catch (err) {
       await client.query('ROLLBACK').catch(() => undefined);
       // A checagem acima resolve o caso comum; a restricao do banco resolve a
@@ -131,6 +151,10 @@ export class AuthService {
     } finally {
       client.release();
     }
+
+    if (papel === 'nutricionista') return AGUARDANDO_APROVACAO;
+    // Fora da transação: a sessão usa o pool (ver issueSession).
+    return this.issueSession(user);
   }
 
   async login(dto: LoginDto): Promise<AuthResponse> {
@@ -149,13 +173,14 @@ export class AuthService {
     }
     // Só depois de conferir a senha: dizer antes revelaria quais e-mails existem.
     this.recusarSeDesativada(user);
+    await this.recusarSeNaoAprovado(user);
     return this.issueSession(user);
   }
 
   async loginGoogle(
     idToken: string,
     perfilCadastro: 'paciente' | 'nutricionista' = 'paciente',
-  ): Promise<AuthResponse> {
+  ): Promise<AuthResponse | CadastroAguardandoAprovacao> {
     if (!this.googleClientId) {
       throw new UnauthorizedException(
         'Login com Google não está configurado nesta instalação: defina GOOGLE_CLIENT_ID no .env da API.',
@@ -196,6 +221,8 @@ export class AuthService {
       const nome = payload.name || 'Usuário Google';
 
       const client = await this.pool.connect();
+      let user: UserRow;
+      let criadoAgora: boolean;
       try {
         await client.query('BEGIN');
 
@@ -204,8 +231,9 @@ export class AuthService {
           [email]
         );
 
-        let user = result.rows[0];
+        user = result.rows[0];
         if (user) this.recusarSeDesativada(user);
+        criadoAgora = !user;
 
         if (!user) {
           const randomPass = randomBytes(16).toString('hex');
@@ -221,6 +249,7 @@ export class AuthService {
           user = inserted.rows[0];
 
           if (papel === 'paciente') {
+            // Sem vínculo automático, pelo mesmo motivo do cadastro por e-mail.
             await client.query(
               `INSERT INTO paciente (id_usuario, data_nascimento, genero, tipo_diabetes)
                VALUES ($1, NULL, NULL, NULL)`,
@@ -236,7 +265,6 @@ export class AuthService {
         }
 
         await client.query('COMMIT');
-        return this.issueSession(user);
       } catch (err) {
         await client.query('ROLLBACK').catch(() => undefined);
         if (ehEmailDuplicado(err)) {
@@ -248,12 +276,21 @@ export class AuthService {
       } finally {
         client.release();
       }
+
+      // Pelo Google vale a mesma regra do cadastro por e-mail: quem acabou
+      // de criar a conta de nutricionista ouve "aguardando aprovação"; quem
+      // já tinha conta e ainda não foi aprovado recebe a mesma recusa do login.
+      // Fora da transação, porque as duas consultas usam o pool (ver issueSession).
+      if (criadoAgora && user.tipo === 'nutricionista') return AGUARDANDO_APROVACAO;
+      await this.recusarSeNaoAprovado(user);
+      return this.issueSession(user);
     }
   }
 
   async refresh(refreshToken: string): Promise<AuthResponse> {
     const tokenHash = this.hashToken(refreshToken);
     const client = await this.pool.connect();
+    let renovada: { user: UserRow; refreshToken: string };
     try {
       await client.query('BEGIN');
       const result = await client.query<{
@@ -295,19 +332,20 @@ export class AuthService {
 
       const session = await this.createRefreshToken(client, user.id_usuario, row.id_token);
       await client.query('COMMIT');
-
-      const accessToken = this.signAccessToken(user);
-      return {
-        user: await this.toPublicUser(user),
-        accessToken,
-        refreshToken: session.token,
-      };
+      renovada = { user, refreshToken: session.token };
     } catch (err) {
       await client.query('ROLLBACK').catch(() => undefined);
       throw err;
     } finally {
       client.release();
     }
+
+    // Só depois de devolver a conexão: o toPublicUser consulta o pool (ver issueSession).
+    return {
+      user: await this.toPublicUser(renovada.user),
+      accessToken: this.signAccessToken(renovada.user),
+      refreshToken: renovada.refreshToken,
+    };
   }
 
   async logout(refreshToken: string): Promise<void> {
@@ -326,10 +364,9 @@ export class AuthService {
    * variável deixava qualquer um trocar a senha de outra pessoa só pelo e-mail.
    */
   private expoeLinkReset(): boolean {
-    return (
-      this.config.get<string>('RESET_LINK_NA_RESPOSTA') === 'true' &&
-      this.config.get<string>('NODE_ENV') !== 'production'
-    );
+    // A regra mora em common/ambiente.ts porque o link de boas-vindas dos
+    // cadastros feitos pelo painel (ContasService) segue a mesma.
+    return expoeLinkDeSenha(this.config);
   }
 
   async esqueciSenha(email: string): Promise<{
@@ -403,11 +440,17 @@ export class AuthService {
     }
   }
 
-  async redefinirSenha(token: string, novaSenha: string): Promise<{ message: string }> {
+  async redefinirSenha(
+    token: string,
+    novaSenha: string,
+  ): Promise<{ message: string; perfil: string }> {
     const tokenHash = this.hashToken(token);
     const senhaHash = await bcrypt.hash(novaSenha, 10);
 
     const client = await this.pool.connect();
+    // A tela usa o perfil para mandar cada um para o lugar certo: o paciente
+    // entra pelo aplicativo, e o login do painel recusa paciente.
+    let perfil: string;
     try {
       await client.query('BEGIN');
 
@@ -436,10 +479,13 @@ export class AuthService {
         );
       }
 
-      await client.query(
-        'UPDATE usuario SET senha = $1, atualizado_em = NOW() WHERE id_usuario = $2',
+      const atualizado = await client.query<{ tipo: string }>(
+        `UPDATE usuario SET senha = $1, atualizado_em = NOW()
+          WHERE id_usuario = $2
+          RETURNING tipo`,
         [senhaHash, row.id_usuario],
       );
+      perfil = atualizado.rows[0].tipo;
       // Revoga sessões ativas depois da troca de senha.
       await client.query(
         `UPDATE refresh_token SET revogado_em = NOW()
@@ -455,22 +501,23 @@ export class AuthService {
       client.release();
     }
 
-    return { message: 'Senha atualizada com sucesso. Você já pode entrar.' };
+    return { message: 'Senha atualizada com sucesso. Você já pode entrar.', perfil };
   }
 
+  /**
+   * Sem `pool.connect()`: segurar uma conexão aqui enquanto o `toPublicUser`
+   * pedia outra prendia o pool inteiro com ~15 logins simultâneos, e a API
+   * parava de falar com o banco até ser reiniciada
+   * (docs/ANALISE_DESEMPENHO.md, item 2.1). Quem chama também não pode estar
+   * segurando conexão.
+   */
   private async issueSession(user: UserRow): Promise<AuthResponse> {
-    const client = await this.pool.connect();
-    try {
-      const session = await this.createRefreshToken(client, user.id_usuario, null);
-      const accessToken = this.signAccessToken(user);
-      return {
-        user: await this.toPublicUser(user),
-        accessToken,
-        refreshToken: session.token,
-      };
-    } finally {
-      client.release();
-    }
+    const session = await this.createRefreshToken(this.pool, user.id_usuario, null);
+    return {
+      user: await this.toPublicUser(user),
+      accessToken: this.signAccessToken(user),
+      refreshToken: session.token,
+    };
   }
 
   private async createRefreshToken(
@@ -504,6 +551,24 @@ export class AuthService {
    * Conta encerrada pelo próprio dono não emite sessão nova. Chamar só depois
    * de a credencial já ter sido validada, para não virar sonda de e-mails.
    */
+  /**
+   * Nutricionista só entra depois da aprovação da administração. Vem depois
+   * da senha conferida, como a desativação: antes disso, dizer "aguardando
+   * aprovação" revelaria quais e-mails estão cadastrados.
+   */
+  private async recusarSeNaoAprovado(user: UserRow): Promise<void> {
+    if (user.tipo !== 'nutricionista') return;
+    const { rows } = await this.pool.query<{ aprovado_em: Date | null }>(
+      'SELECT aprovado_em FROM nutricionista WHERE id_usuario = $1',
+      [user.id_usuario],
+    );
+    if (rows[0] && rows[0].aprovado_em === null) {
+      throw new ForbiddenException(
+        'Seu cadastro ainda está aguardando a aprovação da administração.',
+      );
+    }
+  }
+
   private recusarSeDesativada(user: UserRow): void {
     if (user.desativado_em) {
       throw new UnauthorizedException(

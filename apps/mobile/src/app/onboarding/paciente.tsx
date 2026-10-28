@@ -2,7 +2,6 @@ import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,7 +10,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FormField } from '@/components/FormField';
@@ -22,7 +21,7 @@ import {
   type OnboardingPacienteValues,
 } from '@/lib/validation/auth';
 import { SEXOS, TIPOS_DIABETES } from '@/types/auth';
-import { updatePacienteData } from '@/lib/api/perfil';
+import { getPacienteData, updatePacienteData } from '@/lib/api/perfil';
 import { useAuthStore } from '@/stores/auth';
 import { colors, radius, spacing, typography } from '@/lib/theme';
 
@@ -35,13 +34,19 @@ function formatDateMask(raw: string) {
   return out;
 }
 
+/** Converte ISO (AAAA-MM-DD) para o formato do campo, DD/MM/AAAA. */
+function isoParaBr(iso: string): string {
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : '';
+}
+
 export default function OnboardingPacienteScreen() {
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
   const [saving, setSaving] = useState(false);
   const firstName = user?.nome?.split(' ')[0];
 
-  const { control, handleSubmit } = useForm<OnboardingPacienteValues>({
+  const { control, handleSubmit, setValue } = useForm<OnboardingPacienteValues>({
     resolver: zodResolver(onboardingPacienteSchema),
     defaultValues: {
       dataNascimento: '',
@@ -52,6 +57,20 @@ export default function OnboardingPacienteScreen() {
       restricoesAlergias: '',
     } as unknown as OnboardingPacienteValues,
   });
+
+  // Quem foi cadastrado pelo nutricionista já tem nascimento, sexo e tipo de
+  // diabetes gravados: o formulário chega preenchido em vez de perguntar de
+  // novo o que a pessoa acabou de dizer no consultório.
+  useEffect(() => {
+    getPacienteData()
+      .then((d) => {
+        if (!d) return;
+        if (d.dataNascimento) setValue('dataNascimento', isoParaBr(d.dataNascimento));
+        if (d.sexo) setValue('sexo', d.sexo);
+        if (d.tipoDiabetes) setValue('tipoDiabetes', d.tipoDiabetes);
+      })
+      .catch(() => undefined);
+  }, [setValue]);
 
   const onSubmit = handleSubmit(async (raw) => {
     const values = raw as unknown as OnboardingPacienteOutput;
@@ -86,7 +105,7 @@ export default function OnboardingPacienteScreen() {
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior="padding"
         >
           <ScrollView
             contentContainerStyle={styles.scroll}

@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -61,83 +62,86 @@ export default function ExcluirContaScreen() {
         </View>
       </View>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.avisoCard}>
-          <View style={styles.avisoTopo}>
-            <Ionicons name="warning-outline" size={20} color={colors.danger} />
-            <Text style={styles.avisoTitulo}>Isso encerra seu acesso</Text>
-          </View>
-          {CONSEQUENCIAS.map((texto) => (
-            <View key={texto} style={styles.itemLinha}>
-              <View style={styles.bullet} />
-              <Text style={styles.itemTexto}>{texto}</Text>
-            </View>
-          ))}
-          <Text style={styles.avisoRodape}>
-            Mudou de ideia depois? Fale com seu nutricionista para reativar a conta.
-          </Text>
-        </View>
-
-        <Pressable style={styles.checkLinha} onPress={() => setCiente(!ciente)}>
-          <View style={[styles.checkbox, ciente && styles.checkboxMarcado]}>
-            {ciente && <Ionicons name="checkmark" size={14} color={colors.textInverse} />}
-          </View>
-          <Text style={styles.checkTexto}>
-            Entendi e quero encerrar minha conta no NutriCare.
-          </Text>
-        </Pressable>
-
-        <View style={styles.card}>
-          <View style={styles.field}>
-            <Text style={styles.label}>Confirme sua senha</Text>
-            <View style={styles.inputWrap}>
-              <TextInput
-                value={senha}
-                onChangeText={(v) => {
-                  setSenha(v);
-                  setErro(null);
-                }}
-                style={[styles.input, erro ? styles.inputError : null]}
-                secureTextEntry={!mostrarSenha}
-                placeholder="••••••••"
-                placeholderTextColor={colors.textMuted}
-                autoCapitalize="none"
-              />
-              <Pressable onPress={() => setMostrarSenha(!mostrarSenha)} style={styles.eyeBtn}>
-                <Ionicons
-                  name={mostrarSenha ? 'eye-off-outline' : 'eye-outline'}
-                  size={18}
-                  color={colors.textMuted}
-                />
-              </Pressable>
-            </View>
-          </View>
-          {erro && <Text style={styles.erroTexto}>{erro}</Text>}
-        </View>
-
-        <Pressable
-          style={[styles.btnPerigo, !podeEnviar && styles.btnDisabled]}
-          onPress={confirmar}
-          disabled={!podeEnviar}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
         >
-          {enviando ? (
-            <ActivityIndicator color={colors.textInverse} />
-          ) : (
-            <>
-              <Ionicons name="trash-outline" size={16} color={colors.textInverse} />
-              <Text style={styles.btnPerigoTexto}>Excluir minha conta</Text>
-            </>
-          )}
-        </Pressable>
+          <View style={styles.avisoCard}>
+            <View style={styles.avisoTopo}>
+              <Ionicons name="warning-outline" size={20} color={colors.danger} />
+              <Text style={styles.avisoTitulo}>Isso encerra seu acesso</Text>
+            </View>
+            {CONSEQUENCIAS.map((texto) => (
+              <View key={texto} style={styles.itemLinha}>
+                <View style={styles.bullet} />
+                <Text style={styles.itemTexto}>{texto}</Text>
+              </View>
+            ))}
+            <Text style={styles.avisoRodape}>
+              Mudou de ideia depois? Fale com seu nutricionista para reativar a conta.
+            </Text>
+          </View>
 
-        <Pressable style={styles.btnCancelar} onPress={() => router.back()} disabled={enviando}>
-          <Text style={styles.btnCancelarTexto}>Cancelar</Text>
-        </Pressable>
-      </ScrollView>
+          <Pressable style={styles.checkLinha} onPress={() => setCiente(!ciente)}>
+            <View style={[styles.checkbox, ciente && styles.checkboxMarcado]}>
+              {ciente && <Ionicons name="checkmark" size={14} color={colors.textInverse} />}
+            </View>
+            <Text style={styles.checkTexto}>
+              Entendi e quero encerrar minha conta no NutriCare.
+            </Text>
+          </Pressable>
+
+          <View style={styles.card}>
+            <View style={styles.field}>
+              <Text style={styles.label}>Confirme sua senha</Text>
+              <View style={styles.inputWrap}>
+                <TextInput
+                  value={senha}
+                  onChangeText={(v) => {
+                    setSenha(v);
+                    setErro(null);
+                  }}
+                  style={[styles.input, erro ? styles.inputError : null]}
+                  secureTextEntry={!mostrarSenha}
+                  placeholder="••••••••"
+                  placeholderTextColor={colors.textMuted}
+                  autoCapitalize="none"
+                />
+                <Pressable onPress={() => setMostrarSenha(!mostrarSenha)} style={styles.eyeBtn} hitSlop={12}>
+                  <Ionicons
+                    name={mostrarSenha ? 'eye-off-outline' : 'eye-outline'}
+                    size={18}
+                    color={colors.textMuted}
+                  />
+                </Pressable>
+              </View>
+            </View>
+            {erro && <Text style={styles.erroTexto}>{erro}</Text>}
+          </View>
+
+          <Pressable
+            style={[styles.btnPerigo, !podeEnviar && styles.btnDisabled]}
+            onPress={confirmar}
+            disabled={!podeEnviar}
+          >
+            {enviando ? (
+              <ActivityIndicator color={colors.textInverse} />
+            ) : (
+              <>
+                <Ionicons name="trash-outline" size={16} color={colors.textInverse} />
+                <Text style={styles.btnPerigoTexto}>Excluir minha conta</Text>
+              </>
+            )}
+          </Pressable>
+
+          <Pressable style={styles.btnCancelar} onPress={() => router.back()} disabled={enviando}>
+            <Text style={styles.btnCancelarTexto}>Cancelar</Text>
+          </Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

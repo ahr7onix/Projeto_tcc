@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Projeto TCC",
+    "name": "NutriCare",
     "slug": "projeto-tcc-mobile",
     "scheme": "projetotcc",
     "version": "0.1.0",
@@ -36,7 +36,11 @@
     "extra": {
       "router": {
         "origin": false
+      },
+      "eas": {
+        "projectId": "e3fc9593-b908-4c3f-94d0-5e4d365cac79"
       }
-    }
+    },
+    "owner": "natanzinho23"
   }
 }

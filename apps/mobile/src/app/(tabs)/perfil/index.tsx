@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Card } from '@/components/Card';
+import { NutricionistasVinculados } from '@/components/NutricionistasVinculados';
 import { ScreenContainer } from '@/components/ScreenContainer';
 import { logout } from '@/lib/api/auth';
 import { useAuthStore } from '@/stores/auth';
@@ -67,6 +68,8 @@ export default function PerfilScreen() {
           <Text style={styles.roleText}>{role}</Text>
         </View>
       </View>
+
+      <NutricionistasVinculados />
 
       <Card title="Conta">
         <View style={styles.menuList}>

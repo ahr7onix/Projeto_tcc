@@ -5,14 +5,55 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
+import { validateSync, type ValidationError } from 'class-validator';
 import type { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
 import type { JwtPayload } from '../../common/guards/jwt.guard';
 import { valoresParaQuantidade } from '../../common/nutricao/nutricao';
 import { CreateAlimentoDto } from './dto/create-alimento.dto';
+import { ImportarAlimentosDto } from './dto/importar-alimentos.dto';
 import { UpdateAlimentoDto } from './dto/update-alimento.dto';
 
 const PERFIS_EDITORES = ['administrador', 'nutricionista'];
+
+/** Nome de cada campo como a nutricionista o reconhece na planilha. */
+const ROTULOS_CAMPOS: Record<string, string> = {
+  nome: 'nome',
+  grupo: 'grupo',
+  medidaCaseira: 'medida caseira',
+  medidaCaseiraG: 'gramas da medida caseira',
+  porcaoG: 'porção de referência',
+  kcal: 'calorias',
+  carboidratosG: 'carboidratos',
+  proteinasG: 'proteínas',
+  lipidiosG: 'lipídios',
+  fibrasG: 'fibras',
+  indiceGlicemico: 'índice glicêmico',
+};
+
+/**
+ * Carboidratos, proteínas e lipídios de uma porção não podem pesar mais que a
+ * própria porção. Vale para o cadastro manual e para cada linha da importação.
+ */
+const MENSAGEM_MACROS_EXCEDEM =
+  'Carboidratos, proteínas e lipídios somam mais que o peso da porção';
+
+function macrosExcedemPorcao(porcaoG: number, carb: number, prot: number, lip: number): boolean {
+  return carb + prot + lip > porcaoG;
+}
+
+function descreverErros(erros: ValidationError[]): string {
+  const campos = erros.map((e) => ROTULOS_CAMPOS[e.property] ?? e.property);
+  return `Valor ausente ou inválido em: ${campos.join(', ')}`;
+}
+
+export interface LinhaRecusada {
+  /** Posição do item na lista enviada, a partir de zero. */
+  indice: number;
+  nome: string | null;
+  motivo: string;
+}
 
 const COM_ACENTO = 'áàâãäéèêëíìîïóòôõöúùûüçñ';
 const SEM_ACENTO = 'aaaaaeeeeiiiiooooouuuucn';
@@ -80,8 +121,11 @@ export class AlimentosService {
     if (!filtros.incluirInativos) {
       where.push('ativo = TRUE');
     }
-    if (filtros.busca?.trim()) {
-      params.push(`%${filtros.busca.trim()}%`);
+    // Cada palavra é procurada separada: a TACO escreve "Arroz, integral,
+    // cozido", e buscar a frase "arroz integral" inteira não achava nada.
+    const palavras = filtros.busca?.trim().split(/[\s,]+/).filter(Boolean) ?? [];
+    for (const palavra of palavras.slice(0, 6)) {
+      params.push(`%${palavra}%`);
       where.push(`${semAcento('nome')} LIKE ${semAcento(`$${params.length}`)}`);
     }
     if (filtros.grupo?.trim()) {
@@ -138,12 +182,10 @@ export class AlimentosService {
     };
   }
 
-  /** Macros de uma porção não podem pesar mais que a própria porção. */
+  // os macros não podem passar do peso da porção
   private validarMacros(porcaoG: number, carb: number, prot: number, lip: number) {
-    if (carb + prot + lip > porcaoG) {
-      throw new BadRequestException(
-        'Carboidratos, proteínas e lipídios somam mais que o peso da porção',
-      );
+    if (macrosExcedemPorcao(porcaoG, carb, prot, lip)) {
+      throw new BadRequestException(MENSAGEM_MACROS_EXCEDEM);
     }
   }
 
@@ -189,6 +231,120 @@ export class AlimentosService {
     );
 
     return this.mapAlimento(rows[0]);
+  }
+
+  /**
+   * Carrega uma tabela inteira (TACO, IBGE ou outra) de uma vez — RF01.
+   *
+   * Cada linha passa pelas mesmas regras do cadastro manual. Linha com problema
+   * é recusada com o motivo, sem derrubar as outras. As válidas entram numa
+   * transação, por upsert no par (nome, fonte): importar a mesma planilha de
+   * novo atualiza os valores em vez de duplicar, então reenviar um lote que
+   * falhou no meio do caminho é seguro.
+   */
+  async importar(user: JwtPayload, dto: ImportarAlimentosDto) {
+    this.podeEditar(user);
+    const fonte = dto.fonte.trim();
+
+    const recusados: LinhaRecusada[] = [];
+    const validos: CreateAlimentoDto[] = [];
+    const nomesVistos = new Set<string>();
+
+    dto.itens.forEach((bruto, indice) => {
+      const item = plainToInstance(CreateAlimentoDto, bruto);
+      const nome = typeof item.nome === 'string' ? item.nome.trim() : null;
+      const erros = validateSync(item, { whitelist: true });
+
+      if (erros.length) {
+        recusados.push({ indice, nome, motivo: descreverErros(erros) });
+        return;
+      }
+      // Mesma regra da tela de cadastro: medida caseira sem peso não serve
+      // para converter "1 concha" em gramas.
+      if (item.medidaCaseira?.trim() && item.medidaCaseiraG === undefined) {
+        recusados.push({ indice, nome, motivo: 'Informe os gramas da medida caseira' });
+        return;
+      }
+      if (
+        macrosExcedemPorcao(
+          item.porcaoG ?? 100,
+          item.carboidratosG,
+          item.proteinasG,
+          item.lipidiosG,
+        )
+      ) {
+        recusados.push({ indice, nome, motivo: MENSAGEM_MACROS_EXCEDEM });
+        return;
+      }
+      // Duas linhas com o mesmo nome no mesmo envio: a segunda sobrescreveria
+      // a primeira em silêncio.
+      const chave = item.nome.trim().toLowerCase();
+      if (nomesVistos.has(chave)) {
+        recusados.push({ indice, nome, motivo: 'Alimento repetido na planilha' });
+        return;
+      }
+      nomesVistos.add(chave);
+      validos.push(item);
+    });
+
+    let inseridos = 0;
+    let atualizados = 0;
+
+    if (validos.length) {
+      const client = await this.pool.connect();
+      try {
+        await client.query('BEGIN');
+        for (const item of validos) {
+          // `xmax = 0` só é verdadeiro na linha recém-inserida: é assim que o
+          // Postgres diz se o upsert inseriu ou atualizou.
+          const { rows } = await client.query<{ inserido: boolean }>(
+            `INSERT INTO alimento
+               (nome, grupo, medida_caseira, medida_caseira_g, porcao_g,
+                kcal, carboidratos_g, proteinas_g, lipidios_g, fibras_g,
+                indice_glicemico, fonte, id_autor)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+             ON CONFLICT (lower(trim(nome)), fonte) DO UPDATE SET
+               grupo = EXCLUDED.grupo,
+               medida_caseira = EXCLUDED.medida_caseira,
+               medida_caseira_g = EXCLUDED.medida_caseira_g,
+               porcao_g = EXCLUDED.porcao_g,
+               kcal = EXCLUDED.kcal,
+               carboidratos_g = EXCLUDED.carboidratos_g,
+               proteinas_g = EXCLUDED.proteinas_g,
+               lipidios_g = EXCLUDED.lipidios_g,
+               fibras_g = EXCLUDED.fibras_g,
+               indice_glicemico = EXCLUDED.indice_glicemico,
+               ativo = TRUE
+             RETURNING (xmax = 0) AS inserido`,
+            [
+              item.nome.trim(),
+              item.grupo?.trim() || 'outros',
+              item.medidaCaseira?.trim() || null,
+              item.medidaCaseira?.trim() ? item.medidaCaseiraG : null,
+              item.porcaoG ?? 100,
+              item.kcal,
+              item.carboidratosG,
+              item.proteinasG,
+              item.lipidiosG,
+              item.fibrasG ?? null,
+              item.indiceGlicemico ?? null,
+              fonte,
+              user.sub,
+            ],
+          );
+          if (rows[0]?.inserido) inseridos++;
+          else atualizados++;
+        }
+        await client.query('COMMIT');
+      } catch (err) {
+        await client.query('ROLLBACK').catch(() => undefined);
+        throw err;
+      } finally {
+        client.release();
+      }
+    }
+
+    return { fonte, inseridos, atualizados, recusados };
   }
 
   async atualizar(user: JwtPayload, id: string, dto: UpdateAlimentoDto) {

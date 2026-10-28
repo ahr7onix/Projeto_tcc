@@ -46,7 +46,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
           metadados: { requestId },
         });
       }
-      if (!res.headersSent) res.status(status).json(excecao.getResponse());
+      // Exceção criada só com texto (o limite de tentativas, por exemplo)
+      // devolve uma string em getResponse(). O filtro padrão do Nest embrulha
+      // esse caso em { statusCode, message }, e é nesse formato que o painel e o
+      // app procuram a mensagem: sem isto, o usuário via um erro genérico.
+      const corpo = excecao.getResponse();
+      const resposta = typeof corpo === 'string' ? { statusCode: status, message: corpo } : corpo;
+      if (!res.headersSent) res.status(status).json(resposta);
       return;
     }
 
@@ -105,11 +111,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
     });
   }
 
-  /**
-   * Erros que não são defeito do servidor e antes viravam 500: id fora do
-   * formato (Postgres 22P02), registro duplicado (23505) e corpo grande demais
-   * (body-parser, 413).
-   */
+  // Erros que não são culpa do servidor: id fora do formato (22P02), registro
+  // duplicado (23505) e corpo grande demais (413).
   private erroPrevisto(excecao: unknown): { status: number; message: string } | null {
     const e = excecao as { code?: string; status?: number; statusCode?: number; type?: string };
     if (e?.code === '22P02' || e?.code === '22003') {

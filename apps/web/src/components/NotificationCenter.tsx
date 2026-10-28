@@ -4,6 +4,7 @@ import { assinarMensagens, type EventoMensagem } from '../lib/mensagens-stream'
 import { api } from '../lib/api'
 import { listarAlertas, type Alerta } from '../lib/alertas'
 import { type Mensagem } from '../lib/mensagens'
+import { repetirEnquantoVisivel } from '../lib/polling'
 
 interface Paciente { id: string; nome: string; ultimoRegistro: string | null }
 interface Persistida { id: string; tipo: string; titulo: string; mensagem: string; lida: boolean; criadoEm: string }
@@ -48,16 +49,20 @@ export default function NotificationCenter() {
 
   useEffect(() => {
     void carregar()
-    const timer = window.setInterval(carregar, 5_000)
+    // Era a cada 5 s, em toda tela: só esta central ocupava ~8% do servidor
+    // gratuito por painel aberto. Mensagem nova continua chegando na hora pelo SSE.
+    const parar = repetirEnquantoVisivel(carregar, 30_000)
     const cancelar = assinarMensagens((evento: EventoMensagem) => {
       const mensagem: Mensagem = evento.mensagem
+      // O servidor manda o evento para os dois lados da conversa; quem escreveu não é avisado.
+      if (mensagem.propria) return
       const item: Item = { id: `mensagem-${mensagem.id}`, tipo: 'mensagem', prioridade: 'informativo', titulo: `Nova mensagem de ${mensagem.remetenteNome}`, descricao: mensagem.conteudo, criadoEm: mensagem.criadoEm, pacienteId: evento.contraparteId, pacienteNome: mensagem.remetenteNome, conversaId: evento.contraparteId, lida: false }
       setItens((atual) => [item, ...atual.filter((existente) => existente.id !== item.id)])
       setToast(item)
       window.setTimeout(() => setToast((atual) => atual?.id === item.id ? null : atual), 6000)
       void carregar()
     })
-    return () => { window.clearInterval(timer); cancelar() }
+    return () => { parar(); cancelar() }
   }, [carregar])
 
   const filtrados = useMemo(() => itens.filter((item) => {

@@ -52,6 +52,9 @@ function resolverSsl(config: ConfigService, connectionString: string): ConfigSsl
         const pool = new Pool({
           connectionString,
           max: 10,
+          // Sem limite, um pool esgotado deixava a requisição esperando para
+          // sempre. 15 s é o mesmo tempo que o app espera antes de desistir.
+          connectionTimeoutMillis: 15_000,
           ssl: resolverSsl(config, connectionString),
         });
 

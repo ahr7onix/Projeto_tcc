@@ -11,6 +11,9 @@
 # Não há nada para preencher à mão: o endereço do banco e os endereços dos dois
 # serviços já estão amarrados aqui dentro. Basta o Render aplicar o arquivo.
 #
+# Existe uma segunda cópia, para outra conta do Render, em render-tcc.yaml
+# (docs/PUBLICAR.md, "Segunda cópia"). Mudou algo aqui? Mude lá também.
+#
 # ATENÇÃO: o banco gratuito do Render expira em 30 dias. Antes disso é preciso
 # trocar para o plano pago ou criar um banco novo. Para uso além da demonstração,
 # vale migrar para um provedor com plano gratuito sem prazo (Neon, Supabase).
@@ -29,7 +32,10 @@ services:
     plan: free
     region: oregon
     rootDir: apps/api
-    buildCommand: npm ci && npm run build
+    # `--include=dev` porque NODE_ENV=production (abaixo) vale também no build, e
+    # com ele o npm deixa de instalar as devDependencies — entre elas o
+    # @nestjs/cli e o typescript, sem os quais o `nest build` falha.
+    buildCommand: npm ci --include=dev && npm run build
     # O preparar-banco.mjs cria as tabelas na primeira vez e não faz nada nas
     # seguintes, então pode ficar no start sem problema.
     startCommand: node preparar-banco.mjs && node dist/main.js
@@ -57,6 +63,26 @@ services:
       # Endereço do painel, para o navegador liberar as chamadas.
       - key: CORS_ORIGIN
         value: https://nutricare-adj-painel.onrender.com
+      # Os links de criar e de redefinir senha que vão por e-mail apontam para
+      # cá. Sem isto apontavam para localhost:5173.
+      - key: WEB_APP_URL
+        value: https://nutricare-adj-painel.onrender.com
+      # E-mail de verdade (docs/PUBLICAR.md, seção "E-mail"). Sem SMTP_HOST
+      # nenhum e-mail sai: nem o link de criar senha do cadastro de paciente e
+      # de nutricionista, nem o de "esqueci a senha". `sync: false` = o valor é
+      # preenchido no painel do Render e nunca fica no repositório.
+      - key: SMTP_HOST
+        sync: false
+      # 2525, e não 587: o plano gratuito do Render bloqueia as portas 25, 465
+      # e 587 desde setembro de 2025. O Brevo atende na 2525.
+      - key: SMTP_PORT
+        value: "2525"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
       # Mesmo Client ID do painel (ver docs/LOGIN_GOOGLE.md).
       - key: GOOGLE_CLIENT_ID
         value: 579066584754-mjlmqjmtscn5lgs7depm8uvovn92lm5d.apps.googleusercontent.com

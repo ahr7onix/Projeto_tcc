@@ -44,8 +44,12 @@ export default function LoginPage() {
   const [nome, setNome] = useState('')
   const [regEmail, setRegEmail] = useState('')
   const [regSenha, setRegSenha] = useState('')
+  const [regCrn, setRegCrn] = useState('')
   const [regError, setRegError] = useState<string | null>(null)
   const [regLoading, setRegLoading] = useState(false)
+  // Cadastro de nutricionista não abre sessão: fica aguardando a administração
+  // conferir o CRN. A tela avisa isso em vez de entrar no painel.
+  const [aguardandoAprovacao, setAguardandoAprovacao] = useState<string | null>(null)
 
   const loginGoogleRef = useRef<HTMLDivElement | null>(null)
   const signupGoogleRef = useRef<HTMLDivElement | null>(null)
@@ -69,6 +73,10 @@ export default function LoginPage() {
       const { data } = await api.post('/auth/google/nutricionista', {
         credential: response.credential,
       })
+      if (data.aguardandoAprovacao) {
+        setAguardandoAprovacao(data.message)
+        return
+      }
       const destino = DESTINO_POR_PERFIL[data.user.role]
       if (!destino) {
         setActiveError(ERRO_PERFIL)
@@ -190,7 +198,16 @@ export default function LoginPage() {
         nome,
         email: regEmail,
         senha: regSenha,
+        crn: regCrn.trim() || undefined,
       })
+      if (data.aguardandoAprovacao) {
+        setAguardandoAprovacao(data.message)
+        setNome('')
+        setRegEmail('')
+        setRegSenha('')
+        setRegCrn('')
+        return
+      }
       const destino = DESTINO_POR_PERFIL[data.user.role]
       if (!destino) {
         setRegError(ERRO_PERFIL)
@@ -259,6 +276,7 @@ export default function LoginPage() {
             <div className={styles.brand}>NutriCare</div>
             <h1 className={styles.title}>Criar conta</h1>
             {regError && <div className={styles.error}>{regError}</div>}
+            {aguardandoAprovacao && <div style={avisoAprovacao}>{aguardandoAprovacao}</div>}
 
             {googleSlot(signupGoogleRef, isSignUp)}
 
@@ -286,15 +304,23 @@ export default function LoginPage() {
               required
               autoComplete="email"
             />
-            <input
+            <CampoSenha
               className={styles.input}
-              type="password"
               placeholder="Senha (mín. 8 caracteres)"
               value={regSenha}
               onChange={(e) => setRegSenha(e.target.value)}
               required
               autoComplete="new-password"
               minLength={8}
+            />
+            <input
+              className={styles.input}
+              type="text"
+              placeholder="CRN (ex.: CRN-3/12345)"
+              aria-label="CRN"
+              value={regCrn}
+              onChange={(e) => setRegCrn(e.target.value)}
+              maxLength={20}
             />
             <button type="submit" className={styles.btn} disabled={regLoading || googleLoading}>
               {regLoading ? 'Criando...' : 'Cadastrar'}
@@ -311,6 +337,7 @@ export default function LoginPage() {
             <div className={styles.brand}>NutriCare</div>
             <h1 className={styles.title}>Bem-vindo de volta</h1>
             {loginError && <div className={styles.error}>{loginError}</div>}
+            {aguardandoAprovacao && <div style={avisoAprovacao}>{aguardandoAprovacao}</div>}
 
             {googleSlot(loginGoogleRef, !isSignUp)}
 
@@ -329,9 +356,8 @@ export default function LoginPage() {
               required
               autoComplete="email"
             />
-            <input
+            <CampoSenha
               className={styles.input}
-              type="password"
               placeholder="Senha"
               value={loginSenha}
               onChange={(e) => setLoginSenha(e.target.value)}
@@ -388,4 +414,46 @@ function GoogleIcon() {
       <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
     </svg>
   )
+}
+
+// Campo de senha com o olho para conferir o que foi digitado.
+function CampoSenha(props: Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'>) {
+  const [visivel, setVisivel] = useState(false)
+  const rotulo = visivel ? 'Esconder senha' : 'Mostrar senha'
+  return (
+    <div className={styles.senhaWrap}>
+      <input {...props} type={visivel ? 'text' : 'password'} />
+      <button
+        type="button"
+        className={styles.olho}
+        onClick={() => setVisivel((v) => !v)}
+        aria-label={rotulo}
+        title={rotulo}
+      >
+        {visivel ? <EyeOffIcon /> : <EyeIcon />}
+      </button>
+    </div>
+  )
+}
+
+function EyeIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg>
+}
+
+function EyeOffIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M17.9 17.9A10.4 10.4 0 0 1 12 19c-6.4 0-10-7-10-7a18 18 0 0 1 5.1-5.9M9.9 5.2A9.6 9.6 0 0 1 12 5c6.4 0 10 7 10 7a18 18 0 0 1-2.2 3.2M14.1 14.1a3 3 0 1 1-4.2-4.2" /><path d="m2 2 20 20" /></svg>
+}
+
+// Mesmo desenho da caixa de erro, nas cores de sucesso: não é erro, é o
+// próximo passo do cadastro.
+const avisoAprovacao: React.CSSProperties = {
+  width: '100%',
+  margin: '4px 0 8px',
+  padding: '10px 12px',
+  borderRadius: 'var(--radius-md)',
+  background: 'var(--success-soft)',
+  border: '1px solid var(--success)',
+  color: 'var(--success)',
+  fontSize: 13,
+  lineHeight: 1.45,
 }

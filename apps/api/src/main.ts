@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/logging/all-exceptions.filter';
@@ -11,10 +12,18 @@ import { HealthService } from './modules/health/health.service';
 async function bootstrap() {
   // O logger da aplicação é também o do Nest: avisos do framework e da API
   // saem no mesmo formato e vão para o mesmo arquivo.
-  const app = await NestFactory.create(AppModule, { cors: false, logger });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    cors: false,
+    logger,
+  });
   const config = app.get(ConfigService);
 
-  // Cabeçalhos de segurança; também remove o X-Powered-By: Express.
+  // No Render a requisição chega por um proxy: sem isto, o IP de todo usuário
+  // seria o do proxy, e os limites de tentativa tratariam todo mundo como uma
+  // pessoa só.
+  app.set('trust proxy', 1);
+
+  // helmet também tira o X-Powered-By
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
   // CORS_ORIGIN aceita uma lista separada por vírgula, porque em produção o

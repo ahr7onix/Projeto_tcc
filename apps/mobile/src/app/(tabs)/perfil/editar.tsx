@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -108,130 +109,132 @@ export default function EditarPerfilScreen() {
         </View>
       </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Nome */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Dados pessoais</Text>
-          <View style={styles.field}>
-            <Text style={styles.label}>Nome completo</Text>
-            <TextInput
-              value={nome}
-              onChangeText={setNome}
-              style={styles.input}
-              placeholder="Seu nome"
-              placeholderTextColor={colors.textMuted}
-            />
-          </View>
-        </View>
-
-        {/* Dados clínicos */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Dados clínicos</Text>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Data de nascimento</Text>
-            <TextInput
-              value={dataNascimento}
-              onChangeText={(v) => setDataNascimento(formatDateMask(v))}
-              style={styles.input}
-              keyboardType="number-pad"
-              placeholder="DD/MM/AAAA"
-              placeholderTextColor={colors.textMuted}
-              maxLength={10}
-            />
-            <Text style={styles.hint}>
-              Usamos sua idade para simplificar a interface automaticamente para
-              quem tem 55 anos ou mais.
-            </Text>
-          </View>
-
-          <View style={styles.row}>
-            <View style={[styles.field, { flex: 1 }]}>
-              <Text style={styles.label}>Peso (kg)</Text>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+        <ScrollView keyboardShouldPersistTaps="handled" style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Nome */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Dados pessoais</Text>
+            <View style={styles.field}>
+              <Text style={styles.label}>Nome completo</Text>
               <TextInput
-                value={peso}
-                onChangeText={setPeso}
+                value={nome}
+                onChangeText={setNome}
                 style={styles.input}
-                keyboardType="decimal-pad"
-                placeholder="Ex: 72.5"
-                placeholderTextColor={colors.textMuted}
-              />
-            </View>
-            <View style={[styles.field, { flex: 1 }]}>
-              <Text style={styles.label}>Altura (m)</Text>
-              <TextInput
-                value={altura}
-                onChangeText={setAltura}
-                style={styles.input}
-                keyboardType="decimal-pad"
-                placeholder="Ex: 1.74"
+                placeholder="Seu nome"
                 placeholderTextColor={colors.textMuted}
               />
             </View>
           </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Sexo</Text>
-            <View style={styles.chips}>
-              {SEXOS.map((s) => (
-                <Pressable
-                  key={s.value}
-                  onPress={() => setSexo(s.value)}
-                  style={[styles.chip, sexo === s.value && styles.chipActive]}
-                >
-                  <Text style={[styles.chipText, sexo === s.value && styles.chipTextActive]}>
-                    {s.label}
-                  </Text>
-                </Pressable>
-              ))}
+          {/* Dados clínicos */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Dados clínicos</Text>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Data de nascimento</Text>
+              <TextInput
+                value={dataNascimento}
+                onChangeText={(v) => setDataNascimento(formatDateMask(v))}
+                style={styles.input}
+                keyboardType="number-pad"
+                placeholder="DD/MM/AAAA"
+                placeholderTextColor={colors.textMuted}
+                maxLength={10}
+              />
+              <Text style={styles.hint}>
+                Usamos sua idade para simplificar a interface automaticamente para
+                quem tem 55 anos ou mais.
+              </Text>
+            </View>
+
+            <View style={styles.row}>
+              <View style={[styles.field, { flex: 1 }]}>
+                <Text style={styles.label}>Peso (kg)</Text>
+                <TextInput
+                  value={peso}
+                  onChangeText={setPeso}
+                  style={styles.input}
+                  keyboardType="decimal-pad"
+                  placeholder="Ex: 72.5"
+                  placeholderTextColor={colors.textMuted}
+                />
+              </View>
+              <View style={[styles.field, { flex: 1 }]}>
+                <Text style={styles.label}>Altura (m)</Text>
+                <TextInput
+                  value={altura}
+                  onChangeText={setAltura}
+                  style={styles.input}
+                  keyboardType="decimal-pad"
+                  placeholder="Ex: 1.74"
+                  placeholderTextColor={colors.textMuted}
+                />
+              </View>
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Sexo</Text>
+              <View style={styles.chips}>
+                {SEXOS.map((s) => (
+                  <Pressable
+                    key={s.value}
+                    onPress={() => setSexo(s.value)}
+                    style={[styles.chip, sexo === s.value && styles.chipActive]}
+                  >
+                    <Text style={[styles.chipText, sexo === s.value && styles.chipTextActive]}>
+                      {s.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Tipo de diabetes</Text>
+              <View style={styles.chips}>
+                {TIPOS_DIABETES.map((t) => (
+                  <Pressable
+                    key={t.value}
+                    onPress={() => setTipoDiabetes(t.value)}
+                    style={[styles.chip, tipoDiabetes === t.value && styles.chipActive]}
+                  >
+                    <Text style={[styles.chipText, tipoDiabetes === t.value && styles.chipTextActive]}>
+                      {t.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Restrições e alergias</Text>
+              <TextInput
+                value={restricoes}
+                onChangeText={setRestricoes}
+                style={[styles.input, styles.textarea]}
+                placeholder="Ex: lactose, amendoim..."
+                placeholderTextColor={colors.textMuted}
+                multiline
+              />
             </View>
           </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Tipo de diabetes</Text>
-            <View style={styles.chips}>
-              {TIPOS_DIABETES.map((t) => (
-                <Pressable
-                  key={t.value}
-                  onPress={() => setTipoDiabetes(t.value)}
-                  style={[styles.chip, tipoDiabetes === t.value && styles.chipActive]}
-                >
-                  <Text style={[styles.chipText, tipoDiabetes === t.value && styles.chipTextActive]}>
-                    {t.label}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Restrições e alergias</Text>
-            <TextInput
-              value={restricoes}
-              onChangeText={setRestricoes}
-              style={[styles.input, styles.textarea]}
-              placeholder="Ex: lactose, amendoim..."
-              placeholderTextColor={colors.textMuted}
-              multiline
-            />
-          </View>
-        </View>
-
-        <Pressable
-          style={[styles.saveBtn, saving && styles.btnDisabled]}
-          onPress={onSave}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator color={colors.textInverse} />
-          ) : (
-            <>
-              <Ionicons name="checkmark" size={18} color={colors.textInverse} />
-              <Text style={styles.saveBtnText}>Salvar alterações</Text>
-            </>
-          )}
-        </Pressable>
-      </ScrollView>
+          <Pressable
+            style={[styles.saveBtn, saving && styles.btnDisabled]}
+            onPress={onSave}
+            disabled={saving}
+          >
+            {saving ? (
+              <ActivityIndicator color={colors.textInverse} />
+            ) : (
+              <>
+                <Ionicons name="checkmark" size={18} color={colors.textInverse} />
+                <Text style={styles.saveBtnText}>Salvar alterações</Text>
+              </>
+            )}
+          </Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

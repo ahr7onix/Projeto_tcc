@@ -16,8 +16,9 @@ INSERT INTO usuario (nome, email, senha, tipo) VALUES
     ('Maria Oliveira',     'maria.oliveira@email.com',   '$2a$10$KCN6lz1JkKCSywueeO7w.OTS149BPYWvmohLziUm4G7U2khHHrmMq', 'paciente');
 
 -- ---------- Nutricionista ----------
-INSERT INTO nutricionista (id_usuario, crn, especialidade)
-SELECT id_usuario, 'CRN-3/12345', 'Nutrição clínica e diabetes'
+-- Já aprovada: a demonstração precisa de uma nutricionista que entre no painel.
+INSERT INTO nutricionista (id_usuario, crn, especialidade, aprovado_em)
+SELECT id_usuario, 'CRN-3/12345', 'Nutrição clínica e diabetes', NOW()
 FROM usuario WHERE email = 'camila.souza@nutri.com';
 
 -- ---------- Pacientes ----------

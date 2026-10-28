@@ -2,8 +2,13 @@ import { useState, useEffect, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { PageHeader, EmptyState, AlertBanner, Btn } from '../../components/ui'
 import { api, extractError } from '../../lib/api'
-import VincularPacienteModal from '../../components/VincularPacienteModal'
-import { desvincularPaciente } from '../../lib/vinculos'
+import ConvidarPacienteModal from '../../components/ConvidarPacienteModal'
+import {
+  cancelarConvite,
+  desvincularPaciente,
+  listarConvites,
+  type ConviteEnviado,
+} from '../../lib/vinculos'
 import PatientPicker from '../../components/PatientPicker'
 
 interface Paciente {
@@ -41,8 +46,37 @@ export default function PacientesPage() {
   const [busca, setBusca] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [vincularAberto, setVincularAberto] = useState(false)
+  const [convidarAberto, setConvidarAberto] = useState(false)
+  // Os convites pendentes ficam visíveis na própria tela, cada um com o seu
+  // "Cancelar convite" (ideia trazida do PR #7): antes só havia um contador
+  // que abria a janela de convite.
+  const [convitesPendentes, setConvitesPendentes] = useState<ConviteEnviado[]>([])
+  const [cancelandoConviteId, setCancelandoConviteId] = useState<string | null>(null)
   const [desvinculandoId, setDesvinculandoId] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelado = false
+    listarConvites()
+      .then((lista) => {
+        if (!cancelado) setConvitesPendentes(lista)
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelado = true
+    }
+  }, [])
+
+  async function handleCancelarConvite(convite: ConviteEnviado) {
+    try {
+      setCancelandoConviteId(convite.id)
+      await cancelarConvite(convite.id)
+      setConvitesPendentes((atual) => atual.filter((c) => c.id !== convite.id))
+    } catch (err) {
+      setError(extractError(err))
+    } finally {
+      setCancelandoConviteId(null)
+    }
+  }
 
   const fetchPacientes = useCallback(async (q: string, ativo: () => boolean) => {
     setError(null)
@@ -110,11 +144,37 @@ export default function PacientesPage() {
       <PageHeader
         eyebrow="Gerenciamento"
         title={acompanhamento ? 'Acompanhamento' : 'Pacientes'}
-        subtitle={acompanhamento ? 'Selecione um paciente para registrar e acompanhar todas as informações em uma única ficha.' : 'Pacientes vinculados a você. Novos cadastros pelo app mobile aparecem automaticamente aqui.'}
-        action={<Btn onClick={() => setVincularAberto(true)}>+ Vincular paciente</Btn>}
+        subtitle={acompanhamento ? 'Selecione um paciente para registrar e acompanhar todas as informações em uma única ficha.' : 'Pacientes que aceitaram o seu acompanhamento pelo aplicativo.'}
+        action={<Btn onClick={() => setConvidarAberto(true)}>+ Convidar paciente</Btn>}
       />
 
       {error && <div style={{ marginBottom: 16 }}><AlertBanner message={error} /></div>}
+
+      {convitesPendentes.length > 0 && (
+        <div style={caixaConvites}>
+          <div style={tituloConvites}>
+            Convites aguardando resposta ({convitesPendentes.length})
+          </div>
+          {convitesPendentes.map((c) => (
+            <div key={c.id} style={linhaConvite}>
+              <div style={{ flex: 1, minWidth: 0, fontSize: 14, color: 'var(--text)' }}>
+                {c.paciente.nome}{' '}
+                <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>
+                  {c.paciente.email} · enviado em {new Date(c.criadoEm).toLocaleDateString('pt-BR')}
+                </span>
+              </div>
+              <Btn
+                size="sm"
+                variant="secondary"
+                loading={cancelandoConviteId === c.id}
+                onClick={() => handleCancelarConvite(c)}
+              >
+                Cancelar convite
+              </Btn>
+            </div>
+          ))}
+        </div>
+      )}
 
       {}
       {!loading && pacientes.length > 0 && (
@@ -255,22 +315,33 @@ export default function PacientesPage() {
             <EmptyState
               icon={<PatientsIcon />}
               title="Nenhum paciente encontrado"
-              message={busca ? 'Tente um nome diferente.' : 'Clique em "Vincular paciente" para começar a acompanhar alguém.'}
+              message={busca ? 'Tente um nome diferente.' : 'Clique em "Convidar paciente" para começar a acompanhar alguém.'}
             />
           </div>
         )}
       </div>
 
-      {/* A recarga depois de vincular é pontual e não compete com nada, então
-          passa uma guarda sempre ativa. */}
-      {vincularAberto && (
-        <VincularPacienteModal
-          onClose={() => setVincularAberto(false)}
-          onVinculado={() => fetchPacientes(busca, () => true)}
+      {convidarAberto && (
+        <ConvidarPacienteModal
+          onClose={() => setConvidarAberto(false)}
+          onConvitesAlterados={setConvitesPendentes}
         />
       )}
     </div>
   )
+}
+
+const caixaConvites: React.CSSProperties = {
+  marginBottom: 24, padding: '12px 16px',
+  background: 'var(--surface)', border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-md)',
+}
+const tituloConvites: React.CSSProperties = {
+  fontSize: 12, fontWeight: 600, color: 'var(--text-muted)',
+  textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8,
+}
+const linhaConvite: React.CSSProperties = {
+  display: 'flex', alignItems: 'center', gap: 12, padding: '6px 0', flexWrap: 'wrap',
 }
 
 function PatientsIcon() { return <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> }

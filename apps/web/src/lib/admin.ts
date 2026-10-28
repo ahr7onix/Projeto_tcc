@@ -20,7 +20,10 @@ export interface UsuarioAdmin {
   tipo: 'paciente' | 'nutricionista' | 'administrador'
   criadoEm: string
   crn: string | null
+  especialidade: string | null
   perfilCompleto: boolean | null
+  /** Só para nutricionista: o acesso ao painel depende da aprovação. */
+  aprovado: boolean | null
   vinculos: number
 }
 
@@ -70,9 +73,39 @@ export async function obterAnalise(dias = 90): Promise<AnaliseAdmin> {
   return data
 }
 
-export async function listarUsuarios(params: { tipo?: string; busca?: string } = {}): Promise<UsuarioAdmin[]> {
+export async function listarUsuarios(
+  params: { tipo?: string; busca?: string; pendentes?: boolean } = {},
+): Promise<UsuarioAdmin[]> {
   const { data } = await api.get('/admin/usuarios', { params })
   return data.data
+}
+
+/** Libera o painel para um nutricionista, depois de conferir o CRN. */
+export async function aprovarNutricionista(id: string): Promise<void> {
+  await api.patch(`/admin/nutricionistas/${id}/aprovar`)
+}
+
+export interface CadastroNutricionistaPayload {
+  nome: string
+  email: string
+  crn?: string
+  especialidade?: string
+}
+
+export interface CadastroNutricionistaResultado {
+  nutricionista: { id: string; nome: string; email: string; crn: string | null }
+  /** Falso quando o servidor não tem e-mail de verdade configurado. */
+  emailEnviado: boolean
+  /** Só vem fora de produção, para testar sem caixa de e-mail. */
+  linkDefinirSenha?: string
+}
+
+/** A conta já nasce aprovada; a senha, o nutricionista cria pelo link do e-mail. */
+export async function cadastrarNutricionista(
+  payload: CadastroNutricionistaPayload,
+): Promise<CadastroNutricionistaResultado> {
+  const { data } = await api.post('/admin/nutricionistas', payload)
+  return data
 }
 
 export async function removerUsuario(id: string): Promise<void> {

@@ -1,4 +1,5 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { HealthService } from '../health/health.service';
 
 /**
@@ -19,8 +20,11 @@ export class StatusController {
   constructor(private readonly health: HealthService) {}
 
   @Get()
-  async status() {
+  async status(@Res({ passthrough: true }) res: Response) {
     const banco = await this.health.verificarBanco();
+    // O Render só olha o código HTTP. Com 200 e "banco indisponível", uma API
+    // que perdeu o banco seguia marcada como saudável e nunca era reiniciada.
+    res.status(banco === 'connected' ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE);
 
     return {
       status: 'ok',

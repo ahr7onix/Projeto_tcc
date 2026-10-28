@@ -10,11 +10,13 @@ import {
   Select,
   StatTile,
 } from '../../components/ui'
+import CadastrarNutricionistaModal from '../../components/CadastrarNutricionistaModal'
 import GraficoBarras, { type BarraDados } from '../../components/GraficoBarras'
 import GraficoLinha from '../../components/GraficoLinha'
 import { useAuth } from '../../contexts/AuthContext'
 import { extractError } from '../../lib/api'
 import {
+  aprovarNutricionista,
   listarUsuarios,
   obterAnalise,
   obterMetricas,
@@ -57,15 +59,23 @@ function formatarData(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR')
 }
 
+/** O CRN costuma ser digitado já com a sigla ("CRN-3/12345"); não repete. */
+function rotuloCrn(crn: string): string {
+  return /^crn/i.test(crn.trim()) ? crn.trim() : `CRN ${crn.trim()}`
+}
+
 export default function AdminPage() {
   const { user } = useAuth()
   const [metricas, setMetricas] = useState<MetricasAdmin | null>(null)
   const [analise, setAnalise] = useState<AnaliseAdmin | null>(null)
   const [usuarios, setUsuarios] = useState<UsuarioAdmin[]>([])
+  const [pendentes, setPendentes] = useState<UsuarioAdmin[]>([])
   const [tipo, setTipo] = useState('')
   const [busca, setBusca] = useState('')
   const [loading, setLoading] = useState(true)
   const [removendoId, setRemovendoId] = useState<string | null>(null)
+  const [aprovandoId, setAprovandoId] = useState<string | null>(null)
+  const [cadastrando, setCadastrando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
   const ehAdmin = user?.role === 'administrador'
@@ -76,15 +86,17 @@ export default function AdminPage() {
     try {
       setLoading(true)
       setErro(null)
-      const [m, u, an] = await Promise.all([
+      const [m, u, an, p] = await Promise.all([
         obterMetricas(),
         listarUsuarios({ tipo: tipo || undefined, busca: busca || undefined }),
         obterAnalise(90),
+        listarUsuarios({ pendentes: true }),
       ])
       if (!ativo()) return
       setMetricas(m)
       setUsuarios(u)
       setAnalise(an)
+      setPendentes(p)
     } catch (err) {
       if (ativo()) setErro(extractError(err))
     } finally {
@@ -108,19 +120,37 @@ export default function AdminPage() {
     }
   }, [carregar, ehAdmin, busca])
 
-  async function excluir(u: UsuarioAdmin) {
-    const aviso =
-      u.tipo === 'paciente'
-        ? 'Todos os registros clínicos, planos e mensagens deste paciente serão apagados permanentemente.'
-        : 'Os vínculos e conteúdos vinculados a este usuário serão afetados.'
+  async function aprovar(u: UsuarioAdmin) {
+    try {
+      setAprovandoId(u.id)
+      setErro(null)
+      await aprovarNutricionista(u.id)
+      setPendentes((atual) => atual.filter((x) => x.id !== u.id))
+      setUsuarios((atual) => atual.map((x) => (x.id === u.id ? { ...x, aprovado: true } : x)))
+    } catch (err) {
+      setErro(extractError(err))
+    } finally {
+      setAprovandoId(null)
+    }
+  }
 
-    if (!window.confirm(`Remover ${u.nome}?\n\n${aviso}\n\nEsta ação não pode ser desfeita.`)) return
+  async function excluir(u: UsuarioAdmin, recusandoCadastro = false) {
+    const pergunta = recusandoCadastro
+      ? `Recusar o cadastro de ${u.nome}?\n\nA conta é removida e a pessoa não entra no painel.`
+      : `Remover ${u.nome}?\n\n${
+          u.tipo === 'paciente'
+            ? 'Todos os registros clínicos, planos e mensagens deste paciente serão apagados permanentemente.'
+            : 'Os vínculos e conteúdos vinculados a este usuário serão afetados.'
+        }\n\nEsta ação não pode ser desfeita.`
+
+    if (!window.confirm(pergunta)) return
 
     try {
       setRemovendoId(u.id)
       setErro(null)
       await removerUsuario(u.id)
       setUsuarios((atual) => atual.filter((x) => x.id !== u.id))
+      setPendentes((atual) => atual.filter((x) => x.id !== u.id))
       obterMetricas().then(setMetricas).catch(() => undefined)
     } catch (err) {
       setErro(extractError(err))
@@ -150,9 +180,57 @@ export default function AdminPage() {
         eyebrow="Sistema"
         title="Administração"
         subtitle="Gestão de usuários e visão geral da plataforma."
+        action={<Btn onClick={() => setCadastrando(true)}>+ Cadastrar nutricionista</Btn>}
       />
 
       {erro && <AlertBanner message={erro} />}
+
+      {/* Antes dos números: é o único bloco da tela que espera uma ação. O CRN
+          não tem consulta pública automatizada, então a conferência é manual. */}
+      {pendentes.length > 0 && (
+        <Card
+          title="Aguardando aprovação"
+          subtitle="Confira o CRN no site do conselho regional antes de aprovar. Só depois disso a pessoa entra no painel."
+          style={{ marginBottom: 24 }}
+        >
+          {pendentes.map((u, i) => (
+            <div
+              key={u.id}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+                padding: '12px 0',
+                borderTop: i > 0 ? '1px solid var(--border)' : 'none',
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 220 }}>
+                <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>{u.nome}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                  {u.email} · cadastro em {formatarData(u.criadoEm)}
+                </div>
+              </div>
+              <div style={{ fontSize: 13, color: u.crn ? 'var(--text)' : 'var(--warning)', minWidth: 160 }}>
+                {u.crn ? rotuloCrn(u.crn) : 'CRN não informado'}
+                {u.especialidade && (
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{u.especialidade}</div>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <Btn
+                  variant="ghost"
+                  size="sm"
+                  loading={removendoId === u.id}
+                  onClick={() => excluir(u, true)}
+                >
+                  Recusar
+                </Btn>
+                <Btn size="sm" loading={aprovandoId === u.id} onClick={() => aprovar(u)}>
+                  Aprovar
+                </Btn>
+              </div>
+            </div>
+          ))}
+        </Card>
+      )}
 
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 24 }}>
         <StatTile
@@ -365,11 +443,13 @@ export default function AdminPage() {
 
               <Badge label={u.tipo} tint={TINT_TIPO[u.tipo] ?? 'primary'} />
 
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: 12, color: u.aprovado === false ? 'var(--warning)' : 'var(--text-muted)' }}>
                 {u.tipo === 'nutricionista'
-                  ? u.crn
-                    ? `CRN ${u.crn}`
-                    : 'CRN pendente'
+                  ? u.aprovado === false
+                    ? 'Aguardando aprovação'
+                    : u.crn
+                      ? rotuloCrn(u.crn)
+                      : 'CRN pendente'
                   : u.tipo === 'paciente'
                     ? `${u.vinculos} vínculo(s)`
                     : '—'}
@@ -394,6 +474,13 @@ export default function AdminPage() {
           ))
         )}
       </div>
+
+      {cadastrando && (
+        <CadastrarNutricionistaModal
+          onClose={() => setCadastrando(false)}
+          onCadastrado={() => carregar()}
+        />
+      )}
     </div>
   )
 }

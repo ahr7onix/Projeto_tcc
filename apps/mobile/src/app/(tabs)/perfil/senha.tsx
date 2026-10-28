@@ -4,6 +4,7 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -62,83 +63,85 @@ export default function AlterarSenhaScreen() {
         </View>
       </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.card}>
-          <View style={styles.field}>
-            <Text style={styles.label}>Senha atual</Text>
-            <View style={styles.inputWrap}>
-              <TextInput
-                value={senhaAtual}
-                onChangeText={setSenhaAtual}
-                style={styles.input}
-                secureTextEntry={!showAtual}
-                placeholder="••••••••"
-                placeholderTextColor={colors.textMuted}
-              />
-              <Pressable onPress={() => setShowAtual(!showAtual)} style={styles.eyeBtn}>
-                <Ionicons name={showAtual ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.textMuted} />
-              </Pressable>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+        <ScrollView keyboardShouldPersistTaps="handled" style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <View style={styles.card}>
+            <View style={styles.field}>
+              <Text style={styles.label}>Senha atual</Text>
+              <View style={styles.inputWrap}>
+                <TextInput
+                  value={senhaAtual}
+                  onChangeText={setSenhaAtual}
+                  style={styles.input}
+                  secureTextEntry={!showAtual}
+                  placeholder="••••••••"
+                  placeholderTextColor={colors.textMuted}
+                />
+                <Pressable onPress={() => setShowAtual(!showAtual)} style={styles.eyeBtn} hitSlop={12}>
+                  <Ionicons name={showAtual ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.textMuted} />
+                </Pressable>
+              </View>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Nova senha</Text>
+              <View style={styles.inputWrap}>
+                <TextInput
+                  value={novaSenha}
+                  onChangeText={setNovaSenha}
+                  style={styles.input}
+                  secureTextEntry={!showNova}
+                  placeholder="Mínimo 6 caracteres"
+                  placeholderTextColor={colors.textMuted}
+                />
+                <Pressable onPress={() => setShowNova(!showNova)} style={styles.eyeBtn} hitSlop={12}>
+                  <Ionicons name={showNova ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.textMuted} />
+                </Pressable>
+              </View>
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Confirmar nova senha</Text>
+              <View style={styles.inputWrap}>
+                <TextInput
+                  value={confirmar}
+                  onChangeText={setConfirmar}
+                  style={[styles.input, confirmar && confirmar !== novaSenha && styles.inputError]}
+                  secureTextEntry={!showNova}
+                  placeholder="Repita a nova senha"
+                  placeholderTextColor={colors.textMuted}
+                />
+                {confirmar !== '' && (
+                  <View style={styles.eyeBtn}>
+                    <Ionicons
+                      name={confirmar === novaSenha ? 'checkmark-circle' : 'close-circle'}
+                      size={18}
+                      color={confirmar === novaSenha ? colors.success : colors.danger}
+                    />
+                  </View>
+                )}
+              </View>
             </View>
           </View>
 
-          <View style={styles.divider} />
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Nova senha</Text>
-            <View style={styles.inputWrap}>
-              <TextInput
-                value={novaSenha}
-                onChangeText={setNovaSenha}
-                style={styles.input}
-                secureTextEntry={!showNova}
-                placeholder="Mínimo 6 caracteres"
-                placeholderTextColor={colors.textMuted}
-              />
-              <Pressable onPress={() => setShowNova(!showNova)} style={styles.eyeBtn}>
-                <Ionicons name={showNova ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.textMuted} />
-              </Pressable>
-            </View>
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Confirmar nova senha</Text>
-            <View style={styles.inputWrap}>
-              <TextInput
-                value={confirmar}
-                onChangeText={setConfirmar}
-                style={[styles.input, confirmar && confirmar !== novaSenha && styles.inputError]}
-                secureTextEntry={!showNova}
-                placeholder="Repita a nova senha"
-                placeholderTextColor={colors.textMuted}
-              />
-              {confirmar !== '' && (
-                <View style={styles.eyeBtn}>
-                  <Ionicons
-                    name={confirmar === novaSenha ? 'checkmark-circle' : 'close-circle'}
-                    size={18}
-                    color={confirmar === novaSenha ? colors.success : colors.danger}
-                  />
-                </View>
-              )}
-            </View>
-          </View>
-        </View>
-
-        <Pressable
-          style={[styles.saveBtn, saving && styles.btnDisabled]}
-          onPress={onSave}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator color={colors.textInverse} />
-          ) : (
-            <>
-              <Ionicons name="lock-closed" size={16} color={colors.textInverse} />
-              <Text style={styles.saveBtnText}>Alterar senha</Text>
-            </>
-          )}
-        </Pressable>
-      </ScrollView>
+          <Pressable
+            style={[styles.saveBtn, saving && styles.btnDisabled]}
+            onPress={onSave}
+            disabled={saving}
+          >
+            {saving ? (
+              <ActivityIndicator color={colors.textInverse} />
+            ) : (
+              <>
+                <Ionicons name="lock-closed" size={16} color={colors.textInverse} />
+                <Text style={styles.saveBtnText}>Alterar senha</Text>
+              </>
+            )}
+          </Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
