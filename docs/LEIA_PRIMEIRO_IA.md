@@ -61,6 +61,8 @@ e avise a equipe antes.
   `useSafeAreaInsets` da barra de abas.
 - **APK:** não troque `slug`, `owner`, `extra.eas.projectId` nem `android.package` no
   `apps/mobile/app.json`. Eles ligam o app ao projeto do Expo, onde está a chave de assinatura.
+  O SHA-1 dessa chave está cadastrado no Google Cloud para o login com Google do APK; chave
+  nova exige cadastrar o SHA-1 novo (`docs/LOGIN_GOOGLE.md`, "APK (Android)").
   Como gerar: `docs/PUBLICAR.md`, "APK do aplicativo".
 - **Dados de demonstração:** só existem se o banco for preparado com `SEED_DEMO=true`.
 
@@ -82,7 +84,8 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
   (`nutricare-tcc-painel.onrender.com`), com e-mail pelo Brevo e login Google em cliente próprio.
   A cópia do `render.yaml` continua sem e-mail.
 - APK de demonstração gerado pelo EAS Build (`apps/mobile/eas.json`, perfil `preview`) e testado
-  num Android de verdade. Falta o login com Google dentro do APK.
+  num Android de verdade. O login com Google do APK (Google Sign-In nativo) está no código e
+  ainda precisa ser conferido no celular, no próximo APK.
 
 ## Em andamento
 

@@ -26,9 +26,11 @@ import {
   useLoginGoogle,
 } from '@/hooks/use-auth';
 import {
+  entrarComGoogleNativo,
   isGoogleAuthConfigured,
   mountGoogleWebButton,
   useNativeGoogleAuthRequest,
+  usaGoogleNativo,
 } from '@/lib/google-sign-in';
 import {
   cadastroSchema,
@@ -178,6 +180,11 @@ export function LoginForm({ initialMode = 'login' }: Props) {
       return;
     }
     try {
+      if (usaGoogleNativo()) {
+        const idToken = await entrarComGoogleNativo();
+        if (idToken) submitGoogleToken(idToken);
+        return;
+      }
       await promptGoogle();
     } catch (err) {
       setGoogleError(

@@ -2,6 +2,23 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-28 — Login com Google no APK
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/login-google-apk`
+- O que foi adicionado: no APK do Android o botão "Continuar com Google" usa o Google Sign-In
+  nativo (`@react-native-google-signin/google-signin`, que já estava instalado e sem uso).
+  Cliente "NutriCare - App Android" no projeto `nutricare-tcc` do Google Cloud, com o pacote e
+  o SHA-1 da chave do APK.
+- O que foi modificado: `eas.json` passa o Client ID web da segunda cópia para o APK. No Expo Go,
+  no iPhone e no navegador nada muda.
+- Arquivos principais: `apps/mobile/src/lib/google-sign-in.ts`,
+  `apps/mobile/src/components/auth/LoginForm.tsx`, `apps/mobile/eas.json`,
+  `docs/LOGIN_GOOGLE.md`.
+- Atenção para quem vier depois: o token sai em nome do Client ID web, então a API não mudou.
+  O módulo é carregado só na hora do login, porque no Expo Go ele quebra assim que é importado.
+  Conferido só até o pacote JavaScript do Android (`expo export`); falta testar no celular com o
+  próximo APK.
+
 ## 2026-10-28 — Painel mais leve para o servidor (central e tela Início)
 - Quem: Natan, com apoio de IA
 - PR/branch: `perf/painel-polling` (criada em cima de `fix/travamento-login`)
