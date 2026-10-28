@@ -2,6 +2,25 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-28 — Teclado e barra de abas no Android; aviso da própria mensagem no painel
+- Quem: Natan, com apoio de IA
+- PR/branch: `fix/teclado-e-aviso-de-mensagem`
+- O que foi modificado:
+  - App: no Android o teclado cobria o campo de digitar e o botão de enviar. Com o app ocupando a
+    tela inteira (edge-to-edge, Expo 54), o sistema não encolhe mais a tela; agora o
+    `ScreenContainer` e as telas de login, primeiro acesso do paciente, esqueci a senha, conversa e
+    perfil (editar, senha, excluir) abrem o espaço com `KeyboardAvoidingView`
+    (`behavior="padding"`) também no Android.
+  - App: a barra de abas ficava atrás dos botões do Android (◁ ○ □). Ela passa a somar a altura
+    da barra do sistema (`useSafeAreaInsets`). No iPhone e no navegador nada muda.
+  - Painel: a nutricionista recebia "Nova mensagem de ..." com o próprio nome ao enviar uma
+    mensagem, porque o servidor manda o evento para os dois lados da conversa. O aviso agora
+    ignora mensagem própria.
+- Arquivos principais: `apps/mobile/src/components/ScreenContainer.tsx`,
+  `apps/mobile/src/app/(tabs)/_layout.tsx`, `apps/web/src/components/NotificationCenter.tsx`.
+- Atenção para quem vier depois: nas telas de perfil o diff é quase todo indentação (use
+  `git diff -w`). Conferido num Android de verdade com navegação de 3 botões, pelo Expo Go.
+
 ## 2026-10-27 — Login com Google próprio na segunda cópia
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/render-tcc-google`

@@ -54,6 +54,10 @@ e avise a equipe antes.
   credencial no Google sem a equipe, e nunca coloque a chave secreta do cliente no repositório.
   O `render-tcc.yaml` usa outro ID de propósito: é o cliente da segunda cópia, em outra conta.
 - **App mobile:** em `EXPO_PUBLIC_API_URL` use o IP da máquina na rede, não `localhost`.
+- **Android ocupa a tela inteira (edge-to-edge):** o teclado e a barra do sistema ficam por cima
+  do app. Tela nova com campo de digitar vai dentro do `ScreenContainer` ou de um
+  `KeyboardAvoidingView` com `behavior="padding"` (também no Android). Não tire a soma de
+  `useSafeAreaInsets` da barra de abas.
 - **Dados de demonstração:** só existem se o banco for preparado com `SEED_DEMO=true`.
 
 ## O que já está feito
@@ -89,6 +93,9 @@ Bugs pequenos, podem ser corrigidos:
 - O token de acesso continua valendo até expirar (15 min) depois de desativar a conta ou trocar a
   senha.
 - Os testes automáticos escrevem erros falsos no `logs/` real da API.
+- App em celular estreito (360 de largura): a barra de abas corta "Alimentação" e "Mensagens".
+- App: "Gerenciar" (Saúde e Alimentação), "Esqueceu a senha?" e o olho de mostrar a senha têm
+  área de toque pequena (menos de 32 px de altura, sem `hitSlop`).
 
 Limitações assumidas pela equipe (seção 1.8 da documentação): parâmetros clínicos ainda sem
 validação da Nutrição, CRN conferido à mão, e-mail depende de SMTP configurado, ambiente
