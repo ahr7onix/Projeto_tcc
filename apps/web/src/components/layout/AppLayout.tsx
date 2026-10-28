@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { contarNaoLidas } from '../../lib/mensagens'
+import { repetirEnquantoVisivel } from '../../lib/polling'
 import { useAuth } from '../../contexts/AuthContext'
 import NotificationCenter from '../NotificationCenter'
 import s from './AppLayout.module.css'
@@ -84,15 +85,15 @@ export default function AppLayout() {
   const grupos = user?.role === 'administrador' ? NAV_ADMINISTRADOR : NAV_NUTRICIONISTA
   const rotuloPerfil = ROTULO_PERFIL[user?.role ?? ''] ?? 'Nutricionista'
 
-  // contador de mensagens não lidas: atualiza ao trocar de tela e a cada minuto
+  // contador de mensagens não lidas: atualiza ao trocar de tela e a cada minuto (só com a aba visível)
   const temConversas = user?.role === 'nutricionista'
   useEffect(() => {
     if (!temConversas) return
     let ativo = true
     const buscar = () => contarNaoLidas().then(n => ativo && setNaoLidas(n)).catch(() => {})
     buscar()
-    const timer = setInterval(buscar, 60_000)
-    return () => { ativo = false; clearInterval(timer) }
+    const parar = repetirEnquantoVisivel(buscar, 60_000)
+    return () => { ativo = false; parar() }
   }, [temConversas, pathname])
   const badges: Record<string, number> = { '/mensagens': naoLidas }
 

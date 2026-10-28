@@ -2,6 +2,20 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-28 — Barra lateral nova do painel web (PR #10)
+- Quem: equipe, com apoio de IA
+- PR/branch: #10, `feat/sidebar-redesign` (atualizada com a `main` de 28/10)
+- O que foi adicionado: contador de mensagens não lidas no item "Mensagens" (bolinha quando o
+  menu está recolhido). A consulta usa `repetirEnquantoVisivel` (`lib/polling.ts`): a cada 60 s e
+  só com a aba visível, no mesmo padrão da decisão de desempenho de 28/10.
+- O que foi modificado: topo da barra (agora mostra o perfil de quem está logado), grupos
+  separados por fio, item ativo com ícone em quadrado azul, rodapé com "Recolher menu" e
+  "Sair da conta".
+- O que foi removido: ícone e nome "NutriCare / Painel clínico" do topo da barra lateral.
+- Arquivos principais: `apps/web/src/components/layout/AppLayout.tsx` e `AppLayout.module.css`.
+- Atenção para quem vier depois: a barra do topo no celular ainda mostra "NutriCare". O contador
+  só vale para nutricionista (administrador não tem conversas).
+
 ## 2026-10-28 — Painel mais leve para o servidor (central e tela Início)
 - Quem: Natan, com apoio de IA
 - PR/branch: `perf/painel-polling` (criada em cima de `fix/travamento-login`)
@@ -176,15 +190,6 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   tirar isso exigiria reescrever histórico com force-push. Commits novos saem sem rodapé.
 - Atenção para quem vier depois: antes de mexer em qualquer coisa, leia as regras de "não mexa".
 
-## 2026-10-27 — Barra lateral nova do painel web (PR #10, aberto)
-- Quem: equipe, com apoio de IA
-- PR/branch: #10, `feat/sidebar-redesign`
-- O que foi adicionado: contador de mensagens não lidas no item "Mensagens".
-- O que foi modificado: topo da barra (agora mostra o perfil), grupos separados por fio, item
-  ativo com ícone em quadrado azul, rodapé com "Recolher menu" e "Sair da conta".
-- O que foi removido: ícone e nome "NutriCare / Painel clínico" do topo da barra lateral.
-- Arquivos principais: `apps/web/src/components/layout/AppLayout.tsx` e `AppLayout.module.css`.
-- Atenção para quem vier depois: a barra do topo no celular ainda mostra "NutriCare".
 
 ## 2026-10-27 — Convite de vínculo (PR #7, fechado; entrou na main por outro caminho)
 - Quem: equipe, com apoio de IA
