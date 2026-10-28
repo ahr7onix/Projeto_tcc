@@ -51,7 +51,8 @@ exata.
 se corrija antes o travamento do login (item 2.1)**. Hoje, uns 15 logins no
 mesmo instante (uma turma apertando "Entrar" junto, ou os aplicativos renovando
 a sessão quando o servidor acorda) **congelam a API até alguém reiniciá-la**, e
-o Render não percebe sozinho.
+o Render não percebe sozinho. *(Corrigido logo depois desta análise, na branch
+`fix/travamento-login`: ver o fim do item 2.1.)*
 
 Fora isso, o gargalo não são os pacientes, é o **painel da nutricionista**:
 
@@ -145,6 +146,16 @@ simultâneas passaram e a API seguiu respondendo**. Com 30 logins, 4 voltaram 50
 conexão (o bcrypt de 30 logins em 0,1 CPU leva ~30 s); o certo é traduzir esse
 erro em `503` e usar um tempo limite de 15 a 30 s. Vale também o `/status`
 devolver `503` quando o banco não responde, para o Render reiniciar o serviço.
+
+**Situação: corrigido** na branch `fix/travamento-login`, nos quatro pontos e com
+`connectionTimeoutMillis` de 15 s. O `/status` passou a devolver `503` sem banco
+(item 2.5). Conferido no "Render" com o código final: 15 e 30 logins simultâneos
+e 30 renovações simultâneas, todos com `200`, e o banco seguiu respondendo.
+Derrubando o banco, o `/status` respondeu `503` em 3 s e voltou a `200` sozinho
+quando o banco voltou. O `auth.service.spec.ts` repete o cenário com um pool de
+uma conexão só, e falha no código antigo. O erro de tempo limite do pool ainda
+sai como `500`: traduzir para `503` mexeria no `AllExceptionsFilter`, que está
+na lista de "não mexa".
 
 ### 2.2 [ALTO] O painel consulta a API a cada 5 s, em qualquer tela e com a aba escondida
 
@@ -462,7 +473,8 @@ verdade, as correções da seção 5 são o que separa "funciona" de "trava".
 1. **Corrigir o travamento do pool (2.1).** São quatro pontos do
    `auth.service.ts` (`issueSession`, `refresh`, cadastro e login com Google) e
    uma linha no pool. O modo `travamento` do script confere a correção. De
-   quebra, `/status` devolvendo `503` sem banco (2.5).
+   quebra, `/status` devolvendo `503` sem banco (2.5). **Feito** em
+   `fix/travamento-login`.
 2. **Central de notificações: de 5 s para 30–60 s**, parando quando a aba está
    escondida (`document.visibilityState`) e sem disparar uma rodada nova com a
    anterior em andamento (2.2 e 2.4). Só espaçar não resolve a banda: o
