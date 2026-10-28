@@ -37,6 +37,7 @@ e avise a equipe antes.
 | `JwtAuthGuard`, `RolesGuard` e os `@Roles(...)` dos controllers | Afrouxar abre dado de um perfil para outro. Paciente só vê os próprios dados. |
 | Faixas de glicemia (`apps/api/src/common/glicemia`) e fórmulas de nutrição (`apps/api/src/common/nutricao`) | É regra clínica. Só muda com validação do curso de Nutrição (`docs/CONFERENCIA_NUTRICAO.md`). Os alimentos do seed (`fonte = 'exemplo'`) são aproximados. |
 | `AllExceptionsFilter` (formato das respostas de erro) | O painel e o app leem as mensagens de erro nesse formato. |
+| Conexão presa do pool (`pool.connect()`) | Quem segura um `client` não pode chamar `this.pool` (nem serviço que use o pool) antes do `release()`. O pool tem 10 conexões: com ~15 pedidos juntos, todas ficavam presas esperando uma segunda e a API parava de falar com o banco até ser reiniciada. Já aconteceu no login e na renovação de sessão; o `auth.service.spec.ts` testa com um pool de uma conexão só. |
 | Exclusão de conta feita pelo paciente (`desativado_em`) | É suave de propósito: não troque por `DELETE`, o histórico de saúde precisa ficar. (A remoção feita pelo administrador é definitiva, e isso também é intencional.) |
 | Plano alimentar "ativo" | É calculado pelas datas de início e fim, não por coluna. Criar plano novo encerra o anterior. |
 | Raiz do repositório sem npm workspaces | O Render instala cada serviço isolado pelo `rootDir`. Workspaces quebram o deploy. |
@@ -89,14 +90,8 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
 
 ## Pendências conhecidas
 
-Corrigir antes da banca (detalhe e correção testada em `docs/ANALISE_DESEMPENHO.md`):
+Corrigir antes da banca (detalhe em `docs/ANALISE_DESEMPENHO.md`):
 
-- **Travamento da API no login:** `issueSession` e `refresh` (`auth.service.ts`) seguram uma
-  conexão do pool e pedem outra (`toPublicUser`) antes de soltar a primeira. Com ~15 logins ou
-  renovações de sessão juntos, as 10 conexões ficam presas e a API para de falar com o banco até
-  ser reiniciada. O `/status` continua respondendo 200, então o Render não reinicia sozinho.
-  Regra para código novo: nunca chamar `this.pool` (nem serviço que use o pool) enquanto segura
-  um `client` de `pool.connect()`.
 - **Painel pesado demais para o servidor gratuito:** a central de notificações busca 3 rotas a
   cada 5 s em toda tela (`NotificationCenter.tsx`), e a Início baixa todas as glicemias de 90
   dias de todos os pacientes a cada 30 s (`HomePage.tsx`, 10,8 MB com 50 pacientes). Com o

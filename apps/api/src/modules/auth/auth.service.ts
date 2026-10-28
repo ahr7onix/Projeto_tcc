@@ -93,6 +93,7 @@ export class AuthService {
     const nome = dto.nome.trim().replace(/\s+/g, ' ');
 
     const client = await this.pool.connect();
+    let user: UserRow;
     try {
       await client.query('BEGIN');
 
@@ -113,7 +114,7 @@ export class AuthService {
          RETURNING id_usuario, nome, email, senha, tipo`,
         [nome, email, senhaHash, papel],
       );
-      const user = inserted.rows[0];
+      user = inserted.rows[0];
 
       if (papel === 'paciente') {
         const dataNascimento = this.parseBrDate(dto.dataNascimento);
@@ -136,8 +137,6 @@ export class AuthService {
       }
 
       await client.query('COMMIT');
-      if (papel === 'nutricionista') return AGUARDANDO_APROVACAO;
-      return this.issueSession(user);
     } catch (err) {
       await client.query('ROLLBACK').catch(() => undefined);
       // A checagem acima resolve o caso comum; a restricao do banco resolve a
@@ -152,6 +151,10 @@ export class AuthService {
     } finally {
       client.release();
     }
+
+    if (papel === 'nutricionista') return AGUARDANDO_APROVACAO;
+    // Fora da transação: a sessão usa o pool (ver issueSession).
+    return this.issueSession(user);
   }
 
   async login(dto: LoginDto): Promise<AuthResponse> {
@@ -218,6 +221,8 @@ export class AuthService {
       const nome = payload.name || 'Usuário Google';
 
       const client = await this.pool.connect();
+      let user: UserRow;
+      let criadoAgora: boolean;
       try {
         await client.query('BEGIN');
 
@@ -226,9 +231,9 @@ export class AuthService {
           [email]
         );
 
-        let user = result.rows[0];
+        user = result.rows[0];
         if (user) this.recusarSeDesativada(user);
-        const criadoAgora = !user;
+        criadoAgora = !user;
 
         if (!user) {
           const randomPass = randomBytes(16).toString('hex');
@@ -260,12 +265,6 @@ export class AuthService {
         }
 
         await client.query('COMMIT');
-        // Pelo Google vale a mesma regra do cadastro por e-mail: quem acabou
-        // de criar a conta de nutricionista ouve "aguardando aprovação"; quem
-        // já tinha conta e ainda não foi aprovado recebe a mesma recusa do login.
-        if (criadoAgora && user.tipo === 'nutricionista') return AGUARDANDO_APROVACAO;
-        await this.recusarSeNaoAprovado(user);
-        return this.issueSession(user);
       } catch (err) {
         await client.query('ROLLBACK').catch(() => undefined);
         if (ehEmailDuplicado(err)) {
@@ -277,12 +276,21 @@ export class AuthService {
       } finally {
         client.release();
       }
+
+      // Pelo Google vale a mesma regra do cadastro por e-mail: quem acabou
+      // de criar a conta de nutricionista ouve "aguardando aprovação"; quem
+      // já tinha conta e ainda não foi aprovado recebe a mesma recusa do login.
+      // Fora da transação, porque as duas consultas usam o pool (ver issueSession).
+      if (criadoAgora && user.tipo === 'nutricionista') return AGUARDANDO_APROVACAO;
+      await this.recusarSeNaoAprovado(user);
+      return this.issueSession(user);
     }
   }
 
   async refresh(refreshToken: string): Promise<AuthResponse> {
     const tokenHash = this.hashToken(refreshToken);
     const client = await this.pool.connect();
+    let renovada: { user: UserRow; refreshToken: string };
     try {
       await client.query('BEGIN');
       const result = await client.query<{
@@ -324,19 +332,20 @@ export class AuthService {
 
       const session = await this.createRefreshToken(client, user.id_usuario, row.id_token);
       await client.query('COMMIT');
-
-      const accessToken = this.signAccessToken(user);
-      return {
-        user: await this.toPublicUser(user),
-        accessToken,
-        refreshToken: session.token,
-      };
+      renovada = { user, refreshToken: session.token };
     } catch (err) {
       await client.query('ROLLBACK').catch(() => undefined);
       throw err;
     } finally {
       client.release();
     }
+
+    // Só depois de devolver a conexão: o toPublicUser consulta o pool (ver issueSession).
+    return {
+      user: await this.toPublicUser(renovada.user),
+      accessToken: this.signAccessToken(renovada.user),
+      refreshToken: renovada.refreshToken,
+    };
   }
 
   async logout(refreshToken: string): Promise<void> {
@@ -495,19 +504,20 @@ export class AuthService {
     return { message: 'Senha atualizada com sucesso. Você já pode entrar.', perfil };
   }
 
+  /**
+   * Sem `pool.connect()`: segurar uma conexão aqui enquanto o `toPublicUser`
+   * pedia outra prendia o pool inteiro com ~15 logins simultâneos, e a API
+   * parava de falar com o banco até ser reiniciada
+   * (docs/ANALISE_DESEMPENHO.md, item 2.1). Quem chama também não pode estar
+   * segurando conexão.
+   */
   private async issueSession(user: UserRow): Promise<AuthResponse> {
-    const client = await this.pool.connect();
-    try {
-      const session = await this.createRefreshToken(client, user.id_usuario, null);
-      const accessToken = this.signAccessToken(user);
-      return {
-        user: await this.toPublicUser(user),
-        accessToken,
-        refreshToken: session.token,
-      };
-    } finally {
-      client.release();
-    }
+    const session = await this.createRefreshToken(this.pool, user.id_usuario, null);
+    return {
+      user: await this.toPublicUser(user),
+      accessToken: this.signAccessToken(user),
+      refreshToken: session.token,
+    };
   }
 
   private async createRefreshToken(

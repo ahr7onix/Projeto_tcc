@@ -2,6 +2,29 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-28 — Travamento da API com logins simultâneos
+- Quem: Natan, com apoio de IA
+- PR/branch: `fix/travamento-login` (criada em cima de `docs/analise-desempenho`)
+- O que foi adicionado: `auth.service.spec.ts`, que faz login, renovação de sessão, cadastro e
+  login com Google num pool de uma conexão só e falha se alguém pedir uma segunda conexão
+  segurando a primeira. Linha nova no "NÃO MEXA" do `LEIA_PRIMEIRO_IA.md` sobre isso.
+- O que foi modificado:
+  - `auth.service.ts`: o `issueSession` grava o refresh token direto pelo pool, e a renovação, o
+    cadastro e o login com Google só montam a sessão depois de soltar a conexão da transação.
+    Antes, com ~15 logins ou renovações juntos, as 10 conexões ficavam presas esperando uma
+    segunda e a API parava de falar com o banco até ser reiniciada.
+  - `database.module.ts`: `connectionTimeoutMillis` de 15 s; pool esgotado vira erro em vez de
+    espera sem fim.
+  - `status.controller.ts`: `/status` responde 503 quando o banco não responde (o corpo é o
+    mesmo). É o `healthCheckPath` do Render, que só olha o código HTTP.
+- Arquivos principais: `apps/api/src/modules/auth/auth.service.ts`,
+  `apps/api/src/database/database.module.ts`, `apps/api/src/modules/status/status.controller.ts`.
+- Atenção para quem vier depois: conferido num contêiner com 0,1 CPU (igual ao Render gratuito)
+  com `node scripts/carga/teste-carga.mjs travamento --n 30`: 30 logins e 30 renovações
+  simultâneos passaram. O erro de tempo limite do pool ainda sai como 500 (traduzir para 503
+  mexeria no `AllExceptionsFilter`). Com o banco fora, o Render agora marca a API como fora do
+  ar e pode reiniciá-la.
+
 ## 2026-10-28 — Análise de desempenho e concorrência
 - Quem: Natan, com apoio de IA
 - PR/branch: `docs/analise-desempenho` (criada em cima de `docs/analise-seguranca-lgpd`)
