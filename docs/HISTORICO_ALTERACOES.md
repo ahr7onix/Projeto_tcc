@@ -2,6 +2,40 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-28 — Análise de desempenho e concorrência
+- Quem: Natan, com apoio de IA
+- PR/branch: `docs/analise-desempenho` (criada em cima de `docs/analise-seguranca-lgpd`)
+- O que foi adicionado: `docs/ANALISE_DESEMPENHO.md` (desempenho da API, banco, painel, app e
+  hospedagem, com testes de carga e projeções); `scripts/carga/teste-carga.mjs` (teste de carga
+  sem dependências: rota a rota, pessoas usando ao mesmo tempo, SSE e travamento do login) e
+  `scripts/carga/popular-carga.sql` (1.000 pacientes com 90 dias de uso, só para banco
+  descartável).
+- O que foi modificado: só documentação (este histórico e as pendências do
+  `LEIA_PRIMEIRO_IA.md`). Nenhuma mudança no código da aplicação.
+- Arquivos principais: `docs/ANALISE_DESEMPENHO.md`, `scripts/carga/`.
+- Atenção para quem vier depois: achado crítico — ~15 logins ou renovações de sessão
+  simultâneos travam a API até reiniciar (pool de conexões preso no `auth.service.ts`); a
+  correção está descrita e foi testada, mas não entrou neste PR. O painel é o que mais pesa no
+  servidor gratuito (polling de 5 s e a Início com 10,8 MB a cada 30 s). Os testes rodaram num
+  banco Postgres isolado e num contêiner com 0,1 CPU imitando o Render gratuito; nada tocou o
+  banco publicado.
+
+## 2026-10-28 — Análise de segurança, redes e LGPD
+- Quem: Natan, com apoio de IA
+- PR/branch: `docs/analise-seguranca-lgpd`
+- O que foi adicionado: `docs/ANALISE_SEGURANCA_LGPD.md` — análise da API, painel, app,
+  infraestrutura e conformidade LGPD. Metodologia: leitura do backend, 86 testes ativos contra
+  uma cópia local da API com banco Postgres isolado (criado e descartado só para o teste),
+  verificações passivas no deploy do time, `npm audit` e levantamento regulatório.
+- O que foi modificado: só documentação (este histórico e a lista de pendências do
+  `LEIA_PRIMEIRO_IA.md`). Nenhuma mudança em código.
+- Arquivos principais: `docs/ANALISE_SEGURANCA_LGPD.md`.
+- Atenção para quem vier depois: achado novo de autorização — `GET /planos/ativo?pacienteId=`
+  (`planos.service.ts`, `findAtivo`) não confere vínculo e entrega o plano de qualquer paciente
+  a nutricionista sem vínculo e ao administrador. É o único vazamento clínico encontrado; os
+  outros módulos estão corretos. Credenciais de demonstração (admin e exemplos) são públicas no
+  README e funcionam no site no ar — trocar antes de qualquer uso real.
+
 ## 2026-10-28 — Olho para mostrar a senha no login
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/olho-senha` (criada em cima de `feat/apk-eas`, PR #14)

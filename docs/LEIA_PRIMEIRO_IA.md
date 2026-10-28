@@ -89,8 +89,26 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
 
 ## Pendências conhecidas
 
+Corrigir antes da banca (detalhe e correção testada em `docs/ANALISE_DESEMPENHO.md`):
+
+- **Travamento da API no login:** `issueSession` e `refresh` (`auth.service.ts`) seguram uma
+  conexão do pool e pedem outra (`toPublicUser`) antes de soltar a primeira. Com ~15 logins ou
+  renovações de sessão juntos, as 10 conexões ficam presas e a API para de falar com o banco até
+  ser reiniciada. O `/status` continua respondendo 200, então o Render não reinicia sozinho.
+  Regra para código novo: nunca chamar `this.pool` (nem serviço que use o pool) enquanto segura
+  um `client` de `pool.connect()`.
+- **Painel pesado demais para o servidor gratuito:** a central de notificações busca 3 rotas a
+  cada 5 s em toda tela (`NotificationCenter.tsx`), e a Início baixa todas as glicemias de 90
+  dias de todos os pacientes a cada 30 s (`HomePage.tsx`, 10,8 MB com 50 pacientes). Com o
+  código de hoje, uma nutricionista na Início já trava o servidor gratuito por vários segundos a
+  cada 30 s, e o Render gratuito só dá 5 GB de banda por mês.
+
 Bugs pequenos, podem ser corrigidos:
 
+- **Autorização:** `GET /planos/ativo?pacienteId=` (`planos.service.ts`, `findAtivo`) não passa
+  por `garantirVinculo` e entrega o plano alimentar de qualquer paciente a nutricionista sem
+  vínculo e ao administrador. É o único vazamento clínico achado na análise de segurança
+  (`docs/ANALISE_SEGURANCA_LGPD.md`, item 2.1). Corrigir no padrão do `findAll` do mesmo serviço.
 - `?dias=` inválido ou gigante responde 500 em `/registros`, `/emocional/resumo` e
   `/emocional/glicemia` (falta validar o número).
 - `tipo_refeicao` não é validado na API. O app usa `cafe`, `almoco`, `lanche`, `jantar` e `ceia`.
