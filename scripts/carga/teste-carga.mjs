@@ -5,7 +5,7 @@
 // scripts/carga/popular-carga.sql: o teste grava glicemias e mensagens.
 //
 //   node scripts/carga/teste-carga.mjs endpoints  [--url http://127.0.0.1:3020] [--niveis 1,10,50] [--segundos 10] [--so a,b] [--sem a,b]
-//   node scripts/carga/teste-carga.mjs sessoes    [--url ...] [--mix 2:20,5:50] [--segundos 60] [--central-ms 5000] [--inicio-ms 30000] [--tela inicio|outra]
+//   node scripts/carga/teste-carga.mjs sessoes    [--url ...] [--mix 2:20,5:50] [--segundos 60] [--central-ms 30000] [--inicio-ms 30000] [--tela inicio|outra] [--inicio-antigo]
 //   node scripts/carga/teste-carga.mjs sse        [--url ...] [--conexoes 100,300]
 //   node scripts/carga/teste-carga.mjs travamento [--url ...] [--n 15]
 //
@@ -166,11 +166,14 @@ async function modoEndpoints() {
 //
 // Reproduz o tráfego que o código dos clientes gera de verdade:
 //   - painel (nutricionista): a central de notificações busca 3 rotas a cada
-//     5 s em qualquer tela (NotificationCenter.tsx) e a tela Início busca mais
-//     4 a cada 30 s (HomePage.tsx). Os dois são setInterval: não esperam a
-//     rodada anterior terminar — igual aqui;
+//     30 s em qualquer tela (NotificationCenter.tsx) e a tela Início busca mais
+//     4 a cada 30 s (HomePage.tsx). Aqui o disparo é por setInterval, sem
+//     esperar a rodada anterior: é o pior caso;
 //   - app (paciente em uso): abre uma tela, lê por 10 a 30 s, abre outra.
 // Todos ficam com o canal de mensagens (SSE) aberto, como nos clientes.
+//
+// O painel de antes da análise (central a cada 5 s, Início baixando 90 dias de
+// glicemias) é reproduzido com --central-ms 5000 --inicio-antigo.
 
 const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
 const entre = (a, b) => a + Math.random() * (b - a);
@@ -184,16 +187,22 @@ const TELAS_PACIENTE = [
 ];
 
 const CENTRAL_DE_NOTIFICACOES = [['GET', '/notificacoes?limite=100'], ['GET', '/alertas?dias=7'], ['GET', '/pacientes']];
-const TELA_INICIO = [['GET', '/pacientes'], ['GET', '/alertas/resumo?dias=7'], ['GET', '/registros?dias=90&tipo=glicemia'], ['GET', '/mensagens/nao-lidas']];
+const telaInicio = (antiga) => [
+  ['GET', '/pacientes'],
+  ['GET', '/alertas/resumo?dias=7'],
+  ['GET', antiga ? '/registros?dias=90&tipo=glicemia' : '/registros/resumo-glicemia?dias=30'],
+  ['GET', '/mensagens/nao-lidas'],
+];
 
 async function modoSessoes() {
   const mix = opcao('mix', '2:20,5:50,10:100').split(',').map((par) => par.split(':').map(Number));
   const segundos = Number(opcao('segundos', '60'));
-  // Para projetar mudanças no painel: intervalo da central (padrão 5 s, como hoje),
-  // da tela Início (30 s) e se o nutricionista está nela (--tela inicio|outra).
-  const centralMs = Number(opcao('central-ms', '5000'));
+  // Para comparar versões do painel: intervalo da central, da tela Início e se
+  // o nutricionista está nela (--tela inicio|outra).
+  const centralMs = Number(opcao('central-ms', '30000'));
   const inicioMs = Number(opcao('inicio-ms', '30000'));
   const naTelaInicio = opcao('tela', 'inicio') === 'inicio';
+  const TELA_INICIO = telaInicio(args.includes('--inicio-antigo'));
   const maxPac = Math.max(...mix.map(([, p]) => p));
   const u = await prepararUsuarios(Math.max(maxPac, 1), 20);
   for (const p of u.pacientes) p.nutriId = u.nutris[nutriDoPaciente(p.n) - 1].id;

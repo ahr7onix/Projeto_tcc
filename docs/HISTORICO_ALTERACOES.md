@@ -2,6 +2,31 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-28 — Painel mais leve para o servidor (central e tela Início)
+- Quem: Natan, com apoio de IA
+- PR/branch: `perf/painel-polling` (criada em cima de `fix/travamento-login`)
+- O que foi adicionado: rota `GET /registros/resumo-glicemia?dias=` (7 a 90, padrão 30) com o
+  que a Início mostra já contado: medições e alertas por dia, a última medição de cada paciente
+  e os alertas do período anterior. A classificação é a do `avaliarGlicemia`, sem repetir regra.
+  `apps/web/src/lib/polling.ts`: repete a busca só com a aba visível, sem rodada sobreposta, e
+  recarrega ao voltar para a aba. Testes do resumo em `registros.service.spec.ts`.
+- O que foi modificado:
+  - Início (`HomePage.tsx`): usa o resumo em vez de baixar todas as glicemias de 90 dias de
+    todos os pacientes (10,8 MB com 50 pacientes; agora 3,5 KB). Trocar o período busca de novo.
+  - Central de notificações (`NotificationCenter.tsx`): de 5 s para 30 s, parada com a aba
+    escondida. Mensagem nova continua aparecendo na hora pelo SSE.
+  - `scripts/carga/teste-carga.mjs` simula o painel novo; o antigo com
+    `--central-ms 5000 --inicio-antigo`.
+- Arquivos principais: `apps/api/src/modules/registros/registros.service.ts`,
+  `apps/web/src/pages/app/HomePage.tsx`, `apps/web/src/components/NotificationCenter.tsx`,
+  `apps/web/src/lib/polling.ts`.
+- Atenção para quem vier depois: conferido no navegador, Início antiga e nova lado a lado com a
+  mesma nutricionista (50 pacientes, 90 dias): indicadores, situação dos pacientes, gráfico e
+  rodapé iguais nos três períodos. A única diferença foi o selo "↑ x% nos alertas", porque o
+  cálculo antigo ignorava medições com hora futura só nele (os outros números já as contavam);
+  no uso real não existe medição no futuro. Com a Início parada 35 s: 25 chamadas e 12,6 MB
+  antes, 7 chamadas e 0,35 MB agora. Aba escondida por 65 s: nenhuma chamada.
+
 ## 2026-10-28 — Travamento da API com logins simultâneos
 - Quem: Natan, com apoio de IA
 - PR/branch: `fix/travamento-login` (criada em cima de `docs/analise-desempenho`)

@@ -90,13 +90,13 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
 
 ## Pendências conhecidas
 
-Corrigir antes da banca (detalhe em `docs/ANALISE_DESEMPENHO.md`):
+Desempenho (detalhe em `docs/ANALISE_DESEMPENHO.md`):
 
-- **Painel pesado demais para o servidor gratuito:** a central de notificações busca 3 rotas a
-  cada 5 s em toda tela (`NotificationCenter.tsx`), e a Início baixa todas as glicemias de 90
-  dias de todos os pacientes a cada 30 s (`HomePage.tsx`, 10,8 MB com 50 pacientes). Com o
-  código de hoje, uma nutricionista na Início já trava o servidor gratuito por vários segundos a
-  cada 30 s, e o Render gratuito só dá 5 GB de banda por mês.
+- **Banda do painel:** a central de notificações ainda baixa o `/alertas?dias=7` inteiro (337 KB
+  com 50 pacientes) a cada 30 s. Uma nutricionista com o painel aberto o dia todo passa dos 5 GB
+  de banda por mês do Render gratuito. Próximo passo: recarregar só quando o SSE avisar.
+- **Resumo da Início:** custa ~1,1 s no servidor gratuito porque classifica no Node as
+  glicemias de 60 dias. Baixar mais pede gravar a severidade na glicemia (migration nova).
 
 Bugs pequenos, podem ser corrigidos:
 

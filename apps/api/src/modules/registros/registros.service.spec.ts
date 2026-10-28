@@ -1,4 +1,4 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import type { Pool } from 'pg';
 import type { AlimentosService } from '../alimentos/alimentos.service';
 import type { PushService } from '../push/push.service';
@@ -159,5 +159,63 @@ describe('RegistrosService.createRefeicao', () => {
     await expect(
       service.createRefeicao('7', { descricao: 'Pão', tipo_refeicao: 'cafe' }),
     ).rejects.toBeInstanceOf(NotFoundException);
+  });
+});
+
+describe('RegistrosService.resumoGlicemia', () => {
+  const nutricionista = { sub: '5', role: 'nutricionista' };
+  /** Linha como a consulta devolve: da medição mais nova para a mais antiga. */
+  const linha = (pacienteId: string, valor: string, dia: string, noPeriodo = true) => ({
+    paciente_id: pacienteId,
+    valor,
+    momento: 'jejum',
+    dia,
+    no_periodo: noPeriodo,
+  });
+
+  it('conta por dia, guarda a última medição de cada paciente e o período anterior', async () => {
+    const { service } = servico([
+      [
+        linha('30', '45', '2026-10-28'), // crítico, a última do paciente 30
+        linha('31', '120', '2026-10-28'), // normal, a última do paciente 31
+        linha('30', '200', '2026-10-27'), // atenção
+        linha('31', '60', '2026-09-20', false), // atenção, período anterior
+        linha('31', '100', '2026-09-20', false), // normal, período anterior
+      ],
+    ]);
+
+    const resumo = await service.resumoGlicemia(nutricionista, 30);
+
+    expect(resumo).toEqual({
+      dias: 30,
+      medicoes: 3,
+      foraNoPeriodo: 2,
+      foraNoPeriodoAnterior: 1,
+      porDia: [
+        { data: '2026-10-27', total: 1, fora: 1 },
+        { data: '2026-10-28', total: 2, fora: 1 },
+      ],
+      ultimaPorPaciente: [
+        { pacienteId: '30', severidade: 'critico' },
+        { pacienteId: '31', severidade: 'normal' },
+      ],
+    });
+  });
+
+  it('limita o período a 90 dias e usa 30 quando o valor não serve', async () => {
+    const { service, query } = servico([[], [], []]);
+
+    expect((await service.resumoGlicemia(nutricionista, 365)).dias).toBe(90);
+    expect((await service.resumoGlicemia(nutricionista, Number('abc'))).dias).toBe(30);
+    expect((await service.resumoGlicemia(nutricionista)).dias).toBe(30);
+    expect(query.mock.calls.map(([, params]) => params[0])).toEqual([90, 30, 30]);
+  });
+
+  it('recusa o administrador, que não acompanha paciente', async () => {
+    const { service } = servico([]);
+
+    await expect(
+      service.resumoGlicemia({ sub: '1', role: 'administrador' }, 30),
+    ).rejects.toBeInstanceOf(ForbiddenException);
   });
 });
