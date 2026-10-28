@@ -2,6 +2,20 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-28 — APK de demonstração pelo EAS Build
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/apk-eas`
+- O que foi adicionado: `apps/mobile/eas.json` com o perfil `preview` (APK de instalação direta,
+  apontando para `nutricare-tcc-api.onrender.com`); seção "APK do aplicativo" no
+  `docs/PUBLICAR.md`.
+- O que foi modificado: `apps/mobile/app.json` ganhou `owner` e `extra.eas.projectId`, que ligam o
+  app ao projeto `@natanzinho23/projeto-tcc-mobile` no expo.dev. Nenhuma versão mudou.
+- Arquivos principais: `apps/mobile/eas.json`, `apps/mobile/app.json`, `docs/PUBLICAR.md`.
+- Atenção para quem vier depois: a chave de assinatura (keystore) está guardada no Expo, na conta
+  do Natan. Testado num Android de verdade: login, alerta de glicemia, lembrete com som e
+  mensagens em tempo real funcionaram. O login com Google ainda não funciona no APK (o botão
+  avisa "Google não configurado").
+
 ## 2026-10-28 — Teclado e barra de abas no Android; aviso da própria mensagem no painel
 - Quem: Natan, com apoio de IA
 - PR/branch: `fix/teclado-e-aviso-de-mensagem`
