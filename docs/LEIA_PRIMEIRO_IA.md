@@ -99,8 +99,8 @@ Bugs pequenos, podem ser corrigidos:
   senha.
 - Os testes automáticos escrevem erros falsos no `logs/` real da API.
 - App em celular estreito (360 de largura): a barra de abas corta "Alimentação" e "Mensagens".
-- App: "Gerenciar" (Saúde e Alimentação), "Esqueceu a senha?" e o olho de mostrar a senha têm
-  área de toque pequena (menos de 32 px de altura, sem `hitSlop`).
+- App: "Gerenciar" (Saúde e Alimentação) e "Esqueceu a senha?" têm área de toque pequena
+  (menos de 32 px de altura, sem `hitSlop`).
 
 Limitações assumidas pela equipe (seção 1.8 da documentação): parâmetros clínicos ainda sem
 validação da Nutrição, CRN conferido à mão, e-mail depende de SMTP configurado, ambiente

@@ -2,6 +2,19 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-28 — Olho para mostrar a senha no login
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/olho-senha` (criada em cima de `feat/apk-eas`, PR #14)
+- O que foi adicionado: botão de olho que mostra e esconde a senha no login e no cadastro do app
+  (no `FormField`, para todo campo com `secureTextEntry`) e no login e no cadastro do painel
+  (`CampoSenha` em `LoginPage.tsx`).
+- O que foi modificado: os olhos que já existiam em Perfil > Alterar senha e Excluir conta ganharam
+  `hitSlop`, porque a área de toque tinha 18 px.
+- Arquivos principais: `apps/mobile/src/components/FormField.tsx`,
+  `apps/web/src/pages/auth/LoginPage.tsx`, `apps/web/src/pages/auth/LoginPage.module.css`.
+- Atenção para quem vier depois: no painel o olho nativo do Edge foi escondido
+  (`::-ms-reveal`) para não aparecerem dois.
+
 ## 2026-10-28 — APK de demonstração pelo EAS Build
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/apk-eas`

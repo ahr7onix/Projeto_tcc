@@ -304,9 +304,8 @@ export default function LoginPage() {
               required
               autoComplete="email"
             />
-            <input
+            <CampoSenha
               className={styles.input}
-              type="password"
               placeholder="Senha (mín. 8 caracteres)"
               value={regSenha}
               onChange={(e) => setRegSenha(e.target.value)}
@@ -357,9 +356,8 @@ export default function LoginPage() {
               required
               autoComplete="email"
             />
-            <input
+            <CampoSenha
               className={styles.input}
-              type="password"
               placeholder="Senha"
               value={loginSenha}
               onChange={(e) => setLoginSenha(e.target.value)}
@@ -416,6 +414,34 @@ function GoogleIcon() {
       <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
     </svg>
   )
+}
+
+// Campo de senha com o olho para conferir o que foi digitado.
+function CampoSenha(props: Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'>) {
+  const [visivel, setVisivel] = useState(false)
+  const rotulo = visivel ? 'Esconder senha' : 'Mostrar senha'
+  return (
+    <div className={styles.senhaWrap}>
+      <input {...props} type={visivel ? 'text' : 'password'} />
+      <button
+        type="button"
+        className={styles.olho}
+        onClick={() => setVisivel((v) => !v)}
+        aria-label={rotulo}
+        title={rotulo}
+      >
+        {visivel ? <EyeOffIcon /> : <EyeIcon />}
+      </button>
+    </div>
+  )
+}
+
+function EyeIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg>
+}
+
+function EyeOffIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M17.9 17.9A10.4 10.4 0 0 1 12 19c-6.4 0-10-7-10-7a18 18 0 0 1 5.1-5.9M9.9 5.2A9.6 9.6 0 0 1 12 5c6.4 0 10 7 10 7a18 18 0 0 1-2.2 3.2M14.1 14.1a3 3 0 1 1-4.2-4.2" /><path d="m2 2 20 20" /></svg>
 }
 
 // Mesmo desenho da caixa de erro, nas cores de sucesso: não é erro, é o

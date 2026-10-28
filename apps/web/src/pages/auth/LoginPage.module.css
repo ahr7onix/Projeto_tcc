@@ -122,6 +122,42 @@
   box-shadow: 0 0 0 3px var(--primary-soft);
 }
 
+.senhaWrap {
+  position: relative;
+  width: 100%;
+}
+
+.senhaWrap .input {
+  padding-right: 46px;
+}
+
+/* O Edge tem um olho próprio; fica só o nosso. */
+.senhaWrap .input::-ms-reveal {
+  display: none;
+}
+
+.olho {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.olho:hover {
+  color: var(--text);
+}
+
 .btn {
   width: 100%;
   border-radius: var(--radius-md);

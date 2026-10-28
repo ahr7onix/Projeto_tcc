@@ -77,7 +77,7 @@ export default function AlterarSenhaScreen() {
                   placeholder="••••••••"
                   placeholderTextColor={colors.textMuted}
                 />
-                <Pressable onPress={() => setShowAtual(!showAtual)} style={styles.eyeBtn}>
+                <Pressable onPress={() => setShowAtual(!showAtual)} style={styles.eyeBtn} hitSlop={12}>
                   <Ionicons name={showAtual ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.textMuted} />
                 </Pressable>
               </View>
@@ -96,7 +96,7 @@ export default function AlterarSenhaScreen() {
                   placeholder="Mínimo 6 caracteres"
                   placeholderTextColor={colors.textMuted}
                 />
-                <Pressable onPress={() => setShowNova(!showNova)} style={styles.eyeBtn}>
+                <Pressable onPress={() => setShowNova(!showNova)} style={styles.eyeBtn} hitSlop={12}>
                   <Ionicons name={showNova ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.textMuted} />
                 </Pressable>
               </View>

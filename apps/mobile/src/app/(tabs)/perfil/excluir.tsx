@@ -110,7 +110,7 @@ export default function ExcluirContaScreen() {
                   placeholderTextColor={colors.textMuted}
                   autoCapitalize="none"
                 />
-                <Pressable onPress={() => setMostrarSenha(!mostrarSenha)} style={styles.eyeBtn}>
+                <Pressable onPress={() => setMostrarSenha(!mostrarSenha)} style={styles.eyeBtn} hitSlop={12}>
                   <Ionicons
                     name={mostrarSenha ? 'eye-off-outline' : 'eye-outline'}
                     size={18}
