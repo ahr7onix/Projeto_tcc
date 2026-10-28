@@ -63,6 +63,10 @@ e avise a equipe antes.
   O SHA-1 dessa chave está cadastrado no Google Cloud para o login com Google do APK; chave
   nova exige cadastrar o SHA-1 novo (`docs/LOGIN_GOOGLE.md`, "APK (Android)").
   Como gerar: `docs/PUBLICAR.md`, "APK do aplicativo".
+- **Lembretes como alarme:** o Android grava som e vibração do canal `lembretes-alarme` na
+  primeira vez e ignora mudanças depois; para mudar, use outro id de canal
+  (`apps/mobile/src/lib/agenda-lembretes.ts`). O som (`apps/mobile/assets/sounds/alarme.wav`)
+  entra no APK pelo plugin do `expo-notifications` no `app.json`: trocar o som exige APK novo.
 - **Dados de demonstração:** só existem se o banco for preparado com `SEED_DEMO=true`.
 
 ## O que já está feito
@@ -83,8 +87,8 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
   (`nutricare-tcc-painel.onrender.com`), com e-mail pelo Brevo e login Google em cliente próprio.
   A cópia do `render.yaml` continua sem e-mail.
 - APK de demonstração gerado pelo EAS Build (`apps/mobile/eas.json`, perfil `preview`) e testado
-  num Android de verdade. O login com Google do APK (Google Sign-In nativo) está no código e
-  ainda precisa ser conferido no celular, no próximo APK.
+  num Android de verdade. O login com Google do APK (Google Sign-In nativo) e o modo alarme dos
+  lembretes estão no código e ainda precisam ser conferidos no celular, no próximo APK.
 
 ## Em andamento
 

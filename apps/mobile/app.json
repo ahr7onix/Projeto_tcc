@@ -28,7 +28,12 @@
       "expo-font",
       "expo-asset",
       "expo-web-browser",
-      "expo-notifications"
+      [
+        "expo-notifications",
+        {
+          "sounds": ["./assets/sounds/alarme.wav"]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": false
