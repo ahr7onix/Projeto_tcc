@@ -58,6 +58,9 @@ e avise a equipe antes.
   do app. Tela nova com campo de digitar vai dentro do `ScreenContainer` ou de um
   `KeyboardAvoidingView` com `behavior="padding"` (também no Android). Não tire a soma de
   `useSafeAreaInsets` da barra de abas.
+- **APK:** não troque `slug`, `owner`, `extra.eas.projectId` nem `android.package` no
+  `apps/mobile/app.json`. Eles ligam o app ao projeto do Expo, onde está a chave de assinatura.
+  Como gerar: `docs/PUBLICAR.md`, "APK do aplicativo".
 - **Dados de demonstração:** só existem se o banco for preparado com `SEED_DEMO=true`.
 
 ## O que já está feito
@@ -77,6 +80,8 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
 - Segunda cópia publicada pelo `render-tcc.yaml`, na conta do Render do Natan
   (`nutricare-tcc-painel.onrender.com`), com e-mail pelo Brevo e login Google em cliente próprio.
   A cópia do `render.yaml` continua sem e-mail.
+- APK de demonstração gerado pelo EAS Build (`apps/mobile/eas.json`, perfil `preview`) e testado
+  num Android de verdade. Falta o login com Google dentro do APK.
 
 ## Em andamento
 

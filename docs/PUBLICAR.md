@@ -252,6 +252,30 @@ API usar pelo `EXPO_PUBLIC_API_URL` do `apps/mobile/.env`.
 
 ---
 
+## APK do aplicativo (Android)
+
+O APK de demonstração é montado nos servidores do Expo (EAS Build), com o perfil
+`preview` do `apps/mobile/eas.json`. Ele usa a API da segunda cópia
+(`nutricare-tcc-api.onrender.com`); para apontar para outra, troque
+`EXPO_PUBLIC_API_URL` no `eas.json` e gere de novo.
+
+O projeto fica na conta do Expo do Natan (`@natanzinho23/projeto-tcc-mobile`,
+ligado pelo `owner` e pelo `extra.eas.projectId` do `app.json`). Quem for gerar
+precisa entrar nessa conta.
+
+1. Em `apps/mobile`: `npx eas-cli@latest login`.
+2. `npx eas-cli@latest build -p android --profile preview`. Na primeira vez ele
+   pergunta se cria a chave de assinatura (keystore): responder sim. A chave fica
+   guardada no Expo; sem ela não dá para atualizar o app instalado.
+3. No fim aparece um link e um QR code. Abrir no celular, tocar em **Install** e
+   aceitar os avisos do Android (o app não vem da Play Store).
+
+No plano gratuito o primeiro build levou 44 minutos (metade na fila). O link do
+APK expira: a página do build mostra quantos dias faltam (**Availability**).
+Baixe o `.apk` pelo menu **⋮ > Download** e guarde uma cópia.
+
+---
+
 ## Problemas comuns
 
 | O que acontece | Causa provável | O que fazer |
