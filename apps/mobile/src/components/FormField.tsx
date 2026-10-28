@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -50,7 +51,9 @@ function FieldInput({
   ...inputProps
 }: FieldInputProps) {
   const [focused, setFocused] = useState(false);
+  const [revealed, setRevealed] = useState(false);
   const hasError = !!errorMessage;
+  const isPassword = !!inputProps.secureTextEntry;
 
   const handleFocus: TextInputProps['onFocus'] = (e) => {
     setFocused(true);
@@ -89,7 +92,23 @@ function FieldInput({
           onFocus={handleFocus}
           onBlur={handleBlur}
           placeholderTextColor={colors.textMuted}
+          secureTextEntry={isPassword && !revealed}
         />
+        {isPassword ? (
+          <Pressable
+            onPress={() => setRevealed((v) => !v)}
+            hitSlop={12}
+            style={styles.eyeBtn}
+            accessibilityRole="button"
+            accessibilityLabel={revealed ? 'Esconder senha' : 'Mostrar senha'}
+          >
+            <Ionicons
+              name={revealed ? 'eye-off-outline' : 'eye-outline'}
+              size={20}
+              color={colors.textMuted}
+            />
+          </Pressable>
+        ) : null}
       </View>
       {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
     </View>
@@ -152,6 +171,7 @@ const styles = StyleSheet.create({
   },
   containerError: { borderColor: colors.danger },
   icon: { marginRight: spacing.sm },
+  eyeBtn: { marginLeft: spacing.sm, padding: spacing.xs },
   input: {
     flex: 1,
     paddingVertical: spacing.md,
