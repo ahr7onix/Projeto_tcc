@@ -2,6 +2,43 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-29 — Importação da TACO inteira pelo painel
+- Quem: Natan, com apoio de IA
+- PR/branch: `fix/taco-tracos`
+- O que aconteceu: testando a importação com a TACO 4ª edição pronta em CSV
+  (github.com/brolesi/taco, 597 alimentos), o painel recusava 57. O arquivo grava o traço ("Tr")
+  como `1e-05`, e o leitor da planilha não aceitava número em notação científica.
+- O que foi modificado:
+  - `lerNumero` (`apps/web/src/lib/planilha-alimentos.ts`) aceita notação científica. Agora
+    entram 578. Os 19 de fora não têm o dado na própria TACO (óleos e azeites sem carboidrato e
+    proteína, 6 alimentos sem análise, 4 carnes e peixes com carboidrato levemente negativo), e
+    a tela mostra o motivo de cada um.
+  - App, tela Alimentos: com a TACO são uns 30 grupos, e os filtros quebrando linha cobriam a
+    tela antes do resultado. Agora ficam numa linha só que desliza para o lado.
+  - App, telas Alimentos e Refeição: o carboidrato da lista aparecia cru ("11.94"); agora sai
+    como no detalhe ("11,9"). A função de formatar, que estava copiada em duas telas, foi para
+    `formatarQuantidade` em `apps/mobile/src/lib/api/alimentos.ts`.
+- Atenção para quem vier depois: importada duas vezes no painel local. Na 1ª, 578 gravados em
+  2 s; na 2ª, 0 novos e 578 atualizados (não duplica). Na busca, os 36 alimentos de exemplo
+  aparecem ao lado dos da TACO ("Arroz integral cozido" e "Arroz, integral, cozido"); desativar
+  os de exemplo é decisão da equipe. A importação no painel no ar fica para depois deste merge,
+  porque o painel de lá ainda recusa os 57. A parte do app é só JavaScript: vai ao celular pela
+  atualização da internet (`npm run atualizar`). `npm run verificar` e `npm run e2e:fluxo`
+  (21/21) passaram.
+
+## 2026-10-29 — Teste no ar: paciente cadastrado pela nutricionista
+- Quem: Natan, com apoio de IA
+- PR/branch: sem mudança de código (registrado junto com `fix/taco-tracos`)
+- O que foi testado: no painel no ar, a Camila cadastrou um paciente novo; o e-mail com o link
+  chegou na caixa principal do Gmail; o paciente criou a senha (o mesmo link usado de novo foi
+  recusado), entrou no app, o primeiro acesso veio com nascimento, sexo e tipo de diabetes já
+  preenchidos, aceitou o convite e apareceu na lista da Camila. No fim ele excluiu a conta e
+  saiu da lista. Tudo passou.
+- Atenção para quem vier depois: o Brevo troca o link do e-mail por um endereço de rastreamento
+  de cliques (`sendibt3.com`) que redireciona para o painel; no plano gratuito não dá para
+  desligar. Paciente recém-aceito aparece como "Inativo" no painel: "Ativo" quer dizer registro
+  nos últimos 7 dias.
+
 ## 2026-10-29 — App aguenta a API acordando; primeira atualização pela internet
 - Quem: Natan, com apoio de IA
 - PR/branch: `fix/servidor-acordando`

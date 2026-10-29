@@ -6,22 +6,13 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { ScreenContainer } from '@/components/ScreenContainer';
-import { buscarAlimento, rotuloGrupo, type Alimento } from '@/lib/api/alimentos';
+import {
+  buscarAlimento,
+  formatarQuantidade as formatar,
+  rotuloGrupo,
+  type Alimento,
+} from '@/lib/api/alimentos';
 import { colors, radius, spacing, typography } from '@/lib/theme';
-
-/**
- * Uma casa decimal só quando o número precisa: 28 e 28,4.
- *
- * O arredondamento é o mesmo do servidor (`arredondar` em common/nutricao):
- * com `toFixed` a prévia mostrava 24,9 e o registro salvo ficava 25, porque
- * 24,95 em ponto flutuante é 24,9499... e as duas funções decidiam diferente.
- */
-const formatar = (valor: number): string => {
-  const arredondado = Math.round(valor * 10) / 10;
-  return Number.isInteger(arredondado)
-    ? String(arredondado)
-    : String(arredondado).replace('.', ',');
-};
 
 /**
  * A mesma regra de três que a API aplica ao gravar o registro. Aqui ela roda

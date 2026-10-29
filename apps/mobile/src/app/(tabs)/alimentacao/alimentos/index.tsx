@@ -5,6 +5,7 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -15,6 +16,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { ScreenContainer } from '@/components/ScreenContainer';
 import {
   descreverPorcao,
+  formatarQuantidade,
   listarAlimentos,
   listarGrupos,
   rotuloGrupo,
@@ -61,8 +63,14 @@ export default function AlimentosScreen() {
           ) : null}
         </View>
 
+        {/* Uma linha que desliza para o lado: com a TACO importada são uns 30
+            grupos, e quebrando linha eles cobriam a tela antes do resultado. */}
         {grupos?.length ? (
-          <View style={styles.chips}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chips}
+          >
             <Pressable
               onPress={() => setGrupo('')}
               style={[styles.chip, grupo === '' && styles.chipActive]}
@@ -85,7 +93,7 @@ export default function AlimentosScreen() {
                 </Pressable>
               );
             })}
-          </View>
+          </ScrollView>
         ) : null}
       </Card>
 
@@ -148,7 +156,7 @@ export default function AlimentosScreen() {
                   </View>
                 </View>
                 <View style={styles.carbo}>
-                  <Text style={styles.carboValor}>{a.carboidratosG}</Text>
+                  <Text style={styles.carboValor}>{formatarQuantidade(a.carboidratosG)}</Text>
                   <Text style={styles.carboUnidade}>g carb.</Text>
                   <Text style={styles.carboPor}>por {a.porcaoG} g</Text>
                 </View>
@@ -174,7 +182,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   buscaInput: { flex: 1, paddingVertical: spacing.md, fontSize: 15, color: colors.text },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  chips: { flexDirection: 'row', gap: spacing.sm },
   chip: {
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.md,
