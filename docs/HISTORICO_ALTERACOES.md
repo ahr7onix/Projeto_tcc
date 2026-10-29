@@ -2,6 +2,19 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-28 — Ícone e tela de abertura do app (logo provisório)
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/app-segundo-apk`, que junta num PR só as três entradas abaixo (login com
+  Google no APK, lembrete como alarme e atualização pela internet) e esta
+- O que foi adicionado: logo provisório (gota de glicemia com uma folha, no azul do app) em
+  `apps/mobile/assets/logo.svg` e os PNGs que o Expo usa: `icon.png`, `adaptive-icon.png`
+  (Android), `splash-icon.png` (tela de abertura, fundo azul) e `favicon.png` (navegador).
+- O que foi modificado: `app.json` aponta para as imagens e configura o `expo-splash-screen`.
+- O que foi removido: `assets/.gitkeep`, que só marcava onde esses arquivos iam.
+- Atenção para quem vier depois: o logo é provisório; o grupo pode trocar por um melhor. Ícone e
+  tela de abertura são nativos: trocar exige subir o `version` do `app.json` e gerar APK novo
+  (não vão pela atualização pela internet). Conferido no `expo prebuild`.
+
 ## 2026-10-28 — Atualização do app pela internet (EAS Update)
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/atualizacao-pela-internet` (criada em cima de `feat/lembrete-alarme`)
