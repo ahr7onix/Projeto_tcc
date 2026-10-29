@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
+import { AppState } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { acordarServidor } from '@/lib/api';
 import { capturarErrosGlobais } from '@/lib/logger';
 import { queryClient } from '@/lib/query-client';
 import { useAuthStore } from '@/stores/auth';
@@ -25,6 +27,16 @@ export default function RootLayout() {
   useEffect(() => {
     hydrate();
   }, [hydrate]);
+
+  // A API do plano gratuito dorme quando fica parada; acordar ao abrir e ao
+  // voltar para o app faz o primeiro login não esbarrar no servidor desligado.
+  useEffect(() => {
+    acordarServidor();
+    const assinatura = AppState.addEventListener('change', (estado) => {
+      if (estado === 'active') acordarServidor();
+    });
+    return () => assinatura.remove();
+  }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

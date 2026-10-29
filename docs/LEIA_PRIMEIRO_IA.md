@@ -73,6 +73,9 @@ e avise a equipe antes.
   `npm run atualizar -- "o que mudou"` em `apps/mobile`. Mudou algo nativo (pacote com código
   nativo, plugin, som, ícone, permissão)? Suba o `version` do `app.json` e gere APK novo, senão
   a atualização chega ao APK antigo e quebra o app (`docs/PUBLICAR.md`).
+- **API dormindo (Render gratuito):** depois de 15 min parada ela leva de 30 a 60 s para acordar.
+  O app espera até 60 s (`apps/mobile/src/lib/api.ts`) e manda um "acorda" ao abrir e ao voltar
+  para a frente. Não baixe esse tempo: com 15 s o primeiro login do dia falhava.
 - **Dados de demonstração:** só existem se o banco for preparado com `SEED_DEMO=true`.
 
 ## O que já está feito
@@ -95,7 +98,7 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
 - APK de demonstração gerado pelo EAS Build (`apps/mobile/eas.json`, perfil `preview`) e testado
   num Android de verdade. No segundo APK (29/10/2026) foram conferidos no celular o login com
   Google (Google Sign-In nativo), o lembrete como alarme e o ícone. A atualização pela internet
-  está configurada e ainda não foi usada de verdade.
+  funcionou: a primeira saiu em 29/10/2026 e chegou ao celular sem APK novo.
 - Teste do fluxo completo da demonstração (`scripts/e2e-fluxo.mjs`, `npm run e2e:fluxo`): 21
   passos, do cadastro da nutricionista ao paciente encerrando o acompanhamento.
 

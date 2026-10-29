@@ -145,6 +145,10 @@ export async function entrarComGoogleNativo(): Promise<string | null> {
     if (err.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
       throw new Error('Este celular precisa do Google Play Services atualizado.');
     }
+    // 7 é o NETWORK_ERROR: o celular não conseguiu falar com o Google.
+    if (err.code === '7') {
+      throw new Error('Sem internet para falar com o Google. Confira a conexão e tente de novo.');
+    }
     // 10 é o DEVELOPER_ERROR: falta o cliente Android ou o SHA-1 não bate.
     if (err.code === '10') {
       throw new Error('O Google não reconheceu este aplicativo. Avise a equipe.');
