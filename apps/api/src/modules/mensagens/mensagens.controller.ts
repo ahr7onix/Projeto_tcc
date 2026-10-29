@@ -20,6 +20,7 @@ import { CreateMensagemDto } from './dto/create-mensagem.dto';
 import { DigitandoDto } from './dto/digitando.dto';
 import { MensagensEventosService } from './mensagens-eventos.service';
 import { MensagensService } from './mensagens.service';
+import { limiteDaQuery } from '../../common/numero-da-query';
 
 @Controller('mensagens')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -58,7 +59,7 @@ export class MensagensController {
     return this.mensagens.listarMensagens(
       user,
       contraparteId,
-      limite ? Number(limite) : undefined,
+      limiteDaQuery(limite),
     );
   }
 

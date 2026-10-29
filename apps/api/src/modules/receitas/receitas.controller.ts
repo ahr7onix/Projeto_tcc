@@ -9,6 +9,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { CreateReceitaDto } from './dto/create-receita.dto';
 import { UpdateReceitaDto } from './dto/update-receita.dto';
 import { ReceitasService } from './receitas.service';
+import { limiteDaQuery } from '../../common/numero-da-query';
 
 @Controller('receitas')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -27,7 +28,7 @@ export class ReceitasController {
       busca,
       categoria,
       apenasMinhas: apenasMinhas === 'true',
-      limite: limite ? Number(limite) : undefined,
+      limite: limiteDaQuery(limite),
     });
   }
 
