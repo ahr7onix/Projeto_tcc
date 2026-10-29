@@ -18,9 +18,10 @@ const ORIGEM = 'lembrete';
 
 /**
  * Modo alarme: escolha guardada só no aparelho, como o volume de um
- * despertador. No Android os lembretes vão para um canal próprio, com som mais
- * longo (assets/sounds/alarme.wav) tocado no volume do alarme — por isso toca
- * mesmo com o celular no silencioso — e vibração longa.
+ * despertador. No Android os lembretes vão para um canal próprio, com som de
+ * 30 s (assets/sounds/alarme.wav) tocado no volume do alarme — por isso toca
+ * mesmo com o celular no silencioso — e vibração longa. O Android para o som
+ * quando a pessoa abre a barra de notificações, toca no aviso ou o descarta.
  *
  * O Android grava som e vibração do canal na primeira vez e ignora mudanças
  * depois. Para mudar qualquer um dos dois, crie um canal com outro id.
@@ -44,7 +45,8 @@ async function canalDoModo(alarme: boolean): Promise<string | undefined> {
     name: 'Lembretes como alarme',
     importance: Notifications.AndroidImportance.MAX,
     sound: SOM_ALARME,
-    vibrationPattern: [0, 800, 400, 800, 400, 800, 400, 800],
+    // Dez ciclos de 0,8 s vibrando e 0,4 s parado: uns 12 segundos.
+    vibrationPattern: [0, ...Array.from({ length: 10 }, () => [800, 400]).flat()],
     audioAttributes: {
       usage: Notifications.AndroidAudioUsage.ALARM,
       contentType: Notifications.AndroidAudioContentType.SONIFICATION,

@@ -7,9 +7,10 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 - PR/branch: `feat/lembrete-alarme` (criada em cima de `feat/login-google-apk`)
 - O que foi adicionado: na tela Saúde > Lembretes, o cartão "Como o celular avisa", com a chave
   "Tocar como alarme" e o botão "Tocar um teste" (toca em 5 segundos). Com a chave ligada, no
-  Android os lembretes vão para o canal `lembretes-alarme`: som de ~6 s
+  Android os lembretes vão para o canal `lembretes-alarme`: som de 30 s
   (`assets/sounds/alarme.wav`, gerado pela equipe, sem direitos de terceiros), tocado no volume
-  do alarme, vibração longa e aviso na tela bloqueada. A escolha fica só no aparelho
+  do alarme, vibração de ~12 s e aviso na tela bloqueada. O som para quando a pessoa abre a
+  barra de notificações, toca no aviso ou o descarta. A escolha fica só no aparelho
   (`AsyncStorage`); banco e API não mudaram.
 - O que foi modificado: `app.json` passa o som para o plugin do `expo-notifications`;
   `agenda-lembretes.ts` agenda no canal do modo escolhido e reagenda tudo ao trocar a chave.
@@ -19,7 +20,9 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   notificação. Com o app fechado o Android só executa esses botões com o `expo-task-manager`
   (mais uma peça nativa), e sem ele o botão não faz nada. Conferido no navegador (a chave
   liga e continua ligada depois de recarregar) e no `expo prebuild` (o som vai para
-  `res/raw`); o som de alarme só dá para conferir no celular, com o próximo APK.
+  `res/raw`). No Expo Go a chave e o teste funcionam, mas toca o som padrão do celular, uma vez
+  só: o arquivo do som só existe dentro do APK. O som de alarme só dá para conferir no celular,
+  com o próximo APK.
 
 ## 2026-10-28 — Login com Google no APK
 - Quem: Natan, com apoio de IA

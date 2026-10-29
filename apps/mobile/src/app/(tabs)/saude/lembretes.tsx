@@ -219,7 +219,8 @@ export default function LembretesScreen() {
           <View style={{ flex: 1 }}>
             <Text style={styles.itemTitulo}>Tocar como alarme</Text>
             <Text style={styles.ajuda}>
-              Som mais longo, no volume do despertador: toca mesmo com o celular no silencioso.
+              Toca por até 30 segundos, no volume do despertador, mesmo com o celular no
+              silencioso.
             </Text>
           </View>
           <Switch
