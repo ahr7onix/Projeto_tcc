@@ -18,6 +18,7 @@ import type { JwtPayload } from '../../common/guards/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { AdminService } from './admin.service';
 import { CadastrarNutricionistaDto } from './dto/cadastrar-nutricionista.dto';
+import { diasDaQuery, limiteDaQuery } from '../../common/numero-da-query';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -33,7 +34,7 @@ export class AdminController {
   /** Analise do grupo atendido: perfil, controle glicemico e acompanhamento. */
   @Get('analise')
   analise(@Query('dias') dias?: string) {
-    return this.admin.analise(dias ? Number(dias) : undefined);
+    return this.admin.analise(diasDaQuery(dias));
   }
 
   @Get('usuarios')
@@ -46,7 +47,7 @@ export class AdminController {
     return this.admin.listarUsuarios({
       tipo,
       busca,
-      limite: limite ? Number(limite) : undefined,
+      limite: limiteDaQuery(limite),
       pendentes: pendentes === 'true',
     });
   }

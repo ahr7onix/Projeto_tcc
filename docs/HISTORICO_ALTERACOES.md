@@ -85,6 +85,30 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   Conferido só até o pacote JavaScript do Android (`expo export`); falta testar no celular com o
   próximo APK.
 
+## 2026-10-28 — Correções de segurança antes da banca
+- Quem: Natan, com apoio de IA
+- PR/branch: `fix/seguranca-antes-da-banca`
+- O que foi adicionado: `common/numero-da-query.ts` (`diasDaQuery`, `limiteDaQuery`): o que não é
+  inteiro positivo vira o padrão do serviço e o que passa do teto (3650 dias, 1000 itens) é
+  cortado. Testes novos para isso e para a autorização dos planos (263 para 277).
+- O que foi modificado:
+  - `GET /planos/ativo` confere o vínculo (`garantirVinculo`) e recusa o administrador; antes
+    entregava o plano de qualquer paciente (`ANALISE_SEGURANCA_LGPD.md`, item 2.1).
+  - `GET /planos/:id` também recusa o administrador, que lia qualquer plano pelo número.
+  - Todas as rotas com `?dias=` ou `?limite=` usam as funções acima; `?dias=abc` dava 500.
+  - O "Sair" do painel chama `POST /auth/logout`, como o app, e o refresh token deixa de valer.
+  - `npm audit fix` sem `--force` na API e no painel (só `package-lock.json`): API de 51 para 34
+    alertas, 3 críticos para 0; painel de 6 para 4. O app ficou de fora de propósito (cadeia de
+    build do Expo, risco para o APK).
+- Arquivos principais: `apps/api/src/modules/planos/planos.service.ts`,
+  `apps/api/src/common/numero-da-query.ts`, os controllers com `dias`/`limite`,
+  `apps/web/src/contexts/AuthContext.tsx`.
+- Atenção para quem vier depois: conferido numa cópia da API com o banco local, antes e depois:
+  nutricionista sem vínculo 200 → 400, administrador 200 → 403, `?dias=abc` 500 → 200; e no
+  Chrome, o "Sair" do painel manda o logout e o refresh antigo passa a dar 401. O que sobra do
+  `npm audit` exige subir versão maior (Nest 12, Vite 8, React Router 7): fica para depois da
+  banca.
+
 ## 2026-10-28 — Painel mais leve para o servidor (central e tela Início)
 - Quem: Natan, com apoio de IA
 - PR/branch: `perf/painel-polling` (criada em cima de `fix/travamento-login`)

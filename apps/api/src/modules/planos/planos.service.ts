@@ -331,7 +331,20 @@ export class PlanosService {
     }
   }
 
+  /**
+   * Plano alimentar é dado clínico: como nos outros módulos de acompanhamento,
+   * o administrador não lê (ele não acompanha paciente).
+   */
+  private recusarAdministrador(user: JwtPayload) {
+    if (user.role !== 'paciente' && user.role !== 'nutricionista') {
+      throw new ForbiddenException(
+        'Este recurso é do acompanhamento nutricional: disponível para paciente e nutricionista',
+      );
+    }
+  }
+
   private async buscarPlanoAutorizado(idPlano: string, user: JwtPayload) {
+    this.recusarAdministrador(user);
     const { rows } = await this.pool.query<PlanoRow>(
       `SELECT pa.*,
               up.id_usuario AS paciente_usuario_id,
@@ -460,8 +473,13 @@ export class PlanosService {
   }
 
   async findAtivo(user: JwtPayload, pacienteId?: string) {
+    this.recusarAdministrador(user);
     const alvo = user.role === 'paciente' ? user.sub : pacienteId;
     if (!alvo) throw new BadRequestException('Informe o pacienteId');
+    // O nutricionista só lê o plano de paciente vinculado a ele (RN02).
+    if (user.role === 'nutricionista') {
+      await this.vinculos.garantirVinculo(user.sub, alvo);
+    }
 
     const { rows } = await this.pool.query<PlanoRow>(
       `SELECT pa.*,
