@@ -473,6 +473,16 @@ operação atual.
 4. Corrigir o 500 do `?dias=` inválido (item 2.5) e o logout do painel chamar a
    API (seção 3).
 
+> **Feito em 28/10/2026 (branch `fix/seguranca-antes-da-banca`):** itens 2, 3 e 4.
+> O `/planos/ativo` confere o vínculo e recusa o administrador; o `/planos/:id`
+> também passou a recusar o administrador, que lia qualquer plano pelo número.
+> `?dias=` e `?limite=` inválidos usam o padrão do serviço em todas as rotas. O
+> "Sair" do painel revoga o refresh token. `npm audit fix` sem `--force`: API de
+> 51 para 34 alertas (3 críticos para 0), painel de 6 para 4; o app ficou de
+> fora porque quase tudo é da cadeia de build do Expo e mexer arriscaria o APK.
+> O que sobra exige subir versão maior (Nest 12, Vite 8, React Router 7). Falta o
+> item 1, que é feito no painel publicado.
+
 **Trabalho futuro (seção de limitações da monografia):**
 
 5. Revogar o access token / sessões na troca de senha e na exclusão (item 2.4).

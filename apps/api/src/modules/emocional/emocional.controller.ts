@@ -8,6 +8,7 @@ import type { JwtPayload } from '../../common/guards/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CreateEmocionalDto } from './dto/create-emocional.dto';
 import { EmocionalService } from './emocional.service';
+import { diasDaQuery, limiteDaQuery } from '../../common/numero-da-query';
 
 @Controller('emocional')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -23,8 +24,8 @@ export class EmocionalController {
   ) {
     return this.emocional.listar(user, {
       pacienteId,
-      dias: dias ? Number(dias) : undefined,
-      limite: limite ? Number(limite) : undefined,
+      dias: diasDaQuery(dias),
+      limite: limiteDaQuery(limite),
     });
   }
 
@@ -34,7 +35,7 @@ export class EmocionalController {
     @Query('pacienteId') pacienteId?: string,
     @Query('dias') dias?: string,
   ) {
-    return this.emocional.resumo(user, pacienteId, dias ? Number(dias) : undefined);
+    return this.emocional.resumo(user, pacienteId, diasDaQuery(dias));
   }
 
   /** Humor e glicemia dia a dia, para a leitura do RF06 do briefing. */
@@ -44,7 +45,7 @@ export class EmocionalController {
     @Query('pacienteId') pacienteId?: string,
     @Query('dias') dias?: string,
   ) {
-    return this.emocional.porDia(user, pacienteId, dias ? Number(dias) : undefined);
+    return this.emocional.porDia(user, pacienteId, diasDaQuery(dias));
   }
 
   @Post()

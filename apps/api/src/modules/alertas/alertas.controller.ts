@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt.guard';
 import type { JwtPayload } from '../../common/guards/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { AlertasService } from './alertas.service';
+import { diasDaQuery } from '../../common/numero-da-query';
 
 @Controller('alertas')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -18,7 +19,7 @@ export class AlertasController {
     @Query('severidade') severidade?: string,
   ) {
     return this.alertas.findAll(user, {
-      dias: dias ? Number(dias) : undefined,
+      dias: diasDaQuery(dias),
       pacienteId,
       severidade,
     });
@@ -26,6 +27,6 @@ export class AlertasController {
 
   @Get('resumo')
   resumo(@CurrentUser() user: JwtPayload, @Query('dias') dias?: string) {
-    return this.alertas.resumo(user, dias ? Number(dias) : undefined);
+    return this.alertas.resumo(user, diasDaQuery(dias));
   }
 }

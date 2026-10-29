@@ -100,12 +100,6 @@ Desempenho (detalhe em `docs/ANALISE_DESEMPENHO.md`):
 
 Bugs pequenos, podem ser corrigidos:
 
-- **Autorização:** `GET /planos/ativo?pacienteId=` (`planos.service.ts`, `findAtivo`) não passa
-  por `garantirVinculo` e entrega o plano alimentar de qualquer paciente a nutricionista sem
-  vínculo e ao administrador. É o único vazamento clínico achado na análise de segurança
-  (`docs/ANALISE_SEGURANCA_LGPD.md`, item 2.1). Corrigir no padrão do `findAll` do mesmo serviço.
-- `?dias=` inválido ou gigante responde 500 em `/registros`, `/emocional/resumo` e
-  `/emocional/glicemia` (falta validar o número).
 - `tipo_refeicao` não é validado na API. O app usa `cafe`, `almoco`, `lanche`, `jantar` e `ceia`.
 - Apagar medicamento só desativa; apagar de novo devolve 200 em vez de 404.
 - O token de acesso continua valendo até expirar (15 min) depois de desativar a conta ou trocar a

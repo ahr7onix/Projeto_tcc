@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react'
-import { limparSessao } from '../lib/api'
+import { api, limparSessao } from '../lib/api'
 
 interface User {
   id?: string
@@ -38,6 +38,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [])
 
   const logout = useCallback(() => {
+    // Revoga o refresh token na API, como o app já faz; sem esperar a resposta,
+    // para o "Sair" não travar se a API estiver fora.
+    const refreshToken = localStorage.getItem('@NutriCare:refreshToken')
+    if (refreshToken) api.post('/auth/logout', { refreshToken }).catch(() => undefined)
     setUser(null)
     limparSessao()
   }, [])
