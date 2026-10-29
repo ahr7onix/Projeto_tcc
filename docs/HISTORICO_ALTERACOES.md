@@ -2,6 +2,119 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-29 — Fluxo completo da demonstração conferido; três ajustes no painel
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/app-segundo-apk`
+- O que foi conferido: a demonstração inteira no Chrome, com contas novas, painel e app (modo
+  web) apontando para uma API local com o código da `main`. 23 passos: nutricionista se cadastra,
+  fica barrada até a aprovação, admin aprova; paciente cria conta e faz o primeiro acesso;
+  convite, aceite e paciente na lista; glicemia de 320 no app vira aviso no app e alerta no
+  painel; plano alimentar criado no painel aparece no app; mensagens nos dois sentidos em tempo
+  real; planilha de alimentos importada aparece na busca do app; receita publicada aparece no
+  app; relatório abre com a glicemia.
+- O que foi modificado:
+  - Pacientes (painel): em tela de 1280 px o nome do paciente sumia, porque os botões da linha
+    tomavam a largura toda; e o cabeçalho tinha colunas diferentes das linhas. Agora os dois usam
+    as mesmas colunas, o nome tem largura mínima e os botões quebram linha.
+  - Aviso de erro do painel (`AlertBanner`): rola até ficar visível quando aparece. No plano
+    alimentar, o erro "Preencha o nome e os itens de todas as refeições" ficava no topo da janela
+    enquanto a pessoa estava no botão "Criar plano", e parecia que o botão não fazia nada. Vale
+    para todas as janelas e telas que usam o aviso.
+  - Central de notificações (painel): cada alerta de glicemia aparecia duas vezes, uma delas sem
+    o nome ("Um paciente registrou..."), porque somava o alerta e o histórico do push. O
+    histórico do tipo `alerta_glicemia` ficou de fora da central.
+  - App: o botão de enviar mensagem ganhou nome para leitor de tela ("Enviar mensagem").
+- Arquivos principais: `apps/web/src/pages/app/PacientesPage.tsx`,
+  `apps/web/src/components/ui/index.tsx`, `apps/web/src/components/NotificationCenter.tsx`,
+  `apps/mobile/src/app/(tabs)/mensagens/[id].tsx`.
+- Atenção para quem vier depois: no app em modo web, a tela ainda se monta logo depois de
+  aparecer; teste automático que digita cedo demais perde o texto (no celular não acontece). O
+  cadastro de paciente feito pela nutricionista (link de senha por e-mail) não entrou nesta
+  rodada; o envio do link foi conferido no ar em 27/10.
+
+## 2026-10-29 — Segundo APK conferido no celular
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/app-segundo-apk`
+- O que foi conferido: o APK do build `6ae15033` do EAS, instalado por cima do primeiro num
+  Android de verdade. Ícone e tela de abertura novos, login com Google (entrou como paciente
+  novo) e lembrete no modo alarme (som de 30 s) funcionaram. Antes de entregar o APK, ele foi
+  baixado e conferido: mesma assinatura do primeiro (SHA-1 cadastrado no Google Cloud), som em
+  `res/raw`, Client ID web e endereço da API no pacote, atualização pela internet no manifesto.
+- O que foi modificado: só documentação. `LEIA_PRIMEIRO_IA.md` (feito e limitações) e a
+  limitação 6 da `DOCUMENTACAO_TCC.md`, que ainda dizia que o app não tinha sido conferido num
+  celular. O que continua de fora é o push enviado pelo servidor, que depende do Firebase.
+- Atenção para quem vier depois: a atualização pela internet está configurada, mas ainda não foi
+  publicada nenhuma; a primeira deve ser conferida no celular (abrir, fechar e abrir o app).
+
+## 2026-10-28 — Ícone e tela de abertura do app (logo provisório)
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/app-segundo-apk`, que junta num PR só as três entradas abaixo (login com
+  Google no APK, lembrete como alarme e atualização pela internet) e esta
+- O que foi adicionado: logo provisório (gota de glicemia com uma folha, no azul do app) em
+  `apps/mobile/assets/logo.svg` e os PNGs que o Expo usa: `icon.png`, `adaptive-icon.png`
+  (Android), `splash-icon.png` (tela de abertura, fundo azul) e `favicon.png` (navegador).
+- O que foi modificado: `app.json` aponta para as imagens e configura o `expo-splash-screen`.
+- O que foi removido: `assets/.gitkeep`, que só marcava onde esses arquivos iam.
+- Atenção para quem vier depois: o logo é provisório; o grupo pode trocar por um melhor. Ícone e
+  tela de abertura são nativos: trocar exige subir o `version` do `app.json` e gerar APK novo
+  (não vão pela atualização pela internet). Conferido no `expo prebuild`.
+
+## 2026-10-28 — Atualização do app pela internet (EAS Update)
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/atualizacao-pela-internet` (criada em cima de `feat/lembrete-alarme`)
+- O que foi adicionado: `expo-updates` (`~29.0.20`, a versão do Expo 54; nenhuma outra versão
+  mudou). O APK passa a buscar atualização no Expo toda vez que abre e aplica na abertura
+  seguinte. Script `npm run atualizar -- "o que mudou"` (`apps/mobile/scripts/publicar-atualizacao.mjs`),
+  que publica com as variáveis do perfil `preview` do `eas.json`, e não com o `.env` da máquina.
+- O que foi modificado: `app.json` ganhou `runtimeVersion` (`policy: appVersion`) e
+  `updates.url`; o perfil `preview` do `eas.json` ganhou `"channel": "preview"`.
+- Arquivos principais: `apps/mobile/app.json`, `apps/mobile/eas.json`,
+  `apps/mobile/scripts/publicar-atualizacao.mjs`, `docs/PUBLICAR.md`.
+- Atenção para quem vier depois: só JavaScript vai pela internet. Mudança nativa exige subir o
+  `version` do `app.json` e gerar APK novo, senão a atualização chega ao APK antigo e quebra o
+  app. O APK que já existia (sem `expo-updates`) não recebe atualização. Conferido no
+  `expo prebuild` (o manifesto do Android leva o endereço e a versão `0.1.0`); falta conferir
+  no celular com o próximo APK.
+
+## 2026-10-28 — Lembretes podem tocar como alarme
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/lembrete-alarme` (criada em cima de `feat/login-google-apk`)
+- O que foi adicionado: na tela Saúde > Lembretes, o cartão "Como o celular avisa", com a chave
+  "Tocar como alarme" e o botão "Tocar um teste" (toca em 5 segundos). Com a chave ligada, no
+  Android os lembretes vão para o canal `lembretes-alarme`: som de 30 s
+  (`assets/sounds/alarme.wav`, gerado pela equipe, sem direitos de terceiros), tocado no volume
+  do alarme, vibração de ~12 s e aviso na tela bloqueada. O som para quando a pessoa abre a
+  barra de notificações, toca no aviso ou o descarta. A escolha fica só no aparelho
+  (`AsyncStorage`); banco e API não mudaram.
+- O que foi modificado: `app.json` passa o som para o plugin do `expo-notifications`;
+  `agenda-lembretes.ts` agenda no canal do modo escolhido e reagenda tudo ao trocar a chave.
+- Arquivos principais: `apps/mobile/src/lib/agenda-lembretes.ts`,
+  `apps/mobile/src/app/(tabs)/saude/lembretes.tsx`, `apps/mobile/app.json`.
+- Atenção para quem vier depois: ficaram de fora os botões "Feito" e "Adiar 10 min" na
+  notificação. Com o app fechado o Android só executa esses botões com o `expo-task-manager`
+  (mais uma peça nativa), e sem ele o botão não faz nada. Conferido no navegador (a chave
+  liga e continua ligada depois de recarregar) e no `expo prebuild` (o som vai para
+  `res/raw`). No Expo Go a chave e o teste funcionam, mas toca o som padrão do celular, uma vez
+  só: o arquivo do som só existe dentro do APK. O som de alarme só dá para conferir no celular,
+  com o próximo APK.
+
+## 2026-10-28 — Login com Google no APK
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/login-google-apk`
+- O que foi adicionado: no APK do Android o botão "Continuar com Google" usa o Google Sign-In
+  nativo (`@react-native-google-signin/google-signin`, que já estava instalado e sem uso).
+  Cliente "NutriCare - App Android" no projeto `nutricare-tcc` do Google Cloud, com o pacote e
+  o SHA-1 da chave do APK.
+- O que foi modificado: `eas.json` passa o Client ID web da segunda cópia para o APK. No Expo Go,
+  no iPhone e no navegador nada muda.
+- Arquivos principais: `apps/mobile/src/lib/google-sign-in.ts`,
+  `apps/mobile/src/components/auth/LoginForm.tsx`, `apps/mobile/eas.json`,
+  `docs/LOGIN_GOOGLE.md`.
+- Atenção para quem vier depois: o token sai em nome do Client ID web, então a API não mudou.
+  O módulo é carregado só na hora do login, porque no Expo Go ele quebra assim que é importado.
+  Conferido só até o pacote JavaScript do Android (`expo export`); falta testar no celular com o
+  próximo APK.
+
 ## 2026-10-28 — Correções de segurança antes da banca
 - Quem: Natan, com apoio de IA
 - PR/branch: `fix/seguranca-antes-da-banca`

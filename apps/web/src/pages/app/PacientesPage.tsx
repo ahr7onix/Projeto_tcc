@@ -216,7 +216,7 @@ export default function PacientesPage() {
         {}
         {!loading && filtrados.length > 0 && (
           <div style={{
-            display: 'grid', gridTemplateColumns: '1fr 110px 140px 130px 110px 36px',
+            display: 'grid', gridTemplateColumns: COLUNAS_LISTA,
             padding: '10px 20px', gap: 12,
             fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
             textTransform: 'uppercase', letterSpacing: '0.5px',
@@ -243,7 +243,7 @@ export default function PacientesPage() {
               key={p.id}
               onClick={() => navigate(`${acompanhamento ? '/acompanhamento' : '/pacientes'}/${p.id}/informacoes`)}
               style={{
-                display: 'grid', gridTemplateColumns: '1fr 110px 140px 130px minmax(250px, auto) 36px',
+                display: 'grid', gridTemplateColumns: COLUNAS_LISTA,
                 alignItems: 'center', padding: '14px 20px', gap: 12,
                 borderBottom: i < filtrados.length - 1 ? '1px solid var(--border)' : 'none',
                 cursor: 'pointer', transition: 'background 0.12s',
@@ -330,6 +330,11 @@ export default function PacientesPage() {
     </div>
   )
 }
+
+// Cabeçalho e linhas usam as mesmas colunas. O nome tem largura mínima e os
+// botões quebram linha: antes, em tela de 1280 px, os botões ocupavam tudo e o
+// nome do paciente sumia.
+const COLUNAS_LISTA = 'minmax(200px, 1fr) 90px 120px 110px minmax(200px, 300px) 36px'
 
 const caixaConvites: React.CSSProperties = {
   marginBottom: 24, padding: '12px 16px',

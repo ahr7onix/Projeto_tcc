@@ -61,7 +61,17 @@ e avise a equipe antes.
   `useSafeAreaInsets` da barra de abas.
 - **APK:** não troque `slug`, `owner`, `extra.eas.projectId` nem `android.package` no
   `apps/mobile/app.json`. Eles ligam o app ao projeto do Expo, onde está a chave de assinatura.
+  O SHA-1 dessa chave está cadastrado no Google Cloud para o login com Google do APK; chave
+  nova exige cadastrar o SHA-1 novo (`docs/LOGIN_GOOGLE.md`, "APK (Android)").
   Como gerar: `docs/PUBLICAR.md`, "APK do aplicativo".
+- **Lembretes como alarme:** o Android grava som e vibração do canal `lembretes-alarme` na
+  primeira vez e ignora mudanças depois; para mudar, use outro id de canal
+  (`apps/mobile/src/lib/agenda-lembretes.ts`). O som (`apps/mobile/assets/sounds/alarme.wav`)
+  entra no APK pelo plugin do `expo-notifications` no `app.json`: trocar o som exige APK novo.
+- **Atualização pela internet (EAS Update):** só para mudança de JavaScript, com
+  `npm run atualizar -- "o que mudou"` em `apps/mobile`. Mudou algo nativo (pacote com código
+  nativo, plugin, som, ícone, permissão)? Suba o `version` do `app.json` e gere APK novo, senão
+  a atualização chega ao APK antigo e quebra o app (`docs/PUBLICAR.md`).
 - **Dados de demonstração:** só existem se o banco for preparado com `SEED_DEMO=true`.
 
 ## O que já está feito
@@ -82,7 +92,9 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
   (`nutricare-tcc-painel.onrender.com`), com e-mail pelo Brevo e login Google em cliente próprio.
   A cópia do `render.yaml` continua sem e-mail.
 - APK de demonstração gerado pelo EAS Build (`apps/mobile/eas.json`, perfil `preview`) e testado
-  num Android de verdade. Falta o login com Google dentro do APK.
+  num Android de verdade. No segundo APK (29/10/2026) foram conferidos no celular o login com
+  Google (Google Sign-In nativo), o lembrete como alarme e o ícone. A atualização pela internet
+  está configurada e ainda não foi usada de verdade.
 
 ## Em andamento
 
@@ -111,7 +123,7 @@ Bugs pequenos, podem ser corrigidos:
 
 Limitações assumidas pela equipe (seção 1.8 da documentação): parâmetros clínicos ainda sem
 validação da Nutrição, CRN conferido à mão, e-mail depende de SMTP configurado, ambiente
-publicado é de demonstração, app não conferido em celular de verdade.
+publicado é de demonstração, push do servidor sem Firebase (o app usa notificações locais).
 
 ## Como registrar o que você fez
 

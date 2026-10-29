@@ -122,6 +122,8 @@ export default function ConversaScreen() {
             onPress={() => texto.trim() && enviar(texto.trim())}
             disabled={!texto.trim() || isPending}
             style={[styles.enviar, (!texto.trim() || isPending) && styles.enviarDesativado]}
+            accessibilityRole="button"
+            accessibilityLabel="Enviar mensagem"
           >
             {isPending ? (
               <ActivityIndicator color={colors.textInverse} size="small" />

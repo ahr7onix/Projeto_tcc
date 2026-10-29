@@ -197,9 +197,11 @@ exclusão feita pelo próprio paciente, no aplicativo, é suave e preserva o his
 e o painel não têm testes de unidade. A conferência dessas duas partes é feita por testes ponta a
 ponta com Playwright, que percorrem o painel e o aplicativo no navegador, e por testes manuais.
 
-**6. Funcionalidades que ainda não foram conferidas num celular de verdade.** A entrega das
-notificações push, o disparo dos lembretes no horário e o login pelo Google no aplicativo foram
-conferidos no modo web do aplicativo, não num aparelho.
+**6. O push enviado pelo servidor não chega ao aplicativo instalado.** O aplicativo foi conferido
+num Android de verdade em 28 e 29/10/2026: lembretes no horário (também no modo alarme), alerta de
+glicemia fora da faixa, mensagens em tempo real e login pelo Google. Esses avisos são notificações
+locais do aparelho. O push mandado pelo servidor depende do Firebase Cloud Messaging, que não foi
+configurado.
 
 **7. O ambiente publicado é de demonstração.** O sistema está no ar em um plano gratuito, no
 qual o servidor hiberna quando fica ocioso — a primeira requisição depois disso leva cerca de
@@ -248,7 +250,7 @@ na API, tela no aplicativo ou no painel, e persistência no banco.
 | RF26 | Relatório do paciente, com exportação em planilha e em PDF | Implementado |
 | RF27 | Métricas gerais e gestão de usuários pelo administrador | Implementado |
 | RF28 | Exclusão da própria conta pelo paciente | Implementado |
-| RF29 | Lembretes programáveis pelo paciente | Implementado — tela no aplicativo, notificação local no aparelho |
+| RF29 | Lembretes programáveis pelo paciente | Implementado — tela no aplicativo, notificação local no aparelho, com opção de tocar como alarme |
 | RF30 | Gráficos de evolução da glicemia e do peso | Implementado — no painel e no aplicativo |
 | RF31 | Importação da tabela nutricional por planilha (CSV), com prévia e recusa por linha | Implementado |
 | RF32 | Consentimento do paciente no vínculo: convite, aceite, recusa e encerramento pelo paciente | Implementado |
