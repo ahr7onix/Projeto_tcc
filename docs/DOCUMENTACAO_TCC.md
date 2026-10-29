@@ -193,9 +193,10 @@ enviado.
 conta é apagada com tudo o que depende dela — no caso do paciente, o histórico clínico. A
 exclusão feita pelo próprio paciente, no aplicativo, é suave e preserva o histórico.
 
-**5. Não há testes automatizados de interface.** A API tem 238 testes automatizados; o aplicativo
+**5. Não há testes de unidade de interface.** A API tem 277 testes automatizados; o aplicativo
 e o painel não têm testes de unidade. A conferência dessas duas partes é feita por testes ponta a
-ponta com Playwright, que percorrem o painel e o aplicativo no navegador, e por testes manuais.
+ponta com Playwright, que percorrem o painel e o aplicativo no navegador, e por testes manuais. O
+principal é o `scripts/e2e-fluxo.mjs`, que refaz a demonstração inteira em 21 passos.
 
 **6. O push enviado pelo servidor não chega ao aplicativo instalado.** O aplicativo foi conferido
 num Android de verdade em 28 e 29/10/2026: lembretes no horário (também no modo alarme), alerta de

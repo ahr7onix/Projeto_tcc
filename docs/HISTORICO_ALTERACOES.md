@@ -2,6 +2,26 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-29 — Teste do fluxo completo no repositório (`npm run e2e:fluxo`)
+- Quem: Natan, com apoio de IA
+- PR/branch: `test/e2e-fluxo`
+- O que foi adicionado: `scripts/e2e-fluxo.mjs`, que refaz a demonstração inteira no navegador
+  em 21 passos, com contas novas: cadastro e aprovação da nutricionista, conta e primeiro acesso
+  do paciente, convite e aceite, glicemia alta virando alerta, plano alimentar, mensagens nos dois
+  sentidos, planilha de alimentos, receita, conteúdo educativo, relatório, humor, medidas,
+  medicamento, anotação e o paciente encerrando o acompanhamento. Comando `npm run e2e:fluxo` na
+  raiz. Fecha o item "atualizar o teste ponta a ponta com os fluxos novos" do plano de fechamento.
+- O que foi modificado: README (tabela de comandos), regra 4 do `LEIA_PRIMEIRO_IA.md` (mexeu em
+  tela ou fluxo, roda o teste), limitação 5 da `DOCUMENTACAO_TCC.md` (277 testes da API e o
+  teste do fluxo). `.gitignore` ignora `scripts/e2e-falhas/`, onde ficam os prints dos passos que
+  falham.
+- Arquivos principais: `scripts/e2e-fluxo.mjs`, `scripts/package.json`, `package.json`.
+- Atenção para quem vier depois: o teste cria contas e entra como o administrador do seed, então
+  só roda em banco de desenvolvimento; ele se recusa a rodar contra endereço `onrender.com`. O
+  app tem que estar em modo web (`npm run web` em `apps/mobile`) com o `EXPO_PUBLIC_API_URL`
+  apontando para a mesma API. `MOSTRAR=1` abre o navegador na tela. Rodou 21/21 em 29/10, com o
+  navegador visível e escondido.
+
 ## 2026-10-29 — Fluxo completo da demonstração conferido; três ajustes no painel
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/app-segundo-apk`

@@ -40,6 +40,7 @@ para não precisar entrar em cada pasta:
 | `npm run dev:api` · `dev:web` · `dev:mobile` | sobe cada aplicação |
 | `npm run db:preparar` | cria e atualiza as tabelas do banco |
 | `npm run db:verificar` | confere se o `schema.sql` está em dia com as migrations |
+| `npm run e2e:fluxo` | percorre a demonstração inteira no navegador (precisa da API, do painel e do app web rodando; ver o topo de `scripts/e2e-fluxo.mjs`) |
 
 Cada projeto mantém o seu próprio `package.json` e `package-lock.json`. A raiz
 só delega — não são workspaces do npm, de propósito: o Render instala cada
