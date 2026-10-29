@@ -57,6 +57,20 @@ export function descreverPorcao(alimento: Alimento): string {
   return `${alimento.porcaoG} g`;
 }
 
+/**
+ * Uma casa decimal só quando o número precisa: 28 e 28,4.
+ *
+ * O arredondamento é o mesmo do servidor (`arredondar` em common/nutricao):
+ * com `toFixed` a prévia mostrava 24,9 e o registro salvo ficava 25, porque
+ * 24,95 em ponto flutuante é 24,9499... e as duas funções decidiam diferente.
+ */
+export function formatarQuantidade(valor: number): string {
+  const arredondado = Math.round(valor * 10) / 10;
+  return Number.isInteger(arredondado)
+    ? String(arredondado)
+    : String(arredondado).replace('.', ',');
+}
+
 /** Os grupos vem do banco; o mapa so troca o nome tecnico pelo do dia a dia. */
 const ROTULO_GRUPO: Record<string, string> = {
   acucares: 'Açúcares',

@@ -16,6 +16,7 @@ import { ScreenContainer } from '@/components/ScreenContainer';
 import {
   buscarAlimento,
   descreverPorcao,
+  formatarQuantidade as formatar,
   listarAlimentos,
   type Alimento,
 } from '@/lib/api/alimentos';
@@ -26,20 +27,6 @@ function horaAgora(): string {
   const agora = new Date();
   return `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`;
 }
-
-/**
- * Uma casa decimal só quando o número precisa: 28 e 28,4.
- *
- * O arredondamento é o mesmo do servidor (`arredondar` em common/nutricao):
- * com `toFixed` a prévia mostrava 24,9 e o registro salvo ficava 25, porque
- * 24,95 em ponto flutuante é 24,9499... e as duas funções decidiam diferente.
- */
-const formatar = (valor: number): string => {
-  const arredondado = Math.round(valor * 10) / 10;
-  return Number.isInteger(arredondado)
-    ? String(arredondado)
-    : String(arredondado).replace('.', ',');
-};
 
 const numero = (texto: string): number => Number(texto.replace(',', '.'));
 
@@ -206,7 +193,7 @@ export default function RegistrarRefeicaoScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.escolhidoNome}>{alimento.nome}</Text>
                 <Text style={styles.escolhidoPorcao}>
-                  {alimento.carboidratosG} g de carboidrato por {alimento.porcaoG} g
+                  {formatar(alimento.carboidratosG)} g de carboidrato por {alimento.porcaoG} g
                 </Text>
               </View>
               <Ionicons name="checkmark-circle" size={22} color={colors.success} />
@@ -265,7 +252,7 @@ export default function RegistrarRefeicaoScreen() {
                     <Text style={styles.resultadoNome}>{a.nome}</Text>
                     <Text style={styles.resultadoPorcao}>{descreverPorcao(a)}</Text>
                   </View>
-                  <Text style={styles.resultadoCarbo}>{a.carboidratosG} g carb.</Text>
+                  <Text style={styles.resultadoCarbo}>{formatar(a.carboidratosG)} g carb.</Text>
                 </Pressable>
               ))
             )}

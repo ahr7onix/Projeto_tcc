@@ -76,6 +76,16 @@ e avise a equipe antes.
 - **API dormindo (Render gratuito):** depois de 15 min parada ela leva de 30 a 60 s para acordar.
   O app espera até 60 s (`apps/mobile/src/lib/api.ts`) e manda um "acorda" ao abrir e ao voltar
   para a frente. Não baixe esse tempo: com 15 s o primeiro login do dia falhava.
+- **Tabela TACO:** o arquivo pronto é o `data/processed/taco/taco_composicao.csv` do
+  github.com/brolesi/taco (licença MIT, 597 alimentos). Importe pelo painel (Alimentos →
+  Importar planilha, fonte "TACO 4ª edição"): entram 578. Os 19 de fora não têm o dado na
+  própria TACO (óleos e azeites sem carboidrato e proteína, 6 alimentos sem análise, 4 carnes e
+  peixes com carboidrato levemente negativo), e a tela mostra o motivo de cada um. O arquivo
+  grava o traço ("Tr") como `1e-05`; por isso o leitor da planilha aceita notação científica.
+  Os 36 alimentos de exemplo continuam aparecendo na busca ao lado dos da TACO.
+- **Links nos e-mails (Brevo):** o Brevo troca os links por um endereço de rastreamento de
+  cliques (`...sendibt3.com/tr/cl/...`) que redireciona para o painel. No plano gratuito não dá
+  para desligar. O link de criar ou redefinir senha continua valendo uma vez só.
 - **Dados de demonstração:** só existem se o banco for preparado com `SEED_DEMO=true`.
 
 ## O que já está feito
