@@ -13,6 +13,11 @@ import type {
 export function extractAuthError(error: unknown, fallback: string): string {
   if (error instanceof AxiosError) {
     if (error.code === 'ERR_NETWORK') return 'Sem conexão com o servidor.';
+    // Sem isto, o tempo esgotado caía na mensagem padrão ("E-mail ou senha
+    // incorretos") e a pessoa achava que tinha errado a senha.
+    if (error.code === 'ECONNABORTED') {
+      return 'O servidor demorou para responder. Tente de novo em instantes.';
+    }
     const data = error.response?.data as
       | { message?: string | string[] }
       | undefined;

@@ -6,10 +6,14 @@ import { useAuthStore } from '../stores/auth';
 
 // `axios.create` e a forma documentada. A regra avisa porque o axios tambem
 // exporta `create` como named export, mas os dois sao o mesmo binding.
+// No plano gratuito do Render a API dorme depois de 15 min parada e leva de 30 a
+// 60 s para acordar. Com 15 s de espera o primeiro login do dia falhava.
+const ESPERA_MAXIMA_MS = 60000;
+
 // eslint-disable-next-line import/no-named-as-default-member
 export const api: AxiosInstance = axios.create({
   baseURL: env.apiUrl,
-  timeout: 15000,
+  timeout: ESPERA_MAXIMA_MS,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -21,9 +25,19 @@ export const api: AxiosInstance = axios.create({
 // eslint-disable-next-line import/no-named-as-default-member
 const clienteRenovacao = axios.create({
   baseURL: env.apiUrl,
-  timeout: 15000,
+  timeout: ESPERA_MAXIMA_MS,
   headers: { 'Content-Type': 'application/json' },
 });
+
+/**
+ * Manda um "acorda" para a API sem esperar a resposta. Chamado quando o app abre
+ * e quando volta para a frente: enquanto a pessoa digita a senha ou escolhe a
+ * tela, o servidor já vai acordando. Usa o cliente sem interceptors porque não
+ * precisa de sessão.
+ */
+export function acordarServidor(): void {
+  clienteRenovacao.get('/status').catch(() => undefined);
+}
 
 interface RespostaRenovacao {
   accessToken: string;

@@ -301,7 +301,7 @@ quem tem ele instalado precisa instalar um APK novo uma vez.
 
 | O que acontece | Causa provável | O que fazer |
 |---|---|---|
-| Primeira tela demora ~50 s | O servidor estava desligado (plano gratuito) | Esperar; é o comportamento normal |
+| Primeira tela demora ~50 s | O servidor estava desligado (plano gratuito) | Esperar; é o comportamento normal. O app avisa "Acordando o servidor" e espera até 1 minuto. Antes de uma apresentação, abra o painel ou o app uns 2 minutos antes |
 | Painel abre mas as listas ficam vazias | `CORS_ORIGIN` ou `VITE_API_URL` errados | Conferir no `render.yaml`, sem barra no final |
 | `/status` responde `banco: indisponivel` | Banco caiu ou passou dos 30 dias | Ver **nutricare-adj-db** no Render |
 | Erro de certificado nos logs da API | Provedor com certificado próprio | `DATABASE_SSL` = `no-verify` |

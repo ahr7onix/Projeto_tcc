@@ -2,6 +2,28 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-29 — App aguenta a API acordando; primeira atualização pela internet
+- Quem: Natan, com apoio de IA
+- PR/branch: `fix/servidor-acordando`
+- O que aconteceu: no celular, às vezes o login demorava ou falhava e às vezes era rápido. A API
+  do Render gratuito dorme depois de 15 min parada e leva de 30 a 60 s para acordar, e o app
+  desistia com 15 s. Pior: o tempo esgotado aparecia como "E-mail ou senha incorretos".
+- O que foi modificado:
+  - Espera de até 60 s nas chamadas do app (`lib/api.ts`).
+  - O app manda um "acorda" (`GET /status`) ao abrir e ao voltar para a frente.
+  - No login, depois de 5 s aparece "Acordando o servidor. A primeira entrada depois de um
+    tempo parado pode levar até 1 minuto."
+  - Tempo esgotado tem mensagem própria ("O servidor demorou para responder...").
+  - Login com Google sem internet (código 7 do Google) diz "Sem internet para falar com o
+    Google..." no lugar de "NETWORK_ERROR".
+- Arquivos principais: `apps/mobile/src/lib/api.ts`, `apps/mobile/src/app/_layout.tsx`,
+  `apps/mobile/src/components/auth/LoginForm.tsx`, `apps/mobile/src/hooks/use-auth.ts`,
+  `apps/mobile/src/lib/google-sign-in.ts`.
+- Atenção para quem vier depois: conferido no Chrome atrasando o login em 20 s de propósito (o
+  aviso aparece e o login completa). Em 29/10 saiu a primeira atualização pela internet (as
+  correções do PR #22): o celular mostrou "Versão 0.1.0 · atualização de 29/10, 09:23" no
+  Perfil, sem APK novo. Esta correção também é só JavaScript e vai do mesmo jeito.
+
 ## 2026-10-29 — Acabamentos do app e do gráfico do painel
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/fluxo-e-acabamentos`
