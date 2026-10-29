@@ -2,6 +2,25 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-29 — TACO no ar e contagem da tela Alimentos do painel
+- Quem: Natan, com apoio de IA
+- PR/branch: `fix/alimentos-total-taco`
+- O que aconteceu: depois do PR #24, a TACO 4ª edição foi importada no painel no ar, com a conta
+  da Camila e fonte "TACO 4ª edição": 578 novos em 7 s. Os 36 alimentos de exemplo foram
+  desativados (`ativo = false`); no ar ficaram 578 alimentos ativos, todos da TACO, em 15 grupos.
+  A atualização do app pela internet com as telas do PR #24 saiu no mesmo dia.
+- O que foi modificado: a tela Alimentos do painel busca no máximo 200 e dizia "200 alimentos
+  listados", como se a tabela tivesse 200. Agora diz "200 de 578 na tabela" (total tirado da
+  contagem por grupo, que a tela já carregava) e avisa no fim da lista que use a busca ou o
+  grupo para achar os outros. "Remover" passou a atualizar essa contagem.
+- Documentação: README (seed e RF15), `DOCUMENTACAO_TCC.md` (limitação 1, requisito 1, tabela
+  nutricional, 10.4 e 12), `RESUMO_ENTREGA.md`, `CONFERENCIA_NUTRICAO.md` (nota na seção 2) e
+  `LEIA_PRIMEIRO_IA.md` deixam de dizer que falta a tabela oficial. Continua faltando a
+  conferência da Nutrição e decidir os 19 alimentos que a TACO traz sem valor.
+- Atenção para quem vier depois: a listagem `GET /alimentos` devolve no máximo 500 itens; para
+  contar ou varrer a tabela inteira, use `GET /alimentos/grupos` (traz o total de cada grupo) ou
+  filtre por grupo.
+
 ## 2026-10-29 — Importação da TACO inteira pelo painel
 - Quem: Natan, com apoio de IA
 - PR/branch: `fix/taco-tracos`

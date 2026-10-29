@@ -90,8 +90,10 @@ Enquanto essa verificação estiver verde, os três caminhos de instalação
 estrutura.
 
 O `seeds_alimentos.sql` carrega 36 alimentos com valores **aproximados**, só para o
-sistema não nascer vazio. Eles ficam marcados com `fonte = 'exemplo'` e devem ser
-substituídos pela tabela oficial assim que a equipe de Nutrição indicar qual usar.
+sistema não nascer vazio. Eles ficam marcados com `fonte = 'exemplo'`. No ambiente
+publicado eles foram trocados pela TACO 4ª edição (578 alimentos, importados pelo painel
+em 29/10/2026) e ficaram desativados. Num banco novo, importe a TACO como explica o
+`docs/LEIA_PRIMEIRO_IA.md` (armadilha "Tabela TACO").
 
 Sem o `psql` instalado, dá para aplicar os mesmos arquivos pelo Node:
 
@@ -241,7 +243,7 @@ npm run test:cov      # com cobertura
 | RF12 | Conteúdos educativos | Implementado |
 | RF13 | Gestão administrativa | Implementado |
 | RF14 | Integração web + mobile | Implementado |
-| RF15 | Importação de tabela nutricional (CSV, cabeçalho da TACO reconhecido) | Implementado — falta a tabela oficial |
+| RF15 | Importação de tabela nutricional (CSV, cabeçalho da TACO reconhecido) | Implementado — TACO 4ª edição importada no ambiente publicado (578 alimentos) |
 | RF16 | Consentimento do paciente no vínculo (convite, aceite, encerramento) | Implementado |
 | RF17 | Cadastro de paciente pelo nutricionista e de nutricionista pela administração, com aprovação do CRN | Implementado |
 

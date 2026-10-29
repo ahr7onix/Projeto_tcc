@@ -83,7 +83,7 @@ Tudo o que está nesta lista foi usado do começo ao fim e conferido.
 
 | Nº | Requisito do briefing | Situação |
 |---|---|---|
-| RF01 | Importação da tabela de alimentos | **Atendido.** Falta a tabela oficial que vocês indicarem |
+| RF01 | Importação da tabela de alimentos | **Atendido.** TACO 4ª edição carregada; aguarda a conferência de vocês |
 | RF02 | Cálculo da necessidade energética diária | **Atendido.** Aguarda a conferência da fórmula |
 | RF03 | Distribuição de macronutrientes | **Atendido.** Aguarda a conferência dos percentuais |
 | RF04 | Peso, altura, IMC e circunferências, com histórico | **Atendido** |
@@ -96,9 +96,10 @@ Tudo o que está nesta lista foi usado do começo ao fim e conferido.
 
 **RF01 — Tabela de alimentos.** O sistema importa uma tabela inteira de uma vez:
 basta salvar a planilha como CSV. O painel mostra uma prévia e as linhas com
-problema antes de gravar. Os 36 alimentos carregados hoje são **exemplos com
-valores aproximados**, marcados assim na tela. Assim que vocês disserem qual
-tabela usar, a importação leva minutos.
+problema antes de gravar. No ambiente publicado já está carregada a **TACO 4ª
+edição** (578 alimentos; a importação levou 7 segundos), no lugar dos 36 exemplos
+com valores aproximados. Ficaram de fora 19 que a própria TACO traz sem valor
+(óleos e azeites sem carboidrato e proteína, por exemplo): digam como tratá-los.
 
 **RF02, RF03 e RF05 — Cálculos e faixas.** As fórmulas e faixas estão em uso, mas
 são referências gerais. Cada valor fica num lugar só do sistema, e corrigir um

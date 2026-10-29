@@ -21,6 +21,12 @@ import {
   type GrupoAlimento,
 } from '../../lib/alimentos'
 
+/**
+ * A tela traz no máximo isto de uma vez. Com a TACO são 578 alimentos: sem
+ * dizer que a lista parou aqui, "200 alimentos listados" parecia a tabela toda.
+ */
+const LIMITE_LISTA = 200
+
 /** Uma casa decimal só quando o número precisa: 89 e 89,5. */
 const formatar = (valor: number | null): string => {
   if (valor === null) return '—'
@@ -47,7 +53,7 @@ export default function AlimentosPage() {
         const lista = await listarAlimentos({
           busca: termo,
           grupo: grupoSelecionado,
-          limite: 200,
+          limite: LIMITE_LISTA,
         })
         if (ativo()) setAlimentos(lista)
       } catch (err) {
@@ -125,12 +131,23 @@ export default function AlimentosPage() {
       setDesativandoId(alimento.id)
       await desativarAlimento(alimento.id)
       setAlimentos((atual) => atual.filter((a) => a.id !== alimento.id))
+      listarGrupos()
+        .then(setGrupos)
+        .catch(() => undefined)
     } catch (err) {
       setErro(extractError(err))
     } finally {
       setDesativandoId(null)
     }
   }
+
+  // O total vem da contagem por grupo. Com busca digitada não há total a mostrar.
+  const totalNaTabela = busca.trim()
+    ? null
+    : grupo
+      ? (grupos.find((g) => g.grupo === grupo)?.total ?? null)
+      : grupos.reduce((soma, g) => soma + g.total, 0)
+  const listaCortada = alimentos.length >= LIMITE_LISTA
 
   return (
     <div>
@@ -175,7 +192,11 @@ export default function AlimentosPage() {
             <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--primary)' }}>
               {alimentos.length}
             </div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>alimentos listados</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+              {totalNaTabela !== null && totalNaTabela > alimentos.length
+                ? `de ${totalNaTabela} na tabela`
+                : 'alimentos listados'}
+            </div>
           </div>
         </div>
       </Card>
@@ -261,6 +282,13 @@ export default function AlimentosPage() {
             </table>
           </div>
         </Card>
+      )}
+
+      {!loading && listaCortada && (
+        <div style={rodape}>
+          Mostrando os {LIMITE_LISTA} primeiros em ordem alfabética. Use a busca ou o grupo para
+          achar os outros.
+        </div>
       )}
 
       <div style={rodape}>
