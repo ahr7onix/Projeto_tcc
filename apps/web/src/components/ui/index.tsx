@@ -1,4 +1,4 @@
-import React, { useId } from 'react'
+import React, { useEffect, useId, useRef } from 'react'
 
 /*
  * Componentes compartilhados do painel.
@@ -416,8 +416,14 @@ export function ProgressBar({ value, tint = 'primary' }: { value: number; tint?:
 /* ─── AlertBanner ─── */
 export function AlertBanner({ message, type = 'danger' }: { message: string; type?: 'danger' | 'success' }) {
   const t = type === 'danger' ? tintMap.danger : tintMap.success
+  const ref = useRef<HTMLDivElement>(null)
+  // Nos formulários longos o aviso fica no topo e o botão de salvar lá embaixo:
+  // sem rolar até o aviso, parecia que o botão não fazia nada.
+  useEffect(() => {
+    ref.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [message])
   return (
-    <div style={{
+    <div ref={ref} role={type === 'danger' ? 'alert' : 'status'} style={{
       display: 'flex', alignItems: 'center', gap: 8,
       padding: '10px 14px', borderRadius: 'var(--radius-md)',
       background: t.bg, color: t.fg,

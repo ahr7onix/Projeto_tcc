@@ -2,6 +2,36 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-29 — Fluxo completo da demonstração conferido; três ajustes no painel
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/app-segundo-apk`
+- O que foi conferido: a demonstração inteira no Chrome, com contas novas, painel e app (modo
+  web) apontando para uma API local com o código da `main`. 23 passos: nutricionista se cadastra,
+  fica barrada até a aprovação, admin aprova; paciente cria conta e faz o primeiro acesso;
+  convite, aceite e paciente na lista; glicemia de 320 no app vira aviso no app e alerta no
+  painel; plano alimentar criado no painel aparece no app; mensagens nos dois sentidos em tempo
+  real; planilha de alimentos importada aparece na busca do app; receita publicada aparece no
+  app; relatório abre com a glicemia.
+- O que foi modificado:
+  - Pacientes (painel): em tela de 1280 px o nome do paciente sumia, porque os botões da linha
+    tomavam a largura toda; e o cabeçalho tinha colunas diferentes das linhas. Agora os dois usam
+    as mesmas colunas, o nome tem largura mínima e os botões quebram linha.
+  - Aviso de erro do painel (`AlertBanner`): rola até ficar visível quando aparece. No plano
+    alimentar, o erro "Preencha o nome e os itens de todas as refeições" ficava no topo da janela
+    enquanto a pessoa estava no botão "Criar plano", e parecia que o botão não fazia nada. Vale
+    para todas as janelas e telas que usam o aviso.
+  - Central de notificações (painel): cada alerta de glicemia aparecia duas vezes, uma delas sem
+    o nome ("Um paciente registrou..."), porque somava o alerta e o histórico do push. O
+    histórico do tipo `alerta_glicemia` ficou de fora da central.
+  - App: o botão de enviar mensagem ganhou nome para leitor de tela ("Enviar mensagem").
+- Arquivos principais: `apps/web/src/pages/app/PacientesPage.tsx`,
+  `apps/web/src/components/ui/index.tsx`, `apps/web/src/components/NotificationCenter.tsx`,
+  `apps/mobile/src/app/(tabs)/mensagens/[id].tsx`.
+- Atenção para quem vier depois: no app em modo web, a tela ainda se monta logo depois de
+  aparecer; teste automático que digita cedo demais perde o texto (no celular não acontece). O
+  cadastro de paciente feito pela nutricionista (link de senha por e-mail) não entrou nesta
+  rodada; o envio do link foi conferido no ar em 27/10.
+
 ## 2026-10-29 — Segundo APK conferido no celular
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/app-segundo-apk`
