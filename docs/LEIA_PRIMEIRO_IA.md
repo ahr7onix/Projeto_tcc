@@ -92,9 +92,9 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
   (`nutricare-tcc-painel.onrender.com`), com e-mail pelo Brevo e login Google em cliente próprio.
   A cópia do `render.yaml` continua sem e-mail.
 - APK de demonstração gerado pelo EAS Build (`apps/mobile/eas.json`, perfil `preview`) e testado
-  num Android de verdade. O login com Google do APK (Google Sign-In nativo), o modo alarme dos
-  lembretes e a atualização pela internet estão no código e ainda precisam ser conferidos no
-  celular, no próximo APK.
+  num Android de verdade. No segundo APK (29/10/2026) foram conferidos no celular o login com
+  Google (Google Sign-In nativo), o lembrete como alarme e o ícone. A atualização pela internet
+  está configurada e ainda não foi usada de verdade.
 
 ## Em andamento
 
@@ -129,7 +129,7 @@ Bugs pequenos, podem ser corrigidos:
 
 Limitações assumidas pela equipe (seção 1.8 da documentação): parâmetros clínicos ainda sem
 validação da Nutrição, CRN conferido à mão, e-mail depende de SMTP configurado, ambiente
-publicado é de demonstração, app não conferido em celular de verdade.
+publicado é de demonstração, push do servidor sem Firebase (o app usa notificações locais).
 
 ## Como registrar o que você fez
 

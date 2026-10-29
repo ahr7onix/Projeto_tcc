@@ -2,6 +2,20 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-29 — Segundo APK conferido no celular
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/app-segundo-apk`
+- O que foi conferido: o APK do build `6ae15033` do EAS, instalado por cima do primeiro num
+  Android de verdade. Ícone e tela de abertura novos, login com Google (entrou como paciente
+  novo) e lembrete no modo alarme (som de 30 s) funcionaram. Antes de entregar o APK, ele foi
+  baixado e conferido: mesma assinatura do primeiro (SHA-1 cadastrado no Google Cloud), som em
+  `res/raw`, Client ID web e endereço da API no pacote, atualização pela internet no manifesto.
+- O que foi modificado: só documentação. `LEIA_PRIMEIRO_IA.md` (feito e limitações) e a
+  limitação 6 da `DOCUMENTACAO_TCC.md`, que ainda dizia que o app não tinha sido conferido num
+  celular. O que continua de fora é o push enviado pelo servidor, que depende do Firebase.
+- Atenção para quem vier depois: a atualização pela internet está configurada, mas ainda não foi
+  publicada nenhuma; a primeira deve ser conferida no celular (abrir, fechar e abrir o app).
+
 ## 2026-10-28 — Ícone e tela de abertura do app (logo provisório)
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/app-segundo-apk`, que junta num PR só as três entradas abaixo (login com
