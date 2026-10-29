@@ -14,7 +14,8 @@ está no `docs/DOCUMENTACAO_TCC.md`.
 2. Trabalhe numa branch própria, nunca direto na `main`.
 3. Mexa só no que o pedido exige. Não reescreva arquivo inteiro para "melhorar".
 4. Antes de subir, rode `npm run verificar` na raiz (typecheck dos três projetos, testes da API e
-   build). Mexeu no banco? Rode também `npm run db:verificar`.
+   build). Mexeu no banco? Rode também `npm run db:verificar`. Mexeu em tela ou em fluxo? Rode
+   `npm run e2e:fluxo` com a API, o painel e o app web no ar (instruções no topo do script).
 5. Suba para o GitHub (commit, push e Pull Request) a cada atualização. Não deixe trabalho só na
    máquina.
 6. Registre a mudança no `docs/HISTORICO_ALTERACOES.md` e, se mudou o que está "feito",
@@ -95,6 +96,8 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
   num Android de verdade. No segundo APK (29/10/2026) foram conferidos no celular o login com
   Google (Google Sign-In nativo), o lembrete como alarme e o ícone. A atualização pela internet
   está configurada e ainda não foi usada de verdade.
+- Teste do fluxo completo da demonstração (`scripts/e2e-fluxo.mjs`, `npm run e2e:fluxo`): 21
+  passos, do cadastro da nutricionista ao paciente encerrando o acompanhamento.
 
 ## Em andamento
 
@@ -117,9 +120,6 @@ Bugs pequenos, podem ser corrigidos:
 - O token de acesso continua valendo até expirar (15 min) depois de desativar a conta ou trocar a
   senha.
 - Os testes automáticos escrevem erros falsos no `logs/` real da API.
-- App em celular estreito (360 de largura): a barra de abas corta "Alimentação" e "Mensagens".
-- App: "Gerenciar" (Saúde e Alimentação) e "Esqueceu a senha?" têm área de toque pequena
-  (menos de 32 px de altura, sem `hitSlop`).
 
 Limitações assumidas pela equipe (seção 1.8 da documentação): parâmetros clínicos ainda sem
 validação da Nutrição, CRN conferido à mão, e-mail depende de SMTP configurado, ambiente

@@ -340,7 +340,7 @@ export function LoginForm({ initialMode = 'login' }: Props) {
                   />
 
                   <Link href="/(auth)/esqueci-senha" asChild>
-                    <Pressable style={styles.forgot}>
+                    <Pressable style={styles.forgot} hitSlop={12} accessibilityRole="link">
                       <Text style={styles.forgotText}>Esqueceu a senha?</Text>
                     </Pressable>
                   </Link>

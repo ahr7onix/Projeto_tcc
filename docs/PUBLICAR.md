@@ -283,7 +283,8 @@ novo: vai pela internet para quem já tem o APK instalado.
    O script usa as variáveis do perfil `preview` do `eas.json`, não o `.env` da
    máquina.
 2. No celular: abrir o app (ele baixa a atualização), fechar e abrir de novo (ela
-   passa a valer).
+   passa a valer). No fim da tela **Perfil** aparece "Versão 0.1.0 · atualização de
+   DD/MM, HH:MM": é a data da atualização que o celular está usando.
 
 Mudança nativa **precisa de APK novo**: pacote com código nativo, plugin ou som no
 `app.json`, ícone, permissões. Nesse caso, suba o `version` do `app.json` (por

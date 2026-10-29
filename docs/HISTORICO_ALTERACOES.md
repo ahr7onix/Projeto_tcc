@@ -2,6 +2,48 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-29 — Acabamentos do app e do gráfico do painel
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/fluxo-e-acabamentos`
+- O que foi adicionado: no fim da tela Perfil do app, "Versão 0.1.0" e, quando o código veio
+  pela atualização da internet, "· atualização de DD/MM, HH:MM" (`expo-updates`). É como se
+  confere no celular que a atualização nova chegou.
+- O que foi modificado:
+  - Barra de abas do app: o texto encolhe um pouco só quando não cabe
+    (`adjustsFontSizeToFit`). Em celular de 360 de largura "Alimentação" virava "Alimenta…".
+    No navegador isso não tem efeito; vale no celular.
+  - "Gerenciar" (Restrições e Medicamentos) e "Esqueceu a senha?" ganharam área de toque
+    (`hitSlop`) e nome para leitor de tela.
+  - Perfil do app: o selo dizia "Cliente"; agora diz "Paciente", como o resto do sistema.
+  - Gráfico de linha do painel (`GraficoLinha`): com uma medida só, a área sombreada saía da
+    borda esquerda e desenhava uma rampa que parecia tendência. Agora a área sai de baixo do
+    primeiro ponto, e com um ponto só aparece só o ponto.
+- Arquivos principais: `apps/mobile/src/app/(tabs)/_layout.tsx`,
+  `apps/mobile/src/app/(tabs)/perfil/index.tsx`, `apps/web/src/components/GraficoLinha.tsx`.
+- Atenção para quem vier depois: tudo do app aqui é JavaScript, então vai pela atualização da
+  internet (`npm run atualizar`), sem APK novo. O encolhimento das abas só dá para conferir num
+  celular estreito.
+
+## 2026-10-29 — Teste do fluxo completo no repositório (`npm run e2e:fluxo`)
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/fluxo-e-acabamentos`
+- O que foi adicionado: `scripts/e2e-fluxo.mjs`, que refaz a demonstração inteira no navegador
+  em 21 passos, com contas novas: cadastro e aprovação da nutricionista, conta e primeiro acesso
+  do paciente, convite e aceite, glicemia alta virando alerta, plano alimentar, mensagens nos dois
+  sentidos, planilha de alimentos, receita, conteúdo educativo, relatório, humor, medidas,
+  medicamento, anotação e o paciente encerrando o acompanhamento. Comando `npm run e2e:fluxo` na
+  raiz. Fecha o item "atualizar o teste ponta a ponta com os fluxos novos" do plano de fechamento.
+- O que foi modificado: README (tabela de comandos), regra 4 do `LEIA_PRIMEIRO_IA.md` (mexeu em
+  tela ou fluxo, roda o teste), limitação 5 da `DOCUMENTACAO_TCC.md` (277 testes da API e o
+  teste do fluxo). `.gitignore` ignora `scripts/e2e-falhas/`, onde ficam os prints dos passos que
+  falham.
+- Arquivos principais: `scripts/e2e-fluxo.mjs`, `scripts/package.json`, `package.json`.
+- Atenção para quem vier depois: o teste cria contas e entra como o administrador do seed, então
+  só roda em banco de desenvolvimento; ele se recusa a rodar contra endereço `onrender.com`. O
+  app tem que estar em modo web (`npm run web` em `apps/mobile`) com o `EXPO_PUBLIC_API_URL`
+  apontando para a mesma API. `MOSTRAR=1` abre o navegador na tela. Rodou 21/21 em 29/10, com o
+  navegador visível e escondido.
+
 ## 2026-10-29 — Fluxo completo da demonstração conferido; três ajustes no painel
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/app-segundo-apk`
