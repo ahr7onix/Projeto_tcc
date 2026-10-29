@@ -192,7 +192,12 @@ export default function AlimentacaoScreen() {
       <Card
         title="Restrições"
         action={
-          <Pressable onPress={() => router.push('/(tabs)/alimentacao/restricoes')}>
+          <Pressable
+            onPress={() => router.push('/(tabs)/alimentacao/restricoes')}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Gerenciar restrições"
+          >
             <Text style={styles.cardAction}>Gerenciar</Text>
           </Pressable>
         }

@@ -1,5 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 import { router } from 'expo-router';
+import * as Updates from 'expo-updates';
 import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Card } from '@/components/Card';
@@ -46,7 +48,7 @@ const suporteItems: MenuItem[] = [
 export default function PerfilScreen() {
   const { user, signOut } = useAuthStore();
   const initial = (user?.nome ?? '?').charAt(0).toUpperCase();
-  const role = 'Cliente';
+  const role = 'Paciente';
 
   // Revoga o refresh token no servidor antes de limpar o aparelho; se a rede
   // falhar, o logout local acontece do mesmo jeito.
@@ -109,8 +111,20 @@ export default function PerfilScreen() {
         <Ionicons name="log-out-outline" size={18} color={colors.danger} />
         <Text style={styles.signOutText}>Sair da conta</Text>
       </Pressable>
+
+      <Text style={styles.versao}>{textoDaVersao()}</Text>
     </ScreenContainer>
   );
+}
+
+// Versão do app e, se o código veio pela atualização da internet, a data dela:
+// é como se confere no celular que a atualização nova já chegou.
+function textoDaVersao(): string {
+  const versao = `Versão ${Constants.expoConfig?.version ?? '—'}`;
+  const data = Updates.isEnabled && !Updates.isEmbeddedLaunch ? Updates.createdAt : null;
+  if (!data) return versao;
+  const dois = (n: number) => String(n).padStart(2, '0');
+  return `${versao} · atualização de ${dois(data.getDate())}/${dois(data.getMonth() + 1)}, ${dois(data.getHours())}:${dois(data.getMinutes())}`;
 }
 
 const styles = StyleSheet.create({
@@ -191,4 +205,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   signOutText: { color: colors.danger, fontWeight: '700', fontSize: 14 },
+  versao: { ...typography.caption, color: colors.textMuted, textAlign: 'center' },
 });

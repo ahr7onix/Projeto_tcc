@@ -120,9 +120,6 @@ Bugs pequenos, podem ser corrigidos:
 - O token de acesso continua valendo até expirar (15 min) depois de desativar a conta ou trocar a
   senha.
 - Os testes automáticos escrevem erros falsos no `logs/` real da API.
-- App em celular estreito (360 de largura): a barra de abas corta "Alimentação" e "Mensagens".
-- App: "Gerenciar" (Saúde e Alimentação) e "Esqueceu a senha?" têm área de toque pequena
-  (menos de 32 px de altura, sem `hitSlop`).
 
 Limitações assumidas pela equipe (seção 1.8 da documentação): parâmetros clínicos ainda sem
 validação da Nutrição, CRN conferido à mão, e-mail depende de SMTP configurado, ambiente

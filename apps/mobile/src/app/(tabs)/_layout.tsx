@@ -1,6 +1,6 @@
 import { Redirect, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Platform } from 'react-native';
+import { Platform, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMensagensRealtime } from '@/hooks/use-mensagens-realtime';
 import { useAuthStore } from '@/stores/auth';
@@ -39,11 +39,18 @@ export default function TabsLayout() {
           boxShadow: '0 -1px 2px rgba(16, 24, 40, 0.04)',
           elevation: 4,
         },
-        tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '600',
-          marginTop: 2,
-        },
+        // Em celular de 360 de largura "Alimentação" não cabe na aba e virava
+        // "Alimenta…": o texto encolhe um pouco só quando não cabe.
+        tabBarLabel: ({ color, children }) => (
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.8}
+            style={{ color, fontSize: 10, fontWeight: '600', marginTop: 2 }}
+          >
+            {children}
+          </Text>
+        ),
         tabBarItemStyle: {
           paddingVertical: 2,
           minHeight: 48,
