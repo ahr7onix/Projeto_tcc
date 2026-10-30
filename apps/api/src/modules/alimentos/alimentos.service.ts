@@ -114,6 +114,7 @@ export class AlimentosService {
     grupo?: string;
     incluirInativos?: boolean;
     limite?: number;
+    pagina?: number;
   }) {
     const params: unknown[] = [];
     const where: string[] = [];
@@ -135,16 +136,26 @@ export class AlimentosService {
 
     const limite = Math.min(Math.max(filtros.limite ?? 100, 1), 500);
     params.push(limite);
+    const marcadorLimite = params.length;
 
+    const deslocamento = (Math.max(filtros.pagina ?? 1, 1) - 1) * limite;
+    if (deslocamento > 0) params.push(deslocamento);
+
+    // O desempate por id é o que deixa a paginação estável: a TACO tem nomes
+    // repetidos, e sem ele um alimento podia aparecer em duas páginas e sumir de outra.
     const { rows } = await this.pool.query(
-      `SELECT * FROM alimento
+      `SELECT *, COUNT(*) OVER() AS total_encontrado FROM alimento
         ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
-        ORDER BY nome
-        LIMIT $${params.length}`,
+        ORDER BY nome, id_alimento
+        LIMIT $${marcadorLimite}
+        ${deslocamento > 0 ? `OFFSET $${params.length}` : ''}`,
       params,
     );
 
-    return { data: rows.map((r) => this.mapAlimento(r)) };
+    return {
+      data: rows.map((r) => this.mapAlimento(r)),
+      total: Number(rows[0]?.total_encontrado ?? 0),
+    };
   }
 
   /** Usado para montar o filtro de grupos na tela, sem lista fixa no código. */

@@ -228,7 +228,7 @@ export default function PacienteDetalhePage() {
                       : 'var(--text-muted)',
                 }}
               >
-                {paciente.glicemiaMedia ?? '—'}
+                {paciente.glicemiaMedia?.toLocaleString('pt-BR') ?? '—'}
                 {paciente.glicemiaMedia && (
                   <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-muted)', marginLeft: 4 }}>mg/dL</span>
                 )}

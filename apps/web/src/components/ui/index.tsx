@@ -44,9 +44,9 @@ export function Card({ title, subtitle, action, children, style, flush }: CardPr
         </div>
       )}
       <div style={{
-        display: 'flex', flexDirection: 'column', gap: 14,
+        display: 'flex', flexDirection: 'column', gap: flush ? 0 : 14,
         padding: flush ? 0 : '18px',
-        minWidth: 0,
+        minWidth: 0, flex: 1,
       }}>
         {children}
       </div>
@@ -100,7 +100,9 @@ export function StatTile({ label, value, icon, tint = 'primary', sub, onClick }:
     display: 'flex',
     flexDirection: 'column',
     gap: 8,
-    flex: 1,
+    // A base de 150 px faz a fileira quebrar no celular; sem ela os cartões
+    // espremiam até o texto vazar para fora da tela.
+    flex: '1 1 150px',
     minWidth: 0,
     textAlign: 'left',
   }
@@ -488,10 +490,26 @@ interface PaginacaoProps {
   onChange: (pagina: number) => void
   /** Nome do que está sendo listado, no plural. Ex.: "medidas". */
   rotulo?: string
+  /** Para encaixar o controle num card sem respiro interno. */
+  style?: React.CSSProperties
 }
-export function Paginacao({ pagina, totalPaginas, total, primeiro, ultimo, onChange, rotulo = 'itens' }: PaginacaoProps) {
+export function Paginacao({ pagina, totalPaginas, total, primeiro, ultimo, onChange, rotulo = 'itens', style }: PaginacaoProps) {
+  const raiz = useRef<HTMLDivElement>(null)
+
   // Uma página só não precisa de controle: o contador viraria ruído na tela.
   if (totalPaginas <= 1) return null
+
+  // A lista fica logo antes do controle. Sem voltar ao início dela, quem clicava
+  // em "Próxima" lá embaixo caía no meio da página nova. Os 76 px são a barra do
+  // topo no celular mais um respiro.
+  function trocar(nova: number) {
+    onChange(nova)
+    const lista = raiz.current?.previousElementSibling
+    if (!lista) return
+    lista.scrollTop = 0
+    const topo = lista.getBoundingClientRect().top - 76
+    if (topo < 0) window.scrollBy({ top: topo })
+  }
 
   const btn = (ativo: boolean): React.CSSProperties => ({
     padding: '5px 12px', borderRadius: 'var(--radius-md)', fontSize: 13, fontWeight: 500,
@@ -504,10 +522,11 @@ export function Paginacao({ pagina, totalPaginas, total, primeiro, ultimo, onCha
   })
 
   return (
-    <div style={{
+    <div ref={raiz} style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       gap: 12, flexWrap: 'wrap',
       paddingTop: 14, marginTop: 4, borderTop: '1px solid var(--border)',
+      ...style,
     }}>
       <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
         {primeiro}–{ultimo} de {total} {rotulo}
@@ -515,7 +534,7 @@ export function Paginacao({ pagina, totalPaginas, total, primeiro, ultimo, onCha
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <button
           type="button"
-          onClick={() => onChange(pagina - 1)}
+          onClick={() => trocar(pagina - 1)}
           disabled={pagina <= 1}
           aria-label="Página anterior"
           style={btn(pagina > 1)}
@@ -525,12 +544,38 @@ export function Paginacao({ pagina, totalPaginas, total, primeiro, ultimo, onCha
         </span>
         <button
           type="button"
-          onClick={() => onChange(pagina + 1)}
+          onClick={() => trocar(pagina + 1)}
           disabled={pagina >= totalPaginas}
           aria-label="Próxima página"
           style={btn(pagina < totalPaginas)}
         >Próxima ›</button>
       </div>
+    </div>
+  )
+}
+
+/* ─── TabelaRolavel ─── */
+interface TabelaRolavelProps {
+  /** Nome da área para o leitor de tela, que anuncia uma região rolável. */
+  rotulo: string
+  children: React.ReactNode
+  /** Altura máxima no computador, em qualquer unidade do CSS. */
+  altura?: string
+  /** Mantém a primeira coluna à vista ao deslizar a tabela para o lado no celular. */
+  primeiraColunaFixa?: boolean
+}
+/** Caixa com rolagem própria e cabeçalho fixo; as regras ficam em `index.css`. */
+export function TabelaRolavel({ rotulo, children, altura, primeiraColunaFixa }: TabelaRolavelProps) {
+  return (
+    <div
+      className={`tabela-rolavel${primeiraColunaFixa ? ' tabela-coluna-fixa' : ''}`}
+      role="region"
+      aria-label={rotulo}
+      // Sem foco, quem usa só o teclado não conseguiria rolar a tabela.
+      tabIndex={0}
+      style={altura ? ({ '--tabela-altura': altura } as React.CSSProperties) : undefined}
+    >
+      {children}
     </div>
   )
 }

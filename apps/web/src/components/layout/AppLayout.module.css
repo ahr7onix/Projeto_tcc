@@ -246,9 +246,19 @@
   width: 28px;
 }
 
-.recolherBtn:hover {
+.recolherBtn:hover,
+.notifBtn:hover {
   background: var(--surface-alt);
   color: var(--text);
+}
+
+.notifBtn {
+  position: relative;
+}
+
+.notifBtn .badge {
+  margin-left: auto;
+  background: var(--danger);
 }
 
 .logoutBtn:hover {
@@ -315,11 +325,31 @@
   margin-left: var(--sidebar-w-collapsed);
 }
 
+/* Preenche os monitores comuns, até 1920 px. Só em telas maiores que isso sobra
+   espaço, e ele vai para os dois lados: sem o `auto`, o conteúdo encostava na
+   barra lateral e deixava todo o resto à direita. */
 .content {
   flex: 1;
   width: 100%;
-  max-width: 1360px;
+  max-width: 1680px;
+  margin-inline: auto;
   padding: 30px 34px 52px;
+}
+
+/* ─── Notificações ─── */
+
+.notifPainel {
+  left: calc(var(--sidebar-w) + 12px);
+  bottom: 12px;
+}
+
+.sidebarCollapsed ~ .main .notifPainel {
+  left: calc(var(--sidebar-w-collapsed) + 12px);
+}
+
+/* No computador o sino é um item da barra lateral. */
+.sinoFlutuante {
+  display: none;
 }
 
 /* ─── Topo (só no celular) ─── */
@@ -396,9 +426,22 @@
     transform: translateX(0);
   }
 
-  /* Recolher não faz sentido numa gaveta que já abre e fecha. */
-  .recolherBtn {
+  /* Recolher não faz sentido numa gaveta que já abre e fecha. E o sino não pode
+     morar nela: ficaria escondido, então volta a flutuar no canto da tela. */
+  .recolherBtn,
+  .notifBtn {
     display: none;
+  }
+
+  .sinoFlutuante {
+    display: flex;
+  }
+
+  .notifPainel,
+  .sidebarCollapsed ~ .main .notifPainel {
+    left: auto;
+    right: 14px;
+    bottom: 82px;
   }
 
   .sidebarCollapsed .userInfo,
@@ -445,8 +488,9 @@
     display: flex;
   }
 
+  /* O espaço de baixo é para o fim da página não ficar atrás do sino. */
   .content {
-    padding: 18px 16px 40px;
+    padding: 18px 16px 88px;
   }
 
   .overlay {
@@ -485,5 +529,9 @@
   .content {
     padding: 0;
     max-width: none;
+  }
+
+  .sinoFlutuante {
+    display: none;
   }
 }

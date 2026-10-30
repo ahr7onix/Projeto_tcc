@@ -43,15 +43,41 @@ export interface FiltroAlimentos {
   limite?: number
 }
 
-export async function listarAlimentos(filtro: FiltroAlimentos = {}): Promise<Alimento[]> {
+export interface PaginaAlimentos {
+  itens: Alimento[]
+  /** Quantos alimentos a busca achou, somando todas as páginas. */
+  total: number
+}
+
+export async function listarPaginaAlimentos(
+  filtro: FiltroAlimentos & { pagina: number },
+): Promise<PaginaAlimentos> {
   const { data } = await api.get('/alimentos', {
     params: {
       busca: filtro.busca || undefined,
       grupo: filtro.grupo || undefined,
       limite: filtro.limite,
+      pagina: filtro.pagina,
     },
   })
-  return data.data
+  return { itens: data.data, total: data.total ?? data.data.length }
+}
+
+/**
+ * A tabela inteira, para quem precisa de todos de uma vez. A API entrega no
+ * máximo 500 por pedido e a TACO tem 578: com `limite: 300` o seletor do plano
+ * parava no meio do alfabeto e o resto da tabela não aparecia para escolher.
+ */
+export async function listarCatalogoAlimentos(): Promise<Alimento[]> {
+  const POR_PEDIDO = 500
+  const primeira = await listarPaginaAlimentos({ limite: POR_PEDIDO, pagina: 1 })
+  const itens = [...primeira.itens]
+  for (let pagina = 2; itens.length < primeira.total; pagina += 1) {
+    const proxima = await listarPaginaAlimentos({ limite: POR_PEDIDO, pagina })
+    if (proxima.itens.length === 0) break
+    itens.push(...proxima.itens)
+  }
+  return itens
 }
 
 export async function listarGrupos(): Promise<GrupoAlimento[]> {

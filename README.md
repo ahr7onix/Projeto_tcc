@@ -396,7 +396,7 @@ foram corrigidos, e o primeiro deles hoje tem verificação automática no CI.
 
 - **O painel e o app não têm teste de comportamento**, só `typecheck` e lint no
   CI. A escolha se sustenta enquanto a regra de negócio estiver toda na API, que
-  é onde ficam os 277 testes e as fórmulas de `common/glicemia` e
+  é onde ficam os 282 testes e as fórmulas de `common/glicemia` e
   `common/nutricao`; deixa de se sustentar no dia em que os clientes ganharem
   lógica própria.
 

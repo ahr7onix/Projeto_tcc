@@ -7,8 +7,11 @@ import {
   EmptyState,
   Input,
   PageHeader,
+  Paginacao,
   Select,
   StatTile,
+  TabelaRolavel,
+  usePaginacao,
 } from '../../components/ui'
 import CadastrarNutricionistaModal from '../../components/CadastrarNutricionistaModal'
 import GraficoBarras, { type BarraDados } from '../../components/GraficoBarras'
@@ -39,6 +42,16 @@ const TINT_TIPO: Record<string, 'primary' | 'success' | 'warning'> = {
   nutricionista: 'success',
   administrador: 'warning',
 }
+
+const ROTULO_TIPO: Record<string, string> = {
+  paciente: 'Paciente',
+  nutricionista: 'Nutricionista',
+  administrador: 'Administrador',
+}
+
+/** O teto da API. Sem pedir, ela devolve 50 e o resto some sem aviso. */
+const LIMITE_USUARIOS = 200
+const USUARIOS_POR_PAGINA = 15
 
 /** "2026-09" vira "set/26": o eixo do grafico precisa de algo curto. */
 function rotuloMes(mes: string): string {
@@ -79,6 +92,7 @@ export default function AdminPage() {
   const [erro, setErro] = useState<string | null>(null)
 
   const ehAdmin = user?.role === 'administrador'
+  const pagUsuarios = usePaginacao(usuarios, USUARIOS_POR_PAGINA, `${tipo}|${busca}`)
 
   // `ativo` é opcional: `carregar` também roda como recarga depois de excluir
   // um usuário, fora de efeito, onde não há filtro novo para invalidar.
@@ -88,7 +102,7 @@ export default function AdminPage() {
       setErro(null)
       const [m, u, an, p] = await Promise.all([
         obterMetricas(),
-        listarUsuarios({ tipo: tipo || undefined, busca: busca || undefined }),
+        listarUsuarios({ tipo: tipo || undefined, busca: busca || undefined, limite: LIMITE_USUARIOS }),
         obterAnalise(90),
         listarUsuarios({ pendentes: true }),
       ])
@@ -236,14 +250,14 @@ export default function AdminPage() {
         <StatTile
           label="Pacientes"
           value={metricas?.pacientes ?? '...'}
-          icon={<UsersIcon />}
+          icon={<UsersIcon tamanho={20} />}
           tint="primary"
           sub={metricas ? `${metricas.pacientesAtivos7d} ativos em 7d` : undefined}
         />
         <StatTile
           label="Nutricionistas"
           value={metricas?.nutricionistas ?? '...'}
-          icon={<UsersIcon />}
+          icon={<UsersIcon tamanho={20} />}
           tint="success"
           sub={
             metricas && metricas.nutricionistasSemCrn > 0
@@ -365,7 +379,7 @@ export default function AdminPage() {
             <StatTile
               label="Sem registro há mais de 30 dias"
               value={analise.acompanhamento.semRegistro30d}
-              icon={<UsersIcon />}
+              icon={<UsersIcon tamanho={20} />}
               tint={analise.acompanhamento.semRegistro30d > 0 ? 'warning' : 'success'}
               sub="pacientes a procurar"
             />
@@ -401,79 +415,87 @@ export default function AdminPage() {
         </div>
       </Card>
 
-      <div
-        style={{
-          background: 'var(--surface)',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid var(--border)',
-          overflow: 'hidden',
-        }}
-      >
-        {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+      {loading ? (
+        <Card>
+          <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)' }}>
             Carregando...
           </div>
-        ) : usuarios.length === 0 ? (
-          <div style={{ padding: '8px 0' }}>
-            <EmptyState
-              icon={<UsersIcon />}
-              title="Nenhum usuário encontrado"
-              message="Ajuste os filtros para ver outros resultados."
-            />
-          </div>
-        ) : (
-          usuarios.map((u, i) => (
-            <div
-              key={u.id}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 130px 110px 100px 120px',
-                alignItems: 'center',
-                gap: 12,
-                padding: '14px 20px',
-                borderBottom: i < usuarios.length - 1 ? '1px solid var(--border)' : 'none',
-              }}
-            >
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>
-                  {u.nome}
-                </div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{u.email}</div>
-              </div>
-
-              <Badge label={u.tipo} tint={TINT_TIPO[u.tipo] ?? 'primary'} />
-
-              <div style={{ fontSize: 12, color: u.aprovado === false ? 'var(--warning)' : 'var(--text-muted)' }}>
-                {u.tipo === 'nutricionista'
-                  ? u.aprovado === false
-                    ? 'Aguardando aprovação'
-                    : u.crn
-                      ? rotuloCrn(u.crn)
-                      : 'CRN pendente'
-                  : u.tipo === 'paciente'
-                    ? `${u.vinculos} vínculo(s)`
-                    : '—'}
-              </div>
-
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                {formatarData(u.criadoEm)}
-              </div>
-
-              <div style={{ textAlign: 'right' }}>
-                <Btn
-                  variant="danger"
-                  size="sm"
-                  loading={removendoId === u.id}
-                  disabled={u.id === String(user?.id)}
-                  onClick={() => excluir(u)}
-                >
-                  Remover
-                </Btn>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+        </Card>
+      ) : usuarios.length === 0 ? (
+        <Card>
+          <EmptyState
+            icon={<UsersIcon />}
+            title="Nenhum usuário encontrado"
+            message="Ajuste os filtros para ver outros resultados."
+          />
+        </Card>
+      ) : (
+        <Card flush>
+          <TabelaRolavel rotulo="Usuários do sistema">
+            <table style={tabelaUsuarios}>
+              <thead>
+                <tr>
+                  <th style={thUsuario}>Usuário</th>
+                  <th style={thUsuario}>Perfil</th>
+                  <th style={thUsuario}>Situação</th>
+                  <th style={thUsuario}>Cadastro</th>
+                  <th style={thUsuario} aria-label="Ações" />
+                </tr>
+              </thead>
+              <tbody>
+                {pagUsuarios.visiveis.map((u) => (
+                  <tr key={u.id}>
+                    <td style={tdUsuario}>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>
+                        {u.nome}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{u.email}</div>
+                    </td>
+                    <td style={tdUsuario}>
+                      <Badge label={ROTULO_TIPO[u.tipo] ?? u.tipo} tint={TINT_TIPO[u.tipo] ?? 'primary'} />
+                    </td>
+                    <td style={{ ...tdUsuario, fontSize: 12, color: u.aprovado === false ? 'var(--warning)' : 'var(--text-muted)' }}>
+                      {u.tipo === 'nutricionista'
+                        ? u.aprovado === false
+                          ? 'Aguardando aprovação'
+                          : u.crn
+                            ? rotuloCrn(u.crn)
+                            : 'CRN pendente'
+                        : u.tipo === 'paciente'
+                          ? `${u.vinculos} ${u.vinculos === 1 ? 'vínculo' : 'vínculos'}`
+                          : '—'}
+                    </td>
+                    <td style={{ ...tdUsuario, fontSize: 12, color: 'var(--text-muted)' }}>
+                      {formatarData(u.criadoEm)}
+                    </td>
+                    <td style={{ ...tdUsuario, textAlign: 'right' }}>
+                      <Btn
+                        variant="danger"
+                        size="sm"
+                        loading={removendoId === u.id}
+                        disabled={u.id === String(user?.id)}
+                        onClick={() => excluir(u)}
+                      >
+                        Remover
+                      </Btn>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </TabelaRolavel>
+          <Paginacao
+            pagina={pagUsuarios.pagina}
+            totalPaginas={pagUsuarios.totalPaginas}
+            total={pagUsuarios.total}
+            primeiro={pagUsuarios.primeiro}
+            ultimo={pagUsuarios.ultimo}
+            onChange={pagUsuarios.irPara}
+            rotulo="usuários"
+            style={{ margin: 0, padding: '12px 18px' }}
+          />
+        </Card>
+      )}
 
       {cadastrando && (
         <CadastrarNutricionistaModal
@@ -483,6 +505,26 @@ export default function AdminPage() {
       )}
     </div>
   )
+}
+
+const tabelaUsuarios: React.CSSProperties = {
+  width: '100%',
+  minWidth: 720,
+  borderCollapse: 'collapse',
+}
+const thUsuario: React.CSSProperties = {
+  padding: '10px 18px',
+  textAlign: 'left',
+  fontSize: 11,
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em',
+  color: 'var(--text-muted)',
+  whiteSpace: 'nowrap',
+}
+const tdUsuario: React.CSSProperties = {
+  padding: '12px 18px',
+  borderBottom: '1px solid var(--border)',
 }
 
 function LinkIcon() {
@@ -513,9 +555,9 @@ function LockIcon() {
   )
 }
 
-function UsersIcon() {
+function UsersIcon({ tamanho = 32 }: { tamanho?: number }) {
   return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
       <circle cx="9" cy="7" r="4" />
       <path d="M23 21v-2a4 4 0 0 0-3-3.87" />

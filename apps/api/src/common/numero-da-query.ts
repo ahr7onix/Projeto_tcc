@@ -15,3 +15,5 @@ function inteiroPositivo(valor: string | undefined, maximo: number): number | un
 export const diasDaQuery = (valor?: string) => inteiroPositivo(valor, DIAS_MAXIMO);
 
 export const limiteDaQuery = (valor?: string) => inteiroPositivo(valor, LIMITE_MAXIMO);
+
+export const paginaDaQuery = (valor?: string) => inteiroPositivo(valor, LIMITE_MAXIMO);

@@ -1,0 +1,145 @@
+/* Lista de pacientes: cabeçalho e linhas usam as mesmas colunas.
+   Abaixo de 1180 px as colunas não cabem ao lado da barra lateral, e cada paciente
+   vira um bloco com tudo à vista. Rolar para o lado aqui esconderia os botões. */
+
+.resumo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.resumoItem {
+  flex: 1 1 130px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+}
+
+/* Sem `overflow: hidden`: ele cortaria o menu do campo de busca. */
+.lista {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.busca {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cabecalho,
+.linha {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 90px 120px 110px minmax(200px, 420px) 24px;
+  gap: 12px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.cabecalho {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.linha {
+  align-items: center;
+  padding-top: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.linha:last-child {
+  border-bottom: none;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.linha:hover {
+  background: var(--bg);
+}
+
+.identidade {
+  grid-area: paciente;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.nome,
+.email {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nome {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.email {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.status { grid-area: status; }
+.glicemia { grid-area: glicemia; font-size: 14px; font-weight: 600; }
+.registro { grid-area: registro; font-size: 13px; color: var(--text-muted); }
+.acoes { grid-area: acoes; display: flex; gap: 6px; flex-wrap: wrap; }
+.seta { grid-area: seta; display: flex; color: var(--text-muted); }
+
+/* Sem isto o `grid-area` das células viraria linhas implícitas no computador. */
+@media (min-width: 1181px) {
+  .linha {
+    grid-template-areas: 'paciente status glicemia registro acoes seta';
+  }
+}
+
+@media (max-width: 1180px) {
+  .cabecalho {
+    display: none;
+  }
+
+  .linha {
+    grid-template-columns: auto auto minmax(0, 1fr) 24px;
+    grid-template-areas:
+      'paciente paciente paciente seta'
+      'status glicemia registro registro'
+      'acoes acoes acoes acoes';
+    row-gap: 10px;
+  }
+
+  .registro::before {
+    content: 'Último registro: ';
+  }
+}

@@ -49,6 +49,12 @@
   color: var(--text-muted);
 }
 
+/* O anel de foco já está na caixa em volta. O contorno global desenhava um
+   segundo retângulo por dentro, em cima da lupa. */
+.input:focus-visible {
+  outline: none;
+}
+
 .clear {
   position: absolute;
   right: 8px;
@@ -142,12 +148,14 @@
   font-size: 11px;
 }
 
-.option .patient-picker-check {
+/* `:global` porque o ícone usa o nome literal: sem ele o CSS Module troca o nome
+   da regra, ela não pega, e toda opção da lista aparecia marcada. */
+.option :global(.patient-picker-check) {
   color: transparent;
   flex: 0 0 auto;
 }
 
-.optionActive .patient-picker-check {
+.optionActive :global(.patient-picker-check) {
   color: var(--primary);
 }
 

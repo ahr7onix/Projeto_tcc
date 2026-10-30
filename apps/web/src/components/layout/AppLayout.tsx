@@ -80,6 +80,7 @@ export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
   const [naoLidas, setNaoLidas] = useState(0)
+  const [lugarDoSino, setLugarDoSino] = useState<HTMLDivElement | null>(null)
   const { pathname } = useLocation()
   const initial = (user?.nome ?? 'N').charAt(0).toUpperCase()
   const grupos = user?.role === 'administrador' ? NAV_ADMINISTRADOR : NAV_NUTRICIONISTA
@@ -151,6 +152,7 @@ export default function AppLayout() {
         </nav>
 
         <div className={s.sidebarFooter}>
+          {temConversas && <div ref={setLugarDoSino} />}
           <button
             type="button"
             className={`${s.footerBtn} ${s.recolherBtn}`}
@@ -177,7 +179,7 @@ export default function AppLayout() {
           <NavLink to="/perfil" className={s.topbarAvatar} aria-label="Abrir perfil">{initial}</NavLink>
         </header>
         <main className={s.content}><Outlet /></main>
-        {user?.role === 'nutricionista' && <NotificationCenter />}
+        {temConversas && <NotificationCenter lugarNaBarra={lugarDoSino} />}
       </div>
     </div>
   )

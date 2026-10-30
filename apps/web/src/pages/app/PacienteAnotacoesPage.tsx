@@ -90,7 +90,7 @@ export default function PacienteAnotacoesPage() {
 
 const styles: Record<string, React.CSSProperties> = {
   feedback: { padding: 48, textAlign: 'center', color: 'var(--text-muted)' },
-  layout: { display: 'grid', gridTemplateColumns: 'minmax(280px, 0.8fr) minmax(320px, 1.2fr)', gap: 20, alignItems: 'start' },
+  layout: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: 20, alignItems: 'start' },
   form: { display: 'flex', flexDirection: 'column', gap: 16 },
   formFooter: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   counter: { color: 'var(--text-muted)', fontSize: 12 },

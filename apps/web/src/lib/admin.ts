@@ -74,7 +74,7 @@ export async function obterAnalise(dias = 90): Promise<AnaliseAdmin> {
 }
 
 export async function listarUsuarios(
-  params: { tipo?: string; busca?: string; pendentes?: boolean } = {},
+  params: { tipo?: string; busca?: string; pendentes?: boolean; limite?: number } = {},
 ): Promise<UsuarioAdmin[]> {
   const { data } = await api.get('/admin/usuarios', { params })
   return data.data
