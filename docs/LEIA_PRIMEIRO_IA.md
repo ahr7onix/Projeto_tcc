@@ -116,11 +116,13 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
   depois disso só chegam ao APK 1.0.0.
 - Teste do fluxo completo da demonstração (`scripts/e2e-fluxo.mjs`, `npm run e2e:fluxo`): 21
   passos, do cadastro da nutricionista ao paciente encerrando o acompanhamento.
+- Barra lateral nova do painel (PR #10): perfil no topo, contador de mensagens não lidas,
+  "Recolher menu" e "Sair da conta" no rodapé. Scripts sem uso da raiz removidos (PR #19).
 
 ## Em andamento
 
-- v1.0: tag `v1.0` no `main` depois do merge do PR #10 (barra lateral nova do painel web) e do
-  PR #19 (remove scripts sem uso da raiz), os dois do Isac.
+- v1.0: falta só a tag `v1.0` no `main`, com o APK 1.0.0 anexado à release. Os PRs #10 e #19
+  entraram em 30/10/2026. Para saber se a tag já saiu: `git tag`.
 
 ## Pendências conhecidas
 
