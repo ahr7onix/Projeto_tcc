@@ -32,67 +32,65 @@
   width: var(--sidebar-w-collapsed);
 }
 
-/* ─── Marca ─── */
+/* ─── Perfil (topo) ─── */
 
-.brand {
+.perfil {
   display: flex;
   align-items: center;
-  gap: 10px;
-  height: 60px;
-  padding: 0 14px 0 16px;
-  border-bottom: 1px solid var(--border);
+  gap: 11px;
+  margin: 14px 10px 4px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  min-width: 0;
   flex-shrink: 0;
+  transition: background 0.12s;
 }
 
-.brandIcon {
-  width: 30px;
-  height: 30px;
-  border-radius: var(--radius-md);
-  background: var(--primary);
-  color: var(--text-inverse);
+.perfil:hover {
+  background: var(--surface-alt);
+}
+
+.perfilActive,
+.perfilActive:hover {
+  background: var(--primary-soft);
+}
+
+.userAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.brandText {
-  flex: 1;
+.perfilActive .userAvatar {
+  background: var(--surface);
+}
+
+.userInfo {
   min-width: 0;
   overflow: hidden;
 }
 
-.brandName {
-  font-size: 15px;
+.userName {
+  font-size: 14px;
   font-weight: 600;
   color: var(--text);
-  letter-spacing: -0.01em;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.brandSub {
-  font-size: 11px;
+.userRole {
+  font-size: 12px;
   color: var(--text-muted);
   white-space: nowrap;
-}
-
-.collapseBtn {
-  width: 26px;
-  height: 26px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: background 0.12s, color 0.12s;
-}
-
-.collapseBtn:hover {
-  background: var(--surface-alt);
-  color: var(--text);
 }
 
 /* ─── Navegação ─── */
@@ -100,25 +98,30 @@
 .nav {
   flex: 1;
   overflow-y: auto;
-  padding: 18px 10px;
+  padding: 6px 10px 14px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
 }
 
+/* grupos separados por um fio */
 .grupo {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  padding: 14px 0 6px;
+  border-top: 1px solid var(--border);
+}
+
+.grupo:first-child {
+  border-top: none;
+  padding-top: 8px;
 }
 
 .grupoTitulo {
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
   color: var(--text-muted);
-  padding: 0 12px 8px;
+  padding: 0 12px 6px;
   white-space: nowrap;
 }
 
@@ -126,9 +129,9 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 10px;
   min-height: 40px;
-  padding: 8px 12px;
+  padding: 5px 10px 5px 8px;
   border-radius: var(--radius-md);
   font-size: 14px;
   font-weight: 500;
@@ -142,27 +145,25 @@
 }
 
 .navItem:focus-visible,
-.collapseBtn:focus-visible,
-.userCard:focus-visible,
-.logoutBtn:focus-visible,
+.footerBtn:focus-visible,
+.perfil:focus-visible,
 .menuBtn:focus-visible,
 .topbarAvatar:focus-visible {
   outline: 3px solid var(--primary-soft);
   outline-offset: 2px;
 }
 
-/* O destaque da página atual é só isto: fundo azul-claro e texto azul.
-   Sem barra lateral, sem sombra, sem cor cheia. */
+/* página atual: ícone em quadrado azul */
 .navItemActive,
 .navItemActive:hover {
   background: var(--primary-soft);
-  color: var(--primary);
+  color: var(--primary-dark);
   font-weight: 600;
 }
 
 .navItemActive::before {
   position: absolute;
-  left: 0;
+  left: -10px;
   width: 3px;
   height: 22px;
   border-radius: 0 3px 3px 0;
@@ -174,101 +175,80 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
   flex-shrink: 0;
   color: currentColor;
+  transition: background 0.12s, color 0.12s;
+}
+
+.navItemActive .navIcon {
+  background: var(--primary);
+  color: var(--text-inverse);
 }
 
 .navLabel {
+  flex: 1;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* ─── Rodapé: usuário e saída ─── */
+.badge {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  color: var(--text-inverse);
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.navItemActive .badge {
+  background: var(--primary-dark);
+}
+
+/* ─── Rodapé ─── */
 
 .sidebarFooter {
   border-top: 1px solid var(--border);
-  padding: 10px;
+  padding: 8px 10px 10px;
   display: flex;
   flex-direction: column;
   gap: 2px;
   flex-shrink: 0;
 }
 
-.userCard {
+.footerBtn {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
-  border-radius: var(--radius-md);
-  min-width: 0;
-  transition: background 0.12s;
-}
-
-.userCard:hover {
-  background: var(--surface-alt);
-}
-
-.userCardActive,
-.userCardActive:hover {
-  background: var(--primary-soft);
-}
-
-.userCardActive .userName {
-  color: var(--primary);
-}
-
-.userAvatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  color: var(--text-soft);
-  font-size: 13px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.userInfo {
-  min-width: 0;
-  overflow: hidden;
-}
-
-.userName {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.userRole {
-  font-size: 11px;
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-
-/* Sair é a ação menos usada da tela: texto pequeno, cinza, sem moldura.
-   Só ganha cor quando o ponteiro está em cima. */
-.logoutBtn {
-  display: flex;
-  align-items: center;
-  gap: 11px;
   width: 100%;
-  padding: 7px 10px;
+  min-height: 36px;
+  padding: 6px 8px;
   border: none;
   border-radius: var(--radius-md);
   background: transparent;
   color: var(--text-muted);
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 500;
   transition: background 0.12s, color 0.12s;
+}
+
+.footerBtn svg {
+  flex-shrink: 0;
+  width: 28px;
+}
+
+.recolherBtn:hover {
+  background: var(--surface-alt);
+  color: var(--text);
 }
 
 .logoutBtn:hover {
@@ -276,57 +256,48 @@
   color: var(--danger);
 }
 
-.logoutBtn svg {
-  flex-shrink: 0;
-  margin-left: 1px;
-}
-
-.logoutLabel {
+.footerLabel {
   white-space: nowrap;
 }
 
 /* ─── Menu recolhido ─── */
 
-.sidebarCollapsed .brandText,
-.sidebarCollapsed .navLabel,
 .sidebarCollapsed .userInfo,
-.sidebarCollapsed .logoutLabel {
+.sidebarCollapsed .navLabel,
+.sidebarCollapsed .footerLabel {
   display: none;
 }
 
-.sidebarCollapsed .brand {
-  padding: 0 12px;
-  gap: 0;
-  justify-content: center;
-}
-
-.sidebarCollapsed .collapseBtn {
-  position: absolute;
-  top: 17px;
-  right: -13px;
-  background: var(--surface);
-  border-color: var(--border);
-  border-radius: 50%;
-  z-index: 1;
-}
-
+.sidebarCollapsed .perfil,
 .sidebarCollapsed .navItem,
-.sidebarCollapsed .userCard,
-.sidebarCollapsed .logoutBtn {
+.sidebarCollapsed .footerBtn {
   justify-content: center;
   padding-left: 0;
   padding-right: 0;
   gap: 0;
 }
 
-/* Sem espaço para o título, o grupo vira um traço separador. */
+/* recolhido: sem título, só o fio */
 .sidebarCollapsed .grupoTitulo {
-  height: 1px;
+  display: none;
+}
+
+.sidebarCollapsed .grupo {
+  padding-top: 10px;
+}
+
+/* recolhido: o contador vira uma bolinha no canto do ícone */
+.sidebarCollapsed .badge {
+  position: absolute;
+  top: 4px;
+  right: 10px;
+  min-width: 8px;
+  width: 8px;
+  height: 8px;
   padding: 0;
-  margin: 0 8px 6px;
-  background: var(--border);
-  overflow: hidden;
-  text-indent: -999px;
+  font-size: 0;
+  border: 2px solid var(--surface);
+  box-sizing: content-box;
 }
 
 /* ─── Área principal ─── */
@@ -426,38 +397,43 @@
   }
 
   /* Recolher não faz sentido numa gaveta que já abre e fecha. */
-  .collapseBtn {
+  .recolherBtn {
     display: none;
   }
 
-  .sidebarCollapsed .brandText,
-  .sidebarCollapsed .navLabel,
   .sidebarCollapsed .userInfo,
-  .sidebarCollapsed .logoutLabel {
+  .sidebarCollapsed .navLabel,
+  .sidebarCollapsed .footerLabel {
     display: block;
   }
 
-  .sidebarCollapsed .brand {
-    padding: 0 14px 0 16px;
-    gap: 10px;
-    justify-content: initial;
+  .sidebarCollapsed .grupoTitulo {
+    display: block;
   }
 
+  .sidebarCollapsed .perfil,
   .sidebarCollapsed .navItem,
-  .sidebarCollapsed .userCard,
-  .sidebarCollapsed .logoutBtn {
+  .sidebarCollapsed .footerBtn {
     justify-content: initial;
-    padding-right: 12px;
-    padding-left: 12px;
+    padding-left: 8px;
+    padding-right: 10px;
+    gap: 10px;
+  }
+
+  .sidebarCollapsed .perfil {
+    padding: 10px;
     gap: 11px;
   }
 
-  .sidebarCollapsed .grupoTitulo {
-    height: auto;
-    padding: 0 12px 8px;
-    margin: 0;
-    background: transparent;
-    text-indent: 0;
+  .sidebarCollapsed .badge {
+    position: static;
+    min-width: 20px;
+    width: auto;
+    height: 20px;
+    padding: 0 6px;
+    font-size: 11.5px;
+    border: none;
+    box-sizing: border-box;
   }
 
   .main,
