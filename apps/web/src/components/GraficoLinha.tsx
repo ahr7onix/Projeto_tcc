@@ -86,9 +86,13 @@ export default function GraficoLinha({
 
     const coordenadas = pontos.map((p, i) => ({ ...p, cx: x(i), cy: y(p.valor) }))
     const linha = coordenadas.map((p) => `${p.cx},${p.cy}`).join(' ')
-    const area = `${MARGEM.esquerda},${MARGEM.topo + alturaUtil} ${linha} ${
-      coordenadas[coordenadas.length - 1].cx
-    },${MARGEM.topo + alturaUtil}`
+    // A área sai de baixo do primeiro ponto. Saindo da borda esquerda, uma
+    // medida só (que fica no meio) virava uma rampa que parecia tendência.
+    const chao = MARGEM.topo + alturaUtil
+    const area =
+      coordenadas.length > 1
+        ? `${coordenadas[0].cx},${chao} ${linha} ${coordenadas[coordenadas.length - 1].cx},${chao}`
+        : ''
 
     // Com faixa alvo, as marcas do eixo são os limites dela: ler "180" e "70"
     // diz alguma coisa, ler a média entre o maior e o menor valor não diz nada.

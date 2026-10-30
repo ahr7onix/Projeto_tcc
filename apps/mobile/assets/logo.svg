@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1000 1000">
+  <!-- Logo provisório do NutriCare: gota (glicemia) com folha (nutrição).
+       Os PNGs desta pasta (icon, adaptive-icon, splash-icon, favicon) saem deste desenho. -->
+  <rect width="1000" height="1000" fill="#005EB8"/>
+  <g transform="translate(190 190) scale(0.62)">
+    <path d="M500 90 C500 90 230 420 230 600 A270 270 0 0 0 770 600 C770 420 500 90 500 90 Z" fill="#FFFFFF"/>
+    <g transform="translate(500 610) rotate(-38)">
+      <path d="M-150 0 C-80 -105 80 -105 150 0 C80 105 -80 105 -150 0 Z" fill="#005EB8"/>
+      <path d="M-120 0 L118 0" stroke="#FFFFFF" stroke-width="16" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

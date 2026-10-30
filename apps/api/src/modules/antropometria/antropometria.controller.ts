@@ -8,6 +8,7 @@ import type { JwtPayload } from '../../common/guards/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CreateAntropometriaDto } from './dto/create-antropometria.dto';
 import { AntropometriaService } from './antropometria.service';
+import { limiteDaQuery } from '../../common/numero-da-query';
 
 @Controller('antropometria')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -23,7 +24,7 @@ export class AntropometriaController {
     return this.antropometria.listar(
       user,
       pacienteId,
-      limite ? Number(limite) : undefined,
+      limiteDaQuery(limite),
     );
   }
 

@@ -11,18 +11,23 @@ O sistema já está publicado. Este documento registra como isso foi feito e o q
 | API | <https://nutricare-adj-api.onrender.com> |
 | Estado do sistema | <https://nutricare-adj-api.onrender.com/status> |
 
-O aplicativo do celular **não** entra aqui — ele continua rodando pelo Expo, e
-publicar na loja é um processo separado.
+Existe uma segunda cópia do mesmo código, `nutricare-tcc`, com envio de e-mail e
+login Google próprios: <https://nutricare-tcc-painel.onrender.com> e
+<https://nutricare-tcc-api.onrender.com>. É ela que o APK usa e onde a
+demonstração foi conferida (seção "Segunda cópia, em outra conta do Render").
+
+O aplicativo do celular é distribuído como APK, instalado direto no Android
+(seção "APK do aplicativo"). Publicar na loja é um processo separado, não feito.
 
 > **A primeira tela demora cerca de 50 segundos.** No plano gratuito, o servidor
 > desliga depois de 15 minutos parado e precisa ligar de novo quando alguém
 > acessa. Depois disso a navegação fica normal. Avise quem for testar, senão
 > parece que o sistema travou.
 
-> **Use apenas dados fictícios neste ambiente.** O sistema ainda não pede
-> autorização do paciente para ser acompanhado por um nutricionista, o que é
-> exigido pela LGPD para dados de saúde. Enquanto isso não for resolvido, nada
-> de paciente real.
+> **Use apenas dados fictícios neste ambiente.** O paciente já autoriza o
+> acompanhamento pelo aplicativo (aceite do convite), mas os parâmetros clínicos
+> e a tabela de alimentos ainda aguardam a validação da equipe de Nutrição.
+> Enquanto isso, nada de paciente real.
 
 > **O banco de dados gratuito do Render expira em 30 dias.** Antes disso é
 > preciso trocar para o plano pago ou criar um banco novo. Para uso além da
@@ -274,13 +279,36 @@ No plano gratuito o primeiro build levou 44 minutos (metade na fila). O link do
 APK expira: a página do build mostra quantos dias faltam (**Availability**).
 Baixe o `.apk` pelo menu **⋮ > Download** e guarde uma cópia.
 
+### Atualização pela internet (EAS Update)
+
+Mudança só de código JavaScript (telas, textos, regras do app) não precisa de APK
+novo: vai pela internet para quem já tem o APK instalado.
+
+1. Em `apps/mobile`, logado na conta do Expo: `npm run atualizar -- "o que mudou"`.
+   O script usa as variáveis do perfil `preview` do `eas.json`, não o `.env` da
+   máquina.
+2. No celular: abrir o app (ele baixa a atualização), fechar e abrir de novo (ela
+   passa a valer). No fim da tela **Perfil** aparece "Versão 1.0.0 · atualização de
+   DD/MM, HH:MM": é a data da atualização que o celular está usando.
+
+Mudança nativa **precisa de APK novo**: pacote com código nativo, plugin ou som no
+`app.json`, ícone, permissões. Nesse caso, suba o `version` do `app.json` (por
+exemplo `1.0.0` para `1.1.0`) antes de gerar. A atualização só chega ao APK com o
+mesmo `version` (`runtimeVersion` com `policy: appVersion`); sem subir, uma
+atualização que precisa da peça nativa nova chegaria ao APK antigo e quebraria o app.
+
+O primeiro APK (o de 28/10/2026, sem o `expo-updates`) não recebe atualização:
+quem tem ele instalado precisa instalar um APK novo uma vez. Na v1.0 o `version`
+passou de `0.1.0` para `1.0.0`: as atualizações publicadas depois disso só chegam
+ao APK 1.0.0, e quem ainda tem o APK 0.1.0 precisa instalar o novo.
+
 ---
 
 ## Problemas comuns
 
 | O que acontece | Causa provável | O que fazer |
 |---|---|---|
-| Primeira tela demora ~50 s | O servidor estava desligado (plano gratuito) | Esperar; é o comportamento normal |
+| Primeira tela demora ~50 s | O servidor estava desligado (plano gratuito) | Esperar; é o comportamento normal. O app avisa "Acordando o servidor" e espera até 1 minuto. Antes de uma apresentação, abra o painel ou o app uns 2 minutos antes |
 | Painel abre mas as listas ficam vazias | `CORS_ORIGIN` ou `VITE_API_URL` errados | Conferir no `render.yaml`, sem barra no final |
 | `/status` responde `banco: indisponivel` | Banco caiu ou passou dos 30 dias | Ver **nutricare-adj-db** no Render |
 | Erro de certificado nos logs da API | Provedor com certificado próprio | `DATABASE_SSL` = `no-verify` |

@@ -71,6 +71,11 @@ faixas.
 
 ## 2. Tabela de alimentos de exemplo (36 itens)
 
+> **Atualização de 29/10/2026:** no ambiente publicado estes 36 itens foram
+> trocados pela TACO 4ª edição (578 alimentos) e desativados. Continuam valendo
+> para um banco novo, antes de importar a TACO. O que pedimos agora é conferir a
+> escolha da TACO e dizer como tratar os 19 alimentos que ela traz sem valor.
+
 Todos os valores são **por 100 g** do alimento na forma indicada no nome. A
 coluna "medida caseira" informa a quantos gramas equivale a medida citada — é o
 que aparece no app quando o paciente monta a refeição.

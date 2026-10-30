@@ -4,6 +4,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt.guard';
 import type { JwtPayload } from '../../common/guards/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { diasDaQuery } from '../../common/numero-da-query';
 import { RelatoriosService } from './relatorios.service';
 
 @Controller('relatorios')
@@ -21,7 +22,7 @@ export class RelatoriosController {
     return this.relatorios.gerar(
       user,
       pacienteId,
-      dias ? Number(dias) : undefined,
+      diasDaQuery(dias),
       completo === 'true',
     );
   }
@@ -37,7 +38,7 @@ export class RelatoriosController {
     const { nomeArquivo, conteudo } = await this.relatorios.gerarCsv(
       user,
       pacienteId,
-      dias ? Number(dias) : undefined,
+      diasDaQuery(dias),
     );
     res.setHeader('Content-Disposition', `attachment; filename="${nomeArquivo}"`);
     return conteudo;

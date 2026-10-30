@@ -33,8 +33,11 @@ export default function NotificationCenter() {
         api.get('/pacientes'),
       ])
       const lidas = new Set(lerIds())
-      const base: Item[] = (persistidas.data.data as Persistida[]).map((item) => ({
-        id: `notificacao-${item.id}`, tipo: item.tipo === 'alerta_glicemia' ? 'alerta' : 'informativo', prioridade: item.tipo === 'alerta_glicemia' ? 'atencao' : 'informativo', titulo: item.titulo, descricao: item.mensagem, criadoEm: item.criadoEm, lida: item.lida || lidas.has(`notificacao-${item.id}`),
+      // O alerta de glicemia já vem de /alertas, com o nome do paciente. O histórico
+      // guarda o mesmo alerta com o texto do push ("Um paciente registrou..."); somar
+      // os dois mostrava cada alerta duas vezes, uma delas sem dizer quem era.
+      const base: Item[] = (persistidas.data.data as Persistida[]).filter((item) => item.tipo !== 'alerta_glicemia').map((item) => ({
+        id: `notificacao-${item.id}`, tipo: 'informativo', prioridade: 'informativo', titulo: item.titulo, descricao: item.mensagem, criadoEm: item.criadoEm, lida: item.lida || lidas.has(`notificacao-${item.id}`),
       }))
       const clinicos: Item[] = (alertas as Alerta[]).map((alerta) => ({
         id: `alerta-${alerta.id}`, tipo: 'alerta', prioridade: alerta.severidade === 'critico' ? 'critico' : 'atencao', titulo: alerta.severidade === 'critico' ? 'Alerta glicêmico crítico' : 'Alerta glicêmico', descricao: `${alerta.pacienteNome} registrou ${alerta.valor} mg/dL (${alerta.mensagem}).`, criadoEm: String(alerta.dataHora), pacienteId: alerta.pacienteId, pacienteNome: alerta.pacienteNome, lida: lidas.has(`alerta-${alerta.id}`),

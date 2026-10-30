@@ -321,7 +321,12 @@ export default function SaudeScreen() {
       <Card
         title="Medicamentos"
         action={
-          <Pressable onPress={() => router.push('/(tabs)/saude/medicamentos')}>
+          <Pressable
+            onPress={() => router.push('/(tabs)/saude/medicamentos')}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Gerenciar medicamentos"
+          >
             <Text style={styles.cardAction}>Gerenciar</Text>
           </Pressable>
         }

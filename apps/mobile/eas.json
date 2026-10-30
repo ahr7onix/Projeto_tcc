@@ -6,11 +6,13 @@
   "build": {
     "preview": {
       "distribution": "internal",
+      "channel": "preview",
       "android": {
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://nutricare-tcc-api.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://nutricare-tcc-api.onrender.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "358396813214-n1fmvb21ph02u56f71ns4v02i4o6r9fd.apps.googleusercontent.com"
       }
     }
   }
