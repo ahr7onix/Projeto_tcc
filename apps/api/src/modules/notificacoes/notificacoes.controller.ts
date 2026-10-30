@@ -6,6 +6,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt.guard';
 import type { JwtPayload } from '../../common/guards/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { NotificacoesService } from './notificacoes.service';
+import { limiteDaQuery } from '../../common/numero-da-query';
 
 @Controller('notificacoes')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -20,7 +21,7 @@ export class NotificacoesController {
   ) {
     return this.notificacoes.listar(user, {
       apenasNaoLidas: apenasNaoLidas === 'true',
-      limite: limite ? Number(limite) : undefined,
+      limite: limiteDaQuery(limite),
     });
   }
 

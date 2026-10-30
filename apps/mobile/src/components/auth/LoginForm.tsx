@@ -26,9 +26,11 @@ import {
   useLoginGoogle,
 } from '@/hooks/use-auth';
 import {
+  entrarComGoogleNativo,
   isGoogleAuthConfigured,
   mountGoogleWebButton,
   useNativeGoogleAuthRequest,
+  usaGoogleNativo,
 } from '@/lib/google-sign-in';
 import {
   cadastroSchema,
@@ -178,6 +180,11 @@ export function LoginForm({ initialMode = 'login' }: Props) {
       return;
     }
     try {
+      if (usaGoogleNativo()) {
+        const idToken = await entrarComGoogleNativo();
+        if (idToken) submitGoogleToken(idToken);
+        return;
+      }
       await promptGoogle();
     } catch (err) {
       setGoogleError(
@@ -199,6 +206,18 @@ export function LoginForm({ initialMode = 'login' }: Props) {
 
   const pending =
     (isSignUp ? cadastro.isPending : login.isPending) || loginGoogle.isPending;
+
+  // Passou de 5 s, quase sempre é o servidor acordando (plano gratuito): avisar
+  // evita que a pessoa ache que travou e saia do app.
+  const [demorando, setDemorando] = useState(false);
+  useEffect(() => {
+    if (!pending) {
+      setDemorando(false);
+      return;
+    }
+    const espera = setTimeout(() => setDemorando(true), 5000);
+    return () => clearTimeout(espera);
+  }, [pending]);
   const errorMessage = googleError
     ? googleError
     : isSignUp
@@ -252,6 +271,16 @@ export function LoginForm({ initialMode = 'login' }: Props) {
                 <View style={styles.errorBanner}>
                   <Ionicons name="alert-circle" size={16} color={colors.danger} />
                   <Text style={styles.errorText}>{errorMessage}</Text>
+                </View>
+              ) : null}
+
+              {demorando ? (
+                <View style={styles.avisoBanner}>
+                  <ActivityIndicator size="small" color={colors.primary} />
+                  <Text style={styles.avisoText}>
+                    Acordando o servidor. A primeira entrada depois de um tempo parado pode levar
+                    até 1 minuto.
+                  </Text>
                 </View>
               ) : null}
 
@@ -333,7 +362,7 @@ export function LoginForm({ initialMode = 'login' }: Props) {
                   />
 
                   <Link href="/(auth)/esqueci-senha" asChild>
-                    <Pressable style={styles.forgot}>
+                    <Pressable style={styles.forgot} hitSlop={12} accessibilityRole="link">
                       <Text style={styles.forgotText}>Esqueceu a senha?</Text>
                     </Pressable>
                   </Link>
@@ -464,6 +493,20 @@ const styles = StyleSheet.create({
     color: colors.danger,
     flex: 1,
     fontWeight: '600',
+  },
+  avisoBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.primarySoft,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+  },
+  avisoText: {
+    ...typography.caption,
+    color: colors.primaryDark,
+    flex: 1,
   },
   primaryBtn: {
     alignItems: 'center',

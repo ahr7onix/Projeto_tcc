@@ -16,5 +16,6 @@ npm-debug.log*
 Thumbs.db
 
 .expo/
+scripts/e2e-falhas/
 android/
 ios/

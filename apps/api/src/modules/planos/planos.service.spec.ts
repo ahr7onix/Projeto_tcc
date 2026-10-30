@@ -265,6 +265,14 @@ describe('PlanosService', () => {
   });
 
   describe('autorização por plano', () => {
+    it('should refuse the administrator before reading the plan', async () => {
+      const { service, query } = criarServico([[linhaPlano()]]);
+      await expect(service.findOne('42', usuario('administrador'))).rejects.toThrow(
+        ForbiddenException,
+      );
+      expect(query).not.toHaveBeenCalled();
+    });
+
     it('should throw NotFoundException for a plan that does not exist', async () => {
       const { service } = criarServico([[]]);
       await expect(service.findOne('42', usuario('nutricionista'))).rejects.toThrow(
@@ -393,6 +401,29 @@ describe('PlanosService', () => {
     it('should return null when the patient has no plan in force', async () => {
       const { service } = criarServico([[]]);
       await expect(service.findAtivo(usuario('paciente', '2'))).resolves.toBeNull();
+    });
+
+    it('should check the link before a nutritionist reads the plan', async () => {
+      const { service, garantirVinculo } = criarServico([[]]);
+      await service.findAtivo(usuario('nutricionista'), '2');
+      expect(garantirVinculo).toHaveBeenCalledWith('1', '2');
+    });
+
+    it('should not read the plan of a patient without link', async () => {
+      const { service, garantirVinculo, query } = criarServico([[]]);
+      garantirVinculo.mockRejectedValueOnce(new BadRequestException('sem vínculo'));
+      await expect(service.findAtivo(usuario('nutricionista'), '3')).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(query).not.toHaveBeenCalled();
+    });
+
+    it('should refuse the administrator', async () => {
+      const { service, query } = criarServico([[]]);
+      await expect(service.findAtivo(usuario('administrador'), '3')).rejects.toThrow(
+        ForbiddenException,
+      );
+      expect(query).not.toHaveBeenCalled();
     });
   });
 

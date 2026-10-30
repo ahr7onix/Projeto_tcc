@@ -40,6 +40,7 @@ para não precisar entrar em cada pasta:
 | `npm run dev:api` · `dev:web` · `dev:mobile` | sobe cada aplicação |
 | `npm run db:preparar` | cria e atualiza as tabelas do banco |
 | `npm run db:verificar` | confere se o `schema.sql` está em dia com as migrations |
+| `npm run e2e:fluxo` | percorre a demonstração inteira no navegador (precisa da API, do painel e do app web rodando; ver o topo de `scripts/e2e-fluxo.mjs`) |
 
 Cada projeto mantém o seu próprio `package.json` e `package-lock.json`. A raiz
 só delega — não são workspaces do npm, de propósito: o Render instala cada
@@ -89,8 +90,10 @@ Enquanto essa verificação estiver verde, os três caminhos de instalação
 estrutura.
 
 O `seeds_alimentos.sql` carrega 36 alimentos com valores **aproximados**, só para o
-sistema não nascer vazio. Eles ficam marcados com `fonte = 'exemplo'` e devem ser
-substituídos pela tabela oficial assim que a equipe de Nutrição indicar qual usar.
+sistema não nascer vazio. Eles ficam marcados com `fonte = 'exemplo'`. No ambiente
+publicado eles foram trocados pela TACO 4ª edição (578 alimentos, importados pelo painel
+em 29/10/2026) e ficaram desativados. Num banco novo, importe a TACO como explica o
+`docs/LEIA_PRIMEIRO_IA.md` (armadilha "Tabela TACO").
 
 Sem o `psql` instalado, dá para aplicar os mesmos arquivos pelo Node:
 
@@ -177,16 +180,18 @@ mudar o schema: `docker compose down -v` (isso apaga os dados).
 
 ## Publicar na internet
 
-O sistema está no ar no Render, plano gratuito:
+O sistema está no ar no Render, plano gratuito, em duas cópias do mesmo código:
 
-| Peça | Endereço |
-|---|---|
-| Painel web | <https://nutricare-adj-painel.onrender.com> |
-| API | <https://nutricare-adj-api.onrender.com> |
+| Peça | Cópia `nutricare-tcc` (com e-mail; é a que o APK usa) | Cópia `nutricare-adj` |
+|---|---|---|
+| Painel web | <https://nutricare-tcc-painel.onrender.com> | <https://nutricare-adj-painel.onrender.com> |
+| API | <https://nutricare-tcc-api.onrender.com> | <https://nutricare-adj-api.onrender.com> |
 
-O arquivo `render.yaml` na raiz descreve as três peças — banco, API e painel web
-— e o Render as monta sozinho a partir dele. Detalhes, credenciais de acesso e
-limitações do plano gratuito em [docs/PUBLICAR.md](docs/PUBLICAR.md).
+Os arquivos `render-tcc.yaml` e `render.yaml` na raiz descrevem as três peças de
+cada cópia — banco, API e painel web — e o Render as monta sozinho a partir
+deles. O aplicativo do paciente é um APK para Android (versão 1.0.0), gerado pelo
+EAS Build. Detalhes, credenciais de acesso e limitações do plano gratuito em
+[docs/PUBLICAR.md](docs/PUBLICAR.md).
 
 **Esse ambiente é só para demonstração, com dados fictícios.** O banco gratuito
 expira em 30 dias, e os parâmetros clínicos ainda aguardam a validação da equipe
@@ -240,7 +245,7 @@ npm run test:cov      # com cobertura
 | RF12 | Conteúdos educativos | Implementado |
 | RF13 | Gestão administrativa | Implementado |
 | RF14 | Integração web + mobile | Implementado |
-| RF15 | Importação de tabela nutricional (CSV, cabeçalho da TACO reconhecido) | Implementado — falta a tabela oficial |
+| RF15 | Importação de tabela nutricional (CSV, cabeçalho da TACO reconhecido) | Implementado — TACO 4ª edição importada no ambiente publicado (578 alimentos) |
 | RF16 | Consentimento do paciente no vínculo (convite, aceite, encerramento) | Implementado |
 | RF17 | Cadastro de paciente pelo nutricionista e de nutricionista pela administração, com aprovação do CRN | Implementado |
 
@@ -355,7 +360,11 @@ idade, gestação e condição individual do paciente.
 - O CRN não é consultado automaticamente no conselho (não há consulta pública
   automatizada): a administração confere à mão antes de aprovar o nutricionista
 - Sem SMTP configurado nenhum e-mail sai do sistema — nem o link de criar senha
-  de quem é cadastrado pelo painel. Ver [docs/PUBLICAR.md](docs/PUBLICAR.md)
+  de quem é cadastrado pelo painel. Na cópia `nutricare-tcc` ele está configurado
+  (Brevo). Ver [docs/PUBLICAR.md](docs/PUBLICAR.md)
+- O push mandado pelo servidor não chega ao APK: depende do Firebase Cloud
+  Messaging, que não foi configurado. Os lembretes e avisos do app são
+  notificações locais do aparelho
 - Remover um usuário pela administração apaga a conta de vez, com tudo o que
   depende dela — no caso do paciente, o histórico clínico. A exclusão feita pelo
   próprio paciente, no app, é suave e preserva o histórico
@@ -387,7 +396,7 @@ foram corrigidos, e o primeiro deles hoje tem verificação automática no CI.
 
 - **O painel e o app não têm teste de comportamento**, só `typecheck` e lint no
   CI. A escolha se sustenta enquanto a regra de negócio estiver toda na API, que
-  é onde ficam os 238 testes e as fórmulas de `common/glicemia` e
+  é onde ficam os 277 testes e as fórmulas de `common/glicemia` e
   `common/nutricao`; deixa de se sustentar no dia em que os clientes ganharem
   lógica própria.
 

@@ -125,7 +125,10 @@ export function lerCsv(texto: string): string[][] {
  * `NaN` para texto que não é número.
  *
  * Na TACO, "Tr" (traço) é quantidade pequena demais para medir e vale zero;
- * "NA" e "*" são valor não analisado e contam como célula vazia.
+ * "NA" e "*" são valor não analisado e contam como célula vazia. A TACO em
+ * CSV do github.com/brolesi/taco grava o traço como "1e-05": sem aceitar a
+ * notação científica, 43 células viravam "inválido" e 38 alimentos ficavam de
+ * fora (batata cozida, açúcar, suco de laranja...).
  */
 export function lerNumero(texto: string): number | undefined {
   const limpo = texto.trim()
@@ -135,7 +138,7 @@ export function lerNumero(texto: string): number | undefined {
     limpo.includes(',') && limpo.includes('.')
       ? limpo.replace(/\./g, '').replace(',', '.')
       : limpo.replace(',', '.')
-  return /^-?\d+(\.\d+)?$/.test(decimal) ? Number(decimal) : NaN
+  return /^-?\d+(\.\d+)?(e[-+]?\d+)?$/i.test(decimal) ? Number(decimal) : NaN
 }
 
 export function lerPlanilha(texto: string): PlanilhaLida {

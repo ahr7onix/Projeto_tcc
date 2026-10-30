@@ -14,6 +14,7 @@ import type { JwtPayload } from '../../common/guards/jwt.guard';
 import { CreateGlicemiaDto } from './dto/create-glicemia.dto';
 import { CreateRefeicaoDto } from './dto/create-refeicao.dto';
 import { RegistrosService } from './registros.service';
+import { diasDaQuery } from '../../common/numero-da-query';
 
 @Controller('registros')
 @UseGuards(JwtAuthGuard)
@@ -29,7 +30,7 @@ export class RegistrosController {
   ) {
     return this.registros.findAll(user, {
       pacienteId,
-      dias: dias ? Number(dias) : undefined,
+      dias: diasDaQuery(dias),
       tipo,
     });
   }
@@ -37,7 +38,7 @@ export class RegistrosController {
   /** Contagens prontas para a tela Início do painel (ver o serviço). */
   @Get('resumo-glicemia')
   resumoGlicemia(@CurrentUser() user: JwtPayload, @Query('dias') dias?: string) {
-    return this.registros.resumoGlicemia(user, dias ? Number(dias) : undefined);
+    return this.registros.resumoGlicemia(user, diasDaQuery(dias));
   }
 
   @Get('glicemia/ultimo')

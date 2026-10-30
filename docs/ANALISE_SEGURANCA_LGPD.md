@@ -372,7 +372,7 @@ da banca, com teste. Rodar o audit no CI ajudaria a não regredir.
 - **[CRÍTICO (operacional)] Repositório público + credenciais no README + site
   no ar com essas credenciais** — ver item 2.2. É a soma que importa: os três
   juntos é que dão o acesso.
-- **[MÉDIO] `sincronizar.ps1`** faz `git add . && commit && push` **a cada 10
+- **[MÉDIO] `sincronizar.ps1`** (removido do repositório em 28/10/2026) fazia `git add . && commit && push` **a cada 10
   segundos**. Foi assim que `.env` e `node_modules` foram parar no histórico
   (já corrigido no estado atual, mas ainda no histórico). Enquanto esse script
   rodar, qualquer segredo que cair na árvore vai para o repositório público em
@@ -472,6 +472,16 @@ operação atual.
 3. `npm audit fix` sem `--force` nos três apps (seção 5).
 4. Corrigir o 500 do `?dias=` inválido (item 2.5) e o logout do painel chamar a
    API (seção 3).
+
+> **Feito em 28/10/2026 (branch `fix/seguranca-antes-da-banca`):** itens 2, 3 e 4.
+> O `/planos/ativo` confere o vínculo e recusa o administrador; o `/planos/:id`
+> também passou a recusar o administrador, que lia qualquer plano pelo número.
+> `?dias=` e `?limite=` inválidos usam o padrão do serviço em todas as rotas. O
+> "Sair" do painel revoga o refresh token. `npm audit fix` sem `--force`: API de
+> 51 para 34 alertas (3 críticos para 0), painel de 6 para 4; o app ficou de
+> fora porque quase tudo é da cadeia de build do Expo e mexer arriscaria o APK.
+> O que sobra exige subir versão maior (Nest 12, Vite 8, React Router 7). Falta o
+> item 1, que é feito no painel publicado.
 
 **Trabalho futuro (seção de limitações da monografia):**
 

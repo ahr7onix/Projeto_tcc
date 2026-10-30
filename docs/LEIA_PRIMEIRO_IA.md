@@ -14,7 +14,8 @@ está no `docs/DOCUMENTACAO_TCC.md`.
 2. Trabalhe numa branch própria, nunca direto na `main`.
 3. Mexa só no que o pedido exige. Não reescreva arquivo inteiro para "melhorar".
 4. Antes de subir, rode `npm run verificar` na raiz (typecheck dos três projetos, testes da API e
-   build). Mexeu no banco? Rode também `npm run db:verificar`.
+   build). Mexeu no banco? Rode também `npm run db:verificar`. Mexeu em tela ou em fluxo? Rode
+   `npm run e2e:fluxo` com a API, o painel e o app web no ar (instruções no topo do script).
 5. Suba para o GitHub (commit, push e Pull Request) a cada atualização. Não deixe trabalho só na
    máquina.
 6. Registre a mudança no `docs/HISTORICO_ALTERACOES.md` e, se mudou o que está "feito",
@@ -61,7 +62,32 @@ e avise a equipe antes.
   `useSafeAreaInsets` da barra de abas.
 - **APK:** não troque `slug`, `owner`, `extra.eas.projectId` nem `android.package` no
   `apps/mobile/app.json`. Eles ligam o app ao projeto do Expo, onde está a chave de assinatura.
+  O SHA-1 dessa chave está cadastrado no Google Cloud para o login com Google do APK; chave
+  nova exige cadastrar o SHA-1 novo (`docs/LOGIN_GOOGLE.md`, "APK (Android)").
   Como gerar: `docs/PUBLICAR.md`, "APK do aplicativo".
+- **Lembretes como alarme:** o Android grava som e vibração do canal `lembretes-alarme` na
+  primeira vez e ignora mudanças depois; para mudar, use outro id de canal
+  (`apps/mobile/src/lib/agenda-lembretes.ts`). O som (`apps/mobile/assets/sounds/alarme.wav`)
+  entra no APK pelo plugin do `expo-notifications` no `app.json`: trocar o som exige APK novo.
+- **Atualização pela internet (EAS Update):** só para mudança de JavaScript, com
+  `npm run atualizar -- "o que mudou"` em `apps/mobile`. Mudou algo nativo (pacote com código
+  nativo, plugin, som, ícone, permissão)? Suba o `version` do `app.json` e gere APK novo, senão
+  a atualização chega ao APK antigo e quebra o app (`docs/PUBLICAR.md`).
+- **API dormindo (Render gratuito):** depois de 15 min parada ela leva de 30 a 60 s para acordar.
+  O app espera até 60 s (`apps/mobile/src/lib/api.ts`) e manda um "acorda" ao abrir e ao voltar
+  para a frente. Não baixe esse tempo: com 15 s o primeiro login do dia falhava.
+- **Tabela TACO:** o arquivo pronto é o `data/processed/taco/taco_composicao.csv` do
+  github.com/brolesi/taco (licença MIT, 597 alimentos). Importe pelo painel (Alimentos →
+  Importar planilha, fonte "TACO 4ª edição"): entram 578. Os 19 de fora não têm o dado na
+  própria TACO (óleos e azeites sem carboidrato e proteína, 6 alimentos sem análise, 4 carnes e
+  peixes com carboidrato levemente negativo), e a tela mostra o motivo de cada um. O arquivo
+  grava o traço ("Tr") como `1e-05`; por isso o leitor da planilha aceita notação científica.
+  Os 36 alimentos de exemplo continuam aparecendo na busca ao lado dos da TACO até serem
+  desativados ("Remover" no painel só desativa). No ambiente publicado isso já foi feito em
+  29/10/2026; para trazê-los de volta, `PATCH /alimentos/:id` com `{"ativo": true}`.
+- **Links nos e-mails (Brevo):** o Brevo troca os links por um endereço de rastreamento de
+  cliques (`...sendibt3.com/tr/cl/...`) que redireciona para o painel. No plano gratuito não dá
+  para desligar. O link de criar ou redefinir senha continua valendo uma vez só.
 - **Dados de demonstração:** só existem se o banco for preparado com `SEED_DEMO=true`.
 
 ## O que já está feito
@@ -70,7 +96,8 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
 
 - API com cadastro e login (e-mail e Google), refresh, redefinir senha, perfil, registros de
   glicemia e refeição, medidas, humor, medicamentos, lembretes, restrições, planos alimentares,
-  alimentos (com importação por planilha), receitas, conteúdos, mensagens em tempo real,
+  alimentos (com importação por planilha; a TACO 4ª edição está carregada no ambiente
+  publicado desde 29/10/2026), receitas, conteúdos, mensagens em tempo real,
   relatórios, alertas, notificações e administração.
 - Painel web (nutricionista e administrador) e app mobile (paciente).
 - Convite de vínculo com aceite do paciente, e o paciente pode encerrar o acompanhamento.
@@ -82,11 +109,18 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
   (`nutricare-tcc-painel.onrender.com`), com e-mail pelo Brevo e login Google em cliente próprio.
   A cópia do `render.yaml` continua sem e-mail.
 - APK de demonstração gerado pelo EAS Build (`apps/mobile/eas.json`, perfil `preview`) e testado
-  num Android de verdade. Falta o login com Google dentro do APK.
+  num Android de verdade. No segundo APK (29/10/2026) foram conferidos no celular o login com
+  Google (Google Sign-In nativo), o lembrete como alarme e o ícone. A atualização pela internet
+  funcionou: a primeira saiu em 29/10/2026 e chegou ao celular sem APK novo. Na v1.0 o app e a
+  API passaram para a versão 1.0.0, com APK novo: as atualizações pela internet publicadas
+  depois disso só chegam ao APK 1.0.0.
+- Teste do fluxo completo da demonstração (`scripts/e2e-fluxo.mjs`, `npm run e2e:fluxo`): 21
+  passos, do cadastro da nutricionista ao paciente encerrando o acompanhamento.
 
 ## Em andamento
 
-- PR #10: barra lateral nova do painel web.
+- v1.0: tag `v1.0` no `main` depois do merge do PR #10 (barra lateral nova do painel web) e do
+  PR #19 (remove scripts sem uso da raiz), os dois do Isac.
 
 ## Pendências conhecidas
 
@@ -100,24 +134,15 @@ Desempenho (detalhe em `docs/ANALISE_DESEMPENHO.md`):
 
 Bugs pequenos, podem ser corrigidos:
 
-- **Autorização:** `GET /planos/ativo?pacienteId=` (`planos.service.ts`, `findAtivo`) não passa
-  por `garantirVinculo` e entrega o plano alimentar de qualquer paciente a nutricionista sem
-  vínculo e ao administrador. É o único vazamento clínico achado na análise de segurança
-  (`docs/ANALISE_SEGURANCA_LGPD.md`, item 2.1). Corrigir no padrão do `findAll` do mesmo serviço.
-- `?dias=` inválido ou gigante responde 500 em `/registros`, `/emocional/resumo` e
-  `/emocional/glicemia` (falta validar o número).
 - `tipo_refeicao` não é validado na API. O app usa `cafe`, `almoco`, `lanche`, `jantar` e `ceia`.
 - Apagar medicamento só desativa; apagar de novo devolve 200 em vez de 404.
 - O token de acesso continua valendo até expirar (15 min) depois de desativar a conta ou trocar a
   senha.
 - Os testes automáticos escrevem erros falsos no `logs/` real da API.
-- App em celular estreito (360 de largura): a barra de abas corta "Alimentação" e "Mensagens".
-- App: "Gerenciar" (Saúde e Alimentação) e "Esqueceu a senha?" têm área de toque pequena
-  (menos de 32 px de altura, sem `hitSlop`).
 
 Limitações assumidas pela equipe (seção 1.8 da documentação): parâmetros clínicos ainda sem
 validação da Nutrição, CRN conferido à mão, e-mail depende de SMTP configurado, ambiente
-publicado é de demonstração, app não conferido em celular de verdade.
+publicado é de demonstração, push do servidor sem Firebase (o app usa notificações locais).
 
 ## Como registrar o que você fez
 

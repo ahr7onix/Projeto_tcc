@@ -1,10 +1,25 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { ScreenContainer } from '@/components/ScreenContainer';
+import {
+  lerModoAlarme,
+  salvarModoAlarme,
+  sincronizarAgenda,
+  testarLembrete,
+} from '@/lib/agenda-lembretes';
 import {
   atualizarLembrete,
   criarLembrete,
@@ -57,6 +72,36 @@ export default function LembretesScreen() {
   const [form, setForm] = useState<Form>(FORM_VAZIO);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [modoAlarme, setModoAlarme] = useState(false);
+
+  useEffect(() => {
+    lerModoAlarme().then(setModoAlarme).catch(() => {});
+  }, []);
+
+  const onAlternarAlarme = async (ligado: boolean) => {
+    setModoAlarme(ligado);
+    try {
+      await salvarModoAlarme(ligado);
+      // Reagenda na hora: os lembretes que já existem passam a tocar no modo novo.
+      if (lembretes) await sincronizarAgenda(lembretes);
+    } catch {
+      Alert.alert('Erro', 'Não foi possível mudar o jeito de tocar.');
+    }
+  };
+
+  const onTestar = async () => {
+    try {
+      const agendado = await testarLembrete();
+      Alert.alert(
+        agendado ? 'Teste a caminho' : 'Teste indisponível',
+        agendado
+          ? 'Em 5 segundos o celular toca um lembrete de teste. Pode bloquear a tela.'
+          : 'O teste só funciona no celular, com as notificações permitidas.',
+      );
+    } catch {
+      Alert.alert('Erro', 'Não foi possível tocar o teste.');
+    }
+  };
 
   // Invalidar aqui reagenda as notificações: o hook da raiz do app escuta a
   // mesma chave e reescreve a agenda do aparelho.
@@ -166,6 +211,31 @@ export default function LembretesScreen() {
       subtitle="Programe avisos para medir a glicemia, tomar remédio ou comer na hora certa."
       showBack
     >
+      <Card title="Como o celular avisa">
+        <View style={styles.modoLinha}>
+          <View style={styles.itemIcone}>
+            <Ionicons name="alarm-outline" size={18} color={colors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.itemTitulo}>Tocar como alarme</Text>
+            <Text style={styles.ajuda}>
+              Toca por até 30 segundos, no volume do despertador, mesmo com o celular no
+              silencioso.
+            </Text>
+          </View>
+          <Switch
+            value={modoAlarme}
+            onValueChange={onAlternarAlarme}
+            trackColor={{ true: colors.primary, false: colors.border }}
+            thumbColor={colors.surface}
+            accessibilityLabel="Tocar lembretes como alarme"
+          />
+        </View>
+        <Pressable style={styles.btnSecundario} onPress={onTestar}>
+          <Text style={styles.btnSecundarioTexto}>Tocar um teste</Text>
+        </Pressable>
+      </Card>
+
       <Card title={editandoId ? 'Editar lembrete' : 'Novo lembrete'}>
         <View style={styles.field}>
           <Text style={styles.label}>O que você quer ser lembrado de fazer?</Text>
@@ -417,6 +487,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   btnSecundarioTexto: { ...typography.body, color: colors.textSoft, fontWeight: '600' },
+
+  modoLinha: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
 
   center: { alignItems: 'center', paddingVertical: spacing.lg },
   item: {
