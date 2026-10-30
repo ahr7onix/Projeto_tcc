@@ -10,7 +10,7 @@ import { CreateAlimentoDto } from './dto/create-alimento.dto';
 import { ImportarAlimentosDto } from './dto/importar-alimentos.dto';
 import { UpdateAlimentoDto } from './dto/update-alimento.dto';
 import { AlimentosService } from './alimentos.service';
-import { limiteDaQuery } from '../../common/numero-da-query';
+import { limiteDaQuery, paginaDaQuery } from '../../common/numero-da-query';
 
 @Controller('alimentos')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -23,12 +23,14 @@ export class AlimentosController {
     @Query('grupo') grupo?: string,
     @Query('incluirInativos') incluirInativos?: string,
     @Query('limite') limite?: string,
+    @Query('pagina') pagina?: string,
   ) {
     return this.alimentos.listar({
       busca,
       grupo,
       incluirInativos: incluirInativos === 'true',
       limite: limiteDaQuery(limite),
+      pagina: paginaDaQuery(pagina),
     });
   }
 

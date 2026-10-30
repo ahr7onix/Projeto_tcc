@@ -88,7 +88,13 @@ e avise a equipe antes.
 - **Links nos e-mails (Brevo):** o Brevo troca os links por um endereço de rastreamento de
   cliques (`...sendibt3.com/tr/cl/...`) que redireciona para o painel. No plano gratuito não dá
   para desligar. O link de criar ou redefinir senha continua valendo uma vez só.
-- **Dados de demonstração:** só existem se o banco for preparado com `SEED_DEMO=true`.
+- **Dados de demonstração:** só existem se o banco for preparado com `SEED_DEMO=true`. Para ver o
+  sistema com volume (25 pacientes, até 5 meses de uso), use `scripts/demo/README.md`, sempre num
+  banco próprio.
+- **O que corta conteúdo no painel:** o `Card` tem `overflow: hidden`. Campo com menu suspenso
+  (`PatientPicker`) dentro dele precisa de `overflow: 'visible'`, senão o menu sai cortado. Tabela
+  larga vai em `TabelaRolavel` (ou em caixa com `overflow-x: auto`), nunca em caixa com `hidden`:
+  no celular as colunas da direita somem sem aviso.
 
 ## O que já está feito
 
@@ -118,6 +124,10 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
   passos, do cadastro da nutricionista ao paciente encerrando o acompanhamento.
 - Barra lateral nova do painel (PR #10): perfil no topo, contador de mensagens não lidas,
   "Recolher menu" e "Sair da conta" no rodapé. Scripts sem uso da raiz removidos (PR #19).
+- Painel usa a largura da tela (até 1680 px, centralizado acima disso), com paginação em
+  Pacientes, Alimentos (no servidor), Receitas, Conteúdos e Administração, tabelas com cabeçalho
+  fixo e rolagem própria, e sem nada cortado no celular. No computador, o sino de notificações fica
+  na barra lateral.
 
 ## Em andamento
 
@@ -141,6 +151,16 @@ Bugs pequenos, podem ser corrigidos:
 - O token de acesso continua valendo até expirar (15 min) depois de desativar a conta ou trocar a
   senha.
 - Os testes automáticos escrevem erros falsos no `logs/` real da API.
+
+Melhorias de tela que ficaram para depois:
+
+- Plano alimentar: o alimento é escolhido numa lista de 578 opções. Um campo de busca (como o
+  `PatientPicker`) resolveria, usando `GET /alimentos?busca=` em vez de baixar a tabela inteira.
+- Administração: a lista de usuários fica no fim de uma página longa, depois dos gráficos, e cada
+  troca de filtro recarrega também os painéis. Separar em abas resolve os dois. A lista traz no
+  máximo 200 usuários (teto da API), sem aviso quando passa disso.
+- "Pacientes" e "Acompanhamento" no menu abrem a mesma tela, com outro título.
+- Ações que apagam dados usam o `window.confirm` do navegador, que destoa do resto do painel.
 
 Limitações assumidas pela equipe (seção 1.8 da documentação): parâmetros clínicos ainda sem
 validação da Nutrição, CRN conferido à mão, e-mail depende de SMTP configurado, ambiente

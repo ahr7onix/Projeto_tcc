@@ -9,7 +9,7 @@ import {
   type PlanoAlimentar,
   type RefeicaoPlano,
 } from '../lib/planos'
-import { listarAlimentos, type Alimento } from '../lib/alimentos'
+import { listarCatalogoAlimentos, type Alimento } from '../lib/alimentos'
 import {
   buscarReferencias,
   calcularNecessidade,
@@ -100,7 +100,7 @@ export default function PlanoAlimentarModal({
       })
       .catch(() => setReferencias(null))
 
-    listarAlimentos({ limite: 300 })
+    listarCatalogoAlimentos()
       .then(setCatalogo)
       .catch(() => setCatalogo([]))
   }, [plano])

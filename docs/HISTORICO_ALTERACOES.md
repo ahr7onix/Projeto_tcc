@@ -2,6 +2,73 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-30 — Painel: largura da tela, tabelas e paginação
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/painel-layout-tabelas` (saiu de `feat/dados-demonstracao`)
+- O que aconteceu: numa tela de 1867 px sobravam 293 px à direita em todas as páginas, porque o
+  conteúdo tinha `max-width` sem centralizar. Com os dados de demonstração, passamos por todas as
+  telas em 1867, 1366 e 390 px e apareceram os outros problemas abaixo.
+- O que foi adicionado:
+  - `GET /alimentos` aceita `pagina` e devolve `total` além de `data`. Sem `pagina` responde como
+    antes, então o APK não muda. A ordem ganhou desempate por id: a TACO tem nomes repetidos.
+  - `TabelaRolavel` (`components/ui`, regras em `index.css`): cabeçalho fixo e rolagem própria. No
+    celular só rola para o lado, salvo se a tela pedir uma altura. Na impressão sai inteira.
+  - Paginação em Pacientes (10), Alimentos (25, pedindo cada página à API), Receitas e Conteúdos
+    (12) e Administração (15). Ao trocar de página, a lista volta para o começo.
+- O que foi modificado:
+  - Conteúdo vai até 1680 px e centraliza só acima disso.
+  - O sino de notificações virou item da barra lateral no computador: flutuando, cobria os botões
+    da última coluna. No celular continua flutuando.
+  - Pacientes: no celular as colunas da direita ficavam cortadas; abaixo de 1180 px cada paciente
+    vira um bloco. O resumo não muda mais durante a busca e "No sistema", que repetia
+    "Cadastrados", virou "Inativos". O nome do paciente é link, para abrir a ficha pelo teclado.
+  - Administração: a lista virou tabela com cabeçalho. Pede 200 usuários, em vez dos 50 do padrão.
+  - Ficha do paciente: as tabelas deslizam para o lado no celular (antes `overflow: hidden`
+    escondia as colunas, inclusive o valor da glicemia).
+  - Relatório: a tabela de refeições tem rolagem própria na tela (de 17.500 para 2.200 px).
+  - Início: "Precisam de atenção" aparecia com dois números diferentes. O cartão de cima virou
+    "Para acompanhar", e ele e "Alertas glicêmicos" dizem o que contam.
+- Bugs corrigidos:
+  - Modal de plano alimentar: a lista de alimentos parava em 300 de 578, no "Frango". Leite, Pão,
+    Tomate e o resto do alfabeto não podiam entrar num plano.
+  - Planos: o menu do filtro por paciente saía cortado pelo `Card`, e não dava para escolher.
+  - Seletor de paciente: toda opção aparecia marcada e o foco desenhava um retângulo sobre a lupa.
+  - Conteúdos: categoria crua ("alimentacao"), etiqueta esticada e, em cartão mais abaixo, "Editar"
+    parecia não fazer nada. Faixa dos botões alinhada nos cartões, também em Receitas.
+  - "1 porções" e "1 meses atrás"; média de glicemia com ponto em vez de vírgula; Receitas dizia
+    "nenhuma cadastrada" quando a busca não achava nada; estouro lateral no celular nas telas de
+    Anotações, ficha e Administração; ícones desalinhando os cartões da Administração; título
+    "Alimentação" na tela que o menu chama de "Planos alimentares".
+- Arquivos principais: `components/ui/index.tsx`, `components/layout/AppLayout.module.css`,
+  `components/NotificationCenter.tsx`, `index.css`, `pages/app/PacientesPage.module.css`,
+  `pages/app/AlimentosPage.tsx`, `pages/app/AdminPage.tsx`, `lib/alimentos.ts` e
+  `apps/api/src/modules/alimentos`.
+- Atenção para quem vier depois: `npm run verificar` para na pasta principal por falta do
+  `expo-updates` no `apps/mobile/node_modules` (problema local, o app não foi tocado). Testes (282)
+  e build rodaram à parte, e o typecheck do app passou numa worktree da `main`. `npm run e2e:fluxo`:
+  21/21, com API e painel próprios no banco `tcc`, para não sujar o `tcc_demo`. Conferido com
+  Playwright em 390, 1024, 1366, 1867, 1920 e 2560 px, sem erro no console. A impressão do relatório
+  foi conferida por emulação, não em papel. O painel e a API sobem juntos: se o painel subir antes,
+  o total da tela Alimentos vale só a página até a API acompanhar.
+
+## 2026-10-30 — Dados de demonstração com volume
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/dados-demonstracao`
+- O que foi adicionado: `scripts/demo/popular-demo.sql` (consultório fictício com 25 pacientes, 5
+  nutricionistas e até 5 meses de uso, em todas as áreas menos alimentos) e
+  `scripts/demo/README.md` (logins, como rodar e como ver no painel).
+- O que foi modificado: só a armadilha "Dados de demonstração" do `LEIA_PRIMEIRO_IA.md` e a lista
+  de pendências. Nenhuma mudança no código da aplicação nem no esquema do banco.
+- Arquivos principais: `scripts/demo/popular-demo.sql`, `scripts/demo/README.md`.
+- Atenção para quem vier depois: rodou só num banco local novo (`tcc_demo`, no contêiner
+  `tcc-pg-dev`); os bancos publicados não foram tocados. Conferido no painel com Playwright
+  (nutricionista e administrador, sem erro no console nem resposta 500) e pelas rotas da API que
+  o app usa; o app em si não foi aberto. Todo vínculo do script vem com o convite aceito, e o
+  script só existe para contas fictícias: não é caminho do sistema. Nele, sorteio com `random()`
+  fica em coluna de subconsulta, com o filtro por fora: `WHERE random() < p.adesao` direto faz o
+  Postgres sortear uma vez por paciente, e metade deles ficou sem nenhum registro no primeiro
+  teste. Contar o total não mostra isso; confira por paciente.
+
 ## 2026-10-30 — Barra lateral e limpeza no `main`, conferidas juntas
 - Quem: Natan, com apoio de IA
 - PR/branch: `docs/v1-pos-merge`

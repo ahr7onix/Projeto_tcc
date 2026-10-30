@@ -195,7 +195,7 @@ enviado. No ambiente publicado o envio está configurado (Brevo) e foi conferido
 conta é apagada com tudo o que depende dela — no caso do paciente, o histórico clínico. A
 exclusão feita pelo próprio paciente, no aplicativo, é suave e preserva o histórico.
 
-**5. Não há testes de unidade de interface.** A API tem 277 testes automatizados; o aplicativo
+**5. Não há testes de unidade de interface.** A API tem 282 testes automatizados; o aplicativo
 e o painel não têm testes de unidade. A conferência dessas duas partes é feita por testes ponta a
 ponta com Playwright, que percorrem o painel e o aplicativo no navegador, e por testes manuais. O
 principal é o `scripts/e2e-fluxo.mjs`, que refaz a demonstração inteira em 21 passos.
@@ -297,7 +297,7 @@ de glicemia — antes de qualquer uso com paciente real.
 | RNF10 | O sistema precisa ter uma sonda de disponibilidade | Rotas `/status` e `/health`, sem autenticação e sem dado de paciente |
 | RNF11 | As regras clínicas precisam estar em um lugar só | Concentradas em `common/glicemia/glicemia.ts` e `common/nutricao/nutricao.ts` |
 | RNF12 | Alterações no banco precisam ser reproduzíveis | Migrations numeradas e tabela de controle `migracao_aplicada` |
-| RNF13 | O código precisa ter cobertura automatizada na camada de regras | 277 testes automatizados na API |
+| RNF13 | O código precisa ter cobertura automatizada na camada de regras | 282 testes automatizados na API |
 | RNF14 | Adivinhar senha por repetição não pode ser viável | Limite de 5 tentativas por minuto nas rotas de autenticação, contadas por IP e e-mail |
 
 ## 2.3 Regras de negócio
@@ -539,7 +539,7 @@ classificação:
   cálculo de macronutrientes, IMC, relação cintura-quadril e conversão de porções.
 
 Manter esses cálculos fora dos controllers é o que torna possível testá-los isoladamente — a
-maior parte dos 277 testes automatizados incide sobre eles.
+maior parte dos 282 testes automatizados incide sobre eles.
 
 ## 3.5 Funcionamento da API
 
@@ -590,7 +590,7 @@ São cerca de 90 rotas. A tabela abaixo lista as principais, agrupadas por final
 
 | Método | Rota | Para que serve |
 |---|---|---|
-| GET | `/alimentos` | Busca na tabela nutricional |
+| GET | `/alimentos` | Busca na tabela nutricional (`limite` de até 500 e `pagina`; a resposta traz o `total` encontrado) |
 | GET | `/alimentos/:id/porcao` | Valores recalculados para uma quantidade |
 | POST/PATCH/DELETE | `/alimentos` | Manutenção da tabela (nutricionista e administrador) |
 | GET | `/nutricional/referencias` | Fórmulas, fatores de atividade e distribuição padrão |
@@ -2060,7 +2060,7 @@ Estão implementadas, ligadas às telas e cobertas pelos testes onde indicado:
 
 ## 10.6 Testes realizados
 
-**Testes automatizados.** A API tem **277 testes em 27 arquivos**, executados com Jest. Todos
+**Testes automatizados.** A API tem **282 testes em 27 arquivos**, executados com Jest. Todos
 passaram na última execução, em 29/10/2026. Além dos listados abaixo, cobrem o consentimento no
 vínculo (`convites.service.spec.ts`), o cadastro de paciente pelo nutricionista
 (`pacientes.service.spec.ts`), o link de criar senha (`contas.service.spec.ts`), a aprovação de

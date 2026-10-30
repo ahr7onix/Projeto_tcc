@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import CalendarioGlicemia from '../../components/CalendarioGlicemia'
-import { AlertBanner, Badge, Btn, Card, EmptyState, PageHeader } from '../../components/ui'
+import { AlertBanner, Badge, Btn, Card, EmptyState, PageHeader, TabelaRolavel } from '../../components/ui'
 import { CLASSIFICACAO_LABEL, MOMENTO_LABEL, type Classificacao } from '../../lib/alertas'
 import { extractError } from '../../lib/api'
 import { gerarRelatorio, type Relatorio, type RelatorioRegistroGlicemia, type RelatorioRegistroRefeicao } from '../../lib/relatorios'
@@ -203,9 +203,13 @@ function TabelaGlicemia({ porDia }: { porDia: Record<string, RelatorioRegistroGl
   )
 }
 
+/**
+ * Com a rolagem própria, centenas de refeições não empurram o relatório por
+ * metros de tela. Na impressão a tabela sai inteira (`index.css`).
+ */
 function TabelaAlimentacao({ porDia }: { porDia: Record<string, RelatorioRegistroRefeicao[]> }) {
   return (
-    <div style={styles.tableScroll}>
+    <TabelaRolavel rotulo="Refeições registradas" altura="min(520px, 70vh)">
       <table style={styles.table}>
         <thead>
           <tr>
@@ -244,7 +248,7 @@ function TabelaAlimentacao({ porDia }: { porDia: Record<string, RelatorioRegistr
           ))}
         </tbody>
       </table>
-    </div>
+    </TabelaRolavel>
   )
 }
 

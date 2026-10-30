@@ -110,7 +110,7 @@
 /* ── STAT CARDS ───────────────────────────────────────── */
 .statGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 16px;
   margin-bottom: 28px;
 }
@@ -188,15 +188,18 @@
 }
 
 /* ── TABLE ────────────────────────────────────────────── */
+/* Rola para o lado no celular: com `hidden`, as colunas da direita simplesmente
+   sumiam, e não havia como ver o valor da glicemia nem a origem do carboidrato. */
 .tableWrap {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow-x: auto;
 }
 
 .dataTable {
   width: 100%;
+  min-width: 620px;
   border-collapse: collapse;
 }
 

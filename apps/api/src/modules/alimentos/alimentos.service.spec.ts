@@ -88,6 +88,48 @@ describe('AlimentosService', () => {
       expect(query.mock.calls[0][1]).toEqual([500]);
       expect(query.mock.calls[1][1]).toEqual([1]);
     });
+
+    it('should skip the previous pages when a page is requested', async () => {
+      const { pool, query } = criarPoolMock([[]]);
+      await new AlimentosService(pool).listar({ busca: 'arroz', limite: 25, pagina: 3 });
+
+      const [sql, params] = query.mock.calls[0];
+      expect(sql).toContain('LIMIT $2');
+      expect(sql).toContain('OFFSET $3');
+      expect(params).toEqual(['%arroz%', 25, 50]);
+    });
+
+    it('should not use an offset on the first page', async () => {
+      const { pool, query } = criarPoolMock([[]]);
+      await new AlimentosService(pool).listar({ limite: 25, pagina: 1 });
+
+      const [sql, params] = query.mock.calls[0];
+      expect(sql).not.toContain('OFFSET');
+      expect(params).toEqual([25]);
+    });
+
+    it('should keep a stable order for repeated names', async () => {
+      const { pool, query } = criarPoolMock([[]]);
+      await new AlimentosService(pool).listar({});
+
+      expect(query.mock.calls[0][0]).toContain('ORDER BY nome, id_alimento');
+    });
+
+    it('should return how many foods match, not only the ones on the page', async () => {
+      const { pool } = criarPoolMock([[linhaAlimento({ total_encontrado: '578' })]]);
+      const resposta = await new AlimentosService(pool).listar({ limite: 1 });
+
+      expect(resposta.data).toHaveLength(1);
+      expect(resposta.total).toBe(578);
+      expect(resposta.data[0]).not.toHaveProperty('total_encontrado');
+    });
+
+    it('should return a total of zero when nothing is found', async () => {
+      const { pool } = criarPoolMock([[]]);
+      const resposta = await new AlimentosService(pool).listar({ busca: 'nada' });
+
+      expect(resposta).toEqual({ data: [], total: 0 });
+    });
   });
 
   describe('buscar', () => {

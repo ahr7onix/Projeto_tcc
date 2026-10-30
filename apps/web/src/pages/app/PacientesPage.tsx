@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { PageHeader, EmptyState, AlertBanner, Btn } from '../../components/ui'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { PageHeader, EmptyState, AlertBanner, Btn, Paginacao, usePaginacao } from '../../components/ui'
 import { api, extractError } from '../../lib/api'
 import ConvidarPacienteModal from '../../components/ConvidarPacienteModal'
 import {
@@ -10,6 +10,7 @@ import {
   type ConviteEnviado,
 } from '../../lib/vinculos'
 import PatientPicker from '../../components/PatientPicker'
+import s from './PacientesPage.module.css'
 
 interface Paciente {
   id: string
@@ -28,7 +29,8 @@ function timeAgo(dateStr: string | null): string {
   if (days === 1) return 'Ontem'
   if (days < 7) return `${days} dias atrás`
   if (days < 30) return `${Math.floor(days / 7)} sem. atrás`
-  return `${Math.floor(days / 30)} meses atrás`
+  const meses = Math.floor(days / 30)
+  return `${meses} ${meses === 1 ? 'mês' : 'meses'} atrás`
 }
 
 function glicemiaColor(val: number | null): string {
@@ -43,6 +45,9 @@ export default function PacientesPage() {
   const location = useLocation()
   const acompanhamento = location.pathname.startsWith('/acompanhamento')
   const [pacientes, setPacientes] = useState<Paciente[]>([])
+  // A lista encolhe com a busca, mas o resumo é da carteira inteira: durante uma
+  // busca por "Jo" a tela dizia "2 cadastrados".
+  const [carteira, setCarteira] = useState({ cadastrados: 0, ativos: 0 })
   const [busca, setBusca] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -86,6 +91,10 @@ export default function PacientesPage() {
       const { data } = await api.get('/pacientes', { params })
       if (!ativo()) return
       setPacientes(data.data)
+      if (!q) {
+        const lista: Paciente[] = data.data
+        setCarteira({ cadastrados: lista.length, ativos: lista.filter(p => p.status === 'ativo').length })
+      }
     } catch (err) {
       if (ativo()) setError(extractError(err))
     } finally {
@@ -123,7 +132,8 @@ export default function PacientesPage() {
     p.nome.toLowerCase().includes(busca.toLowerCase())
   )
 
-  const ativos = pacientes.filter(p => p.status === 'ativo').length
+  const pag = usePaginacao(filtrados, POR_PAGINA, busca)
+  const raizFicha = acompanhamento ? '/acompanhamento' : '/pacientes'
 
   async function handleDesvincular(e: React.MouseEvent, p: Paciente) {
     e.stopPropagation()
@@ -132,6 +142,10 @@ export default function PacientesPage() {
       setDesvinculandoId(p.id)
       await desvincularPaciente(p.id)
       setPacientes(atual => atual.filter(x => x.id !== p.id))
+      setCarteira(atual => ({
+        cadastrados: atual.cadastrados - 1,
+        ativos: atual.ativos - (p.status === 'ativo' ? 1 : 0),
+      }))
     } catch (err) {
       setError(extractError(err))
     } finally {
@@ -177,52 +191,38 @@ export default function PacientesPage() {
       )}
 
       {}
-      {!loading && pacientes.length > 0 && (
-        <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
+      {!loading && carteira.cadastrados > 0 && (
+        <div className={s.resumo}>
           {[
-            { label: 'Cadastrados', value: pacientes.length, color: 'var(--primary)', bg: 'var(--primary-soft)' },
-            { label: 'No sistema', value: pacientes.length, color: 'var(--success)', bg: 'var(--success-soft)' },
-            { label: 'Ativos', value: ativos, color: 'var(--success)', bg: 'var(--success-soft)' },
-          ].map(s => (
-            <div key={s.label} style={{
-              background: s.bg, borderRadius: 'var(--radius-md)',
-              padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 10,
-            }}>
-              <span style={{ fontSize: 22, fontWeight: 600, color: s.color }}>{s.value}</span>
-              <span style={{ fontSize: 13, color: s.color, fontWeight: 600, opacity: 0.8 }}>{s.label}</span>
+            { label: 'Cadastrados', value: carteira.cadastrados, color: 'var(--primary)', bg: 'var(--primary-soft)' },
+            { label: 'Ativos', value: carteira.ativos, color: 'var(--success)', bg: 'var(--success-soft)' },
+            { label: 'Inativos', value: carteira.cadastrados - carteira.ativos, color: 'var(--text-soft)', bg: 'var(--surface-alt)' },
+          ].map(item => (
+            <div key={item.label} className={s.resumoItem} style={{ background: item.bg }}>
+              <span style={{ fontSize: 22, fontWeight: 600, color: item.color }}>{item.value}</span>
+              <span style={{ fontSize: 13, color: item.color, fontWeight: 600, opacity: 0.8 }}>{item.label}</span>
             </div>
           ))}
         </div>
       )}
 
       {}
-      <div style={{
-        background: 'var(--surface)', borderRadius: 'var(--radius-lg)',
-        border: '1px solid var(--border)', overflow: 'hidden',
-        boxShadow: 'var(--shadow-card)',
-      }}>
+      <div className={s.lista}>
         {}
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+        <div className={s.busca}>
           <PatientPicker
             patients={pacientes}
             value={busca}
             label="Localizar paciente"
             placeholder="Digite o nome do paciente..."
             onChange={setBusca}
-            onSelect={(patient) => navigate(`${acompanhamento ? '/acompanhamento' : '/pacientes'}/${patient.id}/informacoes`)}
+            onSelect={(patient) => navigate(`${raizFicha}/${patient.id}/informacoes`)}
           />
         </div>
 
         {}
         {!loading && filtrados.length > 0 && (
-          <div style={{
-            display: 'grid', gridTemplateColumns: COLUNAS_LISTA,
-            padding: '10px 20px', gap: 12,
-            fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
-            textTransform: 'uppercase', letterSpacing: '0.5px',
-            borderBottom: '1px solid var(--border)',
-            background: 'var(--bg)',
-          }}>
+          <div className={s.cabecalho}>
             <span>Paciente</span>
             <span>Status</span>
             <span>Glicemia média</span>
@@ -238,78 +238,76 @@ export default function PacientesPage() {
             Carregando pacientes...
           </div>
         ) : filtrados.length > 0 ? (
-          filtrados.map((p, i) => (
-            <div
-              key={p.id}
-              onClick={() => navigate(`${acompanhamento ? '/acompanhamento' : '/pacientes'}/${p.id}/informacoes`)}
-              style={{
-                display: 'grid', gridTemplateColumns: COLUNAS_LISTA,
-                alignItems: 'center', padding: '14px 20px', gap: 12,
-                borderBottom: i < filtrados.length - 1 ? '1px solid var(--border)' : 'none',
-                cursor: 'pointer', transition: 'background 0.12s',
-              }}
-              onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = 'var(--bg)'}
-              onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'transparent'}
-            >
-              {}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-                <div style={{
-                  width: 40, height: 40, borderRadius: '50%',
-                  background: 'var(--primary-soft)', color: 'var(--primary)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 600, fontSize: 15, flexShrink: 0,
-                }}>{p.nome.charAt(0).toUpperCase()}</div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, color: 'var(--text)', fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.nome}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.email}</div>
+          <div>
+            {pag.visiveis.map((p) => (
+              <div
+                key={p.id}
+                className={s.linha}
+                onClick={() => navigate(`${raizFicha}/${p.id}/informacoes`)}
+              >
+                {}
+                <div className={s.identidade}>
+                  <div className={s.avatar}>{p.nome.charAt(0).toUpperCase()}</div>
+                  <div style={{ minWidth: 0 }}>
+                    {/* O nome é um link de verdade: a linha inteira só responde ao
+                        mouse, e por teclado não dava para abrir a ficha. */}
+                    <Link
+                      to={`${raizFicha}/${p.id}/informacoes`}
+                      className={s.nome}
+                      onClick={e => e.stopPropagation()}
+                    >
+                      {p.nome}
+                    </Link>
+                    <span className={s.email}>{p.email}</span>
+                  </div>
+                </div>
+
+                {}
+                <div className={s.status}>
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600,
+                    background: p.status === 'ativo' ? 'var(--success-soft)' : 'var(--surface-alt)',
+                    color: p.status === 'ativo' ? 'var(--success)' : 'var(--text-muted)',
+                  }}>
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor' }} />
+                    {p.status === 'ativo' ? 'Ativo' : 'Inativo'}
+                  </span>
+                </div>
+
+                {}
+                <div className={s.glicemia} style={{ color: glicemiaColor(p.glicemiaMedia) }}>
+                  {p.glicemiaMedia ? `${p.glicemiaMedia.toLocaleString('pt-BR')} mg/dL` : '—'}
+                </div>
+
+                {}
+                <div className={s.registro}>
+                  {timeAgo(p.ultimoRegistro)}
+                </div>
+
+                <div className={s.acoes} onClick={e => e.stopPropagation()}>
+                  <Btn variant="secondary" size="sm" onClick={() => navigate(`/relatorios/${p.id}`)}>
+                    Ver Relatório
+                  </Btn>
+                  <Btn variant="ghost" size="sm" onClick={() => navigate(`/pacientes/${p.id}/anotacoes`)}>
+                    Registrar Nova Informação
+                  </Btn>
+                  <Btn
+                    variant="ghost"
+                    size="sm"
+                    loading={desvinculandoId === p.id}
+                    onClick={(e) => handleDesvincular(e, p)}
+                  >
+                    Desvincular
+                  </Btn>
+                </div>
+
+                <div className={s.seta}>
+                  <ChevronIcon />
                 </div>
               </div>
-
-              {}
-              <div>
-                <span style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 5,
-                  padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600,
-                  background: p.status === 'ativo' ? 'var(--success-soft)' : 'var(--surface-alt)',
-                  color: p.status === 'ativo' ? 'var(--success)' : 'var(--text-muted)',
-                }}>
-                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor' }} />
-                  {p.status === 'ativo' ? 'Ativo' : 'Inativo'}
-                </span>
-              </div>
-
-              {}
-              <div style={{ fontSize: 14, fontWeight: 600, color: glicemiaColor(p.glicemiaMedia) }}>
-                {p.glicemiaMedia ? `${p.glicemiaMedia} mg/dL` : '—'}
-              </div>
-
-              {}
-              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                {timeAgo(p.ultimoRegistro)}
-              </div>
-
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
-                <Btn variant="secondary" size="sm" onClick={() => navigate(`/relatorios/${p.id}`)}>
-                  Ver Relatório
-                </Btn>
-                <Btn variant="ghost" size="sm" onClick={() => navigate(`/pacientes/${p.id}/anotacoes`)}>
-                  Registrar Nova Informação
-                </Btn>
-                <Btn
-                  variant="ghost"
-                  size="sm"
-                  loading={desvinculandoId === p.id}
-                  onClick={(e) => handleDesvincular(e, p)}
-                >
-                  Desvincular
-                </Btn>
-              </div>
-
-              <div style={{ color: 'var(--text-muted)', display: 'flex' }}>
-                <ChevronIcon />
-              </div>
-            </div>
-          ))
+            ))}
+          </div>
         ) : (
           <div style={{ padding: '8px 0 8px' }}>
             <EmptyState
@@ -318,6 +316,19 @@ export default function PacientesPage() {
               message={busca ? 'Tente um nome diferente.' : 'Clique em "Convidar paciente" para começar a acompanhar alguém.'}
             />
           </div>
+        )}
+
+        {!loading && (
+          <Paginacao
+            pagina={pag.pagina}
+            totalPaginas={pag.totalPaginas}
+            total={pag.total}
+            primeiro={pag.primeiro}
+            ultimo={pag.ultimo}
+            onChange={pag.irPara}
+            rotulo="pacientes"
+            style={{ margin: 0, padding: '12px 20px' }}
+          />
         )}
       </div>
 
@@ -331,10 +342,8 @@ export default function PacientesPage() {
   )
 }
 
-// Cabeçalho e linhas usam as mesmas colunas. O nome tem largura mínima e os
-// botões quebram linha: antes, em tela de 1280 px, os botões ocupavam tudo e o
-// nome do paciente sumia.
-const COLUNAS_LISTA = 'minmax(200px, 1fr) 90px 120px 110px minmax(200px, 300px) 36px'
+/** As linhas são altas, com três botões: dez pacientes já ocupam a tela toda. */
+const POR_PAGINA = 10
 
 const caixaConvites: React.CSSProperties = {
   marginBottom: 24, padding: '12px 16px',

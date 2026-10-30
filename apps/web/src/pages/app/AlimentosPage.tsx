@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   AlertBanner,
   Badge,
@@ -7,7 +7,9 @@ import {
   EmptyState,
   Input,
   PageHeader,
+  Paginacao,
   Select,
+  TabelaRolavel,
 } from '../../components/ui'
 import AlimentoModal from '../../components/AlimentoModal'
 import ImportarAlimentosModal from '../../components/ImportarAlimentosModal'
@@ -15,17 +17,17 @@ import { extractError } from '../../lib/api'
 import {
   desativarAlimento,
   descreverPorcao,
-  listarAlimentos,
   listarGrupos,
+  listarPaginaAlimentos,
   type Alimento,
   type GrupoAlimento,
 } from '../../lib/alimentos'
 
 /**
- * A tela traz no máximo isto de uma vez. Com a TACO são 578 alimentos: sem
- * dizer que a lista parou aqui, "200 alimentos listados" parecia a tabela toda.
+ * Cada página é um pedido à API. Trazer a TACO inteira (578 alimentos) para
+ * paginar aqui gastaria banda à toa, e o teto da API é 500 por pedido.
  */
-const LIMITE_LISTA = 200
+const POR_PAGINA = 25
 
 /** Uma casa decimal só quando o número precisa: 89 e 89,5. */
 const formatar = (valor: number | null): string => {
@@ -35,6 +37,8 @@ const formatar = (valor: number | null): string => {
 
 export default function AlimentosPage() {
   const [alimentos, setAlimentos] = useState<Alimento[]>([])
+  const [total, setTotal] = useState(0)
+  const [pagina, setPagina] = useState(1)
   const [grupos, setGrupos] = useState<GrupoAlimento[]>([])
   const [busca, setBusca] = useState('')
   const [grupo, setGrupo] = useState('')
@@ -46,16 +50,24 @@ export default function AlimentosPage() {
   const [desativandoId, setDesativandoId] = useState<string | null>(null)
 
   const carregar = useCallback(
-    async (termo: string, grupoSelecionado: string, ativo: () => boolean) => {
+    async (termo: string, grupoSelecionado: string, numero: number, ativo: () => boolean) => {
       try {
         setLoading(true)
         setErro(null)
-        const lista = await listarAlimentos({
+        const resposta = await listarPaginaAlimentos({
           busca: termo,
           grupo: grupoSelecionado,
-          limite: LIMITE_LISTA,
+          limite: POR_PAGINA,
+          pagina: numero,
         })
-        if (ativo()) setAlimentos(lista)
+        if (!ativo()) return
+        // Remover o único alimento da última página deixa essa página vazia.
+        if (resposta.itens.length === 0 && numero > 1) {
+          setPagina(numero - 1)
+          return
+        }
+        setAlimentos(resposta.itens)
+        setTotal(resposta.total)
       } catch (err) {
         if (ativo()) setErro(extractError(err))
       } finally {
@@ -84,15 +96,28 @@ export default function AlimentosPage() {
   // O debounce evita a consulta por tecla, mas não desfaz a que já saiu: trocar
   // de grupo com uma busca em andamento deixava as duas no ar, e a mais lenta
   // sobrescrevia a certa. A guarda `cancelado` descarta a resposta que não vale
-  // mais.
+  // mais. A espera só vale para quem digita: trocar de página ou de grupo é na hora.
+  const buscaAnterior = useRef(busca)
   useEffect(() => {
+    const digitando = buscaAnterior.current !== busca
+    buscaAnterior.current = busca
     let cancelado = false
-    const tempo = setTimeout(() => carregar(busca, grupo, () => !cancelado), 350)
+    const tempo = setTimeout(() => carregar(busca, grupo, pagina, () => !cancelado), digitando ? 350 : 0)
     return () => {
       cancelado = true
       clearTimeout(tempo)
     }
-  }, [busca, grupo, carregar])
+  }, [busca, grupo, pagina, carregar])
+
+  function mudarBusca(valor: string) {
+    setBusca(valor)
+    setPagina(1)
+  }
+
+  function mudarGrupo(valor: string) {
+    setGrupo(valor)
+    setPagina(1)
+  }
 
   function abrirNovo() {
     setEditando(null)
@@ -105,6 +130,7 @@ export default function AlimentosPage() {
   }
 
   function handleSaved(salvo: Alimento) {
+    if (!alimentos.some((a) => a.id === salvo.id)) setTotal((atual) => atual + 1)
     setAlimentos((atual) => {
       const existe = atual.some((a) => a.id === salvo.id)
       return existe ? atual.map((a) => (a.id === salvo.id ? salvo : a)) : [salvo, ...atual]
@@ -115,7 +141,7 @@ export default function AlimentosPage() {
   }
 
   function handleImportado() {
-    carregar(busca, grupo, () => true)
+    carregar(busca, grupo, pagina, () => true)
     listarGrupos()
       .then(setGrupos)
       .catch(() => undefined)
@@ -130,7 +156,8 @@ export default function AlimentosPage() {
     try {
       setDesativandoId(alimento.id)
       await desativarAlimento(alimento.id)
-      setAlimentos((atual) => atual.filter((a) => a.id !== alimento.id))
+      // Recarrega em vez de só tirar da lista: o próximo alimento sobe para completar a página.
+      await carregar(busca, grupo, pagina, () => true)
       listarGrupos()
         .then(setGrupos)
         .catch(() => undefined)
@@ -141,13 +168,9 @@ export default function AlimentosPage() {
     }
   }
 
-  // O total vem da contagem por grupo. Com busca digitada não há total a mostrar.
-  const totalNaTabela = busca.trim()
-    ? null
-    : grupo
-      ? (grupos.find((g) => g.grupo === grupo)?.total ?? null)
-      : grupos.reduce((soma, g) => soma + g.total, 0)
-  const listaCortada = alimentos.length >= LIMITE_LISTA
+  const totalPaginas = Math.max(1, Math.ceil(total / POR_PAGINA))
+  const primeiro = total === 0 ? 0 : (pagina - 1) * POR_PAGINA + 1
+  const filtrando = Boolean(busca.trim() || grupo)
 
   return (
     <div>
@@ -174,14 +197,14 @@ export default function AlimentosPage() {
               label="Buscar alimento"
               placeholder="Ex: arroz, feijão, banana..."
               value={busca}
-              onChange={(e) => setBusca(e.target.value)}
+              onChange={(e) => mudarBusca(e.target.value)}
             />
           </div>
           <div style={{ minWidth: 200, flex: 1 }}>
             <Select
               label="Grupo"
               value={grupo}
-              onChange={(e) => setGrupo(e.target.value)}
+              onChange={(e) => mudarGrupo(e.target.value)}
               options={[
                 { value: '', label: 'Todos os grupos' },
                 ...grupos.map((g) => ({ value: g.grupo, label: `${g.grupo} (${g.total})` })),
@@ -190,18 +213,18 @@ export default function AlimentosPage() {
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--primary)' }}>
-              {alimentos.length}
+              {total}
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-              {totalNaTabela !== null && totalNaTabela > alimentos.length
-                ? `de ${totalNaTabela} na tabela`
-                : 'alimentos listados'}
+              {filtrando ? (total === 1 ? 'encontrado' : 'encontrados') : 'na tabela'}
             </div>
           </div>
         </div>
       </Card>
 
-      {loading ? (
+      {/* Só a primeira carga troca a tabela pelo aviso. Ao mudar de página a tabela
+          fica no lugar, senão a tela encolhe e pula a cada clique. */}
+      {loading && alimentos.length === 0 ? (
         <Card>
           <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)' }}>
             Carregando alimentos...
@@ -218,8 +241,8 @@ export default function AlimentosPage() {
       ) : (
         <Card flush>
           {/* Rolagem própria: a tabela tem mais colunas do que cabe no celular. */}
-          <div style={{ overflowX: 'auto' }}>
-            <table style={tabela}>
+          <TabelaRolavel rotulo="Tabela de alimentos" primeiraColunaFixa>
+            <table style={{ ...tabela, opacity: loading ? 0.6 : 1 }}>
               <thead>
                 <tr>
                   <th style={{ ...th, textAlign: 'left' }}>Alimento</th>
@@ -280,15 +303,18 @@ export default function AlimentosPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </TabelaRolavel>
+          <Paginacao
+            pagina={pagina}
+            totalPaginas={totalPaginas}
+            total={total}
+            primeiro={primeiro}
+            ultimo={Math.min(primeiro + POR_PAGINA - 1, total)}
+            onChange={setPagina}
+            rotulo="alimentos"
+            style={{ margin: 0, padding: '12px 18px' }}
+          />
         </Card>
-      )}
-
-      {!loading && listaCortada && (
-        <div style={rodape}>
-          Mostrando os {LIMITE_LISTA} primeiros em ordem alfabética. Use a busca ou o grupo para
-          achar os outros.
-        </div>
       )}
 
       <div style={rodape}>
@@ -326,6 +352,7 @@ const tabela: React.CSSProperties = {
   borderCollapse: 'collapse',
   fontSize: 13,
   minWidth: 860,
+  transition: 'opacity 0.12s',
 }
 const th: React.CSSProperties = {
   padding: '12px 14px',

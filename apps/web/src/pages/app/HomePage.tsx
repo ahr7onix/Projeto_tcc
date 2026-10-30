@@ -139,8 +139,10 @@ export default function HomePage() {
       <section style={styles.metrics} aria-label="Indicadores principais">
         <StatTile label="Total de pacientes" value={loading ? '—' : pacientes.length} icon={<PatientsIcon />} onClick={() => navigate('/pacientes')} />
         <StatTile label="Pacientes ativos" value={loading ? '—' : pacientes.filter((p) => p.status === 'ativo').length} icon={<PulseIcon />} tint="success" />
-        <StatTile label="Precisam de atenção" value={loading ? '—' : semRegistro + (resumo7?.pacientes.length ?? 0)} icon={<AlertIcon />} tint={semRegistro > 0 ? 'warning' : 'success'} onClick={() => navigate('/acompanhamento')} />
-        <StatTile label="Alertas glicêmicos" value={resumo7?.foraDaFaixa ?? '—'} icon={<AlertIcon />} tint={(resumo7?.foraDaFaixa ?? 0) > 0 ? 'danger' : 'success'} onClick={() => navigate('/registros')} />
+        {/* Não é o mesmo número de "Precisam de atenção" no cartão abaixo: aqui entra
+            quem teve alerta na semana, lá só quem está fora da faixa agora. */}
+        <StatTile label="Para acompanhar" value={loading ? '—' : semRegistro + (resumo7?.pacientes.length ?? 0)} icon={<AlertIcon />} tint={semRegistro > 0 ? 'warning' : 'success'} sub="alerta ou sem registro" onClick={() => navigate('/acompanhamento')} />
+        <StatTile label="Alertas glicêmicos" value={resumo7?.foraDaFaixa ?? '—'} icon={<AlertIcon />} tint={(resumo7?.foraDaFaixa ?? 0) > 0 ? 'danger' : 'success'} sub="nos últimos 7 dias" onClick={() => navigate('/registros')} />
         <StatTile label="Mensagens não lidas" value={naoLidas} icon={<MessageIcon />} tint={naoLidas > 0 ? 'warning' : 'neutral'} onClick={() => navigate('/mensagens')} />
       </section>
 

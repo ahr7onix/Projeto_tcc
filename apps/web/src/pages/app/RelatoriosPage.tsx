@@ -117,8 +117,10 @@ const styles: Record<string, React.CSSProperties> = {
   count: { color: 'var(--text-muted)', fontSize: 13, paddingBottom: 10 },
   groups: { display: 'flex', flexDirection: 'column', gap: 24 },
   groupTitle: { fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 },
-  list: { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-card)' },
-  row: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '16px 20px', borderBottom: '1px solid var(--border)' },
+  // Colunas em tela larga: numa linha só, o botão ficava longe demais do nome.
+  list: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(460px, 100%), 1fr))', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-card)' },
+  // A linha é sombra, não borda: na última fileira ela fica fora da caixa e some.
+  row: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '16px 20px', boxShadow: '0 1px 0 var(--border)' },
   identity: { display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 },
   avatar: { width: 40, height: 40, borderRadius: '50%', background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 },
   name: { fontSize: 14, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },

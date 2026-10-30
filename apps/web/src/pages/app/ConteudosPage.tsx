@@ -7,8 +7,10 @@ import {
   EmptyState,
   Input,
   PageHeader,
+  Paginacao,
   Select,
   Textarea,
+  usePaginacao,
 } from '../../components/ui'
 import { extractError } from '../../lib/api'
 import {
@@ -28,6 +30,12 @@ const CATEGORIAS = [
   { value: 'medicamento', label: 'Medicamento' },
   { value: 'autocuidado', label: 'Autocuidado' },
 ]
+
+/** 12 divide certo em 2, 3 e 4 colunas: a última fileira da página sai cheia. */
+const POR_PAGINA = 12
+
+/** Duas colunas no computador, uma no celular. */
+const DUAS_COLUNAS = 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))'
 
 const PUBLICOS: { value: PublicoAlvo; label: string }[] = [
   { value: 'todos', label: 'Todos os pacientes' },
@@ -89,6 +97,7 @@ export default function ConteudosPage() {
   const [loading, setLoading] = useState(true)
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
+  const pag = usePaginacao(conteudos, POR_PAGINA)
 
   // `ativo` é opcional porque `carregar` também roda depois de salvar, fora de
   // efeito: ali não há nada para cancelar. Sem o `setErro(null)`, um erro
@@ -128,6 +137,8 @@ export default function ConteudosPage() {
         agendadoEm: paraCampoLocal(completo.agendadoEm),
         imagemCapa: completo.imagemCapa ?? '',
       })
+      // O formulário abre no topo: de um cartão mais abaixo, parecia que "Editar" não fazia nada.
+      window.scrollTo({ top: 0 })
     } catch (err) {
       setErro(extractError(err))
     }
@@ -204,7 +215,7 @@ export default function ConteudosPage() {
             value={form.resumo}
             onChange={(e) => setForm({ ...form, resumo: e.target.value })}
           />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: DUAS_COLUNAS, gap: 14 }}>
             <Select
               label="Categoria"
               value={form.categoria}
@@ -221,7 +232,7 @@ export default function ConteudosPage() {
               ]}
             />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: DUAS_COLUNAS, gap: 14 }}>
             <Select
               label="Público-alvo"
               value={form.publico}
@@ -276,14 +287,15 @@ export default function ConteudosPage() {
           />
         </Card>
       ) : (
+        <>
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))',
             gap: 20,
           }}
         >
-          {conteudos.map((c) => (
+          {pag.visiveis.map((c) => (
             <Card key={c.id}>
               {c.imagemCapa && (
                 <img
@@ -298,13 +310,15 @@ export default function ConteudosPage() {
                   onError={(e) => { e.currentTarget.style.display = 'none' }}
                 />
               )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)' }}>
                     {c.titulo}
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
-                    {c.categoria} · {c.autorNome ?? 'Autor desconhecido'}
+                    {CATEGORIAS.find((item) => item.value === c.categoria)?.label ?? c.categoria}
+                    {' · '}
+                    {c.autorNome ?? 'Autor desconhecido'}
                   </div>
                 </div>
                 <Badge
@@ -334,7 +348,7 @@ export default function ConteudosPage() {
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 'auto' }}>
                 <Btn variant="secondary" size="sm" onClick={() => abrirEdicao(c)}>
                   Editar
                 </Btn>
@@ -345,6 +359,17 @@ export default function ConteudosPage() {
             </Card>
           ))}
         </div>
+        <Paginacao
+          pagina={pag.pagina}
+          totalPaginas={pag.totalPaginas}
+          total={pag.total}
+          primeiro={pag.primeiro}
+          ultimo={pag.ultimo}
+          onChange={pag.irPara}
+          rotulo="conteúdos"
+          style={{ marginTop: 20 }}
+        />
+        </>
       )}
     </div>
   )

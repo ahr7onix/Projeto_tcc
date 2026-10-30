@@ -7,7 +7,9 @@ import {
   EmptyState,
   Input,
   PageHeader,
+  Paginacao,
   Select,
+  usePaginacao,
 } from '../../components/ui'
 import ReceitaModal from '../../components/ReceitaModal'
 import { extractError } from '../../lib/api'
@@ -19,6 +21,9 @@ import {
   type CategoriaReceita,
   type Receita,
 } from '../../lib/receitas'
+
+/** 12 divide certo em 2, 3 e 4 colunas: a última fileira da página sai cheia. */
+const POR_PAGINA = 12
 
 export default function ReceitasPage() {
   const [receitas, setReceitas] = useState<Receita[]>([])
@@ -32,6 +37,8 @@ export default function ReceitasPage() {
   const [editando, setEditando] = useState<Receita | null>(null)
   const [excluindoId, setExcluindoId] = useState<string | null>(null)
   const [abertaId, setAbertaId] = useState<string | null>(null)
+  const pag = usePaginacao(receitas, POR_PAGINA, `${busca}|${categoria}|${apenasMinhas}`)
+  const filtrando = Boolean(busca.trim() || categoria || apenasMinhas)
 
   const carregar = useCallback(
     async (
@@ -184,19 +191,24 @@ export default function ReceitasPage() {
         <Card>
           <EmptyState
             icon={<ChefIcon />}
-            title="Nenhuma receita cadastrada"
-            message="Cadastre uma receita para o paciente encontrar no aplicativo."
+            title={filtrando ? 'Nenhuma receita encontrada' : 'Nenhuma receita cadastrada'}
+            message={
+              filtrando
+                ? 'Ajuste a busca ou os filtros para ver outras receitas.'
+                : 'Cadastre uma receita para o paciente encontrar no aplicativo.'
+            }
           />
         </Card>
       ) : (
+        <>
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))',
             gap: 20,
           }}
         >
-          {receitas.map((receita) => {
+          {pag.visiveis.map((receita) => {
             const aberta = abertaId === receita.id
             const ingredientes = linhasDeIngredientes(receita.ingredientes)
 
@@ -223,7 +235,9 @@ export default function ReceitasPage() {
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {receita.porcoes !== null && (
-                    <span style={etiqueta}>{receita.porcoes} porções</span>
+                    <span style={etiqueta}>
+                      {receita.porcoes} {receita.porcoes === 1 ? 'porção' : 'porções'}
+                    </span>
                   )}
                   {receita.tempoPreparoMin !== null && (
                     <span style={etiqueta}>{receita.tempoPreparoMin} min</span>
@@ -258,7 +272,7 @@ export default function ReceitasPage() {
                   </div>
                 )}
 
-                <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
                   <Btn
                     variant="ghost"
                     size="sm"
@@ -284,6 +298,17 @@ export default function ReceitasPage() {
             )
           })}
         </div>
+        <Paginacao
+          pagina={pag.pagina}
+          totalPaginas={pag.totalPaginas}
+          total={pag.total}
+          primeiro={pag.primeiro}
+          ultimo={pag.ultimo}
+          onChange={pag.irPara}
+          rotulo="receitas"
+          style={{ marginTop: 20 }}
+        />
+        </>
       )}
 
       {modalAberto && (

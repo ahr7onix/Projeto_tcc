@@ -127,16 +127,17 @@ export default function AlimentacaoPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Planos alimentares"
-        title="Alimentação"
+        eyebrow="Nutrição"
+        title="Planos alimentares"
         subtitle="Crie e gerencie os planos alimentares personalizados dos seus pacientes."
         action={<Btn onClick={abrirNovo}>+ Novo plano</Btn>}
       />
 
       {erro && <AlertBanner message={erro} />}
 
-      {}
-      <Card style={{ marginBottom: 20 }}>
+      {/* `overflow: visible`: o padrão do Card cortava o menu do filtro, que abre
+          para fora dele, e não dava para escolher o paciente. */}
+      <Card style={{ marginBottom: 20, overflow: 'visible' }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-end', flexWrap: 'wrap' }}>
           <div style={{ minWidth: 260, flex: 1 }}>
             <PatientPicker
@@ -209,10 +210,14 @@ export default function AlimentacaoPage() {
                     <span style={{ fontSize: 12, color: 'var(--text-muted)', minWidth: 84 }}>
                       {plano.refeicoes.length} {plano.refeicoes.length === 1 ? 'refeição' : 'refeições'}
                     </span>
-                    <Badge
-                      label={plano.ativo ? 'Ativo' : 'Encerrado'}
-                      tint={plano.ativo ? 'success' : 'primary'}
-                    />
+                    {/* Largura fixa: "Ativo" e "Encerrado" têm tamanhos diferentes
+                        e desalinhavam as colunas de uma linha para outra. */}
+                    <span style={{ minWidth: 84, textAlign: 'right' }}>
+                      <Badge
+                        label={plano.ativo ? 'Ativo' : 'Encerrado'}
+                        tint={plano.ativo ? 'success' : 'primary'}
+                      />
+                    </span>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <Btn variant="secondary" size="sm" onClick={() => abrirEdicao(plano)}>
                         Editar
