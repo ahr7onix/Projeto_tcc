@@ -111,13 +111,16 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
 - APK de demonstração gerado pelo EAS Build (`apps/mobile/eas.json`, perfil `preview`) e testado
   num Android de verdade. No segundo APK (29/10/2026) foram conferidos no celular o login com
   Google (Google Sign-In nativo), o lembrete como alarme e o ícone. A atualização pela internet
-  funcionou: a primeira saiu em 29/10/2026 e chegou ao celular sem APK novo.
+  funcionou: a primeira saiu em 29/10/2026 e chegou ao celular sem APK novo. Na v1.0 o app e a
+  API passaram para a versão 1.0.0, com APK novo: as atualizações pela internet publicadas
+  depois disso só chegam ao APK 1.0.0.
 - Teste do fluxo completo da demonstração (`scripts/e2e-fluxo.mjs`, `npm run e2e:fluxo`): 21
   passos, do cadastro da nutricionista ao paciente encerrando o acompanhamento.
 
 ## Em andamento
 
-- PR #10: barra lateral nova do painel web.
+- v1.0: tag `v1.0` no `main` depois do merge do PR #10 (barra lateral nova do painel web) e do
+  PR #19 (remove scripts sem uso da raiz), os dois do Isac.
 
 ## Pendências conhecidas
 

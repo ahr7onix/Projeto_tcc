@@ -2,6 +2,26 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-30 — Versão 1.0
+- Quem: Natan, com apoio de IA
+- PR/branch: `release/v1.0`
+- O que foi modificado:
+  - App e API passam para a versão 1.0.0 (`apps/mobile/app.json`, `package.json` e
+    `package-lock.json` de `apps/mobile` e `apps/api`; a raiz e o painel já estavam em 1.0.0).
+    Como a `runtimeVersion` segue o `version`, o app precisa de APK novo: as atualizações pela
+    internet publicadas depois deste merge só chegam ao APK 1.0.0.
+  - Revisão da documentação para a entrega. `DOCUMENTACAO_TCC.md`: login Google no app e
+    lembretes e alertas conferidos em aparelho (saem os "[PENDENTE DE CONFIRMAÇÃO]" desses
+    pontos), push do servidor descrito como sem Firebase, e-mail configurado no ar, APK e
+    `expo-updates` na seção do Expo, funcionalidades novas na 10.3, 10.4 e 12.2 atualizadas,
+    277 testes em 27 arquivos e o teste ponta a ponta na 10.6. `RESUMO_ENTREGA.md`: RF07 e
+    próximos passos. `README.md` e `PUBLICAR.md`: as duas cópias no ar (a `nutricare-tcc` é a
+    do APK), o APK no lugar de "roda pelo Expo" e o consentimento do paciente, que já existe.
+- Atenção para quem vier depois: continuam pendentes, de propósito, a autoria (seção inicial do
+  documento), a execução por Docker (8.11), o banco sem prazo, o Firebase e a conferência da
+  Nutrição. Trocar as senhas de exemplo do admin e da Camila na cópia `nutricare-tcc` ficou para
+  depois, por decisão do Natan.
+
 ## 2026-10-29 — TACO no ar e contagem da tela Alimentos do painel
 - Quem: Natan, com apoio de IA
 - PR/branch: `fix/alimentos-total-taco`

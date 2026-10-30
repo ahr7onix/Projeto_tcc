@@ -188,7 +188,8 @@ boa quanto o cuidado de quem aprova.
 **3. O envio de e-mail depende de configuração.** Sem servidor SMTP configurado, nenhum e-mail
 sai do sistema — nem o link de criar senha de quem é cadastrado pelo painel, nem o de
 recuperação de senha. O painel avisa isso ao cadastrar alguém, em vez de dizer que o e-mail foi
-enviado.
+enviado. No ambiente publicado o envio está configurado (Brevo) e foi conferido em 27 e
+29/10/2026: o link de criar senha chegou à caixa de entrada do Gmail.
 
 **4. A remoção pela administração é definitiva.** Quando o administrador remove um usuário, a
 conta é apagada com tudo o que depende dela — no caso do paciente, o histórico clínico. A
@@ -225,7 +226,7 @@ na API, tela no aplicativo ou no painel, e persistência no banco.
 | Código | Requisito | Situação |
 |---|---|---|
 | RF01 | Cadastro e autenticação de paciente, nutricionista e administrador | Implementado |
-| RF02 | Autenticação pela conta Google | Implementado no painel; implementado no aplicativo, com ressalva **[PENDENTE DE CONFIRMAÇÃO]** (ver 5.3) |
+| RF02 | Autenticação pela conta Google | Implementado no painel e no aplicativo instalado (APK), conferido num Android em 29/10/2026 (ver 5.3) |
 | RF03 | Recuperação de senha por e-mail | Implementado |
 | RF04 | Registro de glicemia com momento do dia e observação | Implementado |
 | RF05 | Classificação automática da glicemia e retorno ao paciente | Implementado |
@@ -296,7 +297,7 @@ de glicemia — antes de qualquer uso com paciente real.
 | RNF10 | O sistema precisa ter uma sonda de disponibilidade | Rotas `/status` e `/health`, sem autenticação e sem dado de paciente |
 | RNF11 | As regras clínicas precisam estar em um lugar só | Concentradas em `common/glicemia/glicemia.ts` e `common/nutricao/nutricao.ts` |
 | RNF12 | Alterações no banco precisam ser reproduzíveis | Migrations numeradas e tabela de controle `migracao_aplicada` |
-| RNF13 | O código precisa ter cobertura automatizada na camada de regras | 238 testes automatizados na API |
+| RNF13 | O código precisa ter cobertura automatizada na camada de regras | 277 testes automatizados na API |
 | RNF14 | Adivinhar senha por repetição não pode ser viável | Limite de 5 tentativas por minuto nas rotas de autenticação, contadas por IP e e-mail |
 
 ## 2.3 Regras de negócio
@@ -538,7 +539,7 @@ classificação:
   cálculo de macronutrientes, IMC, relação cintura-quadril e conversão de porções.
 
 Manter esses cálculos fora dos controllers é o que torna possível testá-los isoladamente — a
-maior parte dos 238 testes automatizados incide sobre eles.
+maior parte dos 277 testes automatizados incide sobre eles.
 
 ## 3.5 Funcionamento da API
 
@@ -879,10 +880,12 @@ cadastrado como paciente por engano, e vice-versa.
 **No painel**, o login usa a biblioteca oficial do Google carregada em tempo de execução, com o
 botão renderizado pelo próprio Google, em modo popup. Está funcionando.
 
-**No aplicativo**, o login usa `expo-auth-session`, e o Client ID está configurado no arquivo
-`.env`. **[PENDENTE DE CONFIRMAÇÃO]** — não foi possível verificar se o fluxo completa dentro do
-Expo Go ou se exige um *development build*. A documentação anterior afirmava que não funcionava
-no Expo Go, mas o código atual é diferente do que ela descreve.
+**No aplicativo instalado (APK)**, o login usa o Google Sign-In nativo do Android
+(`@react-native-google-signin/google-signin`). O token sai em nome do mesmo Client ID web que a
+API confere, e o Google só libera porque existe um cliente Android cadastrado com o pacote e o
+SHA-1 da chave que assina o APK. O fluxo foi conferido num Android em 29/10/2026. No Expo Go,
+que não tem esse módulo nativo, o aplicativo continua usando o `expo-auth-session`. O passo a
+passo está em `docs/LOGIN_GOOGLE.md`.
 
 O aplicativo do Google Cloud está com status "Em teste", com lista de usuários autorizados —
 ou seja, só as contas incluídas nessa lista conseguem entrar por esse caminho.
@@ -1436,9 +1439,11 @@ servidor e é a que está em uso hoje.
 
 **Notificação push pelo servidor**, enviada pelo serviço da Expo. O aparelho registra seu token
 em `POST /push/token`, a tabela `push_token` guarda para onde enviar e a tabela `notificacao`
-guarda o que foi enviado a quem. O envio é disparado quando uma medição crítica é gravada.
-**[PENDENTE DE CONFIRMAÇÃO]** — o código existe e é acionado, mas não foi possível verificar a
-entrega efetiva em um aparelho físico.
+guarda o que foi enviado a quem. O envio é disparado quando uma medição crítica é gravada. No
+Android, porém, o serviço da Expo só entrega por meio do Firebase Cloud Messaging, que não foi
+configurado: o push do servidor não chega ao aplicativo instalado (limitação 6 da seção 1.8). Os
+avisos que o paciente recebe no celular são as notificações locais, conferidas num Android em 28
+e 29/10/2026; a nutricionista recebe os alertas no painel, em tempo real.
 
 No painel, uma central de notificações mostra os avisos não lidos, com as rotas
 `GET /notificacoes`, `PATCH /notificacoes/:id/ler` e `PATCH /notificacoes/ler-todas`.
@@ -1534,14 +1539,20 @@ Os recursos do Expo usados no projeto:
 |---|---|
 | `expo-router` | Navegação por arquivos: cada arquivo em `app/` vira uma rota |
 | `expo-secure-store` | Guarda os tokens no cofre criptografado do aparelho |
-| `expo-notifications` | Notificações locais e recebimento de push |
-| `expo-auth-session` | Fluxo de login pelo Google |
+| `expo-notifications` | Notificações locais (lembretes, também no modo alarme) e recebimento de push |
+| `expo-auth-session` | Login pelo Google no Expo Go (no APK, o login usa o Google Sign-In nativo do Android) |
+| `expo-updates` | Atualização do aplicativo instalado pela internet (EAS Update), sem gerar APK novo |
 | `expo-device` | Identifica o aparelho ao registrar o token de push |
 | `expo-crypto` | Funções criptográficas usadas no fluxo de autenticação |
 | `expo-image`, `expo-font`, `expo-haptics` | Imagens, fontes e resposta tátil |
 
 A navegação por arquivos organiza o aplicativo em grupos: `(auth)` para as telas de entrada,
 `(tabs)` para as seis abas principais e `onboarding` para a primeira configuração do paciente.
+
+O aplicativo instalável para Android (APK) é gerado pelo EAS Build, o serviço de compilação da
+Expo, com o perfil `preview` do `eas.json`, já apontando para a API publicada. A versão 1.0.0
+foi gerada para a entrega; mudanças só de código JavaScript chegam a ela pelo EAS Update, e
+mudanças nativas exigem um APK novo (`docs/PUBLICAR.md`).
 
 ## 8.5 TypeScript
 
@@ -1996,7 +2007,9 @@ Estão implementadas, ligadas às telas e cobertas pelos testes onde indicado:
 | Funcionalidade | Onde funciona |
 |---|---|
 | Cadastro e login por e-mail e senha | Painel e aplicativo |
-| Login pelo Google | Painel (aplicativo: ver 10.4) |
+| Login pelo Google | Painel e aplicativo instalado (APK) |
+| Cadastro de paciente pelo nutricionista, com convite aceito no aplicativo | Painel e aplicativo (com testes) |
+| Aprovação do cadastro de nutricionista pela administração | Painel (com testes) |
 | Recuperação de senha por e-mail | Painel e aplicativo |
 | Renovação e revogação de sessão | Painel e aplicativo |
 | Controle de acesso por perfil e por vínculo | API (com testes) |
@@ -2007,6 +2020,7 @@ Estão implementadas, ligadas às telas e cobertas pelos testes onde indicado:
 | Registro emocional | Aplicativo e painel |
 | Medicamentos e restrições alimentares | Aplicativo e painel |
 | Tabela nutricional de alimentos com conversão de porção | Painel e API (com testes) |
+| Importação de tabela nutricional por planilha (TACO 4ª edição carregada) | Painel (com testes) |
 | Cálculo de VET e de macronutrientes | API e painel (com testes) |
 | Plano alimentar completo | Painel e aplicativo (com testes) |
 | Receitas | Painel e aplicativo (com testes) |
@@ -2014,6 +2028,8 @@ Estão implementadas, ligadas às telas e cobertas pelos testes onde indicado:
 | Mensagens em tempo real | Painel e aplicativo (com testes) |
 | Alertas de glicemia e painel de alertas | Aplicativo e painel |
 | Notificação local no aparelho | Aplicativo |
+| Lembretes de medicamento e de glicemia, com modo alarme | Aplicativo |
+| Atualização do aplicativo instalado pela internet | Aplicativo (APK) |
 | Relatórios com exportação em planilha e PDF | Painel (com testes) |
 | Anotações do profissional | Painel |
 | Painel administrativo | Painel |
@@ -2024,10 +2040,8 @@ Estão implementadas, ligadas às telas e cobertas pelos testes onde indicado:
 
 | Item | Situação |
 |---|---|
-| **Ambiente publicado** | O banco gratuito do Render expirou; a API precisa de um banco novo num provedor sem prazo (ver `docs/PUBLICAR.md`) |
-| **Envio de e-mail em produção** | Código pronto; falta configurar o SMTP no servidor publicado. Sem ele, os links de criar e de redefinir senha não chegam a ninguém |
-| **Notificação push pelo servidor** | Tabelas, registro de token e disparo implementados; **[PENDENTE DE CONFIRMAÇÃO]** falta comprovar a entrega em aparelho físico |
-| **Login pelo Google no aplicativo** | Código e credenciais configurados; **[PENDENTE DE CONFIRMAÇÃO]** não foi possível verificar o fluxo completo em aparelho |
+| **Ambiente publicado** | No ar em plano gratuito (nutricare-tcc-painel.onrender.com); o banco gratuito vence em cerca de 30 dias e precisa ir para um provedor sem prazo antes disso (ver `docs/PUBLICAR.md`) |
+| **Notificação push pelo servidor** | Tabelas, registro de token e disparo implementados; não chega ao Android sem o Firebase Cloud Messaging, que não foi configurado (o app usa notificações locais) |
 | **Monitoramento** | Existe o serviço `monitoramento-nutricare`, hoje desligado por configuração |
 | **Tabela nutricional oficial** | TACO 4ª edição importada no ambiente publicado (578 de 597 alimentos); falta a conferência da equipe de Nutrição e decidir os 19 que a TACO traz sem valor |
 | **Validação clínica das faixas** | Estrutura pronta; valores aguardam conferência |
@@ -2042,12 +2056,12 @@ Estão implementadas, ligadas às telas e cobertas pelos testes onde indicado:
 | Videochamada ou teleconsulta | Fora do escopo |
 | Aplicativo próprio para o nutricionista | Fora do escopo; o profissional usa o painel |
 | Testes de unidade no painel e no aplicativo | Não há; a conferência é por testes ponta a ponta no navegador (ver 10.6) |
-| Publicação nas lojas de aplicativos | Não feita; a distribuição é pelo Expo |
+| Publicação nas lojas de aplicativos | Não feita; a distribuição é por APK instalado direto no Android (EAS Build) |
 
 ## 10.6 Testes realizados
 
-**Testes automatizados.** A API tem **238 testes em 21 arquivos**, executados com Jest. Todos
-passaram na última execução, em 27/10/2026. Além dos listados abaixo, cobrem o consentimento no
+**Testes automatizados.** A API tem **277 testes em 27 arquivos**, executados com Jest. Todos
+passaram na última execução, em 29/10/2026. Além dos listados abaixo, cobrem o consentimento no
 vínculo (`convites.service.spec.ts`), o cadastro de paciente pelo nutricionista
 (`pacientes.service.spec.ts`), o link de criar senha (`contas.service.spec.ts`), a aprovação de
 nutricionistas (`admin.service.spec.ts`), o limite de tentativas de login
@@ -2073,13 +2087,22 @@ A cobertura foi concentrada, de propósito, onde um erro causa mais dano: a clas
 glicemia, os cálculos nutricionais e o controle de acesso. Há testes específicos para a
 tentativa de acessar dados de paciente sem vínculo.
 
-> **Limitação.** O painel web e o aplicativo **não têm nenhum teste automatizado**. Não há Jest,
-> Testing Library nem ferramenta de teste de interface configurada em nenhum dos dois.
+> **Limitação.** O painel web e o aplicativo **não têm testes de unidade**. Não há Jest nem
+> Testing Library configurados em nenhum dos dois.
+
+**Teste ponta a ponta.** O `scripts/e2e-fluxo.mjs` (`npm run e2e:fluxo`) usa o Playwright para
+percorrer o painel e o aplicativo no navegador e refaz a demonstração inteira em 21 passos: do
+cadastro e aprovação da nutricionista ao paciente encerrando o acompanhamento, passando por
+convite, glicemia com alerta, plano alimentar, mensagens nos dois sentidos, importação de
+planilha, receita, conteúdo e relatório. Os 21 passaram em 29/10/2026.
 
 **Testes manuais.** Foram feitos percorrendo os fluxos completos: cadastro, login, registro de
 glicemia com valores em cada faixa, montagem de plano, troca de mensagens entre painel e
-aplicativo, geração de relatório e recuperação de senha (com servidor de e-mail local em
-desenvolvimento).
+aplicativo, geração de relatório e recuperação de senha. Em 28 e 29/10/2026 o aplicativo foi
+conferido num Android de verdade (lembretes, alarme, alerta de glicemia, mensagens, login pelo
+Google e atualização pela internet), e no ambiente publicado foram conferidos o cadastro de
+paciente pela nutricionista com o link de criar senha chegando por e-mail e a importação da
+TACO.
 
 **Verificação de tipos.** Os três projetos passam por `tsc --noEmit`.
 
@@ -2247,10 +2270,12 @@ alimentos adotada (TACO).
 
 **Curto prazo, para a demonstração:**
 
-1. Recriar o banco do ambiente publicado num provedor sem prazo e configurar o envio de e-mail;
-2. Confirmar a entrega das notificações push, o disparo dos lembretes e o login pelo Google em
-   aparelho físico;
-3. Gerar uma versão instalável do aplicativo para Android.
+1. Levar o banco do ambiente publicado para um provedor sem prazo;
+2. Configurar o Firebase Cloud Messaging, para o push do servidor chegar ao aplicativo instalado.
+
+O envio de e-mail, o APK para Android (versão 1.0.0, com atualização pela internet) e a
+conferência em aparelho físico dos lembretes, alertas, mensagens e login pelo Google foram
+concluídos em outubro de 2026.
 
 **Médio prazo, dependente da área de Nutrição:**
 
