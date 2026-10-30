@@ -2,6 +2,21 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-30 — Barra lateral e limpeza no `main`, conferidas juntas
+- Quem: Natan, com apoio de IA
+- PR/branch: `docs/v1-pos-merge`
+- O que foi conferido: com os PRs #10 e #19 no `main` (commit `5a76646`), `npm run verificar` e
+  `npm run e2e:fluxo` (21/21) passaram, e o painel no ar (`nutricare-tcc-painel`) já publicou a
+  barra nova. Antes do merge, a barra foi olhada no navegador: menu aberto e recolhido,
+  administrador, gaveta no celular e contador de não lidas.
+- O que foi modificado: só documentação. A entrada da limpeza de scripts perdeu a última linha
+  na resolução do conflito do merge e ficou fora da ordem de data; a linha voltou e a entrada
+  foi para junto das de 28/10. `LEIA_PRIMEIRO_IA.md`: a barra nova em "feito" e, em "Em
+  andamento", só a tag `v1.0`.
+- Atenção para quem vier depois: o contador de não lidas atualiza ao trocar de tela ou a cada
+  60 s, então pode levar até 1 minuto para zerar. O avatar da barra usa a primeira letra do
+  nome: "Dra. Camila" aparece com "D".
+
 ## 2026-10-30 — Barra lateral nova do painel web (PR #10)
 - Quem: equipe, com apoio de IA
 - PR/branch: #10, `feat/sidebar-redesign` (atualizada com a `main` de 30/10)
@@ -15,21 +30,6 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 - Arquivos principais: `apps/web/src/components/layout/AppLayout.tsx` e `AppLayout.module.css`.
 - Atenção para quem vier depois: a barra do topo no celular ainda mostra "NutriCare". O contador
   só vale para nutricionista (administrador não tem conversas).
-
-## 2026-10-28 — Limpeza de scripts sem uso na raiz
-- Quem: equipe, com apoio de IA
-- PR/branch: `chore/limpeza-repo`
-- O que foi removido:
-  - `sincronizar.ps1`: fazia `git add .`, commit e push a cada 10 s. Foi ele que levou `.env` e
-    `node_modules` para o histórico, e a análise de segurança recomenda não usar.
-  - `iniciar.bat` e `expo-com-log.bat`: atalho do Windows (Docker + painel + Expo). O mesmo se faz
-    pelos comandos do `README.md` ("Como rodar").
-  - `iniciar-email.bat`: só chamava `npm run maildev` na API.
-  - `scripts/e2e-retest.mjs` e `scripts/e2e-web-only.mjs`: testes avulsos que ninguém chamava e que
-    o `scripts/e2e-smoke.mjs` (`npm run e2e`) já cobre.
-- O que foi modificado: `docs/REVISAO_CODIGO.md` e `docs/ANALISE_SEGURANCA_LGPD.md` (avisam que o
-  `sincronizar.ps1` saiu; o link quebrado virou texto). Nada em código da aplicação.
-- Atenção para quem vier depois: tudo continua no histórico do Git. Para subir o sistema no
 
 ## 2026-10-30 — Versão 1.0
 - Quem: Natan, com apoio de IA
@@ -214,6 +214,22 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   celular. O que continua de fora é o push enviado pelo servidor, que depende do Firebase.
 - Atenção para quem vier depois: a atualização pela internet está configurada, mas ainda não foi
   publicada nenhuma; a primeira deve ser conferida no celular (abrir, fechar e abrir o app).
+
+## 2026-10-28 — Limpeza de scripts sem uso na raiz
+- Quem: equipe, com apoio de IA
+- PR/branch: `chore/limpeza-repo`
+- O que foi removido:
+  - `sincronizar.ps1`: fazia `git add .`, commit e push a cada 10 s. Foi ele que levou `.env` e
+    `node_modules` para o histórico, e a análise de segurança recomenda não usar.
+  - `iniciar.bat` e `expo-com-log.bat`: atalho do Windows (Docker + painel + Expo). O mesmo se faz
+    pelos comandos do `README.md` ("Como rodar").
+  - `iniciar-email.bat`: só chamava `npm run maildev` na API.
+  - `scripts/e2e-retest.mjs` e `scripts/e2e-web-only.mjs`: testes avulsos que ninguém chamava e que
+    o `scripts/e2e-smoke.mjs` (`npm run e2e`) já cobre.
+- O que foi modificado: `docs/REVISAO_CODIGO.md` e `docs/ANALISE_SEGURANCA_LGPD.md` (avisam que o
+  `sincronizar.ps1` saiu; o link quebrado virou texto). Nada em código da aplicação.
+- Atenção para quem vier depois: tudo continua no histórico do Git. Para subir o sistema no
+  Windows, siga o README; o `docker compose up -d --build` sobe banco e API.
 
 ## 2026-10-28 — Ícone e tela de abertura do app (logo provisório)
 - Quem: Natan, com apoio de IA
