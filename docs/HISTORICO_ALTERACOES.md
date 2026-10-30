@@ -2,6 +2,22 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+
+## 2026-10-28 — Limpeza de scripts sem uso na raiz
+- Quem: equipe, com apoio de IA
+- PR/branch: `chore/limpeza-repo`
+- O que foi removido:
+  - `sincronizar.ps1`: fazia `git add .`, commit e push a cada 10 s. Foi ele que levou `.env` e
+    `node_modules` para o histórico, e a análise de segurança recomenda não usar.
+  - `iniciar.bat` e `expo-com-log.bat`: atalho do Windows (Docker + painel + Expo). O mesmo se faz
+    pelos comandos do `README.md` ("Como rodar").
+  - `iniciar-email.bat`: só chamava `npm run maildev` na API.
+  - `scripts/e2e-retest.mjs` e `scripts/e2e-web-only.mjs`: testes avulsos que ninguém chamava e que
+    o `scripts/e2e-smoke.mjs` (`npm run e2e`) já cobre.
+- O que foi modificado: `docs/REVISAO_CODIGO.md` e `docs/ANALISE_SEGURANCA_LGPD.md` (avisam que o
+  `sincronizar.ps1` saiu; o link quebrado virou texto). Nada em código da aplicação.
+- Atenção para quem vier depois: tudo continua no histórico do Git. Para subir o sistema no
+
 ## 2026-10-30 — Versão 1.0
 - Quem: Natan, com apoio de IA
 - PR/branch: `release/v1.0`

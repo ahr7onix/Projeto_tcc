@@ -17,7 +17,7 @@ O repositório carregava 3.778 arquivos de dependências — 95% de tudo que est
 versionado. Isso inflava o clone, poluía todo `git diff` e fixava versões
 vulneráveis no histórico.
 
-A causa foi o [sincronizar.ps1](../sincronizar.ps1), que roda `git add .` + `commit`
+A causa foi o `sincronizar.ps1` (removido do repositório em 28/10/2026), que roda `git add .` + `commit`
 + `push` a cada 10 segundos (daí os commits "Salvo automaticamente"). O `.gitignore`
 da raiz já cobria `node_modules/`, mas `.gitignore` não desfaz o que já estava
 rastreado.
