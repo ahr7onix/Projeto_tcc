@@ -82,7 +82,9 @@ e avise a equipe antes.
   própria TACO (óleos e azeites sem carboidrato e proteína, 6 alimentos sem análise, 4 carnes e
   peixes com carboidrato levemente negativo), e a tela mostra o motivo de cada um. O arquivo
   grava o traço ("Tr") como `1e-05`; por isso o leitor da planilha aceita notação científica.
-  Os 36 alimentos de exemplo continuam aparecendo na busca ao lado dos da TACO.
+  Os 36 alimentos de exemplo continuam aparecendo na busca ao lado dos da TACO até serem
+  desativados ("Remover" no painel só desativa). No ambiente publicado isso já foi feito em
+  29/10/2026; para trazê-los de volta, `PATCH /alimentos/:id` com `{"ativo": true}`.
 - **Links nos e-mails (Brevo):** o Brevo troca os links por um endereço de rastreamento de
   cliques (`...sendibt3.com/tr/cl/...`) que redireciona para o painel. No plano gratuito não dá
   para desligar. O link de criar ou redefinir senha continua valendo uma vez só.
@@ -94,7 +96,8 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
 
 - API com cadastro e login (e-mail e Google), refresh, redefinir senha, perfil, registros de
   glicemia e refeição, medidas, humor, medicamentos, lembretes, restrições, planos alimentares,
-  alimentos (com importação por planilha), receitas, conteúdos, mensagens em tempo real,
+  alimentos (com importação por planilha; a TACO 4ª edição está carregada no ambiente
+  publicado desde 29/10/2026), receitas, conteúdos, mensagens em tempo real,
   relatórios, alertas, notificações e administração.
 - Painel web (nutricionista e administrador) e app mobile (paciente).
 - Convite de vínculo com aceite do paciente, e o paciente pode encerrar o acompanhamento.

@@ -175,9 +175,10 @@ Estas limitações foram verificadas no código e valem para a versão descrita 
 **1. Os parâmetros clínicos ainda não foram validados.** As faixas de referência de glicemia,
 as fórmulas de necessidade energética e a distribuição de macronutrientes usadas pelo sistema
 são referências gerais. O documento `docs/CONFERENCIA_NUTRICAO.md`, preparado para a conferência
-pela equipe de Nutrição, está com o bloco de assinatura em branco. Os 36 alimentos carregados
-no banco estão gravados com origem `exemplo`. **O sistema não deve ser usado com pacientes
-reais enquanto essa validação não ocorrer.**
+pela equipe de Nutrição, está com o bloco de assinatura em branco. No ambiente publicado, os 36
+alimentos de exemplo foram trocados pela TACO 4ª edição, escolha que a equipe de Nutrição ainda
+não conferiu. **O sistema não deve ser usado com pacientes reais enquanto essa validação não
+ocorrer.**
 
 **2. O registro profissional é conferido à mão.** O CRN é digitado no cadastro do
 nutricionista e não há consulta pública automatizada ao conselho. Por isso o acesso ao painel só
@@ -264,7 +265,7 @@ O briefing recebido do curso de Nutrição trazia dez requisitos. A situação a
 
 | Nº do briefing | Requisito | Situação em 27/10/2026 |
 |---|---|---|
-| 1 | Importação de tabelas de alimentos com valores nutricionais | Atendido — importação por planilha; os 36 itens carregados são exemplos e precisam ser trocados pela tabela oficial |
+| 1 | Importação de tabelas de alimentos com valores nutricionais | Atendido — importação por planilha; a TACO 4ª edição (578 alimentos) está carregada no ambiente publicado |
 | 2 | Cálculo da necessidade energética diária | Atendido (Mifflin-St Jeor e Harris-Benedict) — a fórmula a adotar ainda depende de definição clínica |
 | 3 | Distribuição de macronutrientes no plano | Atendido — os percentuais padrão ainda dependem de definição clínica |
 | 4 | Peso, altura, IMC e circunferências, com histórico | Atendido |
@@ -276,7 +277,7 @@ O briefing recebido do curso de Nutrição trazia dez requisitos. A situação a
 | 10 | Controle de acesso por perfil | Atendido, com consentimento do paciente e aprovação do nutricionista |
 
 Os dez requisitos estão atendidos no software. Quatro deles (1, 2, 3 e 5) ainda dependem da
-validação clínica da equipe de Nutrição — a tabela oficial, a fórmula, os percentuais e as faixas
+validação clínica da equipe de Nutrição — a tabela adotada, a fórmula, os percentuais e as faixas
 de glicemia — antes de qualquer uso com paciente real.
 
 ## 2.2 Requisitos não funcionais
@@ -1201,10 +1202,14 @@ porção de referência, calorias, carboidratos, proteínas, lipídios, fibras e
 rota `GET /alimentos/:id/porcao` recalcula todos os valores para a quantidade desejada, o que
 evita que a conversão seja feita — e errada — em cada tela.
 
-Estão carregados **36 alimentos**, todos gravados com origem `exemplo`. **Eles não servem para
-uso clínico** e precisam ser substituídos pela tabela oficial que a equipe de Nutrição indicar
-(TACO, IBGE ou outra). O campo `fonte` existe justamente para permitir que as duas coexistam
-durante a troca.
+O banco novo nasce com **36 alimentos** de origem `exemplo`, com valores aproximados que **não
+servem para uso clínico**. No ambiente publicado, em 29/10/2026, eles foram trocados pela **TACO
+4ª edição** (NEPA/UNICAMP, 2011), importada pelo próprio painel a partir do arquivo em CSV
+mantido em github.com/brolesi/taco: entraram 578 dos 597 alimentos, e os 36 de exemplo foram
+desativados, sem apagar as refeições já registradas com eles. Os 19 de fora não têm o valor na
+própria TACO — óleos e azeites sem carboidrato e proteína, alimentos sem análise e quatro carnes
+com carboidrato levemente negativo — e ficam para a equipe de Nutrição decidir. O campo `fonte`
+permite que as duas tabelas coexistam durante a troca.
 
 *[Inserir Figura 8]*
 
@@ -2024,7 +2029,7 @@ Estão implementadas, ligadas às telas e cobertas pelos testes onde indicado:
 | **Notificação push pelo servidor** | Tabelas, registro de token e disparo implementados; **[PENDENTE DE CONFIRMAÇÃO]** falta comprovar a entrega em aparelho físico |
 | **Login pelo Google no aplicativo** | Código e credenciais configurados; **[PENDENTE DE CONFIRMAÇÃO]** não foi possível verificar o fluxo completo em aparelho |
 | **Monitoramento** | Existe o serviço `monitoramento-nutricare`, hoje desligado por configuração |
-| **Tabela nutricional oficial** | Estão carregados 36 alimentos de exemplo; a tabela oficial depende da indicação da equipe de Nutrição |
+| **Tabela nutricional oficial** | TACO 4ª edição importada no ambiente publicado (578 de 597 alimentos); falta a conferência da equipe de Nutrição e decidir os 19 que a TACO traz sem valor |
 | **Validação clínica das faixas** | Estrutura pronta; valores aguardam conferência |
 
 ## 10.5 Funcionalidades ainda não implementadas
@@ -2235,8 +2240,8 @@ a escolha das fórmulas, os percentuais de macronutrientes e a validação das f
 O que se pode afirmar com evidência: o sistema funciona tecnicamente, e as duas pendências de
 proteção de dados que impediam o uso real — o vínculo sem consentimento e o registro profissional
 sem conferência — foram resolvidas. O que **não** se pode afirmar: que ele está pronto para uso
-com pacientes reais. Falta a validação clínica dos valores de referência e a substituição da
-tabela de alimentos de exemplo pela oficial.
+com pacientes reais. Falta a validação clínica dos valores de referência e da tabela de
+alimentos adotada (TACO).
 
 ## 12.2 Trabalhos futuros
 
@@ -2249,8 +2254,8 @@ tabela de alimentos de exemplo pela oficial.
 
 **Médio prazo, dependente da área de Nutrição:**
 
-4. Importar a tabela nutricional oficial no lugar dos 36 alimentos de exemplo — a importação por
-   planilha já existe;
+4. Conferir a TACO importada e completar os 19 alimentos que ela traz sem valor (óleos e azeites,
+   por exemplo);
 5. Aplicar as faixas de referência validadas e as fórmulas escolhidas.
 
 **Longo prazo:**
