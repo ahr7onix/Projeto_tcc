@@ -2,6 +2,24 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-10-30 — Dados de demonstração com volume
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/dados-demonstracao`
+- O que foi adicionado: `scripts/demo/popular-demo.sql` (consultório fictício com 25 pacientes, 5
+  nutricionistas e até 5 meses de uso, em todas as áreas menos alimentos) e
+  `scripts/demo/README.md` (logins, como rodar e como ver no painel).
+- O que foi modificado: só a armadilha "Dados de demonstração" do `LEIA_PRIMEIRO_IA.md` e a lista
+  de pendências. Nenhuma mudança no código da aplicação nem no esquema do banco.
+- Arquivos principais: `scripts/demo/popular-demo.sql`, `scripts/demo/README.md`.
+- Atenção para quem vier depois: rodou só num banco local novo (`tcc_demo`, no contêiner
+  `tcc-pg-dev`); os bancos publicados não foram tocados. Conferido no painel com Playwright
+  (nutricionista e administrador, sem erro no console nem resposta 500) e pelas rotas da API que
+  o app usa; o app em si não foi aberto. Todo vínculo do script vem com o convite aceito, e o
+  script só existe para contas fictícias: não é caminho do sistema. Nele, sorteio com `random()`
+  fica em coluna de subconsulta, com o filtro por fora: `WHERE random() < p.adesao` direto faz o
+  Postgres sortear uma vez por paciente, e metade deles ficou sem nenhum registro no primeiro
+  teste. Contar o total não mostra isso; confira por paciente.
+
 ## 2026-10-30 — Barra lateral e limpeza no `main`, conferidas juntas
 - Quem: Natan, com apoio de IA
 - PR/branch: `docs/v1-pos-merge`

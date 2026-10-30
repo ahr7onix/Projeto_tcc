@@ -88,7 +88,9 @@ e avise a equipe antes.
 - **Links nos e-mails (Brevo):** o Brevo troca os links por um endereço de rastreamento de
   cliques (`...sendibt3.com/tr/cl/...`) que redireciona para o painel. No plano gratuito não dá
   para desligar. O link de criar ou redefinir senha continua valendo uma vez só.
-- **Dados de demonstração:** só existem se o banco for preparado com `SEED_DEMO=true`.
+- **Dados de demonstração:** só existem se o banco for preparado com `SEED_DEMO=true`. Para ver o
+  sistema com volume (25 pacientes, até 5 meses de uso), use `scripts/demo/README.md`, sempre num
+  banco próprio.
 
 ## O que já está feito
 
@@ -141,6 +143,7 @@ Bugs pequenos, podem ser corrigidos:
 - O token de acesso continua valendo até expirar (15 min) depois de desativar a conta ou trocar a
   senha.
 - Os testes automáticos escrevem erros falsos no `logs/` real da API.
+- Painel: receita de uma porção aparece como "1 porções" (`ReceitasPage.tsx`).
 
 Limitações assumidas pela equipe (seção 1.8 da documentação): parâmetros clínicos ainda sem
 validação da Nutrição, CRN conferido à mão, e-mail depende de SMTP configurado, ambiente
