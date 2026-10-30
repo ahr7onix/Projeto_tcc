@@ -89,7 +89,7 @@ Tudo o que está nesta lista foi usado do começo ao fim e conferido.
 | RF04 | Peso, altura, IMC e circunferências, com histórico | **Atendido** |
 | RF05 | Registro e histórico de glicemia | **Atendido.** Aguarda a conferência das faixas |
 | RF06 | Registro emocional | **Atendido** (escala de cinco pontos). Confirmar o formato |
-| RF07 | Alertas e lembretes | **Atendido.** Falta testar a notificação num celular de verdade |
+| RF07 | Alertas e lembretes | **Atendido.** Conferido num Android de verdade (lembretes no horário, também como alarme, e aviso de glicemia fora da faixa) |
 | RF08 | Gráficos dos indicadores | **Atendido** |
 | RF09 | Receitas e orientações | **Atendido** |
 | RF10 | Controle de acesso por perfil | **Atendido**, agora com consentimento do paciente e aprovação do nutricionista |
@@ -170,14 +170,14 @@ senhas.
 
 ## 7. Próximos passos
 
-1. **Ambiente de demonstração.** O banco de dados gratuito do servidor expirou e
-   precisa ser recriado num provedor sem prazo. É também quando o envio de e-mail
-   passa a funcionar de verdade — sem ele, o link de criar senha não chega a
-   ninguém.
-2. **Teste num celular de verdade**: lembretes no horário, aviso de glicemia fora
-   da faixa, entrada com a conta Google.
-3. **Versão para instalar no Android**, para a demonstração não depender do Expo.
-4. **A conferência de vocês (seção 4)** — o único item que libera o uso com
+Já feito em outubro de 2026: o sistema está no ar com envio de e-mail, o
+aplicativo para Android (versão 1.0.0) se instala direto no celular e foi
+conferido num aparelho de verdade (lembretes, avisos de glicemia, mensagens e
+entrada com a conta Google), e a tabela TACO está carregada.
+
+1. **Banco de dados sem prazo.** O banco gratuito do ambiente no ar vence em
+   cerca de 30 dias e precisa ir para um provedor sem prazo.
+2. **A conferência de vocês (seção 4)** — o único item que libera o uso com
    paciente real.
 
 ---
