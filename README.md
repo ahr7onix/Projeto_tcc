@@ -108,8 +108,10 @@ O seed cria o administrador inicial:
 - e-mail: `admin@nutricare.local`
 - senha: `NutriCare@2026`
 
-**Essa senha está publicada aqui, então vale só para desenvolvimento.** Antes de
-qualquer uso real, gere um hash próprio e substitua o do seed:
+**Essa senha está publicada aqui, então vale só para desenvolvimento.** No ar, defina
+`ADMIN_SENHA` (e `SENHA_DEMO`, se usar `SEED_DEMO=true`) nas variáveis do serviço: o
+`preparar-banco.mjs` troca a senha pública por ela na próxima inicialização (veja
+`docs/PUBLICAR.md`, "Como entrar"). Para trocar à mão, gere um hash próprio:
 
 ```bash
 node database/gerar-hash-admin.js "sua-senha-forte"

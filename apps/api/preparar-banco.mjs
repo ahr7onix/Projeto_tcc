@@ -10,6 +10,11 @@
 //                  certificado próprio do provedor
 //   SEED_DEMO      "true" carrega os usuários e registros fictícios de
 //                  demonstração (Dra. Camila, João, Maria)
+//   ADMIN_SENHA    senha do administrador inicial no lugar da que está no README
+//   SENHA_DEMO     senha das contas de demonstração no lugar da do seeds.sql
+//
+// As duas últimas existem porque o repositório é público: no ar, as contas do
+// seed não podem continuar com a senha que qualquer um lê aqui.
 //
 // Por que este arquivo existe: o schema.sql cria tudo de uma vez e não tem
 // "IF NOT EXISTS" em lugar nenhum, então rodá-lo duas vezes dá erro. Aqui a
@@ -18,6 +23,7 @@
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import bcrypt from 'bcryptjs';
 import pg from 'pg';
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
@@ -71,6 +77,48 @@ async function aplicarUmaVez(nome, caminhoRelativo) {
   await client.query(ler(...caminhoRelativo));
   await registrar(nome);
   console.log(`  aplicar ${nome}`);
+}
+
+/**
+ * Troca a senha publicada no repositório pela da variável, só nas contas que
+ * ainda a usam: quem já trocou a senha pelo painel fica como está. As sessões
+ * abertas com a senha antiga são encerradas.
+ */
+async function trocarSenhaPublica(variavel, senhaPublica, emails) {
+  const { rows } = await client.query(
+    'SELECT id_usuario, email, senha FROM usuario WHERE email = ANY($1)',
+    [emails],
+  );
+  const expostas = [];
+  for (const conta of rows) {
+    if (conta.senha && (await bcrypt.compare(senhaPublica, conta.senha))) expostas.push(conta);
+  }
+  if (expostas.length === 0) return;
+
+  const nomes = expostas.map((c) => c.email).join(', ');
+  const nova = process.env[variavel] ?? '';
+  if (!nova) {
+    // Em desenvolvimento a senha pública é o esperado; no ar, é um risco.
+    if (process.env.NODE_ENV === 'production') {
+      console.warn(`  AVISO   ${nomes} com a senha publicada no repositório: defina ${variavel}`);
+    }
+    return;
+  }
+  if (nova.length < 8 || nova === senhaPublica) {
+    console.warn(`  AVISO   ${variavel} precisa de 8 caracteres ou mais e não pode ser a pública: nada trocado`);
+    return;
+  }
+
+  const ids = expostas.map((c) => c.id_usuario);
+  await client.query('UPDATE usuario SET senha = $1 WHERE id_usuario = ANY($2)', [
+    await bcrypt.hash(nova, 10),
+    ids,
+  ]);
+  await client.query(
+    'UPDATE refresh_token SET revogado_em = NOW() WHERE id_usuario = ANY($1) AND revogado_em IS NULL',
+    [ids],
+  );
+  console.log(`  trocar  senha pública de ${nomes} (${variavel})`);
 }
 
 async function main() {
@@ -128,6 +176,14 @@ async function main() {
   } else {
     console.log('  pular   seeds.sql (defina SEED_DEMO=true para carregar os dados fictícios)');
   }
+
+  console.log('Senhas do seed:');
+  await trocarSenhaPublica('ADMIN_SENHA', 'NutriCare@2026', ['admin@nutricare.local']);
+  await trocarSenhaPublica('SENHA_DEMO', 'Senha123!', [
+    'camila.souza@nutri.com',
+    'joao.silva@email.com',
+    'maria.oliveira@email.com',
+  ]);
 
   console.log('\nBanco pronto.');
 }

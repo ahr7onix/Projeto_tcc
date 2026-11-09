@@ -43,7 +43,7 @@ e avise a equipe antes.
 | Plano alimentar "ativo" | É calculado pelas datas de início e fim, não por coluna. Criar plano novo encerra o anterior. |
 | Raiz do repositório sem npm workspaces | O Render instala cada serviço isolado pelo `rootDir`. Workspaces quebram o deploy. |
 | `render.yaml` e `render-tcc.yaml` (`NODE_ENV=production`) e `RESET_LINK_NA_RESPOSTA` | Em produção o link de criar/redefinir senha nunca pode vir na resposta da API (`common/ambiente.ts`). Não ligue `RESET_LINK_NA_RESPOSTA` fora do desenvolvimento. |
-| Segredos (`.env`, `JWT_SECRET`, senhas) | Nunca vão para o Git. A senha do admin do seed vale só em desenvolvimento. |
+| Segredos (`.env`, `JWT_SECRET`, senhas) | Nunca vão para o Git. As senhas do seed (admin e contas de demonstração) valem só em desenvolvimento; no ar elas são trocadas pelas variáveis `ADMIN_SENHA` e `SENHA_DEMO`, criadas no painel do Render e nunca no `render.yaml`. |
 | Limites de tentativa (`common/limite-tentativas.ts`, `LimitePorMinutoGuard`) | Ficam na memória de uma instância. Com mais de uma réplica da API deixam de proteger; troque por armazenamento compartilhado antes de escalar. |
 | Versões do Expo / React Native no app | Foram testadas juntas. Atualizar sem testar no celular pode quebrar o app. |
 
@@ -133,6 +133,10 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
 
 - Fase de testes com `CADASTRO_TESTE_ABERTO=true` no Render (09/11/2026): cadastro no painel
   entra direto e ganha conta `+app` para o app. Desligar ao fim dos testes.
+
+- Senhas do ar (correção CO-04 do parecer, 09/11/2026): falta criar `ADMIN_SENHA` e
+  `SENHA_DEMO` no Environment da API no Render. Enquanto não existirem, o admin e as contas
+  de demonstração do site seguem com as senhas escritas no repositório.
 
 - v1.0: falta só a tag `v1.0` no `main`, com o APK 1.0.0 anexado à release. Os PRs #10 e #19
   entraram em 30/10/2026. Para saber se a tag já saiu: `git tag`.

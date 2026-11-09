@@ -56,19 +56,33 @@ paciente de verdade, troque a variável para `false`** no Render.
 O banco nasce com um administrador e, como `SEED_DEMO` está como `true`, com
 pacientes fictícios para o cliente ter o que olhar.
 
-| Perfil | E-mail | Senha |
-|---|---|---|
-| Nutricionista (exemplo) | `camila.souza@nutri.com` | `Senha123!` |
-| Administrador | `admin@nutricare.local` | `NutriCare@2026` |
-| Paciente (exemplo) | `joao.silva@email.com` | `Senha123!` |
+| Perfil | E-mail |
+|---|---|
+| Nutricionista (exemplo) | `camila.souza@nutri.com` |
+| Administrador | `admin@nutricare.local` |
+| Paciente (exemplo) | `joao.silva@email.com` |
 
 O paciente entra pelo aplicativo do celular, não pelo painel web.
 
-> **Essas senhas estão escritas na documentação do projeto, então valem só para
-> demonstração.** Antes de qualquer uso com paciente real é obrigatório trocar a
-> senha do administrador e apagar os usuários de exemplo.
+**As senhas do ar não ficam no repositório.** O seed cria essas contas com as senhas
+de desenvolvimento, que estão escritas no `README.md` e no `seeds.sql` e, portanto,
+são públicas. Para o ar, no Render, abra o serviço da API → **Environment** e crie:
 
-Para trocar a senha do administrador, gerar um novo código com:
+| Variável | Para quem |
+|---|---|
+| `ADMIN_SENHA` | administrador |
+| `SENHA_DEMO` | Camila, João e Maria (só existe com `SEED_DEMO=true`) |
+
+Na inicialização seguinte, o `preparar-banco.mjs` troca a senha pública pela da
+variável e encerra as sessões abertas com a antiga. Conta cuja senha já foi trocada
+pelo painel não é tocada, então mudar a variável depois não muda nada. Sem as
+variáveis, o log da API avisa quais contas continuam com a senha pública. Não
+coloque essas variáveis no `render.yaml`: ele é público.
+
+> **Antes de qualquer uso com paciente real** é obrigatório subir com
+> `SEED_DEMO=false` e apagar os usuários de exemplo.
+
+Para trocar a senha do administrador à mão, gerar um novo código com:
 
 ```bash
 node database/gerar-hash-admin.js "a-senha-nova"

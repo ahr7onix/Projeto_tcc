@@ -5,6 +5,12 @@ import type { Pool } from 'pg';
 import type { MailService } from '../mail/mail.service';
 import { AuthService } from './auth.service';
 
+// O compare de verdade, só observado: o teste do e-mail sem conta precisa ver se ele rodou.
+jest.mock('bcryptjs', () => {
+  const real = jest.requireActual('bcryptjs');
+  return { ...real, compare: jest.fn(real.compare) };
+});
+
 const SENHA = 'Senha123!';
 const usuario = {
   id_usuario: '30',
@@ -126,6 +132,21 @@ describe('AuthService com o pool cheio', () => {
     };
     const resposta = await semTravar(service.loginGoogle('token-do-google'));
     expect(resposta).toMatchObject({ user: { id: '30' } });
+  });
+});
+
+describe('AuthService com e-mail sem conta', () => {
+  it('should check the password anyway, so the refusal takes as long as a wrong password', async () => {
+    // Sem a conferência a recusa vinha em ~3 ms em vez de ~66 ms, e o tempo dizia quais e-mails têm conta.
+    const pool = { query: async () => ({ rows: [], rowCount: 0 }) } as unknown as Pool;
+    const config = { get: (_chave: string, padrao?: string) => padrao } as unknown as ConfigService;
+    const service = new AuthService(pool, new JwtService({ secret: 'teste' }), config, {} as MailService);
+    (bcrypt.compare as jest.Mock).mockClear();
+
+    await expect(service.login({ email: 'ninguem@x.com', senha: SENHA })).rejects.toThrow(
+      'E-mail ou senha incorretos',
+    );
+    expect(bcrypt.compare).toHaveBeenCalledTimes(1);
   });
 });
 

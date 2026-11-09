@@ -122,6 +122,12 @@ dos usuários de exemplo, e **antes de qualquer uso real** subir com
 `SEED_DEMO=false` e apagar os usuários de exemplo. Mapeia para A02:2025
 (Security Misconfiguration) e A07:2025 (Authentication Failures).
 
+**Atualização (09/11/2026, correção CO-04 do parecer):** o `preparar-banco.mjs` lê
+`ADMIN_SENHA` e `SENHA_DEMO` e troca a senha pública das contas do seed pela da
+variável, encerrando as sessões abertas. Em produção, sem as variáveis, o log avisa
+quais contas seguem expostas. A troca no ar depende de criar as variáveis no Render
+(`docs/PUBLICAR.md`, "Como entrar").
+
 ### 2.3 [MÉDIO] Limite de tentativas de login não confiável no Render
 
 [limite-tentativas.ts](../apps/api/src/common/limite-tentativas.ts) · [auth.controller.ts:66](../apps/api/src/modules/auth/auth.controller.ts#L66) · [main.ts:21](../apps/api/src/main.ts#L21)
@@ -198,6 +204,8 @@ preferência validando na borda (DTO de query com `@IsInt`/`@Min`/`@Max`).
   compare` só roda quando o usuário é encontrado, criando um oráculo de tempo —
   mesmo com a mensagem genérica. **Correção:** rodar sempre um `bcrypt.compare`
   contra um hash fixo quando o e-mail não existe, para igualar o tempo.
+  **Corrigido em 09/11/2026** (CO-03 do parecer): medido de novo, 77 ms com
+  senha errada e 70 ms com e-mail sem conta.
 - **Convite** ([convites.service.ts](../apps/api/src/modules/vinculos/convites.service.ts)):
   `POST /vinculos/convites` devolve 404 "Nenhum paciente com este e-mail" para
   e-mail não cadastrado e **201 com nome e e-mail** do paciente para um
