@@ -133,6 +133,10 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
 
 - Fase de testes com `CADASTRO_TESTE_ABERTO=true` no Render (09/11/2026): cadastro no painel
   entra direto e ganha conta `+app` para o app. Desligar ao fim dos testes.
+- Botão "Baixar o app Android (teste)" na tela de entrada do painel `nutricare-tcc`
+  (`VITE_APK_URL` no `render-tcc.yaml`). O link do Expo vence em 12/11/2026 às 22:46. Antes
+  disso, troque pelo da release do GitHub (`docs/PUBLICAR.md`, "Botão de baixar o APK").
+  Apague a variável ao fim dos testes.
 
 - v1.0: falta só a tag `v1.0` no `main`, com o APK 1.0.0 anexado à release. Os PRs #10 e #19
   entraram em 30/10/2026. Para saber se a tag já saiu: `git tag`.

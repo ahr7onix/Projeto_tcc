@@ -51,6 +51,24 @@ No app aparece o convite do próprio nutricionista; aceitando, os dois ficam
 vinculados e dá para testar o fluxo inteiro sozinho. **Antes de qualquer uso com
 paciente de verdade, troque a variável para `false`** no Render.
 
+### Botão de baixar o APK
+
+Na tela de entrada do painel aparece **Baixar o app Android (teste)**, que baixa
+o APK direto. Depois do cadastro de teste, o botão sobe para logo abaixo do aviso
+com o login do app. O link vem de `VITE_APK_URL`, e sem ele o botão não aparece.
+
+- Só o `render-tcc.yaml` tem o link: o APK usa a API dessa cópia, e a conta `+app`
+  criada pela cópia do `render.yaml` não existe lá.
+- Hoje o link é o do build `5411cc23` (APK 1.0.0) no Expo, que **vence em
+  12/11/2026 às 22:46** (horário de Brasília). Para não depender do Expo, crie no
+  GitHub uma release (por exemplo, a tag `v1.0` que está pendente), anexe o APK
+  com o nome `nutricare.apk` e troque o valor por
+  `https://github.com/ahr7onix/Projeto_tcc/releases/latest/download/nutricare.apk`.
+  Esse endereço sempre aponta para a release mais nova, e funciona sem login
+  porque o repositório é público.
+- APK novo gerado: troque o link (ou anexe o arquivo a uma release nova).
+- Fim dos testes: apague a `VITE_APK_URL` junto com a `CADASTRO_TESTE_ABERTO`.
+
 ## Como entrar
 
 O banco nasce com um administrador e, como `SEED_DEMO` está como `true`, com

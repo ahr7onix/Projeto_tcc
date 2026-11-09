@@ -2,6 +2,33 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-11-09 — Botão de baixar o APK no painel (temporário)
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/painel-baixar-apk`
+- O que aconteceu: na fase de testes, quem se cadastra no painel ganha uma conta do app, mas o
+  APK só existia num link do Expo que ninguém tinha. Ele não estava no site nem numa release.
+- O que foi adicionado:
+  - Botão "Baixar o app Android (teste)" na tela de entrada, embaixo de "Entrar" e de
+    "Cadastrar". Depois do cadastro de teste, ele aparece logo abaixo do aviso com o login do
+    app.
+  - Variável `VITE_APK_URL` no painel. Vazia, o botão não aparece. Ela está só no
+    `render-tcc.yaml`, apontando para o APK 1.0.0 do Expo (build `5411cc23`). O `render.yaml`
+    explica por que não tem: o APK fala com a API da outra cópia.
+  - Seção "Botão de baixar o APK" no `docs/PUBLICAR.md` e a variável no `apps/web/.env.example`.
+- O que foi modificado:
+  - No formulário da tela de entrada, o conteúdo agora rola quando não cabe no cartão
+    (`justify-content: safe center` e `overflow-y: auto`). Antes, com o aviso do cadastro de
+    teste, o cartão cortava o "NutriCare" de cima e o fim do formulário, sem deixar rolar. Já
+    cortava 4 px antes do botão; com ele, cortaria cerca de 27 px em cada ponta.
+- Arquivos principais: `apps/web/src/pages/auth/LoginPage.tsx`, `LoginPage.module.css`,
+  `render-tcc.yaml`, `render.yaml`.
+- Atenção para quem vier depois: o link do Expo vence em 12/11/2026 às 22:46. Antes disso,
+  publique o APK numa release do GitHub e troque a variável (passo a passo no `PUBLICAR.md`).
+  Conferido com Playwright no Chrome, em 1366x768, 390x844 e 360x640, nos casos de login,
+  cadastro e cadastro com aviso (resposta da API simulada), e sem o link (o botão some). Não deu
+  erro no console. O link responde 200 com o arquivo de 96,8 MB. `tsc` do painel ok. A API e o
+  app não mudaram.
+
 ## 2026-11-09 — Cadastro aberto para teste (temporário)
 - Quem: Isac, com apoio de IA
 - PR/branch: `feat/cadastro-teste-aberto`

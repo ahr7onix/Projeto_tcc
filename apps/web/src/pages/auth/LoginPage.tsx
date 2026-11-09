@@ -5,6 +5,8 @@ import { api, extractError } from '../../lib/api'
 import styles from './LoginPage.module.css'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
+// Link do APK para a fase de testes (o app não está na Play Store). Vazio, o botão some.
+const APK_URL = import.meta.env.VITE_APK_URL || ''
 
 const DESTINO_POR_PERFIL: Record<string, string> = {
   nutricionista: '/inicio',
@@ -279,6 +281,8 @@ export default function LoginPage() {
             <h1 className={styles.title}>Criar conta</h1>
             {regError && <div className={styles.error}>{regError}</div>}
             {aguardandoAprovacao && <div style={avisoAprovacao}>{aguardandoAprovacao}</div>}
+            {/* Depois do cadastro o botão sobe para junto do aviso, que fala do app. */}
+            {aguardandoAprovacao && <BaixarApp />}
 
             {googleSlot(signupGoogleRef, isSignUp)}
 
@@ -327,6 +331,7 @@ export default function LoginPage() {
             <button type="submit" className={styles.btn} disabled={regLoading || googleLoading}>
               {regLoading ? 'Criando...' : 'Cadastrar'}
             </button>
+            {!aguardandoAprovacao && <BaixarApp />}
             <button type="button" className={styles.mobileToggle} onClick={goSignIn}>
               Já tem conta? Entrar
             </button>
@@ -372,6 +377,7 @@ export default function LoginPage() {
             <button type="submit" className={styles.btn} disabled={loginLoading || googleLoading}>
               {loginLoading ? 'Entrando...' : 'Entrar'}
             </button>
+            <BaixarApp />
             <button type="button" className={styles.mobileToggle} onClick={goSignUp}>
               Novo por aqui? Criar conta
             </button>
@@ -416,6 +422,19 @@ function GoogleIcon() {
       <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
     </svg>
   )
+}
+
+function BaixarApp() {
+  if (!APK_URL) return null
+  return (
+    <a className={styles.baixarApp} href={APK_URL} rel="noopener">
+      <DownloadIcon /> Baixar o app Android (teste)
+    </a>
+  )
+}
+
+function DownloadIcon() {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" /></svg>
 }
 
 // Campo de senha com o olho para conferir o que foi digitado.

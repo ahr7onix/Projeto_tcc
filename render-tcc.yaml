@@ -13,8 +13,8 @@
 #   nutricare-tcc-api     a API (NestJS)
 #   nutricare-tcc-painel  o painel web da nutricionista, site estático
 #
-# MUDOU ALGO NO render.yaml? Mude aqui também. Fora os nomes, os endereços e o
-# Client ID do Google, os dois arquivos são iguais.
+# MUDOU ALGO NO render.yaml? Mude aqui também. Fora os nomes, os endereços, o
+# Client ID do Google e o link do APK (só aqui), os dois arquivos são iguais.
 #
 # ATENÇÃO: o banco gratuito do Render expira em 30 dias (ver docs/PUBLICAR.md,
 # "Trocar o banco por um sem prazo").
@@ -111,6 +111,12 @@ services:
         value: https://nutricare-tcc-api.onrender.com
       - key: VITE_GOOGLE_CLIENT_ID
         value: 358396813214-n1fmvb21ph02u56f71ns4v02i4o6r9fd.apps.googleusercontent.com
+      # TEMPORÁRIO, só para a fase de testes: botão "Baixar o app Android" na
+      # tela de entrada. É o APK 1.0.0 do Expo, que usa a API desta cópia; o
+      # link vence em 12/11/2026 às 22:46 (docs/PUBLICAR.md, "Botão de baixar o
+      # APK"). Vazio, o botão some.
+      - key: VITE_APK_URL
+        value: https://expo.dev/artifacts/eas/0DCl04nE4M9BzMA_qhJdWmzDwPxEFCvKAeCGEi2d_B8.apk
     # O painel é uma página só: qualquer endereço interno (/login, /pacientes)
     # tem que devolver o index.html, senão o servidor responde "404".
     routes:
