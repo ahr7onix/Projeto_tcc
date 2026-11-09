@@ -8,7 +8,7 @@ NutriCare: API (NestJS), painel web (React/Vite, nutricionista e administração
 (Expo, paciente) e banco PostgreSQL. Como rodar está no `README.md`. O detalhe de cada parte
 está no `docs/DOCUMENTACAO_TCC.md`.
 
-## Regras do fluxo de trabalho
+Regras do fluxo de trabalho
 
 1. Leia este arquivo e o topo do `docs/HISTORICO_ALTERACOES.md` antes de começar.
 2. Trabalhe numa branch própria, nunca direto na `main`.
@@ -24,8 +24,12 @@ está no `docs/DOCUMENTACAO_TCC.md`.
 8. Não reescreva o histórico da `main` (nada de force-push nela).
 9. Sem assinatura de ferramenta em código, commit ou PR (decisão da equipe). Comentário curto,
    em português, só quando explica o porquê. Sem emoji.
+10. Nos documentos `.md`, título sem duas ou mais `#` no começo da linha (decisão de 09/11/2026).
+    O título fica numa linha própria, com uma linha em branco antes e outra depois. Sem a linha
+    em branco, o GitHub junta o título com o texto de baixo. A `#` única do título principal, na
+    primeira linha, continua.
 
-## NÃO MEXA sem combinar com a equipe
+NÃO MEXA sem combinar com a equipe
 
 Cada item já deu problema sério ou daria. Se o pedido parece exigir mexer em algum deles, pare
 e avise a equipe antes.
@@ -47,7 +51,7 @@ e avise a equipe antes.
 | Limites de tentativa (`common/limite-tentativas.ts`, `LimitePorMinutoGuard`) | Ficam na memória de uma instância. Com mais de uma réplica da API deixam de proteger; troque por armazenamento compartilhado antes de escalar. |
 | Versões do Expo / React Native no app | Foram testadas juntas. Atualizar sem testar no celular pode quebrar o app. |
 
-## Ao rodar o projeto (armadilhas)
+Ao rodar o projeto (armadilhas)
 
 - **Login com Google:** o `apps/web/.env.example` vem com um Client ID de mentira. Quem só copia o
   arquivo vê "Configure VITE_GOOGLE_CLIENT_ID no .env..." na tela de login. É preciso colocar o ID
@@ -96,7 +100,7 @@ e avise a equipe antes.
   larga vai em `TabelaRolavel` (ou em caixa com `overflow-x: auto`), nunca em caixa com `hidden`:
   no celular as colunas da direita somem sem aviso.
 
-## O que já está feito
+O que já está feito
 
 Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RESUMO_ENTREGA.md`.
 
@@ -129,7 +133,7 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
   fixo e rolagem própria, e sem nada cortado no celular. No computador, o sino de notificações fica
   na barra lateral.
 
-## Em andamento
+Em andamento
 
 - Fase de testes com `CADASTRO_TESTE_ABERTO=true` no Render (09/11/2026): cadastro no painel
   entra direto e ganha conta `+app` para o app. Desligar ao fim dos testes.
@@ -141,7 +145,7 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
 - v1.0: falta só a tag `v1.0` no `main`, com o APK 1.0.0 anexado à release. Os PRs #10 e #19
   entraram em 30/10/2026. Para saber se a tag já saiu: `git tag`.
 
-## Pendências conhecidas
+Pendências conhecidas
 
 Desempenho (detalhe em `docs/ANALISE_DESEMPENHO.md`):
 
@@ -173,12 +177,12 @@ Limitações assumidas pela equipe (seção 1.8 da documentação): parâmetros 
 validação da Nutrição, CRN conferido à mão, e-mail depende de SMTP configurado, ambiente
 publicado é de demonstração, push do servidor sem Firebase (o app usa notificações locais).
 
-## Como registrar o que você fez
+Como registrar o que você fez
 
 No fim de cada alteração, coloque uma entrada **no topo** do `docs/HISTORICO_ALTERACOES.md`:
 
 ```
-## AAAA-MM-DD — título curto
+AAAA-MM-DD — título curto
 - Quem: nome da pessoa e/ou ferramenta de IA usada
 - PR/branch: link ou nome
 - O que foi adicionado: ...

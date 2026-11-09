@@ -10,9 +10,9 @@ trabalho.
 
 ---
 
-## 1. Vínculo entre nutricionista e paciente sem consentimento
+1. Vínculo entre nutricionista e paciente sem consentimento
 
-### O que o sistema faz hoje
+O que o sistema faz hoje
 
 O nutricionista cria o vínculo sozinho, informando o id do paciente:
 
@@ -35,7 +35,7 @@ O paciente também **não tem como recusar ou encerrar o vínculo pelo app** —
 `DELETE /vinculos/:pacienteId` é restrito ao papel `nutricionista`
 ([vinculos.controller.ts:22](../apps/api/src/modules/vinculos/vinculos.controller.ts#L22)).
 
-### Por que isso é uma limitação
+Por que isso é uma limitação
 
 Dado de saúde é **dado pessoal sensível** (art. 5º, II). O art. 11 admite o
 tratamento em duas situações relevantes aqui:
@@ -57,7 +57,7 @@ compartilhados) e o art. 18 (direitos de acesso, oposição e eliminação): sem
 tela de aceite e sem botão de encerrar, o paciente não exerce oposição pelo
 próprio aplicativo.
 
-### Risco prático
+Risco prático
 
 Baixo no ambiente do TCC, **desde que a regra abaixo seja mantida**, e alto em
 uso real:
@@ -70,7 +70,7 @@ Em uso real com pacientes da ADJ Birigui, a falha permitiria que um profissional
 visse o histórico clínico de alguém que nunca o autorizou — exposição de dado
 sensível, com o agravante de ser silenciosa.
 
-### Correção proposta (trabalho futuro)
+Correção proposta (trabalho futuro)
 
 Transformar o vínculo em um convite com aceite:
 
@@ -95,16 +95,16 @@ técnica.
 
 ---
 
-## 2. CRN aceito sem validação
+2. CRN aceito sem validação
 
-### O que o sistema faz hoje
+O que o sistema faz hoje
 
 No cadastro, o CRN é texto livre e **opcional** (migration `004`), sem conferência
 de formato ou de existência do registro
 ([cadastro.dto.ts](../apps/api/src/modules/auth/dto/cadastro.dto.ts)). Qualquer
 pessoa pode se cadastrar como nutricionista.
 
-### Por que isso é uma limitação
+Por que isso é uma limitação
 
 O art. 11, II, "f" condiciona a dispensa de consentimento a que o tratamento
 seja feito **por profissionais de saúde**. Sem validar o registro profissional,
@@ -112,7 +112,7 @@ o sistema não consegue sustentar essa condição — e a falha se combina com a
 item 1: conta falsa de nutricionista + vínculo sem aceite = acesso a dados de
 saúde de terceiros.
 
-### Correção proposta
+Correção proposta
 
 Não existe API pública do CFN/CRN para consulta automatizada, então a mitigação
 realista é **aprovação manual pelo administrador**: o cadastro de nutricionista
@@ -122,7 +122,7 @@ condicionar o login do nutricionista à liberação.
 
 ---
 
-## 3. Outras observações de tratamento de dados
+3. Outras observações de tratamento de dados
 
 - **Retenção.** Não há política de expurgo. Registros de glicemia, alimentação e
   emocional ficam indefinidamente. O art. 16 pede eliminação após o fim da
@@ -141,7 +141,7 @@ condicionar o login do nutricionista à liberação.
 
 ---
 
-## Como isso entra na monografia
+Como isso entra na monografia
 
 Sugestão de encaixe, na seção de limitações:
 

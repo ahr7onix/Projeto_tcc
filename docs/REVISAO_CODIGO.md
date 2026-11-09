@@ -7,9 +7,9 @@ Legenda: 🔴 Crítico · 🟡 Aviso · 🟢 Sugestão
 
 ---
 
-## Segurança
+Segurança
 
-### 🔴 `node_modules` versionado no Git (3.778 arquivos) *(corrigido)*
+🔴 `node_modules` versionado no Git (3.778 arquivos) *(corrigido)*
 
 **Local:** `web/web_nutricionista/node_modules/`, `web/Api/nutricare-api/node_modules/`
 
@@ -28,7 +28,7 @@ disco; só saíram do controle de versão. A contagem de arquivos rastreados cai
 
 ---
 
-### 🔴 Arquivos `.env` versionados *(corrigido)*
+🔴 Arquivos `.env` versionados *(corrigido)*
 
 **Local:** `web/web_nutricionista/.env`, `web/web_nutricionista/.env.backup`,
 `web/Api/nutricare-api/.env`
@@ -45,7 +45,7 @@ nenhuma alteração nele foi necessária. Os três `.env.example` continuam vers
 
 ---
 
-### 🟡 O histórico do Git não foi reescrito *(decisão consciente)*
+🟡 O histórico do Git não foi reescrito *(decisão consciente)*
 
 Os `node_modules` e os `.env` saíram do estado atual, mas **continuam nos commits
 antigos**. Limpar isso exigiria `git filter-repo` ou BFG seguido de `push --force`,
@@ -60,7 +60,7 @@ depois considerar a reescrita.
 
 ---
 
-### 🔴 Cadastro de nutricionista não criava o perfil *(corrigido nesta rodada)*
+🔴 Cadastro de nutricionista não criava o perfil *(corrigido nesta rodada)*
 
 **Local:** `apps/api/src/modules/auth/auth.service.ts`
 
@@ -74,7 +74,7 @@ tornando o CRN opcional no cadastro.
 
 ---
 
-### 🟡 Vínculo sem consentimento do paciente *(registrado — correção fica como trabalho futuro)*
+🟡 Vínculo sem consentimento do paciente *(registrado — correção fica como trabalho futuro)*
 
 **Local:** `apps/api/src/modules/vinculos/vinculos.service.ts`
 
@@ -92,7 +92,7 @@ limitações da monografia. Enquanto não for implementada, vale a regra já em 
 
 ---
 
-### 🟡 CRN não é validado
+🟡 CRN não é validado
 
 **Local:** `apps/api/src/modules/auth/dto/cadastro.dto.ts`
 
@@ -104,7 +104,7 @@ que agora existe. Registrado junto com o item anterior em
 
 ---
 
-### 🟢 SQL: interpolação presente, mas sem risco de injeção
+🟢 SQL: interpolação presente, mas sem risco de injeção
 
 A varredura apontou vários `${}` dentro de queries. Auditando um a um, todos
 interpolam **identificadores construídos internamente** (nomes de coluna escolhidos
@@ -126,7 +126,7 @@ explícita.
 
 ---
 
-### 🟢 Proteção contra CSV injection já aplicada
+🟢 Proteção contra CSV injection já aplicada
 
 `relatorios.service.ts` prefixa com aspa simples células que começam com `=`, `+`,
 `-` ou `@`, impedindo que uma observação do paciente vire fórmula executável no
@@ -134,15 +134,15 @@ Excel. Bom detalhe, frequentemente esquecido.
 
 ---
 
-## Performance
+Performance
 
-### 🟢 N+1 evitado na listagem de planos
+🟢 N+1 evitado na listagem de planos
 
 `planos.service.ts` carrega todas as refeições em uma query com
 `WHERE id_plano = ANY($1::bigint[])` e agrupa em memória, em vez de uma query por
 plano.
 
-### 🟡 Alertas calculados em memória
+🟡 Alertas calculados em memória
 
 **Local:** `apps/api/src/modules/alertas/alertas.service.ts`
 
@@ -153,7 +153,7 @@ pacientes é irrelevante; em escala, filtrar no banco (via coluna materializada 
 Para o porte da ADJ Birigui, a solução atual é adequada — otimizar agora seria
 prematuro.
 
-### 🟡 Polling em vez de WebSocket
+🟡 Polling em vez de WebSocket
 
 As mensagens recarregam a cada 15 s (conversa) e 30 s (lista). Simples de defender
 na banca, mas gera requisições constantes mesmo sem novidade. WebSocket (Socket.IO)
@@ -161,9 +161,9 @@ resolveria, ao custo de infraestrutura maior.
 
 ---
 
-## Clean code
+Clean code
 
-### 🟡 API duplicada e sem uso aparente *(corrigido — removida)*
+🟡 API duplicada e sem uso aparente *(corrigido — removida)*
 
 **Local:** `web/Api/nutricare-api/server.js` (557 linhas)
 
@@ -178,14 +178,14 @@ porta 3333, enquanto o painel web sempre apontou para `http://localhost:3000`
 **Correção aplicada:** `git rm -r web/Api`. O código continua recuperável pelo
 histórico do Git, se algum dia fizer falta.
 
-### 🟢 `console.log` em produção
+🟢 `console.log` em produção
 
 **Local:** `apps/api/src/main.ts:27`
 
 Único caso, no boot, com `eslint-disable` explícito. Aceitável. Idealmente usaria o
 `Logger` do Nest, como já feito em `push.service.ts`.
 
-### 🟢 Uso de `any` restrito
+🟢 Uso de `any` restrito
 
 Apenas dois casos, ambos em `catch` — situação em que o TypeScript realmente não
 garante o tipo. O correto seria `catch (error: unknown)` com verificação, mas o
@@ -193,22 +193,22 @@ impacto é baixo.
 
 ---
 
-## Arquitetura
+Arquitetura
 
-### 🟢 Separação de responsabilidades consistente
+🟢 Separação de responsabilidades consistente
 
 Controller (HTTP) → Service (regra de negócio) → Pool (dados). Guards centralizam
 autorização em vez de espalhar `if (role === ...)` pelos serviços. Módulos coesos e
 com fronteiras claras.
 
-### 🟢 Regra de negócio única para glicemia
+🟢 Regra de negócio única para glicemia
 
 `common/glicemia/glicemia.ts` é a única fonte de classificação, consumida por
 registros, alertas e relatórios. Mudar uma faixa de referência altera o sistema
 inteiro de forma coerente — importante num sistema de saúde, onde divergência entre
 telas seria grave.
 
-### 🔴 Docker subia sem administrador *(corrigido)*
+🔴 Docker subia sem administrador *(corrigido)*
 
 **Local:** `docker-compose.yml`
 
@@ -227,14 +227,14 @@ aplicar o seed à mão.
 
 ---
 
-### 🟡 Sem controle de versão de migrations
+🟡 Sem controle de versão de migrations
 
 As migrations são arquivos soltos aplicados manualmente. Não há registro do que já
 rodou, então reaplicar é responsabilidade de quem executa. Ferramentas como
 `node-pg-migrate` ou `Flyway` resolveriam. Para o TCC, documentar a ordem no README
 (feito) é suficiente.
 
-### 🟡 Cobertura de testes concentrada *(ampliada nesta rodada)*
+🟡 Cobertura de testes concentrada *(ampliada nesta rodada)*
 
 Eram 104 testes, cobrindo classificação de glicemia, `RolesGuard`,
 `VinculosService`, os cálculos nutricionais e os cinco módulos novos (alimentos,
@@ -267,7 +267,7 @@ que resta neste item.
 
 ---
 
-## Resumo
+Resumo
 
 | Severidade | Quantidade | Situação |
 |---|---|---|

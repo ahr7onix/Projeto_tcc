@@ -16,13 +16,13 @@ documento. No fim há o campo de assinatura.
 
 ---
 
-## 1. Faixas de referência de glicemia
+1. Faixas de referência de glicemia
 
 O sistema classifica cada medição do paciente em cinco categorias e usa essa
 classificação em três lugares: no retorno imediato ao registrar a medição, nos
 alertas ao nutricionista e nos relatórios (percentual de tempo na faixa).
 
-### 1.1 Limites fixos (valem em qualquer momento do dia)
+1.1 Limites fixos (valem em qualquer momento do dia)
 
 | Situação | Regra aplicada | Classificação | Confere? |
 |---|---|---|---|
@@ -30,7 +30,7 @@ alertas ao nutricionista e nos relatórios (percentual de tempo na faixa).
 | Hipoglicemia | valor **< 70** mg/dL | `hipoglicemia` (atenção) | |
 | Hiperglicemia grave | valor **> 250** mg/dL | `hiperglicemia_grave` (crítico) | |
 
-### 1.2 Faixa-alvo por momento da medição
+1.2 Faixa-alvo por momento da medição
 
 Fora desses intervalos (e dentro dos limites fixos acima), a medição é
 classificada como `hiperglicemia` (acima do máximo) ou `hipoglicemia` (abaixo do
@@ -57,7 +57,7 @@ Não há distinção por tipo de diabetes (tipo 1, tipo 2, gestacional), por ida
 ou por gestação. Se for necessário diferenciar, indiquem quais grupos e quais
 faixas.
 
-### 1.3 Mensagens exibidas ao paciente
+1.3 Mensagens exibidas ao paciente
 
 | Classificação | Texto que o paciente lê | Confere? / correção |
 |---|---|---|
@@ -69,7 +69,7 @@ faixas.
 
 ---
 
-## 2. Tabela de alimentos de exemplo (36 itens)
+2. Tabela de alimentos de exemplo (36 itens)
 
 > **Atualização de 29/10/2026:** no ambiente publicado estes 36 itens foram
 > trocados pela TACO 4ª edição (578 alimentos) e desativados. Continuam valendo
@@ -85,7 +85,7 @@ Os valores foram levantados a partir de tabelas de composição de uso comum, ma
 exatamente isso que pedimos: apontar os que estão errados, ou indicar qual
 tabela oficial (TACO, IBGE/POF, USDA ou outra) deve ser adotada como fonte.
 
-### Cereais, pães e tubérculos
+Cereais, pães e tubérculos
 
 | # | Alimento | Medida caseira | g | kcal | Carb (g) | Prot (g) | Lip (g) | Fibras (g) | Confere? |
 |---|---|---|---|---|---|---|---|---|---|
@@ -100,7 +100,7 @@ tabela oficial (TACO, IBGE/POF, USDA ou outra) deve ser adotada como fonte.
 | 9 | Batata doce cozida | 1 pedaço médio | 80 | 77 | 18,4 | 0,6 | 0,1 | 2,2 | |
 | 10 | Mandioca cozida | 1 pedaço médio | 80 | 125 | 30,1 | 0,6 | 0,3 | 1,6 | |
 
-### Leguminosas
+Leguminosas
 
 | # | Alimento | Medida caseira | g | kcal | Carb (g) | Prot (g) | Lip (g) | Fibras (g) | Confere? |
 |---|---|---|---|---|---|---|---|---|---|
@@ -109,7 +109,7 @@ tabela oficial (TACO, IBGE/POF, USDA ou outra) deve ser adotada como fonte.
 | 13 | Lentilha cozida | 1 concha média | 80 | 93 | 16,3 | 6,3 | 0,5 | 7,9 | |
 | 14 | Grão-de-bico cozido | 1 concha média | 80 | 130 | 21,2 | 8,4 | 2,1 | 7,6 | |
 
-### Carnes, pescados e ovos
+Carnes, pescados e ovos
 
 | # | Alimento | Medida caseira | g | kcal | Carb (g) | Prot (g) | Lip (g) | Fibras (g) | Confere? |
 |---|---|---|---|---|---|---|---|---|---|
@@ -118,7 +118,7 @@ tabela oficial (TACO, IBGE/POF, USDA ou outra) deve ser adotada como fonte.
 | 17 | Filé de tilápia grelhado | 1 filé médio | 100 | 96 | 0,0 | 20,0 | 1,7 | 0,0 | |
 | 18 | Ovo de galinha cozido | 1 unidade | 50 | 146 | 0,6 | 13,3 | 9,5 | 0,0 | |
 
-### Leite e derivados
+Leite e derivados
 
 | # | Alimento | Medida caseira | g | kcal | Carb (g) | Prot (g) | Lip (g) | Fibras (g) | Confere? |
 |---|---|---|---|---|---|---|---|---|---|
@@ -127,7 +127,7 @@ tabela oficial (TACO, IBGE/POF, USDA ou outra) deve ser adotada como fonte.
 | 21 | Iogurte natural integral | 1 pote | 170 | 61 | 4,7 | 3,5 | 3,3 | 0,0 | |
 | 22 | Queijo minas frescal | 1 fatia | 30 | 264 | 3,2 | 17,4 | 20,2 | 0,0 | |
 
-### Frutas
+Frutas
 
 | # | Alimento | Medida caseira | g | kcal | Carb (g) | Prot (g) | Lip (g) | Fibras (g) | Confere? |
 |---|---|---|---|---|---|---|---|---|---|
@@ -138,7 +138,7 @@ tabela oficial (TACO, IBGE/POF, USDA ou outra) deve ser adotada como fonte.
 | 27 | Melancia | 1 fatia média | 200 | 33 | 8,1 | 0,9 | 0,0 | 0,1 | |
 | 28 | Abacate | 1 colher de sopa | 30 | 96 | 6,0 | 1,2 | 8,4 | 6,3 | |
 
-### Hortaliças
+Hortaliças
 
 | # | Alimento | Medida caseira | g | kcal | Carb (g) | Prot (g) | Lip (g) | Fibras (g) | Confere? |
 |---|---|---|---|---|---|---|---|---|---|
@@ -148,7 +148,7 @@ tabela oficial (TACO, IBGE/POF, USDA ou outra) deve ser adotada como fonte.
 | 32 | Brócolis cozido | 1 colher de sopa | 25 | 25 | 4,4 | 2,1 | 0,5 | 3,4 | |
 | 33 | Abóbora cozida | 1 colher de sopa | 30 | 48 | 12,0 | 0,9 | 0,1 | 2,5 | |
 
-### Óleos, oleaginosas e açúcares
+Óleos, oleaginosas e açúcares
 
 | # | Alimento | Medida caseira | g | kcal | Carb (g) | Prot (g) | Lip (g) | Fibras (g) | Confere? |
 |---|---|---|---|---|---|---|---|---|---|
@@ -156,7 +156,7 @@ tabela oficial (TACO, IBGE/POF, USDA ou outra) deve ser adotada como fonte.
 | 35 | Castanha-do-pará | 1 unidade | 5 | 643 | 15,1 | 14,5 | 63,5 | 7,9 | |
 | 36 | Açúcar refinado | 1 colher de chá | 5 | 387 | 99,5 | 0,0 | 0,0 | 0,0 | |
 
-### Perguntas abertas sobre esta tabela
+Perguntas abertas sobre esta tabela
 
 1. **Fonte a adotar.** Qual tabela oficial deve substituir estes valores?
    Cada alimento guarda a própria fonte, e o rótulo aparece na tela — então dá
@@ -172,13 +172,13 @@ tabela oficial (TACO, IBGE/POF, USDA ou outra) deve ser adotada como fonte.
 
 ---
 
-## 3. Fórmulas de cálculo
+3. Fórmulas de cálculo
 
 Estas fórmulas geram a **sugestão** apresentada ao nutricionista na tela de
 plano alimentar. A prescrição continua sendo dele — o sistema não fecha nada
 sozinho.
 
-### 3.1 Taxa metabólica basal
+3.1 Taxa metabólica basal
 
 | Fórmula | Expressão usada | Confere? |
 |---|---|---|
@@ -188,7 +188,7 @@ sozinho.
 O padrão do sistema é Mifflin-St Jeor. **Confirmem se é a escolha adequada** —
 ou se para o público com diabetes há outra recomendação.
 
-### 3.2 Fatores de atividade física
+3.2 Fatores de atividade física
 
 O gasto energético total é a TMB multiplicada por:
 
@@ -200,7 +200,7 @@ O gasto energético total é a TMB multiplicada por:
 | `intenso` | Intenso (6 a 7 dias por semana) | 1,725 | |
 | `muito_intenso` | Muito intenso (treino pesado ou trabalho físico) | 1,90 | |
 
-### 3.3 Macronutrientes
+3.3 Macronutrientes
 
 | Item | Valor no sistema | Confere? |
 |---|---|---|
@@ -214,7 +214,7 @@ nutricionista; o sistema só exige que os três percentuais somem 100.
 **Confirmem se 50/20/30 é um ponto de partida adequado** para o público
 atendido, ou indiquem outro.
 
-### 3.4 IMC
+3.4 IMC
 
 IMC = peso(kg) ÷ altura(m)², apresentado com duas casas decimais.
 
@@ -234,7 +234,7 @@ ser corrigido antes do uso real e, em caso positivo, quais referências usar.
 
 ---
 
-## 4. Resultado da conferência
+4. Resultado da conferência
 
 | Bloco | Situação | Observações |
 |---|---|---|
@@ -261,7 +261,7 @@ _______________________________________________________________________
 
 ---
 
-## Onde cada valor fica no sistema (para quem for aplicar as correções)
+Onde cada valor fica no sistema (para quem for aplicar as correções)
 
 | Bloco | Arquivo |
 |---|---|

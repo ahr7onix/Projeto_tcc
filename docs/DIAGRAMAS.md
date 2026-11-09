@@ -5,7 +5,7 @@ para exportar como imagem e inserir na monografia.
 
 ---
 
-## 1. Casos de uso
+1. Casos de uso
 
 ```mermaid
 flowchart LR
@@ -56,7 +56,7 @@ flowchart LR
 
 ---
 
-## 2. Diagrama de classes
+2. Diagrama de classes
 
 ```mermaid
 classDiagram
@@ -181,7 +181,7 @@ classDiagram
 
 ---
 
-## 3. Modelo entidade-relacionamento
+3. Modelo entidade-relacionamento
 
 ```mermaid
 erDiagram
@@ -295,7 +295,7 @@ erDiagram
 
 ---
 
-## 4. Diagrama de sequência — Criar plano alimentar
+4. Diagrama de sequência — Criar plano alimentar
 
 ```mermaid
 sequenceDiagram
@@ -332,7 +332,7 @@ sequenceDiagram
 
 ---
 
-## 5. Diagrama de sequência — Registro de glicemia com alerta
+5. Diagrama de sequência — Registro de glicemia com alerta
 
 ```mermaid
 sequenceDiagram
@@ -360,7 +360,7 @@ sequenceDiagram
 
 ---
 
-## 6. Diagrama de containers
+6. Diagrama de containers
 
 ```mermaid
 flowchart TB
@@ -405,7 +405,7 @@ flowchart TB
 
 ---
 
-## 7. Diagrama de componentes da API
+7. Diagrama de componentes da API
 
 ```mermaid
 flowchart LR

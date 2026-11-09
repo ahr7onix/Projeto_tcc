@@ -15,7 +15,7 @@ precisamos de vocês para concluir.
 
 ---
 
-## 1. Em resumo
+1. Em resumo
 
 **Os dez requisitos do briefing de vocês têm hoje tela, servidor e banco de
 dados.** Em julho, só um estava completo.
@@ -33,7 +33,7 @@ fictícios**.
 
 ---
 
-## 2. O que já funciona hoje
+2. O que já funciona hoje
 
 Tudo o que está nesta lista foi usado do começo ao fim e conferido.
 
@@ -79,7 +79,7 @@ Tudo o que está nesta lista foi usado do começo ao fim e conferido.
 
 ---
 
-## 3. Requisito por requisito
+3. Requisito por requisito
 
 | Nº | Requisito do briefing | Situação |
 |---|---|---|
@@ -111,7 +111,7 @@ de vocês, dá para mudar.
 
 ---
 
-## 4. O que precisamos de vocês
+4. O que precisamos de vocês
 
 1. **Qual tabela nutricional usar** (TACO, TBCA, IBGE ou outra). Se vier em
    planilha, a importação já está pronta.
@@ -130,7 +130,7 @@ educativos a nutricionista publica direto pelo painel, sem depender de nós.
 
 ---
 
-## 5. Cuidados com os dados dos pacientes
+5. Cuidados com os dados dos pacientes
 
 Os dois pontos de LGPD que estavam abertos em julho foram resolvidos:
 
@@ -154,7 +154,7 @@ senhas.
 
 ---
 
-## 6. Trabalho feito nesta etapa
+6. Trabalho feito nesta etapa
 
 - Importação da tabela de alimentos por planilha, e busca que entende os nomes da
   TACO ("Arroz, integral, cozido")
@@ -168,7 +168,7 @@ senhas.
 
 ---
 
-## 7. Próximos passos
+7. Próximos passos
 
 Já feito em outubro de 2026: o sistema está no ar com envio de e-mail, o
 aplicativo para Android (versão 1.0.0) se instala direto no celular e foi
@@ -182,7 +182,7 @@ entrada com a conta Google), e a tabela TACO está carregada.
 
 ---
 
-## 8. Conclusão
+8. Conclusão
 
 O sistema **cumpre o escopo do briefing** e está pronto para ser demonstrado
 assim que o ambiente voltar ao ar. O que separa a demonstração do uso real são as

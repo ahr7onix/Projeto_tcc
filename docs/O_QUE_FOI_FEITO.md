@@ -14,7 +14,7 @@ estado atual da branch `main` (`1ecd4ac`, 25/07/2026).
 
 ---
 
-## 1. Ponto de partida
+1. Ponto de partida
 
 O que existia antes: cadastro/login (JWT + Google), onboarding do paciente,
 registro de glicemia e de refeição, listagem básica de pacientes no painel web.
@@ -27,7 +27,7 @@ duplicada em Express.
 
 ---
 
-## 2. Banco de dados
+2. Banco de dados
 
 Seis migrations novas, todas já incorporadas ao `database/schema.sql` (quem
 instala do zero não precisa aplicá-las):
@@ -71,9 +71,9 @@ Também foram criados:
 
 ---
 
-## 3. API (NestJS — `apps/api`)
+3. API (NestJS — `apps/api`)
 
-### Autorização por perfil
+Autorização por perfil
 
 - `common/guards/roles.guard.ts` e `common/decorators/roles.decorator.ts`:
   o controle de acesso deixou de ser `if (role === ...)` espalhado pelos
@@ -95,7 +95,7 @@ Também foram criados:
   continua sendo do nutricionista — está escrito no próprio arquivo e devolvido
   em todas as respostas da API.
 
-### Módulos novos
+Módulos novos
 
 | Módulo | Requisito | O que faz |
 |---|---|---|
@@ -130,7 +130,7 @@ macronutrientes por refeição e do plano inteiro, informando quantos itens
 ficaram fora da soma por serem texto livre — o total nunca é apresentado como
 completo quando não é.
 
-### Endpoints acrescentados
+Endpoints acrescentados
 
 ```
 GET/POST/DELETE  /vinculos                    vínculo nutricionista-paciente
@@ -165,7 +165,7 @@ GET              /notificacoes/nao-lidas      contador
 PATCH            /notificacoes/ler-todas      marcar tudo como lido
 ```
 
-### Testes
+Testes
 
 `jest.config.js` configurado e **104 testes** cobrindo as regras de maior
 impacto:
@@ -191,7 +191,7 @@ cd apps/api && npm test
 
 ---
 
-## 4. Painel web (`apps/web`)
+4. Painel web (`apps/web`)
 
 Telas novas:
 
@@ -209,7 +209,7 @@ Camada de acesso à API separada em `src/lib/` (`planos`, `relatorios`,
 
 ---
 
-## 5. App mobile (`apps/mobile`)
+5. App mobile (`apps/mobile`)
 
 - **Plano alimentar real** vindo da API, no lugar do conteúdo fixo
 - **Mensagens** — lista de conversas e tela de conversa
@@ -220,7 +220,7 @@ Camada de acesso à API separada em `src/lib/` (`planos`, `relatorios`,
 
 ---
 
-## 6. Defeitos encontrados ao rodar o sistema de ponta a ponta
+6. Defeitos encontrados ao rodar o sistema de ponta a ponta
 
 Depois de tudo construído, o sistema foi subido de fato (banco, API, painel e
 app) e usado como um usuário usaria. Oito defeitos apareceram — nenhum deles
@@ -279,7 +279,7 @@ vazio.
 
 ---
 
-## 7. Limpeza do repositório
+7. Limpeza do repositório
 
 - **`node_modules` e `.env` fora do versionamento** — de 3.986 para 205 arquivos
   rastreados. A causa era o `sincronizar.ps1`, que roda `git add .` + commit +
@@ -300,7 +300,7 @@ Client ID (público por natureza), a decisão foi não reescrever.
 
 ---
 
-## 8. Documentação criada
+8. Documentação criada
 
 | Arquivo | Conteúdo |
 |---|---|
@@ -311,7 +311,7 @@ Client ID (público por natureza), a decisão foi não reescrever.
 
 ---
 
-## 9. Ambiente nesta máquina
+9. Ambiente nesta máquina
 
 Não há Docker nem `psql.exe` instalados aqui, apesar de o `docker-compose.yml` e
 o `iniciar.bat` do repositório assumirem Docker. Para rodar o sistema foi
@@ -327,7 +327,7 @@ Para rodar de novo, subir o Postgres portátil **antes** da API — não tentar
 
 ---
 
-## 10. Requisitos atendidos
+10. Requisitos atendidos
 
 > **Atenção:** a numeração RF01–RF14 abaixo é a lista **interna** do projeto e
 > **não corresponde** aos RF01–RF10 do briefing da equipe de Nutrição. Pela
@@ -358,7 +358,7 @@ histórico) e RN10 (acesso separado por perfil).
 
 ---
 
-## 11. O que continua em aberto
+11. O que continua em aberto
 
 **O briefing de Nutrição está atendido no banco e na API, mas ainda não nas
 telas.** Os oito módulos novos existem e respondem, com testes nos cálculos, e é
@@ -410,7 +410,7 @@ chance de questionar:
 
 ---
 
-## 12. Commits
+12. Commits
 
 ```
 1ecd4ac  fix(mobile): liga a tela de Registros na API

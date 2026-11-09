@@ -8,7 +8,7 @@ e notificações. Não cria alimentos: usa os da TACO.
 Tudo é inventado. Os textos de conteúdos e receitas e os valores por porção não passaram pela
 Nutrição.
 
-## Logins
+Logins
 
 Senha de todos: `Senha123!` (o administrador usa a senha do `README.md` da raiz).
 
@@ -28,7 +28,7 @@ Senha de todos: `Senha123!` (o administrador usa a senha do `README.md` da raiz)
 O e-mail dos outros pacientes segue o padrão `nome.sobrenome@demo.nutricare.local`; a lista está
 no início do script.
 
-## Como rodar
+Como rodar
 
 Use um banco só para isso: desfazer é apagar o banco. Os exemplos usam o contêiner `tcc-pg-dev`
 (porta 5440, usuário, senha e base `tcc`).
@@ -54,7 +54,7 @@ Use um banco só para isso: desfazer é apagar o banco. Os exemplos usam o cont�
    No Windows, não mande o arquivo pela entrada do `psql` (`Get-Content ... | psql`): o PowerShell
    estraga os acentos.
 
-## Como ver no painel
+Como ver no painel
 
 Em dois terminais, na raiz do repositório:
 
@@ -69,13 +69,13 @@ $env:VITE_API_URL='http://127.0.0.1:3010'; cd apps/web; npx vite --port 5174
 Depois abra `http://localhost:5174`. Use `127.0.0.1` no endereço do banco: `localhost` pode
 resolver para IPv6 e estourar o tempo de conexão.
 
-## Para atualizar antes de apresentar
+Para atualizar antes de apresentar
 
 Repita o passo 3. As datas são relativas ao dia em que o script roda, então os dados voltam a
 ficar recentes. Cada execução apaga e recria as contas `@demo.nutricare.local` e refaz os registros
 de João e Maria e as notificações da Camila: o que foi digitado nessas contas se perde.
 
-## Site publicado
+Site publicado
 
 O script foi feito para banco local. Em site aberto, todas essas contas ficariam com uma senha
 conhecida, e não há como desfazer sem apagar o banco. Não rode no banco publicado sem combinar

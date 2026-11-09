@@ -6,7 +6,7 @@ possível repetir a configuração em outra conta ou quando o sistema for public
 
 ---
 
-## Como funciona (resumo)
+Como funciona (resumo)
 
 1. O usuário clica no botão do Google no painel.
 2. O Google abre uma janela, o usuário escolhe a conta, e o Google devolve um
@@ -27,7 +27,7 @@ explicando isso — o resto do sistema continua funcionando normalmente.
 
 ---
 
-## O que está configurado hoje
+O que está configurado hoje
 
 Projeto no Google Cloud: `my-project-1572287916923`.
 
@@ -55,7 +55,7 @@ ser divulgado é a "chave secreta do cliente", que este modo de login nem usa.
 > **Não** é preciso preencher "URIs de redirecionamento autorizados". O painel usa
 > o modo *popup* do Google Identity Services, que não redireciona.
 
-### Quem consegue entrar
+Quem consegue entrar
 
 Na tela **Público-alvo** (Google Auth Platform), o aplicativo está com:
 
@@ -80,7 +80,7 @@ teste é suficiente.
 
 ---
 
-## Quando o sistema for publicado
+Quando o sistema for publicado
 
 1. Console do Google Cloud > **Credenciais** > abrir o cliente
    "NutriCare - Painel Web".
@@ -90,7 +90,7 @@ teste é suficiente.
 3. Salvar. A alteração leva de alguns segundos a alguns minutos para valer.
 4. Publicar o app na tela **Público-alvo**, ou manter a lista de usuários de teste.
 
-### Se for preciso criar tudo do zero em outra conta
+Se for preciso criar tudo do zero em outra conta
 
 1. Console do Google Cloud > **Criar projeto**.
 2. **Google Auth Platform > Público-alvo**: tipo **Externo**, preencher nome do
@@ -100,7 +100,7 @@ teste é suficiente.
 5. Copiar o "ID do cliente" para os dois `.env` da tabela lá em cima.
 6. Adicionar os e-mails em **Usuários de teste**.
 
-### Segunda cópia (`render-tcc.yaml`)
+Segunda cópia (`render-tcc.yaml`)
 
 A segunda cópia publicada (ver [PUBLICAR.md](PUBLICAR.md), "Segunda cópia") fica
 em outra conta e tem cliente próprio, criado do zero como acima. O cliente de
@@ -127,7 +127,7 @@ nessa cópia, adicione o e-mail no projeto `nutricare-tcc`.
 
 ---
 
-## Como testar
+Como testar
 
 1. Subir a API e o painel.
 2. Abrir <http://localhost:5173/login> e clicar no botão do Google.
@@ -137,7 +137,7 @@ Resultado esperado: entra no painel. No painel web, login e cadastro usam
 `POST /auth/google/nutricionista`: conta nova nasce como **nutricionista**.
 Pacientes continuam no app mobile (`/auth/google/paciente`).
 
-### Erros comuns
+Erros comuns
 
 | O que aparece | Causa | Solução |
 |---|---|---|
@@ -152,7 +152,7 @@ quanto o Vite leem essas variáveis só na inicialização.
 
 ---
 
-## No aplicativo do celular
+No aplicativo do celular
 
 O botão **Continuar com Google** envia o `id_token` para
 `POST /auth/google/paciente`. O jeito de pegar o token depende de onde o app roda:
@@ -165,7 +165,7 @@ O botão **Continuar com Google** envia o `id_token` para
 
 Nos três casos o token sai em nome do Client ID **web**, o mesmo que a API confere.
 
-### APK (Android)
+APK (Android)
 
 O cliente Android só serve para o Google reconhecer o app; o ID dele não vai no
 código. Ele tem que estar no mesmo projeto do Client ID web. Na segunda cópia
@@ -186,7 +186,7 @@ O Client ID web do APK fica no `apps/mobile/eas.json`
 Se o app mostrar "O Google não reconheceu este aplicativo", é o `DEVELOPER_ERROR`
 do Google: falta o cliente Android, ou o pacote ou o SHA-1 não batem.
 
-### Variáveis no mobile
+Variáveis no mobile
 
 Arquivo `apps/mobile/.env`:
 
@@ -204,7 +204,7 @@ EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=
 
 Sem o Client ID web, o botão avisa que o Google não está configurado.
 
-### Origens e redirect no Google Cloud
+Origens e redirect no Google Cloud
 
 No cliente **Aplicativo da Web** ("NutriCare - Painel Web"), inclua:
 
@@ -229,7 +229,7 @@ Depois de salvar as origens, reinicie o Expo (`npx expo start --clear`).
 
 Na lista de **Usuários de teste**, use a mesma conta Google que vai entrar no app.
 
-### Limitações
+Limitações
 
 - No **Expo Go**, o fluxo OAuth funciona via `expo-auth-session`.
 - No **APK**, sem o cliente Android no Google Cloud o login com Google falha.

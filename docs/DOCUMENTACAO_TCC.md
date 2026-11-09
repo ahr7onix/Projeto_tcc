@@ -14,7 +14,7 @@
 
 ---
 
-## SUMÁRIO
+SUMÁRIO
 
 1. Introdução
 2. Requisitos do sistema
@@ -33,7 +33,7 @@
 
 ---
 
-### Como ler este documento
+Como ler este documento
 
 Tudo o que está descrito aqui foi conferido no código-fonte, no banco de dados ou nos arquivos
 de configuração do projeto, na versão de 30 de agosto de 2026. Quando uma informação não pôde
@@ -48,7 +48,7 @@ no estado atual, não contém nenhum arquivo de imagem. A lista completa está n
 
 # 1 INTRODUÇÃO
 
-## 1.1 Contextualização
+1.1 Contextualização
 
 O diabetes é uma condição crônica que exige acompanhamento contínuo. Quem convive com ela
 precisa medir a glicemia várias vezes ao dia, anotar o que comeu, controlar o peso e seguir
@@ -68,7 +68,7 @@ o plano alimentar; e um servidor que guarda os dados e aplica as regras.
 O projeto foi desenvolvido em parceria com o curso de Nutrição da instituição, com aplicação
 prevista na ADJ Birigui.
 
-## 1.2 Problema
+1.2 Problema
 
 O acompanhamento nutricional de pessoas com diabetes esbarra em três dificuldades práticas:
 
@@ -88,7 +88,7 @@ O problema que este trabalho endereça, portanto, é: **como aproximar o registr
 paciente do acompanhamento feito pelo profissional, de forma que os dois lados enxerguem a
 mesma informação, no mesmo momento?**
 
-## 1.3 Justificativa
+1.3 Justificativa
 
 Existem aplicativos de registro de glicemia e existem sistemas de prontuário para clínicas.
 O que costuma faltar é a ligação entre os dois: o dado que o paciente registra raramente chega
@@ -103,13 +103,13 @@ sistema com três frentes — aplicativo móvel, aplicação web e serviço de r
 compartilhando um mesmo banco de dados e uma mesma API, com controle de acesso por perfil e
 tratamento de dados de saúde, que a legislação classifica como sensíveis.
 
-## 1.4 Objetivo geral
+1.4 Objetivo geral
 
 Desenvolver um sistema que integre o registro diário feito pelo paciente com diabetes ao
 acompanhamento realizado pelo nutricionista, permitindo que ambos trabalhem sobre a mesma
 informação.
 
-## 1.5 Objetivos específicos
+1.5 Objetivos específicos
 
 1. Permitir que o paciente registre glicemia, refeições, medidas corporais, medicamentos,
    restrições alimentares e estado emocional pelo celular.
@@ -128,7 +128,7 @@ informação.
 10. Gerar relatórios do paciente, exportáveis em planilha e em PDF.
 11. Garantir que cada nutricionista acesse apenas os dados dos pacientes sob seus cuidados.
 
-## 1.6 Público-alvo
+1.6 Público-alvo
 
 **Pacientes com diabetes**, de qualquer tipo, que façam acompanhamento nutricional. O sistema
 não pressupõe familiaridade com tecnologia: o aplicativo tem um modo de interface simplificada,
@@ -142,7 +142,7 @@ sistema.
 
 O cenário de aplicação previsto é a ADJ Birigui, em parceria com o curso de Nutrição.
 
-## 1.7 Escopo do sistema
+1.7 Escopo do sistema
 
 **Está no escopo:**
 
@@ -168,7 +168,7 @@ O cenário de aplicação previsto é a ADJ Birigui, em parceria com o curso de 
 - Uso do sistema com pacientes reais antes da validação clínica dos parâmetros
   (ver seção 1.8).
 
-## 1.8 Limitações do projeto
+1.8 Limitações do projeto
 
 Estas limitações foram verificadas no código e valem para a versão descrita neste documento.
 
@@ -218,7 +218,7 @@ simples, mas expõe o token caso alguma falha de injeção de script apareça. A
 
 # 2 REQUISITOS DO SISTEMA
 
-## 2.1 Requisitos funcionais
+2.1 Requisitos funcionais
 
 A situação de cada requisito foi conferida no código. "Implementado" significa que existe rota
 na API, tela no aplicativo ou no painel, e persistência no banco.
@@ -260,7 +260,7 @@ na API, tela no aplicativo ou no painel, e persistência no banco.
 | RF33 | Cadastro de paciente pelo nutricionista, com link de criar senha enviado ao paciente | Implementado |
 | RF34 | Aprovação do nutricionista pela administração e cadastro de nutricionista pelo administrador | Implementado |
 
-### Comparação com o briefing da equipe de Nutrição
+Comparação com o briefing da equipe de Nutrição
 
 O briefing recebido do curso de Nutrição trazia dez requisitos. A situação atual de cada um:
 
@@ -281,7 +281,7 @@ Os dez requisitos estão atendidos no software. Quatro deles (1, 2, 3 e 5) ainda
 validação clínica da equipe de Nutrição — a tabela adotada, a fórmula, os percentuais e as faixas
 de glicemia — antes de qualquer uso com paciente real.
 
-## 2.2 Requisitos não funcionais
+2.2 Requisitos não funcionais
 
 | Código | Requisito | Como é atendido |
 |---|---|---|
@@ -300,7 +300,7 @@ de glicemia — antes de qualquer uso com paciente real.
 | RNF13 | O código precisa ter cobertura automatizada na camada de regras | 282 testes automatizados na API |
 | RNF14 | Adivinhar senha por repetição não pode ser viável | Limite de 5 tentativas por minuto nas rotas de autenticação, contadas por IP e e-mail |
 
-## 2.3 Regras de negócio
+2.3 Regras de negócio
 
 | Código | Regra | Onde é aplicada |
 |---|---|---|
@@ -324,7 +324,7 @@ de glicemia — antes de qualquer uso com paciente real.
 | RN18 | Nutricionista que se cadastra sozinho só entra no painel depois que a administração aprova | `auth.service.ts` + coluna `nutricionista.aprovado_em` |
 | RN19 | O link de criar ou redefinir senha só vai para o e-mail do dono da conta; nunca volta na resposta da API fora de desenvolvimento | `ContasService` e `expoeLinkDeSenha` (`RESET_LINK_NA_RESPOSTA`) |
 
-## 2.4 Tipos de usuário e permissões
+2.4 Tipos de usuário e permissões
 
 O sistema tem três perfis, gravados no campo `usuario.tipo` como um tipo enumerado do banco.
 
@@ -367,7 +367,7 @@ O quadro abaixo resume o que cada perfil pode fazer.
 
 # 3 ARQUITETURA DO SISTEMA
 
-## 3.1 Visão geral
+3.1 Visão geral
 
 O NutriCare é dividido em quatro peças, com responsabilidades separadas:
 
@@ -435,7 +435,7 @@ linhas cheias são requisições comuns; as tracejadas são o canal de mensagens
 fica aberto enquanto a tela estiver em uso. Repare que nenhuma seta liga a camada de
 apresentação diretamente ao banco.
 
-## 3.2 Funcionamento do painel web
+3.2 Funcionamento do painel web
 
 O painel fica em `apps/web` e é uma aplicação de página única, construída com
 Vite 5 e React 18, escrita em TypeScript. A navegação é feita pelo `react-router-dom`, e as
@@ -470,7 +470,7 @@ perfil: administrador vai para `/admin` e nutricionista vai para `/inicio`.
 tipografia. Não há biblioteca de componentes prontos nem biblioteca de gráficos: o único gráfico
 existente foi escrito diretamente em SVG.
 
-## 3.3 Funcionamento do aplicativo mobile
+3.3 Funcionamento do aplicativo mobile
 
 O aplicativo fica em `apps/mobile` e é construído com Expo 54, React Native 0.81 e React 19,
 em TypeScript.
@@ -503,7 +503,7 @@ do navegador, e é a opção mais segura das duas.
 - `use-mensagens-realtime` — mantém a conexão SSE aberta e atualiza as conversas;
 - `use-accessible-mode` — liga o modo simplificado a partir da idade do paciente.
 
-## 3.4 Funcionamento do backend
+3.4 Funcionamento do backend
 
 A API fica em `apps/api` e usa NestJS 10 sobre Node.js, em TypeScript 5.6.
 
@@ -541,7 +541,7 @@ classificação:
 Manter esses cálculos fora dos controllers é o que torna possível testá-los isoladamente — a
 maior parte dos 282 testes automatizados incide sobre eles.
 
-## 3.5 Funcionamento da API
+3.5 Funcionamento da API
 
 A API é REST, troca JSON e usa autenticação por token no cabeçalho `Authorization: Bearer`.
 São cerca de 90 rotas. A tabela abaixo lista as principais, agrupadas por finalidade.
@@ -634,7 +634,7 @@ As rotas de `/status` e `/health` não exigem autenticação, de propósito: que
 normalmente não tem sessão. Em compensação, elas devolvem apenas estado — nenhum dado de
 paciente, nenhuma configuração, nenhuma string de conexão.
 
-## 3.6 Integração entre as partes
+3.6 Integração entre as partes
 
 O que amarra as três frentes é a API. Um mesmo registro de glicemia percorre este caminho:
 
@@ -658,7 +658,7 @@ mudança vale imediatamente para os dois, sem publicar nova versão do aplicativ
 
 # 4 BANCO DE DADOS
 
-## 4.1 Tecnologia e organização
+4.1 Tecnologia e organização
 
 O banco é PostgreSQL 16. O acesso é feito pelo driver oficial `pg`, com um pool de conexões
 compartilhado por todos os módulos da API. **Não é usado nenhum ORM** — a justificativa está na
@@ -679,12 +679,12 @@ preciso: ele registra em uma tabela de controle (`migracao_aplicada`) o que já 
 pula o resto. Isso é necessário porque o `schema.sql` cria tudo de uma vez, sem `IF NOT EXISTS`,
 e rodá-lo duas vezes daria erro.
 
-## 4.2 Tabelas, entidades e relacionamentos
+4.2 Tabelas, entidades e relacionamentos
 
 São 24 tabelas. Só estão descritas aqui tabelas e campos que existem de fato no `schema.sql`
 e nas migrations.
 
-### Identidade e acesso
+Identidade e acesso
 
 **`usuario`** — a conta. Guarda `nome`, `email` (único), `senha` (hash bcrypt), `tipo`
 (paciente, nutricionista ou administrador) e `desativado_em`. Quando `desativado_em` está
@@ -711,7 +711,7 @@ expiração e marca de uso.
 
 **`push_token`** — para qual aparelho enviar notificação.
 
-### Registros do paciente
+Registros do paciente
 
 **`registro_glicemia`** — valor em mg/dL (entre 0 e 1000, garantido por CHECK), data e hora,
 momento do dia (tipo enumerado com seis valores) e observação.
@@ -735,7 +735,7 @@ campo de texto livre em `paciente`.
 **`anotacao_paciente`** — anotações do profissional, classificadas em limitação, restrição,
 observação, recomendação ou complementar.
 
-### Nutrição
+Nutrição
 
 **`alimento`** — a tabela nutricional. Nome, grupo, medida caseira e seu peso em gramas, porção
 de referência, calorias, carboidratos, proteínas, lipídios, fibras, índice glicêmico, origem
@@ -754,7 +754,7 @@ juntos e somem 100, ou que nenhum venha.
 **`refeicao_item`** — os itens estruturados da refeição, com quantidade em gramas e vínculo
 opcional com a tabela `alimento`. São eles que permitem somar calorias e macronutrientes.
 
-### Comunicação e apoio
+Comunicação e apoio
 
 **`mensagem`** — presa ao vínculo, e não ao par de usuários: se o vínculo for encerrado, a
 conversa fica junto ao histórico daquele acompanhamento. Guarda remetente, conteúdo e a data de
@@ -771,7 +771,7 @@ CHECKs garantem a coerência: um lembrete de glicemia não pode apontar para uma
 lembrete existe justamente para a medição que ainda não aconteceu — e um lembrete recorrente
 precisa de horário, enquanto o avulso precisa de data.
 
-### Relacionamentos principais
+Relacionamentos principais
 
 ```mermaid
 erDiagram
@@ -821,7 +821,7 @@ o que impede por construção que um profissional tenha registros de glicemia.
 > tabelas e os campos de necessidade energética do plano. A versão acima é a que corresponde ao
 > banco atual e deve substituí-la.
 
-## 4.3 Recursos do banco usados pelo projeto
+4.3 Recursos do banco usados pelo projeto
 
 O projeto se apoia em recursos do PostgreSQL para que certas regras não dependam do código da
 aplicação:
@@ -841,7 +841,7 @@ aplicação:
 
 # 5 AUTENTICAÇÃO E CONTROLE DE ACESSO
 
-## 5.1 Visão geral
+5.1 Visão geral
 
 A autenticação usa JWT em dois tokens:
 
@@ -852,7 +852,7 @@ O refresh token **é rotacionado**: a cada renovação, o token usado é revogad
 emitido. No banco fica apenas o hash SHA-256 do token; o valor original só existe no
 dispositivo. Se o banco vazar, os tokens gravados não servem para entrar no sistema.
 
-## 5.2 Login por e-mail e senha
+5.2 Login por e-mail e senha
 
 O usuário informa e-mail e senha em `POST /auth/login`. O servidor busca a conta pelo e-mail,
 compara a senha com o hash bcrypt gravado e, se conferir, emite o par de tokens.
@@ -866,7 +866,7 @@ Três cuidados foram tomados:
 3. **O painel recusa o perfil paciente**, com a mensagem de que a plataforma é para
    nutricionistas e administradores e que o paciente deve usar o aplicativo.
 
-## 5.3 Login pelo Google
+5.3 Login pelo Google
 
 O login social usa o padrão de token de identidade: o cliente obtém um token do Google e o envia
 para a API, que o verifica com a biblioteca oficial `google-auth-library`, conferindo a
@@ -890,7 +890,7 @@ passo está em `docs/LOGIN_GOOGLE.md`.
 O aplicativo do Google Cloud está com status "Em teste", com lista de usuários autorizados —
 ou seja, só as contas incluídas nessa lista conseguem entrar por esse caminho.
 
-## 5.4 Cadastro de usuários
+5.4 Cadastro de usuários
 
 Há duas rotas de cadastro, uma por perfil.
 
@@ -920,7 +920,7 @@ Depois do primeiro acesso, o aplicativo leva o paciente para a tela de complemen
 (`onboarding/paciente`), onde ele informa data de nascimento, tipo de diabetes, peso, altura e
 nível de atividade — dados de que os cálculos nutricionais dependem.
 
-## 5.5 Recuperação de senha
+5.5 Recuperação de senha
 
 **A funcionalidade está pronta e em uso.** O fluxo tem duas etapas:
 
@@ -936,7 +936,7 @@ nível de atividade — dados de que os cálculos nutricionais dependem.
 A tela existe nas duas interfaces: `/esqueci-senha` e `/redefinir-senha` no painel, e
 `(auth)/esqueci-senha` no aplicativo.
 
-## 5.6 Controle de acesso por perfil
+5.6 Controle de acesso por perfil
 
 O controle acontece em dois níveis, e os dois no servidor.
 
@@ -975,7 +975,7 @@ O `resolverPacienteAlvo` é o coração do controle e trata os três perfis de f
 > painel foi unificada em um painel deslizante, e o acompanhamento do paciente passou a ser uma
 > página com quatro abas. O roteiro completo de captura está no capítulo 14.
 
-## 6.1 Tela de login
+6.1 Tela de login
 
 No painel web, login e cadastro estão na **mesma tela**, em um painel que desliza entre os dois
 formulários. O arquivo `RegisterPage.tsx` apenas reexporta `LoginPage.tsx`, de modo que
@@ -996,7 +996,7 @@ A figura mostra a tela pela qual nutricionistas e administradores entram no sist
 é autenticar o usuário e encaminhá-lo para a área correspondente ao seu perfil: administradores
 vão para o painel administrativo e nutricionistas vão para a tela inicial de acompanhamento.
 
-## 6.2 Tela de cadastro
+6.2 Tela de cadastro
 
 O cadastro do nutricionista é feito no mesmo painel, deslizando para o outro lado. Pede nome,
 e-mail e senha; o CRN e a especialidade são preenchidos depois, na tela de perfil.
@@ -1013,7 +1013,7 @@ profissional pode entrar imediatamente.
 No aplicativo, o cadastro do paciente é uma tela separada, em `(auth)/cadastro`, com os mesmos
 três campos.
 
-## 6.3 Tela inicial do nutricionista
+6.3 Tela inicial do nutricionista
 
 É a tela que abre depois do login, em `/inicio`. Reúne quatro indicadores no topo — pacientes
 acompanhados, registros do período, alertas e mensagens não lidas — e, abaixo, o gráfico de
@@ -1030,7 +1030,7 @@ A figura mostra a visão de abertura do profissional. Sua função é dar, em um
 geral do acompanhamento: quantos pacientes estão sob seus cuidados, quanta atividade houve no
 período e quantas medições saíram da faixa esperada, dia a dia.
 
-## 6.4 Telas do paciente
+6.4 Telas do paciente
 
 O aplicativo se organiza em seis abas.
 
@@ -1052,7 +1052,7 @@ A figura mostra a primeira tela que o paciente vê ao abrir o aplicativo. Sua fu
 sem que ele precise procurar, como está a última medição registrada e há quanto tempo ela foi
 feita, além de dar acesso direto ao registro de uma nova medição.
 
-## 6.5 Telas do nutricionista
+6.5 Telas do nutricionista
 
 Além da tela inicial, o painel tem:
 
@@ -1086,7 +1086,7 @@ permite acrescentar um paciente que ainda não esteja sob seus cuidados.
 A figura mostra a tela onde o profissional mantém seus próprios dados. Sua função é permitir o
 preenchimento do CRN e da especialidade — que não são pedidos no cadastro — e a troca de senha.
 
-## 6.6 Tela do administrador
+6.6 Tela do administrador
 
 Fica em `/admin` e é a única tela do perfil administrador. Traz dois blocos:
 
@@ -1112,7 +1112,7 @@ sistema e permitir a gestão das contas, sem expor informação clínica de paci
 
 # 7 FUNCIONALIDADES DE ACOMPANHAMENTO
 
-## 7.1 Registro de glicemia
+7.1 Registro de glicemia
 
 É a funcionalidade central do sistema. O paciente informa o valor em mg/dL e **o momento do
 dia** em que mediu. O momento é obrigatório porque a mesma glicemia significa coisas diferentes
@@ -1152,7 +1152,7 @@ abaixo de 70 é hipoglicemia, e acima de 250 é hiperglicemia grave.
 A figura mostra o formulário de registro. Sua função é capturar o valor medido e o momento do
 dia, e devolver ao paciente, na hora, a leitura daquele número — não apenas o número.
 
-## 7.2 Histórico de glicemia
+7.2 Histórico de glicemia
 
 O histórico é consultado em `GET /registros`, com filtro por tipo de registro e por período. A
 classificação aparece em cada linha, e não só no momento do registro, para que o paciente
@@ -1172,7 +1172,7 @@ A figura mostra a lista de registros do paciente. Sua função é permitir que e
 própria evolução e identifique padrões — por exemplo, glicemia alta sempre depois de um mesmo
 tipo de refeição.
 
-## 7.3 Peso e demais dados do paciente
+7.3 Peso e demais dados do paciente
 
 As medidas corporais ficam em `registro_antropometrico` e formam um **histórico**, não um valor
 único. Cada medição guarda a data, o peso, a altura, as cinco circunferências e uma observação.
@@ -1194,7 +1194,7 @@ Além das medidas, o paciente registra pelo aplicativo:
 > modelagem foi trocada por um histórico datado, e as medições que já existiam foram
 > preservadas na migração.
 
-## 7.4 Alimentação e nutrição
+7.4 Alimentação e nutrição
 
 **Registro de refeições.** O paciente descreve a refeição, informa o tipo (café, almoço, lanche,
 jantar, ceia) e, opcionalmente, os macronutrientes. A refeição pode ser ligada a um item da
@@ -1222,7 +1222,7 @@ permite que as duas tabelas coexistam durante a troca.
 A figura mostra a tela de consulta e manutenção dos alimentos. Sua função é dar ao nutricionista
 uma base de valores nutricionais para montar o plano alimentar sem precisar calcular à mão.
 
-## 7.5 Plano alimentar
+7.5 Plano alimentar
 
 O plano é montado pelo nutricionista no painel e lido pelo paciente no aplicativo.
 
@@ -1262,7 +1262,7 @@ A figura mostra como o mesmo plano chega ao paciente. Sua função é apresentar
 forma simples — refeição por refeição, com horário — sem os campos de cálculo, que são de uso
 do profissional.
 
-## 7.6 Acompanhamento do paciente
+7.6 Acompanhamento do paciente
 
 A ficha do paciente, em `/acompanhamento/:id`, é a tela mais usada pelo nutricionista. Ela tem
 quatro abas:
@@ -1293,7 +1293,7 @@ A figura mostra os registros de glicemia do paciente no período. Sua função �
 profissional veja o comportamento das medições ao longo dos dias, com a classificação já
 aplicada em cada uma.
 
-## 7.7 Gráficos e relatórios
+7.7 Gráficos e relatórios
 
 **Gráficos.** O sistema tem **um único gráfico alcançável**: a evolução diária dos alertas
 glicêmicos, na tela inicial do painel, com períodos de 7, 30 ou 90 dias. Foi escrito diretamente
@@ -1331,7 +1331,7 @@ impressão.
 A figura mostra o relatório consolidado. Sua função é reunir, em um documento único, tudo o que
 foi registrado no período, para uso em consulta ou para entrega ao paciente.
 
-## 7.8 Sistema de mensagens
+7.8 Sistema de mensagens
 
 **O sistema de mensagens existe e funciona em tempo real.**
 
@@ -1367,7 +1367,7 @@ sem sair do sistema, mantendo o histórico da conversa ligado ao acompanhamento.
 A figura mostra o outro lado da mesma conversa. Sua função é dar ao paciente um canal direto com
 o profissional, com as mensagens chegando no momento em que são enviadas.
 
-## 7.9 Alertas de hipo e hiperglicemia
+7.9 Alertas de hipo e hiperglicemia
 
 Toda medição gravada é classificada, e a classificação vira uma severidade:
 
@@ -1430,7 +1430,7 @@ que a verificação de vínculo ocorre antes de qualquer dado sair do banco.
 A figura mostra o aviso que chega ao celular do paciente. Sua função é alcançá-lo mesmo com o
 aplicativo fechado, quando a última medição registrada indica uma situação que merece atenção.
 
-## 7.10 Notificações
+7.10 Notificações
 
 Há dois caminhos de notificação, e eles não se confundem:
 
@@ -1448,7 +1448,7 @@ e 29/10/2026; a nutricionista recebe os alertas no painel, em tempo real.
 No painel, uma central de notificações mostra os avisos não lidos, com as rotas
 `GET /notificacoes`, `PATCH /notificacoes/:id/ler` e `PATCH /notificacoes/ler-todas`.
 
-## 7.11 Conteúdo educativo
+7.11 Conteúdo educativo
 
 O nutricionista publica orientações pelo painel, em `/conteudos`, e o paciente as lê no
 aplicativo, em Alimentação → Conteúdos. Cada conteúdo tem título, resumo, texto, categoria,
@@ -1472,7 +1472,7 @@ consulta em Alimentação → Receitas.
 
 # 8 TECNOLOGIAS UTILIZADAS
 
-## 8.1 Quadro geral
+8.1 Quadro geral
 
 Todas as três partes do sistema são escritas em TypeScript, o que permite reaproveitar
 conhecimento e manter o mesmo estilo de código do começo ao fim.
@@ -1503,7 +1503,7 @@ conhecimento e manter o mesmo estilo de código do começo ao fim.
 | Infraestrutura | Docker e Docker Compose | ver seção 8.11 |
 | Versionamento | Git e GitHub | — |
 
-## 8.2 React
+8.2 React
 
 O React é a biblioteca que monta a interface do painel web. Em vez de manipular a página
 diretamente, escreve-se em componentes: cada pedaço de tela é uma função que recebe dados e
@@ -1517,7 +1517,7 @@ A estilização usa **CSS Modules** com variáveis CSS: cada tela tem seu arquiv
 as cores, espaçamentos e tamanhos de fonte vêm de um conjunto único de variáveis, o que evita
 que cada tela invente sua própria paleta.
 
-## 8.3 React Native
+8.3 React Native
 
 O React Native permite escrever o aplicativo com a mesma lógica de componentes do React, mas
 gerando interface nativa de Android e iOS em vez de HTML. Botões, listas e campos de texto viram
@@ -1527,7 +1527,7 @@ Isso é o que torna possível manter **um único código** para as duas platafor
 necessidade prática do projeto: não havia tempo nem equipe para manter dois aplicativos
 separados.
 
-## 8.4 Expo
+8.4 Expo
 
 O Expo é a plataforma que cuida da parte trabalhosa do React Native — compilação, permissões,
 acesso aos recursos do aparelho e distribuição para teste. Sem ele, seria necessário configurar
@@ -1554,7 +1554,7 @@ Expo, com o perfil `preview` do `eas.json`, já apontando para a API publicada. 
 foi gerada para a entrega; mudanças só de código JavaScript chegam a ela pelo EAS Update, e
 mudanças nativas exigem um APK novo (`docs/PUBLICAR.md`).
 
-## 8.5 TypeScript
+8.5 TypeScript
 
 O TypeScript é o JavaScript com verificação de tipos. O ganho prático apareceu várias vezes
 durante o desenvolvimento: quando um campo mudou de nome no banco, o editor apontou todos os
@@ -1563,12 +1563,12 @@ lugares que precisavam mudar, em vez de o erro só aparecer com o sistema rodand
 Os três projetos rodam `tsc --noEmit` como verificação (`npm run typecheck` na API e no
 aplicativo; no painel, a compilação do Vite já roda `tsc` antes de gerar os arquivos).
 
-## 8.6 Node.js
+8.6 Node.js
 
 O Node.js é o ambiente que executa a API fora do navegador. O projeto usa a versão 20, que é a
 declarada na imagem Docker e nos tipos de desenvolvimento (`@types/node` 20).
 
-## 8.7 NestJS
+8.7 NestJS
 
 O NestJS organiza a API em módulos. Cada assunto do sistema tem seu módulo, com controlador
 (recebe a requisição), serviço (contém a regra) e DTOs (descrevem o que pode entrar).
@@ -1589,7 +1589,7 @@ Os recursos do NestJS que mais pesaram no projeto:
 - **Filtro global de exceções** — nenhum erro inesperado chega ao cliente com detalhe interno.
 - **`@Sse()`** — o suporte a Server-Sent Events, usado nas mensagens em tempo real.
 
-## 8.8 PostgreSQL
+8.8 PostgreSQL
 
 O PostgreSQL 16 guarda todos os dados. Foi escolhido por três motivos concretos, todos usados
 no projeto:
@@ -1611,7 +1611,7 @@ A configuração de SSL também é resolvida no código, porque bancos gerenciad
 criptografada enquanto o PostgreSQL local recusa. A variável `DATABASE_SSL` aceita ligar,
 desligar, ou ligar sem verificar o certificado; vazia, o sistema decide sozinho pelo endereço.
 
-## 8.9 Sobre ORM e TypeORM
+8.9 Sobre ORM e TypeORM
 
 **O projeto não usa TypeORM nem qualquer outro ORM.** A documentação anterior citava o TypeORM,
 e essa citação está incorreta — não existe essa dependência no `package.json` nem nenhuma
@@ -1632,7 +1632,7 @@ serviço.
 Todas as consultas usam **parâmetros** (`$1`, `$2`, …), nunca texto concatenado. Isso é o que
 evita injeção de SQL, e é a razão de a ausência do ORM não representar perda de segurança.
 
-## 8.10 Git e GitHub
+8.10 Git e GitHub
 
 O código é versionado com Git e hospedado no GitHub. O histórico do repositório tem **198
 commits**, com mensagens em português descrevendo a mudança.
@@ -1647,7 +1647,7 @@ concentra o desenvolvimento da fase atual.
 > migrações 013 e 014). Antes da entrega, esse trabalho precisa ser commitado e o ramo
 > integrado a `main`, sob risco de a versão publicada não corresponder à documentada.
 
-## 8.11 Docker
+8.11 Docker
 
 O projeto tem arquivos de contêiner, e é importante descrever exatamente o que eles fazem — sem
 afirmar mais do que se verificou.
@@ -1677,7 +1677,7 @@ repositório, e não como forma validada de execução.
 
 # 9 SEGURANÇA E QUALIDADE DO CÓDIGO
 
-## 9.1 Segurança do sistema
+9.1 Segurança do sistema
 
 O NutriCare guarda dado pessoal e dado de saúde, que a LGPD classifica como dado sensível. As
 medidas adotadas estão listadas abaixo, com o que cada uma realmente faz.
@@ -1738,7 +1738,7 @@ autenticado podia ler o histórico de saúde de qualquer outro trocando um núme
 correção centralizou a verificação em um único serviço, obrigatório antes de qualquer leitura,
 e há testes cobrindo a tentativa de acesso sem vínculo.
 
-## 9.2 Armazenamento e proteção de senhas
+9.2 Armazenamento e proteção de senhas
 
 **Senha nunca é gravada em texto.** O sistema usa `bcrypt` (pela biblioteca `bcryptjs`) com
 fator de custo 10. O bcrypt gera um *salt* próprio para cada senha, de modo que duas pessoas com
@@ -1770,7 +1770,7 @@ transação, de modo que dois cliques no mesmo link não redefinem a senha duas 
 do pedido é sempre a mesma, exista ou não a conta, para não revelar quais e-mails estão
 cadastrados.
 
-## 9.3 Validação de dados
+9.3 Validação de dados
 
 A validação acontece em três lugares diferentes, de propósito.
 
@@ -1801,7 +1801,7 @@ mensagem compreensível em vez de um erro de banco. O exemplo mais claro são os
 a regra está garantida pelo CHECK, mas o serviço a verifica antes para poder responder "os
 percentuais devem somar 100" em vez de devolver uma violação de restrição.
 
-## 9.4 Organização do código
+9.4 Organização do código
 
 O repositório é um monorepo, com as três aplicações lado a lado:
 
@@ -1935,7 +1935,7 @@ reutilizadas), `services` (chamadas à API) e `contexts` (estado compartilhado).
 
 # 10 PROCESSO DE DESENVOLVIMENTO
 
-## 10.1 Metodologia de desenvolvimento
+10.1 Metodologia de desenvolvimento
 
 O desenvolvimento foi **incremental e iterativo**, sem adoção formal de Scrum ou XP. Não houve
 sprints com duração fixa nem cerimônias; o que houve foi um ciclo repetido: escolher a próxima
@@ -1962,7 +1962,7 @@ gerais, aguardando validação profissional. O documento `docs/CONFERENCIA_NUTRI
 exatamente o que precisa ser definido, e a organização do código (seção 9.4) foi pensada para
 que essa definição seja aplicada em um único lugar.
 
-## 10.2 Backlog do projeto
+10.2 Backlog do projeto
 
 O backlog foi organizado por funcionalidade, na ordem em que cada uma foi construída.
 
@@ -2000,7 +2000,7 @@ cada um: o paciente registra e consulta os próprios dados, o nutricionista acom
 pacientes com quem tem vínculo, e o administrador cuida de contas e métricas **sem acesso a dado
 clínico**.
 
-## 10.3 Funcionalidades concluídas
+10.3 Funcionalidades concluídas
 
 Estão implementadas, ligadas às telas e cobertas pelos testes onde indicado:
 
@@ -2036,7 +2036,7 @@ Estão implementadas, ligadas às telas e cobertas pelos testes onde indicado:
 | Exclusão (desativação) da própria conta | Aplicativo |
 | Gráfico de evolução de alertas | Painel |
 
-## 10.4 Funcionalidades em desenvolvimento
+10.4 Funcionalidades em desenvolvimento
 
 | Item | Situação |
 |---|---|
@@ -2046,7 +2046,7 @@ Estão implementadas, ligadas às telas e cobertas pelos testes onde indicado:
 | **Tabela nutricional oficial** | TACO 4ª edição importada no ambiente publicado (578 de 597 alimentos); falta a conferência da equipe de Nutrição e decidir os 19 que a TACO traz sem valor |
 | **Validação clínica das faixas** | Estrutura pronta; valores aguardam conferência |
 
-## 10.5 Funcionalidades ainda não implementadas
+10.5 Funcionalidades ainda não implementadas
 
 | Item | Observação |
 |---|---|
@@ -2058,7 +2058,7 @@ Estão implementadas, ligadas às telas e cobertas pelos testes onde indicado:
 | Testes de unidade no painel e no aplicativo | Não há; a conferência é por testes ponta a ponta no navegador (ver 10.6) |
 | Publicação nas lojas de aplicativos | Não feita; a distribuição é por APK instalado direto no Android (EAS Build) |
 
-## 10.6 Testes realizados
+10.6 Testes realizados
 
 **Testes automatizados.** A API tem **282 testes em 27 arquivos**, executados com Jest. Todos
 passaram na última execução, em 29/10/2026. Além dos listados abaixo, cobrem o consentimento no
@@ -2109,7 +2109,7 @@ TACO.
 **Verificação de saúde.** A API expõe rotas de diagnóstico em `/health`, usadas para confirmar
 que ela está no ar e conectada ao banco depois de cada publicação.
 
-## 10.7 Problemas encontrados durante o desenvolvimento
+10.7 Problemas encontrados durante o desenvolvimento
 
 **1. A API caía sozinha quando o banco encerrava conexões ociosas.** O driver `pg` emite um
 evento de erro no pool; sem ouvinte, o Node transforma isso em exceção não capturada e derruba o
@@ -2150,7 +2150,7 @@ Resolvido ativando os ganchos de encerramento do NestJS.
 que já tinham mudado. Este documento é a correção desse problema, e a análise que o antecede
 está em `docs/ANALISE_PROJETO_2026.md`.
 
-## 10.8 Mudanças feitas durante o projeto
+10.8 Mudanças feitas durante o projeto
 
 | Antes | Agora | Por quê |
 |---|---|---|
@@ -2169,7 +2169,7 @@ está em `docs/ANALISE_PROJETO_2026.md`.
 
 # 11 INTERFACE E EXPERIÊNCIA DE USO
 
-## 11.1 Melhorias de interface
+11.1 Melhorias de interface
 
 As mudanças de interface durante o projeto seguiram um mesmo critério: reduzir o número de
 telas que a pessoa precisa abrir para completar uma tarefa.
@@ -2189,7 +2189,7 @@ telas que a pessoa precisa abrir para completar uma tarefa.
 - **Impressão do relatório** — há uma folha de estilo específica para impressão, que remove
   menus e botões do PDF gerado.
 
-## 11.2 Responsividade
+11.2 Responsividade
 
 **No painel web**, o leiaute se adapta por consultas de mídia: são treze pontos de ajuste no
 CSS, nas larguras de 420, 640, 760, 768, 820, 860, 900 e 1100 pixels. Na prática, isso faz o
@@ -2203,7 +2203,7 @@ continua utilizável em tablet.
 tela, e a área segura (`react-native-safe-area-context`) evita que o conteúdo fique embaixo da
 barra de status ou do recorte da câmera.
 
-## 11.3 Acessibilidade e facilidade de uso
+11.3 Acessibilidade e facilidade de uso
 
 **Modo simplificado automático.** O aplicativo tem um recurso pensado especificamente para o
 público do projeto: pacientes com **55 anos ou mais** recebem automaticamente uma versão com
@@ -2235,7 +2235,7 @@ alimentares.
 
 # 12 RESULTADOS E CONSIDERAÇÕES
 
-## 12.1 Resultados atuais
+12.1 Resultados atuais
 
 O NutriCare está funcionando de ponta a ponta. A API está publicada e responde; o painel e o
 aplicativo se conectam a ela; e um paciente consegue percorrer todo o caminho previsto — criar
@@ -2266,7 +2266,7 @@ sem conferência — foram resolvidas. O que **não** se pode afirmar: que ele e
 com pacientes reais. Falta a validação clínica dos valores de referência e da tabela de
 alimentos adotada (TACO).
 
-## 12.2 Trabalhos futuros
+12.2 Trabalhos futuros
 
 **Curto prazo, para a demonstração:**
 
@@ -2296,7 +2296,7 @@ concluídos em outubro de 2026.
 12. Se a API passar a rodar em mais de um processo, substituir o barramento de eventos em
     memória por um canal compartilhado no banco.
 
-## 12.3 Considerações finais
+12.3 Considerações finais
 
 O NutriCare nasceu de um problema concreto: entre uma consulta e outra, o nutricionista não
 enxerga o paciente, e o paciente fica sozinho com anotações em papel que muitas vezes não chegam
@@ -2381,7 +2381,7 @@ ed. Campinas: NEPA-UNICAMP, 2011.
 
 # 14 APÊNDICES E FIGURAS
 
-## 14.1 Situação das figuras
+14.1 Situação das figuras
 
 **O projeto não contém nenhum arquivo de imagem.** Nenhuma das figuras citadas neste documento
 existe hoje no repositório: todas precisam ser capturadas na versão atual do sistema, com dados
@@ -2394,7 +2394,7 @@ telas antigas de saúde e de registros do painel não existem mais como caminho 
 **Cuidado obrigatório:** nenhuma captura pode conter dado real de paciente. Todas devem ser
 feitas com as contas de demonstração.
 
-## 14.2 Roteiro de captura
+14.2 Roteiro de captura
 
 **Painel web**
 
@@ -2435,7 +2435,7 @@ final exigir figuras em arquivo.
 | 22 | Arquitetura em camadas | 3.1 |
 | 23 | Sequência do registro de glicemia com alerta | 7.9 |
 
-## 14.3 Padrão das legendas
+14.3 Padrão das legendas
 
 Toda figura segue o mesmo formato, com a legenda abaixo da imagem:
 
@@ -2447,7 +2447,7 @@ Fonte: Elaborado pelos autores (2026).
 E, logo depois da legenda, um parágrafo curto explicando o que aparece na figura e qual é a sua
 função no sistema.
 
-## 14.4 Documentos complementares no repositório
+14.4 Documentos complementares no repositório
 
 | Documento | Conteúdo |
 |---|---|

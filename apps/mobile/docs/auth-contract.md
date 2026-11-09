@@ -2,7 +2,7 @@
 
 O mobile foi implementado contra esses endpoints. O módulo `apps/api/src/modules/auth` deve seguir exatamente este contrato. Caso a API divirja, ajustar em [src/lib/api/auth.ts](../src/lib/api/auth.ts).
 
-## `POST /auth/login`
+`POST /auth/login`
 
 **Request**
 ```json
@@ -27,7 +27,7 @@ O mobile foi implementado contra esses endpoints. O módulo `apps/api/src/module
 - `401` — credenciais inválidas
 - `400` — payload mal formado
 
-## `POST /auth/cadastro`
+`POST /auth/cadastro`
 
 **Request**
 ```json
@@ -45,7 +45,7 @@ O mobile foi implementado contra esses endpoints. O módulo `apps/api/src/module
 - `409` — e-mail já cadastrado
 - `400` — payload mal formado
 
-## `POST /auth/refresh` (opcional, mas recomendado)
+`POST /auth/refresh` (opcional, mas recomendado)
 
 **Request**
 ```json
@@ -57,11 +57,11 @@ O mobile foi implementado contra esses endpoints. O módulo `apps/api/src/module
 { "accessToken": "jwt", "refreshToken": "jwt" }
 ```
 
-## `POST /auth/logout` (opcional)
+`POST /auth/logout` (opcional)
 
 Header `Authorization: Bearer <accessToken>` → `204`.
 
-## Convenções
+Convenções
 
 - Senhas trafegam apenas em HTTPS, sempre como `senha` (português). Hash com bcrypt no servidor.
 - `accessToken` curto (~15min), `refreshToken` longo (~30 dias).

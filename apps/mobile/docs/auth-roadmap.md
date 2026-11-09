@@ -4,7 +4,7 @@ Como sair do estado atual (UI pronta, e-mail/senha integrado à API, social logi
 
 ---
 
-## Estado atual
+Estado atual
 
 - [Tela de login](../src/app/(auth)/login.tsx) redesenhada com logo, inputs em pílula, botão primário, divisor e três botões sociais (Apple visível só em iOS, Google e Facebook).
 - Botões sociais estão **desabilitados** e abrem um `Alert` informativo ao toque. A integração real é trabalho desta doc.
@@ -13,7 +13,7 @@ Como sair do estado atual (UI pronta, e-mail/senha integrado à API, social logi
 
 ---
 
-## Pesquisa: o que apps de saúde usam
+Pesquisa: o que apps de saúde usam
 
 Levantamento dos principais apps do ramo (nutrição, diabetes, fitness):
 
@@ -33,11 +33,11 @@ Levantamento dos principais apps do ramo (nutrição, diabetes, fitness):
 - Apps com classificação **médica/regulatória** (MySugr é dispositivo médico CE/FDA) ficam **só em e-mail/senha**. Apps **wellness** (MyFitnessPal, Yazio, Cronometer) liberam social login.
 - Facebook está em queda nesse setor (Cronometer removeu). Apple e Google são consenso.
 
-### Regra da Apple (Guideline 4.8)
+Regra da Apple (Guideline 4.8)
 
 Se o app oferece **qualquer** login social de terceiros (Google, Facebook, X, etc.) na **versão iOS**, **deve** oferecer também **Sign in with Apple** com prominência equivalente. Sem isso, é rejeitado na App Store. É por isso que o botão Apple só aparece em iOS no nosso código atual.
 
-### LGPD
+LGPD
 
 Glicemia, registros alimentares ligados a diabetes e HbA1c são **dados pessoais sensíveis** (LGPD Art. 5º II + Art. 11). O OAuth provider nunca vê PHI — ele só atesta identidade. Mas:
 1. Consentimento de identidade (login social) tem que ser **separado** do consentimento de tratamento de dados de saúde.
@@ -45,7 +45,7 @@ Glicemia, registros alimentares ligados a diabetes e HbA1c são **dados pessoais
 
 ---
 
-## Recomendação para o nosso projeto
+Recomendação para o nosso projeto
 
 Suportar, nesta ordem, **três** mecanismos:
 
@@ -60,7 +60,7 @@ Suportar, nesta ordem, **três** mecanismos:
 
 ---
 
-## Como tornar o login funcional (e-mail/senha)
+Como tornar o login funcional (e-mail/senha)
 
 Já está tudo pronto no mobile. Falta a API:
 
@@ -71,7 +71,7 @@ Já está tudo pronto no mobile. Falta a API:
 2. Subir a API local e ajustar `EXPO_PUBLIC_API_URL` em `.env`.
 3. Validar manualmente os fluxos: login válido, login inválido, cadastro novo, e-mail duplicado, sem rede, logout pelo perfil.
 
-### Refresh token
+Refresh token
 
 Adicionar interceptor de response no [api.ts](../src/lib/api.ts):
 - Em `401`, tentar `POST /auth/refresh` com o `refreshToken` armazenado.
@@ -82,7 +82,7 @@ Cuidado para não cair em loop: se o próprio `/auth/refresh` retornar 401, **n�
 
 ---
 
-## Como adicionar Sign in with Apple (passos)
+Como adicionar Sign in with Apple (passos)
 
 1. **Apple Developer Portal:**
    - Habilitar "Sign in with Apple" no App ID.
@@ -129,7 +129,7 @@ Cuidado para não cair em loop: se o próprio `/auth/refresh` retornar 401, **n�
 
 ---
 
-## Como adicionar Google Sign-In (passos)
+Como adicionar Google Sign-In (passos)
 
 1. **Google Cloud Console:**
    - Criar projeto, habilitar OAuth consent screen.
@@ -162,7 +162,7 @@ Cuidado para não cair em loop: se o próprio `/auth/refresh` retornar 401, **n�
 
 ---
 
-## Esquema de banco recomendado
+Esquema de banco recomendado
 
 ```
 usuarios
@@ -195,7 +195,7 @@ Vantagem: um mesmo usuário pode vincular vários métodos. Login social que ret
 
 ---
 
-## Ordem de implementação sugerida
+Ordem de implementação sugerida
 
 1. ✅ UI de login pronta (este commit)
 2. ⏭️ Implementar módulo `auth` no NestJS (e-mail/senha + JWT + refresh)

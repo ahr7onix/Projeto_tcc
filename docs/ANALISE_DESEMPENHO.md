@@ -9,7 +9,7 @@ mensagens em tempo real e às telas atuais do painel.
 Legenda de gravidade: **[CRÍTICO]** · **[ALTO]** · **[MÉDIO]** · **[BAIXO]** ·
 **[INFO]** (observação, sem ação obrigatória) · **[OK]** (testado e adequado).
 
-## Como foi testado
+Como foi testado
 
 - **Leitura do código:** pool de conexões, autenticação, todas as consultas dos
   módulos clínicos, o canal SSE, o polling do painel e o uso de rede do app.
@@ -45,7 +45,7 @@ exata.
 
 ---
 
-## 1. Resumo executivo
+1. Resumo executivo
 
 **Resposta curta:** para a banca e para uma demonstração, aguenta — **desde que
 se corrija antes o travamento do login (item 2.1)**. Hoje, uns 15 logins no
@@ -82,9 +82,9 @@ montando e serializando JSON grande demais e com frequência demais.
 
 ---
 
-## 2. Achados
+2. Achados
 
-### 2.1 [CRÍTICO] Login e renovação de sessão travam a API com ~15 pedidos simultâneos
+2.1 [CRÍTICO] Login e renovação de sessão travam a API com ~15 pedidos simultâneos
 
 [auth.service.ts:498](../apps/api/src/modules/auth/auth.service.ts#L498),
 [auth.service.ts:283](../apps/api/src/modules/auth/auth.service.ts#L283)
@@ -159,7 +159,7 @@ uma conexão só, e falha no código antigo. O erro de tempo limite do pool aind
 sai como `500`: traduzir para `503` mexeria no `AllExceptionsFilter`, que está
 na lista de "não mexa".
 
-### 2.2 [ALTO] O painel consulta a API a cada 5 s, em qualquer tela e com a aba escondida
+2.2 [ALTO] O painel consulta a API a cada 5 s, em qualquer tela e com a aba escondida
 
 [NotificationCenter.tsx:29](../apps/web/src/components/NotificationCenter.tsx#L29),
 [NotificationCenter.tsx:51](../apps/web/src/components/NotificationCenter.tsx#L51)
@@ -185,7 +185,7 @@ o Node classificando e serializando ~4 mil linhas
 O canal SSE de mensagens já existe e já fica aberto no painel; ele é o caminho
 natural para avisar "chegou alerta novo" em vez de perguntar a cada 5 s.
 
-### 2.3 [ALTO] A tela Início baixa 10,8 MB a cada 30 s
+2.3 [ALTO] A tela Início baixa 10,8 MB a cada 30 s
 
 [HomePage.tsx:70](../apps/web/src/pages/app/HomePage.tsx#L70),
 [HomePage.tsx:87](../apps/web/src/pages/app/HomePage.tsx#L87)
@@ -212,7 +212,7 @@ mas o custo de CPU continua.
 Com os dados de demonstração de hoje (poucos pacientes e registros), as
 respostas são pequenas. O problema aparece com o volume de uso real.
 
-### 2.4 [MÉDIO] Polling sem freio: quando a API fica lenta, as requisições se acumulam
+2.4 [MÉDIO] Polling sem freio: quando a API fica lenta, as requisições se acumulam
 
 O `setInterval` da central (5 s) e o da Início (30 s) disparam a rodada seguinte
 mesmo que a anterior não tenha voltado. O axios do painel não tem `timeout`
@@ -226,14 +226,14 @@ sendo processada até o fim. No teste por rota, oito chamadas da Início que o
 cliente abandonou aos 30 s seguiram ocupando a CPU, e a medição seguinte, de uma
 rota que leva ~0,2 s, deu 25 s.
 
-### 2.5 [MÉDIO] Pool sem tempo limite e `/status` sempre `200`
+2.5 [MÉDIO] Pool sem tempo limite e `/status` sempre `200`
 
 Além de transformar o item 2.1 em travamento permanente, a falta de
 `connectionTimeoutMillis` faz qualquer esgotamento do pool virar espera sem fim
 em vez de erro. E o `/status` responde `200` com `"banco":"indisponivel"`. Para
 o Render, que só olha o código HTTP, o serviço está sempre saudável.
 
-### 2.6 [MÉDIO] Login caro no servidor gratuito
+2.6 [MÉDIO] Login caro no servidor gratuito
 
 O hash das senhas é `bcryptjs` com custo 10, em JavaScript puro. No "Render", um
 login leva **0,6 a 1,3 s** sozinho, e 10 logins simultâneos levam **9 s** (a CPU
@@ -242,7 +242,7 @@ esperam. O custo 10 é o recomendado e não deve baixar (RNF01); o que ajuda é
 não somar logins desnecessários. Por exemplo, a corrida de renovação entre abas
 do painel (item 2.10) desloga as duas abas e força login de novo.
 
-### 2.7 [MÉDIO] Hibernação e distância do servidor gratuito
+2.7 [MÉDIO] Hibernação e distância do servidor gratuito
 
 - **Hibernação:** o serviço gratuito dorme depois de 15 min sem acesso. Na cópia
   publicada, a primeira chamada levou **33,6 s** para responder. No contêiner com
@@ -257,7 +257,7 @@ do painel (item 2.10) desloga as duas abas e força login de novo.
   1 GB. Pelo volume do teste, cada paciente ativo ocupa uns **0,5 MB por ano**:
   1 GB dá para uns 1.000 pacientes registrando todo dia por quase 2 anos.
 
-### 2.8 [BAIXO] Listas e períodos sem teto
+2.8 [BAIXO] Listas e períodos sem teto
 
 - `GET /registros?dias=` aceita qualquer número; sem `pacienteId`, o
   nutricionista recebe tudo de todos os pacientes. Um teto (como os 90 dias do
@@ -270,7 +270,7 @@ do painel (item 2.10) desloga as duas abas e força login de novo.
   ou seja, o histórico inteiro do paciente. Hoje custa ~0,2 s no "Render" e
   cresce com os anos de uso.
 
-### 2.9 [BAIXO] App mobile
+2.9 [BAIXO] App mobile
 
 - **Busca sem espera entre teclas** em
   [alimentos/index.tsx:34](../apps/mobile/src/app/(tabs)/alimentacao/alimentos/index.tsx#L34)
@@ -285,14 +285,14 @@ do painel (item 2.10) desloga as duas abas e força login de novo.
 - **[OK]** Timeout de 15 s, uma única nova tentativa, cache do React Query de
   60 s, SSE fechado em segundo plano e nada pesado na abertura do app.
 
-### 2.10 [BAIXO] Renovação de sessão entre abas do painel
+2.10 [BAIXO] Renovação de sessão entre abas do painel
 
 Cada aba renova o token por conta própria e o refresh token é trocado a cada uso.
 Se duas abas recebem 401 quase juntas, a segunda usa um token já revogado e as
 duas abas saem (o `localStorage` é compartilhado). É raro, mas cada ocorrência
 vira um login a mais, que é caro no servidor gratuito (item 2.6).
 
-### 2.11 [INFO] Estado em memória prende a API a uma instância
+2.11 [INFO] Estado em memória prende a API a uma instância
 
 O canal de mensagens (`MensagensEventosService`, um `Subject` em memória) e os
 limites de tentativa de login ficam na memória do processo. Com mais de uma
@@ -301,7 +301,7 @@ instância, cada uma só enxerga os próprios clientes. Já anotado no
 armazenamento compartilhado (LISTEN/NOTIFY do Postgres ou Redis). Uma instância
 paga maior resolve muito antes disso.
 
-### 2.12 O que está bom [OK]
+2.12 O que está bom [OK]
 
 - **Índices certos:** toda tabela clínica tem índice `(id_paciente, data_hora
   DESC)`, e o `EXPLAIN` mostra uso de índice nas consultas pesadas. A do
@@ -325,9 +325,9 @@ paga maior resolve muito antes disso.
 
 ---
 
-## 3. Resultados dos testes
+3. Resultados dos testes
 
-### 3.1 Cada rota sozinha
+3.1 Cada rota sozinha
 
 Requisições por segundo no ponto de saturação (o maior valor observado com 1 a
 50 chamadas simultâneas no PC e com 1 a 10 no "Render") e o tempo de uma chamada
@@ -357,7 +357,7 @@ ocupado com requisições abandonadas da rota anterior (item 2.4).
 No PC, durante os testes, o processo da API ficou perto de 100% de um núcleo: o
 limite é o Node (montar e serializar a resposta), não o banco.
 
-### 3.2 Pessoas usando ao mesmo tempo ("Render" com 0,1 CPU)
+3.2 Pessoas usando ao mesmo tempo ("Render" com 0,1 CPU)
 
 Cada rodada durou 90 s. Os pacientes abrem uma tela do app, leem por 10 a 30 s e
 abrem outra; as nutricionistas deixam o painel aberto com o polling do código.
@@ -412,7 +412,7 @@ banco; o resto é o Node classificando as ~15 mil glicemias de 60 dias com o
 `avaliarGlicemia`. Baixar mais exigiria gravar a severidade de cada glicemia no
 banco ao registrar (migration nova, decisão da equipe).
 
-### 3.3 Canal de mensagens (SSE)
+3.3 Canal de mensagens (SSE)
 
 Conexões abertas ao mesmo tempo, cada uma de um paciente, e 20 mensagens
 enviadas pelo nutricionista para pacientes conectados. Rodado num contêiner com
@@ -430,7 +430,7 @@ não é o limite do sistema.
 
 ---
 
-## 4. Projeções
+4. Projeções
 
 Cada pessoa gera uma carga previsível, porque o polling do painel e o uso do app
 seguem o código (levantamento em `apps/web` e `apps/mobile`):
@@ -485,7 +485,7 @@ verdade, as correções da seção 5 são o que separa "funciona" de "trava".
 
 ---
 
-## 5. Recomendações, por prioridade
+5. Recomendações, por prioridade
 
 **Antes da banca (pequenas, e resolvem o risco de cair na apresentação):**
 
@@ -528,7 +528,7 @@ O ganho certo é chamar menos vezes (item 2).
 
 ---
 
-## 6. Como repetir
+6. Como repetir
 
 Precisa de Docker e Node 20+. Nunca rode contra o banco publicado: o teste grava
 glicemias e mensagens.

@@ -4,9 +4,9 @@ Histórico resumido das entregas, próximos passos e pendências do app mobile.
 
 ---
 
-## Entregas concluídas
+Entregas concluídas
 
-### 1. Scaffolding do ambiente (`bde270e`)
+1. Scaffolding do ambiente (`bde270e`)
 
 Setup completo do app Expo para que dê para abrir no Expo Go e começar a codar telas.
 
@@ -19,7 +19,7 @@ Setup completo do app Expo para que dê para abrir no Expo Go e começar a codar
 - Componentes base: [ScreenContainer](../src/components/ScreenContainer.tsx), [Card](../src/components/Card.tsx)
 - Layouts e telas placeholder: root `_layout`, `index` (redirect), `(auth)/{login,cadastro}`, `(tabs)/{home,alimentacao,saude,registros,perfil}` + tab oculta `alimentacao/receitas`
 
-### 2. Autenticação plugada na API (`c97356a`)
+2. Autenticação plugada na API (`c97356a`)
 
 Telas de login e cadastro saíram do estado "casca" e agora submetem para a API real.
 
@@ -40,7 +40,7 @@ Telas de login e cadastro saíram do estado "casca" e agora submetem para a API 
 3. Guard de `(auth)/_layout.tsx` redireciona para `/(tabs)/home`
 4. Falha → mensagem do `data.message` da API; sem rede → "Sem conexão com o servidor"
 
-### 3. Funcionalidades do paciente
+3. Funcionalidades do paciente
 
 O app deixou de ser só autenticação. Rotas em [src/app/](../src/app/):
 
@@ -62,7 +62,7 @@ O módulo `auth` da API existe e está implementado — o login funciona fim-a-f
 
 ---
 
-## Pendências
+Pendências
 
 - **`npm install`:** rodar localmente após clonar
 - **Refresh token automático:** o interceptor de 401 hoje só limpa a sessão; falta tentar `/auth/refresh` antes de deslogar. O painel web já faz isso corretamente em `web/web_nutricionista/src/lib/api.ts` — dá para espelhar a lógica
@@ -74,7 +74,7 @@ O módulo `auth` da API existe e está implementado — o login funciona fim-a-f
 
 ---
 
-## Próximos passos sugeridos (ordem de prioridade)
+Próximos passos sugeridos (ordem de prioridade)
 
 1. **Refresh token automático** — é a pendência que o usuário sente: a sessão cai a cada 15 minutos (`JWT_EXPIRES_IN`) mesmo com refresh token válido.
 2. **Logout server-side** — chamar `authApi.logout()` no `signOut` para invalidar o refresh token no banco.

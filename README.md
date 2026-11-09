@@ -13,7 +13,7 @@ prevista na ADJ (Associação de Diabetes Juvenil) de Birigui.
 
 ---
 
-## Arquitetura
+Arquitetura
 
 | Módulo | Caminho | Stack |
 |---|---|---|
@@ -26,7 +26,7 @@ Perfis de usuário: **paciente** (mobile), **nutricionista** (web) e **administr
 
 ---
 
-## Como rodar
+Como rodar
 
 A raiz tem um `package.json` que encaminha os comandos para os três projetos,
 para não precisar entrar em cada pasta:
@@ -48,7 +48,7 @@ serviço isoladamente pelo seu `rootDir`, e workspaces quebrariam isso.
 
 O passo a passo detalhado, projeto por projeto:
 
-### 1. Banco de dados
+1. Banco de dados
 
 ```bash
 createdb nutricare
@@ -59,7 +59,7 @@ O `db:preparar` aplica o `schema.sql` num banco vazio, roda as migrations que
 ainda faltam e carrega os dados iniciais. Pode ser executado quantas vezes for
 preciso: ele anota na tabela `migracao_aplicada` o que já passou.
 
-#### As duas fontes de verdade
+As duas fontes de verdade
 
 A estrutura do banco está escrita em dois lugares que precisam concordar:
 
@@ -118,7 +118,7 @@ node database/gerar-hash-admin.js "sua-senha-forte"
 O script imprime o hash bcrypt para colar em `database/seeds_admin.sql` e o
 `UPDATE` equivalente, caso o banco já exista.
 
-### 2. API
+2. API
 
 ```bash
 cd apps/api
@@ -133,7 +133,7 @@ Sobe em `http://localhost:3000`.
 > `GOOGLE_CLIENT_ID` (o mesmo valor do painel). Sem isso a API recusa o login social, e o resto do
 > sistema continua normal. Detalhes em `docs/LOGIN_GOOGLE.md`.
 
-### 3. Painel web
+3. Painel web
 
 ```bash
 cd apps/web
@@ -151,7 +151,7 @@ Acesse `http://localhost:5173`.
 > porque o Vite só lê o `.env` ao iniciar. O Google só aceita `http://localhost:5173` ou
 > `http://127.0.0.1:5173`, e hoje só entram as contas cadastradas como usuário de teste.
 
-### 4. App mobile
+4. App mobile
 
 ```bash
 cd apps/mobile
@@ -163,7 +163,7 @@ npm start
 Use o IP da máquina na rede local, não `localhost` — o celular não enxerga o
 `localhost` do computador.
 
-### Docker
+Docker
 
 ```bash
 docker compose up -d --build
@@ -178,7 +178,7 @@ mudar o schema: `docker compose down -v` (isso apaga os dados).
 
 ---
 
-## Publicar na internet
+Publicar na internet
 
 O sistema está no ar no Render, plano gratuito, em duas cópias do mesmo código:
 
@@ -213,7 +213,7 @@ servidor de hospedagem usa para monitorar o serviço.
 
 ---
 
-## Testes
+Testes
 
 ```bash
 cd apps/api
@@ -223,7 +223,7 @@ npm run test:cov      # com cobertura
 
 ---
 
-## Funcionalidades por requisito
+Funcionalidades por requisito
 
 > A numeração abaixo é interna do projeto e **não** é a do briefing da equipe de
 > Nutrição (RF01–RF10). O comparativo contra os requisitos do cliente está em
@@ -251,7 +251,7 @@ npm run test:cov      # com cobertura
 
 ---
 
-## Regras de negócio aplicadas no código
+Regras de negócio aplicadas no código
 
 | Regra | Onde é garantida |
 |---|---|
@@ -266,7 +266,7 @@ npm run test:cov      # com cobertura
 
 ---
 
-## Principais endpoints
+Principais endpoints
 
 ```
 GET    /status                        Estado da API e do banco (público)
@@ -330,7 +330,7 @@ DELETE /push/token                    Remove token
 
 ---
 
-## Faixas de referência glicêmica
+Faixas de referência glicêmica
 
 A classificação usada em alertas e relatórios está em
 `apps/api/src/common/glicemia/glicemia.ts`:
@@ -352,7 +352,7 @@ idade, gestação e condição individual do paciente.
 
 ---
 
-## Limitações conhecidas
+Limitações conhecidas
 
 - As mensagens chegam por SSE (`GET /mensagens/stream`), não WebSocket: o
   servidor empurra, mas o cliente só recebe
@@ -372,7 +372,7 @@ idade, gestação e condição individual do paciente.
   vale para uma instância só, como a do plano gratuito do Render
 - A cobertura de testes concentra-se nas regras críticas, não na API inteira
 
-### Arquitetura
+Arquitetura
 
 Pontos levantados numa revisão de arquitetura do monorepo e conscientemente não
 resolvidos. Os dois defeitos que a mesma revisão encontrou — a divergência entre

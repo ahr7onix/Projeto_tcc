@@ -11,9 +11,9 @@ documentos existentes em `docs/` e com o `README.md` recuperado do Git.
 
 ---
 
-## 1 O QUE EXISTE ATUALMENTE
+1 O QUE EXISTE ATUALMENTE
 
-### 1.1 Estrutura do repositório
+1.1 Estrutura do repositório
 
 | Caminho | O que é | Tamanho |
 |---|---|---|
@@ -27,7 +27,7 @@ documentos existentes em `docs/` e com o `README.md` recuperado do Git.
 Fora do repositório principal existem `Projeto_tcc_testes` (cópia de trabalho divergente) e
 `monitoramento-nutricare` (central de monitoramento externa, desligada por padrão).
 
-### 1.2 Backend — o que está implementado
+1.2 Backend — o que está implementado
 
 26 módulos NestJS, 24 controllers e cerca de 90 rotas HTTP. Os módulos são:
 `auth`, `perfil`, `pacientes`, `vinculos`, `registros`, `saude`, `antropometria`, `emocional`,
@@ -47,7 +47,7 @@ por e-mail com token de uso único e validade de 1 hora, e desativação de cont
 **Notificações:** push via Expo (`push_token` + `notificacao`) e notificação local no aparelho
 disparada pelo hook `use-glycemic-watch`.
 
-### 1.3 Banco de dados — o que existe de fato
+1.3 Banco de dados — o que existe de fato
 
 PostgreSQL 16, **7 tipos ENUM** e **24 tabelas** (mais `migracao_aplicada`, criada pelo
 `preparar-banco.mjs` para controlar o que já foi aplicado):
@@ -58,7 +58,7 @@ PostgreSQL 16, **7 tipos ENUM** e **24 tabelas** (mais `migracao_aplicada`, cria
 `medicamento`, `restricao_alimentar`, `anotacao_paciente`, `plano_alimentar`, `refeicao`,
 `refeicao_item`, `lembrete`, `senha_reset_token`.
 
-### 1.4 Testes — número conferido rodando
+1.4 Testes — número conferido rodando
 
 Execução de `npx jest --ci` em `apps/api` no dia 30/08/2026:
 
@@ -69,7 +69,7 @@ Execução de `npx jest --ci` em `apps/api` no dia 30/08/2026:
 O aplicativo mobile e o painel web **não têm testes automatizados**. Existe um teste de fumaça
 ponta a ponta em `scripts/e2e-smoke.mjs` (Playwright), que cobre 9 casos.
 
-### 1.5 Sistema publicado
+1.5 Sistema publicado
 
 Painel: `https://nutricare-adj-painel.onrender.com` · API: `https://nutricare-adj-api.onrender.com`
 Plano gratuito do Render: a API hiberna e leva cerca de 50 s para responder à primeira
@@ -77,7 +77,7 @@ requisição; o banco gratuito expira em 30 dias.
 
 ---
 
-## 2 O QUE MUDOU EM RELAÇÃO À DOCUMENTAÇÃO ANTIGA
+2 O QUE MUDOU EM RELAÇÃO À DOCUMENTAÇÃO ANTIGA
 
 | Ponto | Documentação antiga diz | O código mostra |
 |---|---|---|
@@ -94,7 +94,7 @@ requisição; o banco gratuito expira em 30 dias.
 
 ---
 
-## 3 O QUE ESTÁ ERRADO
+3 O QUE ESTÁ ERRADO
 
 1. **Erro real de interface.** Em `apps/web/src/pages/app/RelatorioPacientePage.tsx`,
    o cartão "Registros do profissional" está escrito duas vezes (linhas 88 e 94). O relatório
@@ -120,7 +120,7 @@ requisição; o banco gratuito expira em 30 dias.
 
 ---
 
-## 4 O QUE PRECISA SER REMOVIDO
+4 O QUE PRECISA SER REMOVIDO
 
 **Código inalcançável no painel web — cerca de 1.643 linhas.** Confirmado por leitura das rotas
 em `App.tsx` e por busca de importações:
@@ -148,7 +148,7 @@ Também deve sair da documentação:
 
 ---
 
-## 5 O QUE PRECISA SER ATUALIZADO
+5 O QUE PRECISA SER ATUALIZADO
 
 1. Número de testes: **168 em 12 suítes**.
 2. Lista de migrations: **001 a 014**.
@@ -165,40 +165,40 @@ Também deve sair da documentação:
 
 ---
 
-## 6 O QUE ESTÁ FALTANDO
+6 O QUE ESTÁ FALTANDO
 
-### 6.1 Funcionalidade construída no servidor mas sem tela
+6.1 Funcionalidade construída no servidor mas sem tela
 
 **Lembretes.** Existem a tabela `lembrete`, o módulo, os DTOs, o serviço, 6 rotas
 (`GET /lembretes`, `GET /lembretes/hoje`, `POST`, `PATCH :id`, `PATCH :id/concluir`,
 `DELETE :id`) e 11 testes automatizados. **Não existe nenhuma tela**, nem no aplicativo nem
 no painel. O paciente não tem como programar "medir a glicemia às 7h".
 
-### 6.2 Gráficos
+6.2 Gráficos
 
 - No painel: existe apenas o gráfico de evolução dos alertas na tela inicial. **Não existe
   gráfico de evolução da glicemia nem do peso** em tela alcançável.
 - No aplicativo: **nenhum gráfico**. Não há biblioteca de gráficos nas dependências.
 
-### 6.3 Testes
+6.3 Testes
 
 Não há testes automatizados no aplicativo mobile (não existe Jest nem *testing-library* no
 `package.json`) nem no painel web.
 
-### 6.4 Imagens
+6.4 Imagens
 
 **Não existe nenhum arquivo de imagem no projeto inteiro.** Não há capturas de tela, não há
 diagramas exportados como figura, e a pasta `apps/mobile/assets` contém apenas um `.gitkeep`
 dizendo onde colocar o ícone e a tela de abertura. Todas as figuras da monografia precisam ser
 produzidas pelos autores.
 
-### 6.5 Validação clínica
+6.5 Validação clínica
 
 O `docs/CONFERENCIA_NUTRICAO.md` tem o bloco de assinatura da equipe de Nutrição **em branco**.
 Os 36 alimentos carregados no banco continuam com `fonte = 'exemplo'`. As faixas de glicemia,
 as fórmulas de VET e a distribuição de macronutrientes ainda não foram validadas.
 
-### 6.6 Consentimento no vínculo
+6.6 Consentimento no vínculo
 
 No cadastro de um paciente — tanto por e-mail quanto pelo Google — o sistema **vincula
 automaticamente o novo paciente a todos os nutricionistas já cadastrados**
@@ -208,7 +208,7 @@ contraria o que o `LIMITACOES_LGPD.md` diz sobre consentimento.
 
 ---
 
-## 7 QUAIS IMAGENS PRECISAM SER SUBSTITUÍDAS
+7 QUAIS IMAGENS PRECISAM SER SUBSTITUÍDAS
 
 Não há imagem a substituir: **não existe imagem nenhuma no projeto**. O que existe é uma lista
 de figuras a produzir. Todas devem ser capturadas na versão atual do sistema, porque as telas
@@ -245,7 +245,7 @@ Figuras a capturar, na ordem em que aparecem na documentação:
 
 ---
 
-## 8 QUAIS PARTES PRECISAM DE CONFIRMAÇÃO
+8 QUAIS PARTES PRECISAM DE CONFIRMAÇÃO
 
 Cada um destes pontos está marcado como **[PENDENTE DE CONFIRMAÇÃO]** também no corpo da
 documentação.

@@ -2,7 +2,7 @@
 
 App mobile do TCC. Roda em iOS, Android e Web via Expo Router (navegação por arquivos).
 
-## Stack
+Stack
 
 - Expo SDK 52 + React Native 0.76 (New Architecture habilitada)
 - Expo Router 4 (rotas baseadas em arquivos, em `src/app/`)
@@ -10,7 +10,7 @@ App mobile do TCC. Roda em iOS, Android e Web via Expo Router (navegação por a
 - React Query para data fetching, Zustand para estado global
 - Axios para HTTP, expo-secure-store para token
 
-## Setup
+Setup
 
 ```bash
 cd apps/mobile
@@ -21,7 +21,7 @@ npm start
 
 Pressione `a` para Android, `i` para iOS (Mac), `w` para Web.
 
-## Estrutura
+Estrutura
 
 ```
 src/
@@ -35,11 +35,11 @@ src/
   stores/                  zustand stores (auth)
 ```
 
-## Variáveis de ambiente
+Variáveis de ambiente
 
 Apenas `EXPO_PUBLIC_*` são expostas ao bundle — qualquer outra variável fica restrita ao build. Veja `.env.example`.
 
-## Notas
+Notas
 
 - O Metro está configurado em modo monorepo (`watchFolders` aponta para a raiz) para permitir importar de `packages/shared` no futuro.
 - Pastas `android/` e `ios/` ficam fora do git: rode `npx expo prebuild` quando precisar de build nativo.

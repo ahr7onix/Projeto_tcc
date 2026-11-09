@@ -3,7 +3,7 @@
 O sistema já está publicado. Este documento registra como isso foi feito e o que
 é preciso saber para manter o ambiente no ar.
 
-## Endereços
+Endereços
 
 | Peça | Endereço |
 |---|---|
@@ -36,7 +36,7 @@ O aplicativo do celular é distribuído como APK, instalado direto no Android
 
 ---
 
-## Cadastro aberto para teste (temporário)
+Cadastro aberto para teste (temporário)
 
 Com `CADASTRO_TESTE_ABERTO=true` (ligado nos dois arquivos do Render), quem se
 cadastra no painel já entra, sem esperar a aprovação da administração, e ganha
@@ -51,7 +51,7 @@ No app aparece o convite do próprio nutricionista; aceitando, os dois ficam
 vinculados e dá para testar o fluxo inteiro sozinho. **Antes de qualquer uso com
 paciente de verdade, troque a variável para `false`** no Render.
 
-### Botão de baixar o APK
+Botão de baixar o APK
 
 Na tela de entrada do painel aparece **Baixar o app Android (teste)**, que baixa
 o APK direto. Depois do cadastro de teste, o botão sobe para logo abaixo do aviso
@@ -69,7 +69,7 @@ com o login do app. O link vem de `VITE_APK_URL`, e sem ele o botão não aparec
 - APK novo gerado: troque o link (ou anexe o arquivo a uma release nova).
 - Fim dos testes: apague a `VITE_APK_URL` junto com a `CADASTRO_TESTE_ABERTO`.
 
-## Como entrar
+Como entrar
 
 O banco nasce com um administrador e, como `SEED_DEMO` está como `true`, com
 pacientes fictícios para o cliente ter o que olhar.
@@ -96,7 +96,7 @@ e aplicar o `UPDATE` que o comando imprime.
 
 ---
 
-## Como foi publicado
+Como foi publicado
 
 Tudo está descrito no arquivo `render.yaml`, na raiz do projeto. O Render lê esse
 arquivo e monta sozinho as três peças, todas no plano gratuito:
@@ -120,7 +120,7 @@ serviços já estão amarrados dentro do `render.yaml`. Foi assim que se fez:
 
 A primeira publicação demora de 5 a 10 minutos.
 
-### Conferir se está tudo de pé
+Conferir se está tudo de pé
 
 Abrir <https://nutricare-adj-api.onrender.com/status>. Deve aparecer:
 
@@ -132,7 +132,7 @@ Se `banco` vier como `indisponivel`, o banco de dados caiu ou expirou.
 
 ---
 
-## E-mail
+E-mail
 
 Sem servidor de e-mail configurado, **nenhum e-mail sai do sistema**: nem o
 link de criar senha de quem é cadastrado pelo painel (paciente cadastrado pelo
@@ -176,7 +176,7 @@ Render (serviço **nutricare-adj-api** → *Logs*).
 
 ---
 
-## Login com Google
+Login com Google
 
 O botão "Entrar com Google" só funciona em endereços autorizados. O endereço do
 painel publicado **já foi autorizado**. Se um dia o endereço mudar:
@@ -195,7 +195,7 @@ Detalhes e erros comuns em [LOGIN_GOOGLE.md](LOGIN_GOOGLE.md).
 
 ---
 
-## O que fazer quando o projeto mudar
+O que fazer quando o projeto mudar
 
 Toda vez que o código novo for enviado ao GitHub, o Render republica sozinho.
 Não precisa refazer nada deste guia.
@@ -206,7 +206,7 @@ qualquer coisa.
 
 ---
 
-## Trocar o banco por um sem prazo
+Trocar o banco por um sem prazo
 
 O banco do Render tem 30 dias de validade e leva a demonstração junto quando
 vence. Neon e Supabase têm plano gratuito sem prazo. A troca leva poucos
@@ -251,7 +251,7 @@ antigo e `psql` no novo, antes do passo 3.
 
 ---
 
-## Segunda cópia, em outra conta do Render
+Segunda cópia, em outra conta do Render
 
 O plano gratuito do Render não deixa convidar ninguém para a conta: só quem
 publicou a cópia acima consegue mudar as configurações dela, como as do e-mail.
@@ -290,7 +290,7 @@ API usar pelo `EXPO_PUBLIC_API_URL` do `apps/mobile/.env`.
 
 ---
 
-## APK do aplicativo (Android)
+APK do aplicativo (Android)
 
 O APK de demonstração é montado nos servidores do Expo (EAS Build), com o perfil
 `preview` do `apps/mobile/eas.json`. Ele usa a API da segunda cópia
@@ -312,7 +312,7 @@ No plano gratuito o primeiro build levou 44 minutos (metade na fila). O link do
 APK expira: a página do build mostra quantos dias faltam (**Availability**).
 Baixe o `.apk` pelo menu **⋮ > Download** e guarde uma cópia.
 
-### Atualização pela internet (EAS Update)
+Atualização pela internet (EAS Update)
 
 Mudança só de código JavaScript (telas, textos, regras do app) não precisa de APK
 novo: vai pela internet para quem já tem o APK instalado.
@@ -337,7 +337,7 @@ ao APK 1.0.0, e quem ainda tem o APK 0.1.0 precisa instalar o novo.
 
 ---
 
-## Problemas comuns
+Problemas comuns
 
 | O que acontece | Causa provável | O que fazer |
 |---|---|---|

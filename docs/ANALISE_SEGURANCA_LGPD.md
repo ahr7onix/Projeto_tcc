@@ -8,7 +8,7 @@ rede e conformidade com a LGPD. Complementa, não substitui, o
 Legenda de gravidade: **[CRÍTICO]** · **[ALTO]** · **[MÉDIO]** · **[BAIXO]** ·
 **[INFO]** (observação, sem ação obrigatória) · **[OK]** (testado e correto).
 
-## Como foi testado
+Como foi testado
 
 - **Backend:** leitura dos guards, do serviço de autenticação, do serviço de
   vínculos e de todos os módulos clínicos; mais 86 testes ativos (IDOR,
@@ -31,7 +31,7 @@ não entrou nesta rodada.
 
 ---
 
-## 1. Resumo executivo
+1. Resumo executivo
 
 O projeto está, no essencial, **bem construído em segurança de aplicação**: a
 autorização por perfil funciona, o acesso a dado de saúde passa por um ponto
@@ -64,9 +64,9 @@ futuros".
 
 ---
 
-## 2. Backend (API NestJS)
+2. Backend (API NestJS)
 
-### 2.1 [ALTO] `/planos/ativo` entrega o plano de qualquer paciente
+2.1 [ALTO] `/planos/ativo` entrega o plano de qualquer paciente
 
 [planos.service.ts:462](../apps/api/src/modules/planos/planos.service.ts#L462)
 
@@ -96,7 +96,7 @@ administrador não deve alcançar este recurso (os outros módulos clínicos já
 recusam). É uma correção de poucas linhas, no padrão que o resto do serviço já
 usa.
 
-### 2.2 [CRÍTICO (operacional)] Credenciais padrão públicas e ativas no ar
+2.2 [CRÍTICO (operacional)] Credenciais padrão públicas e ativas no ar
 
 [README.md:105](../README.md#L105) · [seeds_admin.sql](../database/seeds_admin.sql) · [preparar-banco.mjs:121](../apps/api/preparar-banco.mjs#L121)
 
@@ -122,7 +122,7 @@ dos usuários de exemplo, e **antes de qualquer uso real** subir com
 `SEED_DEMO=false` e apagar os usuários de exemplo. Mapeia para A02:2025
 (Security Misconfiguration) e A07:2025 (Authentication Failures).
 
-### 2.3 [MÉDIO] Limite de tentativas de login não confiável no Render
+2.3 [MÉDIO] Limite de tentativas de login não confiável no Render
 
 [limite-tentativas.ts](../apps/api/src/common/limite-tentativas.ts) · [auth.controller.ts:66](../apps/api/src/modules/auth/auth.controller.ts#L66) · [main.ts:21](../apps/api/src/main.ts#L21)
 
@@ -154,7 +154,7 @@ de saltos correto, ou a função de confiança do Express), atualizar o
 armazenamento do limite por algo compartilhado (ex.: Redis) ou um
 rate-limit na borda. Para o e-mail, um teto por IP independente do e-mail.
 
-### 2.4 [MÉDIO] Token de acesso continua válido após logout, troca de senha e exclusão
+2.4 [MÉDIO] Token de acesso continua válido após logout, troca de senha e exclusão
 
 [perfil.service.ts:36](../apps/api/src/modules/perfil/perfil.service.ts#L36)
 
@@ -178,7 +178,7 @@ min do access token, a opção barata é checar no `JwtAuthGuard` um carimbo de
 "senha trocada em" / "conta desativada em" contra o `iat` do token, ou manter
 uma lista curta de revogação.
 
-### 2.5 [MÉDIO] `?dias=` / `?limite=` inválido ainda gera 500
+2.5 [MÉDIO] `?dias=` / `?limite=` inválido ainda gera 500
 
 [registros.controller.ts](../apps/api/src/modules/registros/registros.controller.ts) · [admin.controller.ts:34](../apps/api/src/modules/admin/admin.controller.ts#L34)
 
@@ -190,7 +190,7 @@ tratado, suja o log de ERROR e é um vetor de ruído/indisponibilidade barato
 `/emocional/resumo` já normalizam o número; falta fazer o mesmo nos demais, de
 preferência validando na borda (DTO de query com `@IsInt`/`@Min`/`@Max`).
 
-### 2.6 [MÉDIO] Enumeração de contas (três canais)
+2.6 [MÉDIO] Enumeração de contas (três canais)
 
 - **Cadastro** com e-mail existente → 409 "E-mail já cadastrado" (revela que a
   conta existe).
@@ -210,7 +210,7 @@ preferência validando na borda (DTO de query com `@IsInt`/`@Min`/`@Max`).
 Positivo: o "esqueci a senha" responde mensagem genérica e teve tempo
 equivalente para e-mail existente vs inexistente — está correto.
 
-### 2.7 [BAIXO] Política de senha fraca e inconsistente na troca
+2.7 [BAIXO] Política de senha fraca e inconsistente na troca
 
 [perfil.controller.ts:29](../apps/api/src/modules/perfil/perfil.controller.ts) · [redefinir-senha.dto.ts](../apps/api/src/modules/auth/dto/redefinir-senha.dto.ts)
 
@@ -218,7 +218,7 @@ O cadastro exige 8 caracteres, mas a troca pelo perfil aceita **6** — testado:
 `123456` foi aceito. Não há verificação de senha óbvia/vazada em lugar nenhum.
 **Correção:** unificar em ≥ 8 e recusar as senhas mais comuns.
 
-### 2.8 [BAIXO] Entrada armazenada sem validação de formato
+2.8 [BAIXO] Entrada armazenada sem validação de formato
 
 - Nome `<img src=x onerror=...>` é gravado cru. Hoje o React escapa texto por
   padrão (não executa), mas é bom limitar caracteres de controle no nome.
@@ -228,7 +228,7 @@ O cadastro exige 8 caracteres, mas a troca pelo perfil aceita **6** — testado:
   validada guardada. **Correção:** validar o esquema (só `http`/`https`) com
   `@IsUrl`.
 
-### 2.9 O que foi testado e está correto [OK]
+2.9 O que foi testado e está correto [OK]
 
 - **Escalada de perfil:** paciente → `/pacientes`, `/admin/*`, `POST /alimentos`,
   `POST /conteudos` → 403/400. Nutricionista → `/admin/*` → 403. Administrador →
@@ -261,7 +261,7 @@ O cadastro exige 8 caracteres, mas a troca pelo perfil aceita **6** — testado:
 
 ---
 
-## 3. Painel web (React + Vite)
+3. Painel web (React + Vite)
 
 - **[OK] Sem sinks de XSS perigosos:** nenhum `dangerouslySetInnerHTML` com dado
   de usuário; o único `innerHTML` em [LoginPage.tsx](../apps/web/src/pages/auth/LoginPage.tsx)
@@ -286,7 +286,7 @@ O cadastro exige 8 caracteres, mas a troca pelo perfil aceita **6** — testado:
 
 ---
 
-## 4. App mobile (Expo / React Native)
+4. App mobile (Expo / React Native)
 
 - **[OK] Token no armazenamento seguro:** [storage.ts](../apps/mobile/src/lib/storage.ts)
   usa `expo-secure-store` (Keychain/Keystore) no device; `AsyncStorage` só no
@@ -319,7 +319,7 @@ O cadastro exige 8 caracteres, mas a troca pelo perfil aceita **6** — testado:
 
 ---
 
-## 5. Dependências (cadeia de suprimento — A03:2025)
+5. Dependências (cadeia de suprimento — A03:2025)
 
 `npm audit` de **produção** (28/10/2026):
 
@@ -350,9 +350,9 @@ da banca, com teste. Rodar o audit no CI ajudaria a não regredir.
 
 ---
 
-## 6. Infraestrutura e rede
+6. Infraestrutura e rede
 
-### O que está correto [OK]
+O que está correto [OK]
 
 - **TLS 1.3**, com TLS 1.0/1.1 **recusados** nas duas pontas; certificado válido
   (Google Trust Services, via Cloudflare).
@@ -367,7 +367,7 @@ da banca, com teste. Rodar o audit no CI ajudaria a não regredir.
 - **CI** reproduz o ambiente (Node 20, mesmo Postgres) e confere schema ×
   migrations.
 
-### Pontos de atenção
+Pontos de atenção
 
 - **[CRÍTICO (operacional)] Repositório público + credenciais no README + site
   no ar com essas credenciais** — ver item 2.2. É a soma que importa: os três
@@ -393,7 +393,7 @@ da banca, com teste. Rodar o audit no CI ajudaria a não regredir.
 
 ---
 
-## 7. LGPD e normas de saúde
+7. LGPD e normas de saúde
 
 Resumo aplicado; a base legal completa com números de resolução e links está no
 levantamento que embasou este documento. O `LIMITACOES_LGPD.md` continua válido
@@ -461,7 +461,7 @@ operação atual.
 
 ---
 
-## 8. Priorização sugerida
+8. Priorização sugerida
 
 **Resolver antes da banca (barato e visível):**
 

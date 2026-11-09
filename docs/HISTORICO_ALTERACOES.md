@@ -2,7 +2,25 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
-## 2026-11-09 — Botão de baixar o APK no painel (temporário)
+2026-11-09 — Documentos sem as cerquilhas (#) nos títulos
+
+- Quem: Natan, com apoio de IA
+- PR/branch: `docs/remover-hashtags` (saiu de `feat/painel-baixar-apk`)
+- O que foi modificado: em 20 documentos `.md` (README, `docs/`, `apps/mobile` e
+  `scripts/demo`), os 349 títulos marcados com duas, três ou quatro `#` viraram texto comum.
+  Onde o título encostava no texto, entrou uma linha em branco, senão o GitHub juntaria os dois
+  num parágrafo só. O modelo de entrada deste histórico, no `LEIA_PRIMEIRO_IA.md`, também
+  perdeu as `#`. A `#` única do título principal de cada arquivo ficou.
+- O que foi adicionado: regra 10 no `LEIA_PRIMEIRO_IA.md`, para os títulos novos também saírem
+  sem as `#`.
+- Atenção para quem vier depois: no GitHub, esses títulos aparecem como texto comum, não mais
+  em negrito e maior. Os que começam com número ("1. Banco de dados") aparecem como item de
+  lista numerada. Nenhum documento tinha link para título (`#ancora`), então nenhum link quebrou.
+  Branches abertas que mexem no topo deste histórico vão dar conflito aqui: na hora de resolver,
+  mantenha as duas entradas e tire as `#` do título da entrada que vier da outra branch.
+
+2026-11-09 — Botão de baixar o APK no painel (temporário)
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/painel-baixar-apk`
 - O que aconteceu: na fase de testes, quem se cadastra no painel ganha uma conta do app, mas o
@@ -29,7 +47,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   erro no console. O link responde 200 com o arquivo de 96,8 MB. `tsc` do painel ok. A API e o
   app não mudaram.
 
-## 2026-11-09 — Cadastro aberto para teste (temporário)
+2026-11-09 — Cadastro aberto para teste (temporário)
+
 - Quem: Isac, com apoio de IA
 - PR/branch: `feat/cadastro-teste-aberto`
 - O que aconteceu: para a fase de testes, quem se cadastra no painel precisava esperar a
@@ -48,7 +67,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   com `SEED_DEMO=false`). As contas aprovadas por este caminho continuam aprovadas; reveja na
   Administração.
 
-## 2026-10-30 — Painel: largura da tela, tabelas e paginação
+2026-10-30 — Painel: largura da tela, tabelas e paginação
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/painel-layout-tabelas` (saiu de `feat/dados-demonstracao`)
 - O que aconteceu: numa tela de 1867 px sobravam 293 px à direita em todas as páginas, porque o
@@ -97,7 +117,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   foi conferida por emulação, não em papel. O painel e a API sobem juntos: se o painel subir antes,
   o total da tela Alimentos vale só a página até a API acompanhar.
 
-## 2026-10-30 — Dados de demonstração com volume
+2026-10-30 — Dados de demonstração com volume
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/dados-demonstracao`
 - O que foi adicionado: `scripts/demo/popular-demo.sql` (consultório fictício com 25 pacientes, 5
@@ -115,7 +136,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   Postgres sortear uma vez por paciente, e metade deles ficou sem nenhum registro no primeiro
   teste. Contar o total não mostra isso; confira por paciente.
 
-## 2026-10-30 — Barra lateral e limpeza no `main`, conferidas juntas
+2026-10-30 — Barra lateral e limpeza no `main`, conferidas juntas
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `docs/v1-pos-merge`
 - O que foi conferido: com os PRs #10 e #19 no `main` (commit `5a76646`), `npm run verificar` e
@@ -130,7 +152,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   60 s, então pode levar até 1 minuto para zerar. O avatar da barra usa a primeira letra do
   nome: "Dra. Camila" aparece com "D".
 
-## 2026-10-30 — Barra lateral nova do painel web (PR #10)
+2026-10-30 — Barra lateral nova do painel web (PR #10)
+
 - Quem: equipe, com apoio de IA
 - PR/branch: #10, `feat/sidebar-redesign` (atualizada com a `main` de 30/10)
 - O que foi adicionado: contador de mensagens não lidas no item "Mensagens" (bolinha quando o
@@ -144,7 +167,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 - Atenção para quem vier depois: a barra do topo no celular ainda mostra "NutriCare". O contador
   só vale para nutricionista (administrador não tem conversas).
 
-## 2026-10-30 — Versão 1.0
+2026-10-30 — Versão 1.0
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `release/v1.0`
 - O que foi modificado:
@@ -164,7 +188,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   Nutrição. Trocar as senhas de exemplo do admin e da Camila na cópia `nutricare-tcc` ficou para
   depois, por decisão do Natan.
 
-## 2026-10-29 — TACO no ar e contagem da tela Alimentos do painel
+2026-10-29 — TACO no ar e contagem da tela Alimentos do painel
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `fix/alimentos-total-taco`
 - O que aconteceu: depois do PR #24, a TACO 4ª edição foi importada no painel no ar, com a conta
@@ -183,7 +208,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   contar ou varrer a tabela inteira, use `GET /alimentos/grupos` (traz o total de cada grupo) ou
   filtre por grupo.
 
-## 2026-10-29 — Importação da TACO inteira pelo painel
+2026-10-29 — Importação da TACO inteira pelo painel
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `fix/taco-tracos`
 - O que aconteceu: testando a importação com a TACO 4ª edição pronta em CSV
@@ -207,7 +233,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   atualização da internet (`npm run atualizar`). `npm run verificar` e `npm run e2e:fluxo`
   (21/21) passaram.
 
-## 2026-10-29 — Teste no ar: paciente cadastrado pela nutricionista
+2026-10-29 — Teste no ar: paciente cadastrado pela nutricionista
+
 - Quem: Natan, com apoio de IA
 - PR/branch: sem mudança de código (registrado junto com `fix/taco-tracos`)
 - O que foi testado: no painel no ar, a Camila cadastrou um paciente novo; o e-mail com o link
@@ -220,7 +247,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   desligar. Paciente recém-aceito aparece como "Inativo" no painel: "Ativo" quer dizer registro
   nos últimos 7 dias.
 
-## 2026-10-29 — App aguenta a API acordando; primeira atualização pela internet
+2026-10-29 — App aguenta a API acordando; primeira atualização pela internet
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `fix/servidor-acordando`
 - O que aconteceu: no celular, às vezes o login demorava ou falhava e às vezes era rápido. A API
@@ -242,7 +270,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   correções do PR #22): o celular mostrou "Versão 0.1.0 · atualização de 29/10, 09:23" no
   Perfil, sem APK novo. Esta correção também é só JavaScript e vai do mesmo jeito.
 
-## 2026-10-29 — Acabamentos do app e do gráfico do painel
+2026-10-29 — Acabamentos do app e do gráfico do painel
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/fluxo-e-acabamentos`
 - O que foi adicionado: no fim da tela Perfil do app, "Versão 0.1.0" e, quando o código veio
@@ -264,7 +293,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   internet (`npm run atualizar`), sem APK novo. O encolhimento das abas só dá para conferir num
   celular estreito.
 
-## 2026-10-29 — Teste do fluxo completo no repositório (`npm run e2e:fluxo`)
+2026-10-29 — Teste do fluxo completo no repositório (`npm run e2e:fluxo`)
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/fluxo-e-acabamentos`
 - O que foi adicionado: `scripts/e2e-fluxo.mjs`, que refaz a demonstração inteira no navegador
@@ -284,7 +314,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   apontando para a mesma API. `MOSTRAR=1` abre o navegador na tela. Rodou 21/21 em 29/10, com o
   navegador visível e escondido.
 
-## 2026-10-29 — Fluxo completo da demonstração conferido; três ajustes no painel
+2026-10-29 — Fluxo completo da demonstração conferido; três ajustes no painel
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/app-segundo-apk`
 - O que foi conferido: a demonstração inteira no Chrome, com contas novas, painel e app (modo
@@ -314,7 +345,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   cadastro de paciente feito pela nutricionista (link de senha por e-mail) não entrou nesta
   rodada; o envio do link foi conferido no ar em 27/10.
 
-## 2026-10-29 — Segundo APK conferido no celular
+2026-10-29 — Segundo APK conferido no celular
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/app-segundo-apk`
 - O que foi conferido: o APK do build `6ae15033` do EAS, instalado por cima do primeiro num
@@ -328,7 +360,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 - Atenção para quem vier depois: a atualização pela internet está configurada, mas ainda não foi
   publicada nenhuma; a primeira deve ser conferida no celular (abrir, fechar e abrir o app).
 
-## 2026-10-28 — Limpeza de scripts sem uso na raiz
+2026-10-28 — Limpeza de scripts sem uso na raiz
+
 - Quem: equipe, com apoio de IA
 - PR/branch: `chore/limpeza-repo`
 - O que foi removido:
@@ -344,7 +377,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 - Atenção para quem vier depois: tudo continua no histórico do Git. Para subir o sistema no
   Windows, siga o README; o `docker compose up -d --build` sobe banco e API.
 
-## 2026-10-28 — Ícone e tela de abertura do app (logo provisório)
+2026-10-28 — Ícone e tela de abertura do app (logo provisório)
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/app-segundo-apk`, que junta num PR só as três entradas abaixo (login com
   Google no APK, lembrete como alarme e atualização pela internet) e esta
@@ -357,7 +391,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   tela de abertura são nativos: trocar exige subir o `version` do `app.json` e gerar APK novo
   (não vão pela atualização pela internet). Conferido no `expo prebuild`.
 
-## 2026-10-28 — Atualização do app pela internet (EAS Update)
+2026-10-28 — Atualização do app pela internet (EAS Update)
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/atualizacao-pela-internet` (criada em cima de `feat/lembrete-alarme`)
 - O que foi adicionado: `expo-updates` (`~29.0.20`, a versão do Expo 54; nenhuma outra versão
@@ -374,7 +409,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   `expo prebuild` (o manifesto do Android leva o endereço e a versão `0.1.0`); falta conferir
   no celular com o próximo APK.
 
-## 2026-10-28 — Lembretes podem tocar como alarme
+2026-10-28 — Lembretes podem tocar como alarme
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/lembrete-alarme` (criada em cima de `feat/login-google-apk`)
 - O que foi adicionado: na tela Saúde > Lembretes, o cartão "Como o celular avisa", com a chave
@@ -396,7 +432,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   só: o arquivo do som só existe dentro do APK. O som de alarme só dá para conferir no celular,
   com o próximo APK.
 
-## 2026-10-28 — Login com Google no APK
+2026-10-28 — Login com Google no APK
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/login-google-apk`
 - O que foi adicionado: no APK do Android o botão "Continuar com Google" usa o Google Sign-In
@@ -413,7 +450,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   Conferido só até o pacote JavaScript do Android (`expo export`); falta testar no celular com o
   próximo APK.
 
-## 2026-10-28 — Correções de segurança antes da banca
+2026-10-28 — Correções de segurança antes da banca
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `fix/seguranca-antes-da-banca`
 - O que foi adicionado: `common/numero-da-query.ts` (`diasDaQuery`, `limiteDaQuery`): o que não é
@@ -437,7 +475,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   `npm audit` exige subir versão maior (Nest 12, Vite 8, React Router 7): fica para depois da
   banca.
 
-## 2026-10-28 — Painel mais leve para o servidor (central e tela Início)
+2026-10-28 — Painel mais leve para o servidor (central e tela Início)
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `perf/painel-polling` (criada em cima de `fix/travamento-login`)
 - O que foi adicionado: rota `GET /registros/resumo-glicemia?dias=` (7 a 90, padrão 30) com o
@@ -462,7 +501,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   no uso real não existe medição no futuro. Com a Início parada 35 s: 25 chamadas e 12,6 MB
   antes, 7 chamadas e 0,35 MB agora. Aba escondida por 65 s: nenhuma chamada.
 
-## 2026-10-28 — Travamento da API com logins simultâneos
+2026-10-28 — Travamento da API com logins simultâneos
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `fix/travamento-login` (criada em cima de `docs/analise-desempenho`)
 - O que foi adicionado: `auth.service.spec.ts`, que faz login, renovação de sessão, cadastro e
@@ -485,7 +525,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   mexeria no `AllExceptionsFilter`). Com o banco fora, o Render agora marca a API como fora do
   ar e pode reiniciá-la.
 
-## 2026-10-28 — Análise de desempenho e concorrência
+2026-10-28 — Análise de desempenho e concorrência
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `docs/analise-desempenho` (criada em cima de `docs/analise-seguranca-lgpd`)
 - O que foi adicionado: `docs/ANALISE_DESEMPENHO.md` (desempenho da API, banco, painel, app e
@@ -503,7 +544,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   banco Postgres isolado e num contêiner com 0,1 CPU imitando o Render gratuito; nada tocou o
   banco publicado.
 
-## 2026-10-28 — Análise de segurança, redes e LGPD
+2026-10-28 — Análise de segurança, redes e LGPD
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `docs/analise-seguranca-lgpd`
 - O que foi adicionado: `docs/ANALISE_SEGURANCA_LGPD.md` — análise da API, painel, app,
@@ -519,7 +561,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   outros módulos estão corretos. Credenciais de demonstração (admin e exemplos) são públicas no
   README e funcionam no site no ar — trocar antes de qualquer uso real.
 
-## 2026-10-28 — Olho para mostrar a senha no login
+2026-10-28 — Olho para mostrar a senha no login
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/olho-senha` (criada em cima de `feat/apk-eas`, PR #14)
 - O que foi adicionado: botão de olho que mostra e esconde a senha no login e no cadastro do app
@@ -532,7 +575,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 - Atenção para quem vier depois: no painel o olho nativo do Edge foi escondido
   (`::-ms-reveal`) para não aparecerem dois.
 
-## 2026-10-28 — APK de demonstração pelo EAS Build
+2026-10-28 — APK de demonstração pelo EAS Build
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/apk-eas`
 - O que foi adicionado: `apps/mobile/eas.json` com o perfil `preview` (APK de instalação direta,
@@ -546,7 +590,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   mensagens em tempo real funcionaram. O login com Google ainda não funciona no APK (o botão
   avisa "Google não configurado").
 
-## 2026-10-28 — Teclado e barra de abas no Android; aviso da própria mensagem no painel
+2026-10-28 — Teclado e barra de abas no Android; aviso da própria mensagem no painel
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `fix/teclado-e-aviso-de-mensagem`
 - O que foi modificado:
@@ -565,7 +610,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 - Atenção para quem vier depois: nas telas de perfil o diff é quase todo indentação (use
   `git diff -w`). Conferido num Android de verdade com navegação de 3 botões, pelo Expo Go.
 
-## 2026-10-27 — Login com Google próprio na segunda cópia
+2026-10-27 — Login com Google próprio na segunda cópia
+
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/render-tcc-google`
 - O que foi adicionado: cliente "NutriCare - Painel Web" no projeto `nutricare-tcc` do Google
@@ -576,7 +622,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 - Atenção para quem vier depois: os usuários de teste dessa cópia ficam no projeto
   `nutricare-tcc`, não no projeto do cliente original.
 
-## 2026-10-27 — Segunda cópia no Render (`render-tcc.yaml`)
+2026-10-27 — Segunda cópia no Render (`render-tcc.yaml`)
+
 - Quem: Natan, com apoio de IA
 - PR/branch: commit `2290c6d`, que entrou direto na `main`, sem PR (a branch local
   `feat/render-tcc` seguia a `origin/main` por engano). O CI passou.
@@ -590,7 +637,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   da segunda cópia nasceu em 27/10 e o gratuito do Render vence em 30 dias. O commit `2290c6d`
   ficou com rodapé de ferramenta; tirar exigiria reescrever a `main`.
 
-## 2026-10-27 — Aviso sobre o login com Google no README
+2026-10-27 — Aviso sobre o login com Google no README
+
 - Quem: equipe, com apoio de IA
 - PR/branch: #11, `docs/ia-e-limpeza`
 - O que foi adicionado: aviso no `README.md` (passos da API e do painel) e seção "Ao rodar o
@@ -600,7 +648,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 - Atenção para quem vier depois: o Client ID não é segredo; a chave secreta do cliente nunca vai
   para o repositório.
 
-## 2026-10-27 — Documentação para IA e limpeza de comentários
+2026-10-27 — Documentação para IA e limpeza de comentários
+
 - Quem: equipe, com apoio de IA
 - PR/branch: `docs/ia-e-limpeza`
 - O que foi adicionado: `CLAUDE.md`, `AGENTS.md`, `docs/LEIA_PRIMEIRO_IA.md` e este histórico.
@@ -612,7 +661,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 - Atenção para quem vier depois: antes de mexer em qualquer coisa, leia as regras de "não mexa".
 
 
-## 2026-10-27 — Convite de vínculo (PR #7, fechado; entrou na main por outro caminho)
+2026-10-27 — Convite de vínculo (PR #7, fechado; entrou na main por outro caminho)
+
 - Quem: equipe, com apoio de IA
 - PR/branch: #7, `feat/convite-vinculo` (obsoleta, não usar)
 - O que aconteceu: a primeira versão do convite ficou nessa branch e o PR foi fechado. A versão
@@ -620,7 +670,8 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 - Atenção para quem vier depois: não faça merge dessa branch; ela usa a migration 016 com outro
   conteúdo e conflita com a que está na `main`.
 
-## 2026-10-27 — Correções do teste funcional (PR #6, na `main`)
+2026-10-27 — Correções do teste funcional (PR #6, na `main`)
+
 - Quem: equipe, com apoio de IA
 - PR/branch: #6, `fix/bugs-teste-funcional`
 - O que foi adicionado: `common/data-nascimento.ts`, `common/limite-tentativas.ts`, `helmet`,
