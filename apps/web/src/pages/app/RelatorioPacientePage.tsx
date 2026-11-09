@@ -4,7 +4,7 @@ import CalendarioGlicemia from '../../components/CalendarioGlicemia'
 import { AlertBanner, Badge, Btn, Card, EmptyState, PageHeader, TabelaRolavel } from '../../components/ui'
 import { CLASSIFICACAO_LABEL, MOMENTO_LABEL, type Classificacao } from '../../lib/alertas'
 import { extractError } from '../../lib/api'
-import { gerarRelatorio, type Relatorio, type RelatorioRegistroGlicemia, type RelatorioRegistroRefeicao } from '../../lib/relatorios'
+import { baixarCsv, gerarRelatorio, type Relatorio, type RelatorioRegistroGlicemia, type RelatorioRegistroRefeicao } from '../../lib/relatorios'
 import { contar } from '../../lib/texto'
 
 const DIAS_HISTORICO = 3650
@@ -57,6 +57,20 @@ export default function RelatorioPacientePage() {
   const [relatorio, setRelatorio] = useState<Relatorio | null>(null)
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
+  const [exportando, setExportando] = useState(false)
+  const [erroCsv, setErroCsv] = useState<string | null>(null)
+
+  async function exportarCsv() {
+    setExportando(true)
+    setErroCsv(null)
+    try {
+      await baixarCsv(pacienteId, DIAS_HISTORICO, true)
+    } catch (err) {
+      setErroCsv(extractError(err))
+    } finally {
+      setExportando(false)
+    }
+  }
 
   useEffect(() => {
     let cancelado = false
@@ -83,8 +97,14 @@ export default function RelatorioPacientePage() {
         eyebrow="Relatório individual"
         title={paciente.nome}
         subtitle={`${paciente.email} · histórico dos últimos 10 anos`}
-        action={<Btn variant="secondary" onClick={() => window.print()}>Imprimir</Btn>}
+        action={
+          <div className="no-print" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Btn variant="secondary" loading={exportando} onClick={exportarCsv}>Exportar CSV</Btn>
+            <Btn variant="secondary" onClick={() => window.print()}>Imprimir</Btn>
+          </div>
+        }
       />
+      {erroCsv && <div style={{ marginBottom: 16 }}><AlertBanner message={erroCsv} /></div>}
 
       <div style={styles.stack}>
         <Card title="Identificação" subtitle="Dados cadastrados no perfil do paciente">

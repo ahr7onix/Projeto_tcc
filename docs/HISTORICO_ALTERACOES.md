@@ -10,6 +10,25 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   do repositório. Para o botão funcionar, o APK precisa estar anexado a uma Release do GitHub com esse
   nome (ou a variável apontar para outro endereço, no `render.yaml`/`render-tcc.yaml`).
 
+## 2026-11-09 — Botão "Exportar CSV" no relatório do paciente
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/painel-exportar-csv`
+- O que aconteceu: o parecer de 02/11 (correção CO-08) apontou que a planilha só existia na API.
+  O painel já tinha a função `baixarCsv`, mas nenhum botão a chamava.
+- O que foi adicionado:
+  - Botão "Exportar CSV" ao lado de "Imprimir" na tela do relatório. Baixa o mesmo histórico da
+    tela (10 anos), mostra o erro da API se falhar e some na impressão.
+  - `GET /relatorios/csv` aceita `completo=true`, como o `GET /relatorios`. Sem ele a planilha
+    parava em 365 dias. Teste novo em `relatorios.service.spec.ts`.
+- O que foi modificado: o CORS da API expõe o `Content-Disposition`. Sem isso o navegador esconde
+  esse cabeçalho quando o painel e a API ficam em endereços diferentes (como no Render), e o
+  arquivo baixaria sem o nome do paciente.
+- Arquivos principais: `apps/web/src/pages/app/RelatorioPacientePage.tsx`,
+  `apps/web/src/lib/relatorios.ts`, `apps/api/src/modules/relatorios` e `apps/api/src/main.ts`.
+- Atenção para quem vier depois: conferido com Playwright no Chrome, com painel (vite preview) e
+  API em portas diferentes, no banco de teste `tcc`. O arquivo baixado tem o nome do paciente, BOM
+  e as 6 glicemias do João. O 404 no console é o `favicon.ico`, que o painel não tem.
+
 ## 2026-11-09 — Cadastro aberto para teste (temporário)
 - Quem: Isac, com apoio de IA
 - PR/branch: `feat/cadastro-teste-aberto`

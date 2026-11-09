@@ -610,7 +610,7 @@ São cerca de 90 rotas. A tabela abaixo lista as principais, agrupadas por final
 | GET | `/alertas` | Medições fora da faixa no período |
 | GET | `/alertas/resumo` | Percentual dentro da faixa e ranking por paciente |
 | GET | `/relatorios` | Relatório consolidado do paciente |
-| GET | `/relatorios/csv` | O mesmo relatório em planilha |
+| GET | `/relatorios/csv` | O mesmo relatório em planilha (`completo=true` para o histórico inteiro) |
 | GET/POST | `/mensagens` | Conversas e envio de mensagem |
 | GET | `/mensagens/stream` | **Canal SSE** de mensagens em tempo real |
 | POST | `/mensagens/:id/digitando` | Sinal de "está digitando" |
@@ -1315,7 +1315,8 @@ Este é o principal item em aberto do projeto, e está registrado como tal na se
 - as anotações do profissional.
 
 O período padrão é de 30 dias e o máximo é de 365; existe ainda a opção de relatório completo,
-que percorre todo o histórico. A exportação em planilha é feita por `GET /relatorios/csv`, e a
+que percorre todo o histórico. A exportação em planilha é o botão "Exportar CSV" da tela do
+relatório, que baixa o mesmo histórico completo da tela por `GET /relatorios/csv?completo=true`. A
 exportação em PDF usa a impressão do próprio navegador, com uma folha de estilo específica para
 impressão.
 
