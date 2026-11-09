@@ -34,7 +34,7 @@ e avise a equipe antes.
 |---|---|
 | `database/schema.sql` e `database/migrations/*.sql` | Os dois têm que descrever o mesmo banco. Toda mudança de banco vai nos dois, e migration já criada nunca é editada: cria-se uma nova com o número seguinte (a próxima é a 018). O CI confere (`npm run db:verificar`). Já houve tabela que existia só na migration e todo banco novo nascia sem ela. |
 | Vínculo nutricionista–paciente (`nutricionista_paciente`, `VinculosService.garantirVinculo` / `resolverPacienteAlvo`, `ConvitesService`) | É o que autoriza o nutricionista a ver dado de saúde do paciente (LGPD, dado sensível). O vínculo só nasce quando o paciente aceita o convite. Não crie caminho que vincule sem aceite e não leia dado clínico sem passar por essa checagem. Já existiu vínculo automático com todos os nutricionistas e isso vazava dados. |
-| Aprovação do nutricionista pela administração (migration 017) | O painel só abre depois que o admin confere o CRN e aprova. Não pule essa etapa. |
+| Aprovação do nutricionista pela administração (migration 017) | O painel só abre depois que o admin confere o CRN e aprova. Não pule essa etapa. A única exceção é a `CADASTRO_TESTE_ABERTO`, temporária, ligada no Render só para a fase de testes (ver `docs/PUBLICAR.md`); desligue antes de qualquer uso real. |
 | `JwtAuthGuard`, `RolesGuard` e os `@Roles(...)` dos controllers | Afrouxar abre dado de um perfil para outro. Paciente só vê os próprios dados. |
 | Faixas de glicemia (`apps/api/src/common/glicemia`) e fórmulas de nutrição (`apps/api/src/common/nutricao`) | É regra clínica. Só muda com validação do curso de Nutrição (`docs/CONFERENCIA_NUTRICAO.md`). Os alimentos do seed (`fonte = 'exemplo'`) são aproximados. |
 | `AllExceptionsFilter` (formato das respostas de erro) | O painel e o app leem as mensagens de erro nesse formato. |
@@ -130,6 +130,9 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
   na barra lateral.
 
 ## Em andamento
+
+- Fase de testes com `CADASTRO_TESTE_ABERTO=true` no Render (09/11/2026): cadastro no painel
+  entra direto e ganha conta `+app` para o app. Desligar ao fim dos testes.
 
 - v1.0: falta só a tag `v1.0` no `main`, com o APK 1.0.0 anexado à release. Os PRs #10 e #19
   entraram em 30/10/2026. Para saber se a tag já saiu: `git tag`.

@@ -11,9 +11,13 @@ import { normalizarDataNascimento } from '../../common/data-nascimento';
 import * as bcrypt from 'bcryptjs';
 import { randomBytes, createHash } from 'crypto';
 import { OAuth2Client, TokenPayload } from 'google-auth-library';
-import type { Pool } from 'pg';
+import type { Pool, PoolClient } from 'pg';
 import { PG_POOL } from '../../database/database.module';
-import { expoeLinkDeSenha } from '../../common/ambiente';
+import {
+  cadastroTesteAberto,
+  emailDaContaDoApp,
+  expoeLinkDeSenha,
+} from '../../common/ambiente';
 import { logger } from '../../common/logging/logger.service';
 import { perfilEstaCompleto } from '../../common/perfil-completo';
 import { MailService } from '../mail/mail.service';
@@ -53,6 +57,17 @@ export interface CadastroAguardandoAprovacao {
   message: string;
 }
 
+/**
+ * Resposta do cadastro de nutricionista com CADASTRO_TESTE_ABERTO ligado: o
+ * acesso ao painel já está liberado e a conta do app foi criada. Também não
+ * abre sessão: a tela mostra o login do app e a pessoa entra no painel.
+ */
+export interface CadastroTeste {
+  cadastroTeste: true;
+  emailApp: string;
+  message: string;
+}
+
 const AGUARDANDO_APROVACAO: CadastroAguardandoAprovacao = {
   aguardandoAprovacao: true,
   message:
@@ -88,12 +103,13 @@ export class AuthService {
   async cadastro(
     dto: CadastroDto,
     papel: 'paciente' | 'nutricionista',
-  ): Promise<AuthResponse | CadastroAguardandoAprovacao> {
+  ): Promise<AuthResponse | CadastroAguardandoAprovacao | CadastroTeste> {
     const email = dto.email.trim().toLowerCase();
     const nome = dto.nome.trim().replace(/\s+/g, ' ');
 
     const client = await this.pool.connect();
     let user: UserRow;
+    let emailApp: string | null = null;
     try {
       await client.query('BEGIN');
 
@@ -134,6 +150,9 @@ export class AuthService {
            VALUES ($1, $2, $3, $4)`,
           [user.id_usuario, crn, dto.especialidade?.trim() ?? null, crn !== null],
         );
+        if (cadastroTesteAberto(this.config)) {
+          emailApp = await this.prepararContaDeTeste(client, user, nome, senhaHash);
+        }
       }
 
       await client.query('COMMIT');
@@ -152,7 +171,9 @@ export class AuthService {
       client.release();
     }
 
-    if (papel === 'nutricionista') return AGUARDANDO_APROVACAO;
+    if (papel === 'nutricionista') {
+      return emailApp ? this.respostaCadastroTeste(emailApp, 'senha') : AGUARDANDO_APROVACAO;
+    }
     // Fora da transação: a sessão usa o pool (ver issueSession).
     return this.issueSession(user);
   }
@@ -180,7 +201,7 @@ export class AuthService {
   async loginGoogle(
     idToken: string,
     perfilCadastro: 'paciente' | 'nutricionista' = 'paciente',
-  ): Promise<AuthResponse | CadastroAguardandoAprovacao> {
+  ): Promise<AuthResponse | CadastroAguardandoAprovacao | CadastroTeste> {
     if (!this.googleClientId) {
       throw new UnauthorizedException(
         'Login com Google não está configurado nesta instalação: defina GOOGLE_CLIENT_ID no .env da API.',
@@ -223,6 +244,7 @@ export class AuthService {
       const client = await this.pool.connect();
       let user: UserRow;
       let criadoAgora: boolean;
+      let emailApp: string | null = null;
       try {
         await client.query('BEGIN');
 
@@ -261,6 +283,9 @@ export class AuthService {
                VALUES ($1, NULL, NULL, FALSE)`,
               [user.id_usuario]
             );
+            if (cadastroTesteAberto(this.config)) {
+              emailApp = await this.prepararContaDeTeste(client, user, nome, senhaHash);
+            }
           }
         }
 
@@ -281,7 +306,9 @@ export class AuthService {
       // de criar a conta de nutricionista ouve "aguardando aprovação"; quem
       // já tinha conta e ainda não foi aprovado recebe a mesma recusa do login.
       // Fora da transação, porque as duas consultas usam o pool (ver issueSession).
-      if (criadoAgora && user.tipo === 'nutricionista') return AGUARDANDO_APROVACAO;
+      if (criadoAgora && user.tipo === 'nutricionista') {
+        return emailApp ? this.respostaCadastroTeste(emailApp, 'google') : AGUARDANDO_APROVACAO;
+      }
       await this.recusarSeNaoAprovado(user);
       return this.issueSession(user);
     }
@@ -511,6 +538,61 @@ export class AuthService {
    * (docs/ANALISE_DESEMPENHO.md, item 2.1). Quem chama também não pode estar
    * segurando conexão.
    */
+  /**
+   * CADASTRO_TESTE_ABERTO: aprova o nutricionista recém-criado e cria a conta de
+   * paciente de teste dele, com a mesma senha, mais um convite pendente. O
+   * vínculo só nasce quando o paciente aceita o convite no app, como sempre.
+   * Roda dentro da transação do cadastro, só com o `client` (nada de pool).
+   */
+  private async prepararContaDeTeste(
+    client: PoolClient,
+    nutri: UserRow,
+    nome: string,
+    senhaHash: string,
+  ): Promise<string> {
+    const emailApp = emailDaContaDoApp(nutri.email);
+    const { rows: nutriRows } = await client.query<{ id_nutricionista: string }>(
+      `UPDATE nutricionista SET aprovado_em = NOW()
+        WHERE id_usuario = $1
+        RETURNING id_nutricionista`,
+      [nutri.id_usuario],
+    );
+
+    const existente = await client.query('SELECT 1 FROM usuario WHERE email = $1', [emailApp]);
+    if (existente.rowCount) return emailApp;
+
+    const { rows: userRows } = await client.query<{ id_usuario: string }>(
+      `INSERT INTO usuario (nome, email, senha, tipo)
+       VALUES ($1, $2, $3, 'paciente')
+       RETURNING id_usuario`,
+      [nome, emailApp, senhaHash],
+    );
+    const { rows: pacRows } = await client.query<{ id_paciente: string }>(
+      `INSERT INTO paciente (id_usuario) VALUES ($1) RETURNING id_paciente`,
+      [userRows[0].id_usuario],
+    );
+    await client.query(
+      `INSERT INTO solicitacao_vinculo (id_nutricionista, id_paciente) VALUES ($1, $2)`,
+      [nutriRows[0].id_nutricionista, pacRows[0].id_paciente],
+    );
+    return emailApp;
+  }
+
+  private respostaCadastroTeste(emailApp: string, origem: 'senha' | 'google'): CadastroTeste {
+    const senhaDoApp =
+      origem === 'senha'
+        ? 'com a mesma senha'
+        : 'tocando em "Esqueceu a senha?" para criar uma senha (o e-mail chega na sua caixa de entrada)';
+    return {
+      cadastroTeste: true,
+      emailApp,
+      message:
+        `Conta criada e liberada para teste. Entre no painel com este e-mail. ` +
+        `No aplicativo Android, entre com ${emailApp} ${senhaDoApp}; ` +
+        `lá aparece o seu convite para ser acompanhado por você mesmo.`,
+    };
+  }
+
   private async issueSession(user: UserRow): Promise<AuthResponse> {
     const session = await this.createRefreshToken(this.pool, user.id_usuario, null);
     return {

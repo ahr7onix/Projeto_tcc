@@ -16,3 +16,22 @@ export function expoeLinkDeSenha(config: { get<T = string>(chave: string): T | u
     config.get<string>('NODE_ENV') !== 'production'
   );
 }
+
+/**
+ * Cadastro aberto para teste (CADASTRO_TESTE_ABERTO=true), temporário.
+ *
+ * Quem se cadastra pelo painel entra sem esperar a aprovação da administração
+ * e ganha uma conta de paciente de teste (mesmo e-mail com "+app" antes do @)
+ * para usar o aplicativo. O vínculo entre as duas contas continua nascendo do
+ * convite que o paciente aceita no app. Desligado por padrão; desligar antes de
+ * qualquer uso com paciente de verdade.
+ */
+export function cadastroTesteAberto(config: { get<T = string>(chave: string): T | undefined }): boolean {
+  return config.get<string>('CADASTRO_TESTE_ABERTO') === 'true';
+}
+
+/** E-mail da conta de paciente de teste: `ana@x.com` vira `ana+app@x.com`. */
+export function emailDaContaDoApp(email: string): string {
+  const arroba = email.lastIndexOf('@');
+  return `${email.slice(0, arroba)}+app${email.slice(arroba)}`;
+}

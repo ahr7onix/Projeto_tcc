@@ -2,6 +2,25 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-11-09 — Cadastro aberto para teste (temporário)
+- Quem: Isac, com apoio de IA
+- PR/branch: `feat/cadastro-teste-aberto`
+- O que aconteceu: para a fase de testes, quem se cadastra no painel precisava esperar a
+  administração aprovar e não tinha como experimentar o app, que só aceita paciente.
+- O que foi adicionado:
+  - Variável `CADASTRO_TESTE_ABERTO` na API, desligada por padrão e ligada nos dois arquivos do
+    Render. Com ela, o cadastro de nutricionista pelo painel (e-mail ou Google) já sai aprovado
+    e cria uma conta de paciente de teste com o mesmo e-mail e `+app` antes do @
+    (`ana@x.com` vira `ana+app@x.com`). No cadastro por e-mail a senha é a mesma; pelo Google, a
+    pessoa cria a senha do app em "Esqueceu a senha?".
+  - A conta do app recebe um convite pendente do nutricionista. O vínculo continua nascendo só
+    do aceite no app: nada de vínculo automático.
+  - A tela de cadastro do painel mostra o login do app no lugar do aviso de aprovação.
+  - Testes em `auth.service.spec.ts` (com a variável ligada e desligada) e em `ambiente.spec.ts`.
+- Antes de qualquer uso com paciente de verdade: `CADASTRO_TESTE_ABERTO=false` no Render (junto
+  com `SEED_DEMO=false`). As contas aprovadas por este caminho continuam aprovadas; reveja na
+  Administração.
+
 ## 2026-10-30 — Painel: largura da tela, tabelas e paginação
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/painel-layout-tabelas` (saiu de `feat/dados-demonstracao`)

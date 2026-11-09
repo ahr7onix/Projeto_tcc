@@ -128,3 +128,60 @@ describe('AuthService com o pool cheio', () => {
     expect(resposta).toMatchObject({ user: { id: '30' } });
   });
 });
+
+describe('AuthService com CADASTRO_TESTE_ABERTO', () => {
+  function montarComCadastroAberto(aberto: boolean) {
+    const consultas: { sql: string; params: unknown[] }[] = [];
+    const executar = async (sql: string, params: unknown[] = []) => {
+      consultas.push({ sql: sql.trim(), params });
+      let rows: unknown[] = [];
+      if (/INSERT INTO usuario/.test(sql)) {
+        rows = [{ id_usuario: params[3] === 'nutricionista' ? '40' : '41', nome: params[0], email: params[1], senha: params[2], tipo: params[3] ?? 'paciente' }];
+      } else if (/UPDATE nutricionista SET aprovado_em/.test(sql)) {
+        rows = [{ id_nutricionista: '7' }];
+      } else if (/INSERT INTO paciente/.test(sql)) {
+        rows = [{ id_paciente: '9' }];
+      }
+      return { rows, rowCount: rows.length };
+    };
+    const pool = {
+      query: executar,
+      connect: async () => ({ query: executar, release: () => undefined }),
+    } as unknown as Pool;
+    const config = {
+      get: (chave: string, padrao?: string) =>
+        chave === 'CADASTRO_TESTE_ABERTO' ? String(aberto) : padrao,
+    } as unknown as ConfigService;
+    const service = new AuthService(pool, new JwtService({ secret: 'teste' }), config, {} as MailService);
+    return { service, consultas };
+  }
+
+  it('should approve the nutritionist and create the app account with a pending invite', async () => {
+    const { service, consultas } = montarComCadastroAberto(true);
+    const resposta = await service.cadastro(
+      { nome: 'Ana', email: 'Ana@X.com', senha: SENHA },
+      'nutricionista',
+    );
+
+    expect(resposta).toMatchObject({ cadastroTeste: true, emailApp: 'ana+app@x.com' });
+    expect(consultas.some((c) => /UPDATE nutricionista SET aprovado_em = NOW\(\)/.test(c.sql))).toBe(true);
+    const contaApp = consultas.find((c) => /INSERT INTO usuario/.test(c.sql) && c.params[1] === 'ana+app@x.com');
+    expect(contaApp).toBeDefined();
+    expect(await bcrypt.compare(SENHA, contaApp!.params[2] as string)).toBe(true);
+    // O vínculo continua dependendo do aceite: nasce só o convite pendente.
+    expect(consultas.some((c) => /INSERT INTO solicitacao_vinculo/.test(c.sql))).toBe(true);
+    expect(consultas.some((c) => /INSERT INTO nutricionista_paciente/.test(c.sql))).toBe(false);
+  });
+
+  it('should keep waiting for approval when the flag is off', async () => {
+    const { service, consultas } = montarComCadastroAberto(false);
+    const resposta = await service.cadastro(
+      { nome: 'Ana', email: 'ana@x.com', senha: SENHA },
+      'nutricionista',
+    );
+
+    expect(resposta).toMatchObject({ aguardandoAprovacao: true });
+    expect(consultas.some((c) => /aprovado_em/.test(c.sql))).toBe(false);
+    expect(consultas.filter((c) => /INSERT INTO usuario/.test(c.sql))).toHaveLength(1);
+  });
+});

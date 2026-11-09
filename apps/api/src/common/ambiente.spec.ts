@@ -1,4 +1,4 @@
-import { expoeLinkDeSenha } from './ambiente';
+import { emailDaContaDoApp, expoeLinkDeSenha } from './ambiente';
 
 const config = (env: Record<string, string>) => ({ get: (chave: string) => env[chave] as never });
 
@@ -19,5 +19,12 @@ describe('expoeLinkDeSenha', () => {
     expect(
       expoeLinkDeSenha(config({ RESET_LINK_NA_RESPOSTA: 'true', NODE_ENV: 'development' })),
     ).toBe(true);
+  });
+});
+
+describe('emailDaContaDoApp', () => {
+  it('should add +app before the @', () => {
+    expect(emailDaContaDoApp('ana@x.com')).toBe('ana+app@x.com');
+    expect(emailDaContaDoApp('ana+nutri@x.com')).toBe('ana+nutri+app@x.com');
   });
 });

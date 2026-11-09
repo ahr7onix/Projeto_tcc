@@ -73,7 +73,9 @@ export default function LoginPage() {
       const { data } = await api.post('/auth/google/nutricionista', {
         credential: response.credential,
       })
-      if (data.aguardandoAprovacao) {
+      // `cadastroTeste`: cadastro aberto para teste (CADASTRO_TESTE_ABERTO na
+      // API). A conta já está liberada; o aviso traz o login do app.
+      if (data.aguardandoAprovacao || data.cadastroTeste) {
         setAguardandoAprovacao(data.message)
         return
       }
@@ -200,7 +202,7 @@ export default function LoginPage() {
         senha: regSenha,
         crn: regCrn.trim() || undefined,
       })
-      if (data.aguardandoAprovacao) {
+      if (data.aguardandoAprovacao || data.cadastroTeste) {
         setAguardandoAprovacao(data.message)
         setNome('')
         setRegEmail('')
