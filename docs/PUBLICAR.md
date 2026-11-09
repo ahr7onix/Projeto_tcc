@@ -36,6 +36,21 @@ O aplicativo do celular é distribuído como APK, instalado direto no Android
 
 ---
 
+## Cadastro aberto para teste (temporário)
+
+Com `CADASTRO_TESTE_ABERTO=true` (ligado nos dois arquivos do Render), quem se
+cadastra no painel já entra, sem esperar a aprovação da administração, e ganha
+uma conta de paciente para testar o app Android:
+
+| Onde | E-mail | Senha |
+|---|---|---|
+| Painel | o do cadastro, ex.: `ana@x.com` | a do cadastro |
+| App | o mesmo com `+app`, ex.: `ana+app@x.com` | a mesma (cadastro pelo Google: criar em "Esqueceu a senha?") |
+
+No app aparece o convite do próprio nutricionista; aceitando, os dois ficam
+vinculados e dá para testar o fluxo inteiro sozinho. **Antes de qualquer uso com
+paciente de verdade, troque a variável para `false`** no Render.
+
 ## Como entrar
 
 O banco nasce com um administrador e, como `SEED_DEMO` está como `true`, com

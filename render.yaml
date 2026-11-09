@@ -90,6 +90,11 @@ services:
       # Troque para "false" antes de qualquer uso com paciente de verdade.
       - key: SEED_DEMO
         value: "true"
+      # TEMPORÁRIO, só para a fase de testes: quem se cadastra no painel entra
+      # sem esperar a aprovação e ganha uma conta de paciente de teste para o
+      # app (e-mail com "+app"). Troque para "false" junto com o SEED_DEMO.
+      - key: CADASTRO_TESTE_ABERTO
+        value: "true"
 
   - type: web
     name: nutricare-adj-painel
