@@ -227,6 +227,7 @@
 
 .footerBtn {
   display: flex;
+  text-decoration: none;
   align-items: center;
   gap: 10px;
   width: 100%;
@@ -247,6 +248,7 @@
 }
 
 .recolherBtn:hover,
+.baixarBtn:hover,
 .notifBtn:hover {
   background: var(--surface-alt);
   color: var(--text);

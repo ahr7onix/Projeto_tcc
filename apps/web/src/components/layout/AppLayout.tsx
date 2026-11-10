@@ -6,6 +6,10 @@ import { useAuth } from '../../contexts/AuthContext'
 import NotificationCenter from '../NotificationCenter'
 import s from './AppLayout.module.css'
 
+/* Endereço do APK. Por padrão é o arquivo da última versão publicada no GitHub. */
+const URL_APK = import.meta.env.VITE_APP_APK_URL
+  || 'https://github.com/ahr7onix/Projeto_tcc/releases/latest/download/NutriCare.apk'
+
 interface ItemMenu {
   to: string
   label: string
@@ -153,6 +157,15 @@ export default function AppLayout() {
 
         <div className={s.sidebarFooter}>
           {temConversas && <div ref={setLugarDoSino} />}
+          <a
+            className={`${s.footerBtn} ${s.baixarBtn}`}
+            href={URL_APK}
+            download
+            title="Baixar o aplicativo Android (APK)"
+          >
+            <DownloadIcon />
+            <span className={s.footerLabel}>Baixar app Android</span>
+          </a>
           <button
             type="button"
             className={`${s.footerBtn} ${s.recolherBtn}`}
@@ -237,6 +250,9 @@ function AdminIcon() {
 }
 function LogoutIcon() {
   return <Svg size={16}><path d="M9.5 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3.5" /><polyline points="15.5 16 19.5 12 15.5 8" /><path d="M19.5 12H9.5" /></Svg>
+}
+function DownloadIcon() {
+  return <Svg size={16}><path d="M12 4v11" /><polyline points="7.5 11 12 15.5 16.5 11" /><path d="M5 19.5h14" /></Svg>
 }
 function MenuIcon() {
   return <Svg size={22}><path d="M4 7h16" /><path d="M4 12h16" /><path d="M4 17h16" /></Svg>
