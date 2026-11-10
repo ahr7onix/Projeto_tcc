@@ -2,6 +2,14 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-11-10 — Painel: botão para baixar o app Android
+- Quem: Isac, com apoio de IA
+- PR/branch: `feat/painel-baixar-app`
+- O que foi adicionado: botão "Baixar app Android" no rodapé do menu lateral do painel. Ele abre o
+  endereço do APK em `VITE_APP_APK_URL`; sem a variável, usa `releases/latest/download/NutriCare.apk`
+  do repositório. Para o botão funcionar, o APK precisa estar anexado a uma Release do GitHub com esse
+  nome (ou a variável apontar para outro endereço, no `render.yaml`/`render-tcc.yaml`).
+
 ## 2026-11-09 — Cadastro aberto para teste (temporário)
 - Quem: Isac, com apoio de IA
 - PR/branch: `feat/cadastro-teste-aberto`
