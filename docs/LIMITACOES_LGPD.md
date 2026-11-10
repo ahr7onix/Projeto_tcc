@@ -1,4 +1,4 @@
-# Limitações de conformidade — LGPD
+# Limitações de conformidade - LGPD
 
 Documento de registro das limitações conhecidas do NutriCare no tratamento de
 dados pessoais sensíveis. Serve de base para a seção de **Limitações do
@@ -22,7 +22,7 @@ POST /vinculos   { "pacienteId": "..." }
 
 `VinculosService.vincular` ([vinculos.service.ts:120](../apps/api/src/modules/vinculos/vinculos.service.ts#L120))
 confere se o nutricionista existe, se o paciente existe e se já não há vínculo
-ativo — e insere. **Não há nenhuma etapa de aprovação do paciente.** A tabela
+ativo - e insere. **Não há nenhuma etapa de aprovação do paciente.** A tabela
 `nutricionista_paciente` só tem a coluna `ativo`, que distingue vínculo vigente
 de vínculo encerrado, não vínculo aceito de vínculo pendente.
 
@@ -31,7 +31,7 @@ medidas, registros alimentares, registros emocionais, planos e relatórios do
 paciente, e a trocar mensagens com ele. O paciente é notificado apenas
 indiretamente: o nutricionista aparece nas telas do app.
 
-O paciente também **não tem como recusar ou encerrar o vínculo pelo app** —
+O paciente também **não tem como recusar ou encerrar o vínculo pelo app** -
 `DELETE /vinculos/:pacienteId` é restrito ao papel `nutricionista`
 ([vinculos.controller.ts:22](../apps/api/src/modules/vinculos/vinculos.controller.ts#L22)).
 
@@ -40,16 +40,16 @@ Por que isso é uma limitação
 Dado de saúde é **dado pessoal sensível** (art. 5º, II). O art. 11 admite o
 tratamento em duas situações relevantes aqui:
 
-- **inciso I** — consentimento do titular, de forma **específica e destacada**,
+- **inciso I** - consentimento do titular, de forma **específica e destacada**,
   para finalidades específicas;
-- **inciso II, alínea "f"** — tutela da saúde, em procedimento realizado por
+- **inciso II, alínea "f"** - tutela da saúde, em procedimento realizado por
   profissionais de saúde ou serviços de saúde.
 
 Um serviço de acompanhamento nutricional se apoia na alínea "f", mas o que a
 dispensa de consentimento cobre é o tratamento **dentro de um atendimento que
 já existe**. O sistema, hoje, não guarda nenhuma evidência de que o atendimento
 foi acordado com o paciente: qualquer nutricionista cadastrado alcança qualquer
-paciente cadastrado. Falta o registro do aceite — que é justamente o que
+paciente cadastrado. Falta o registro do aceite - que é justamente o que
 demonstraria conformidade, tanto pelo inciso I quanto pela alínea "f".
 
 Some-se a isso o art. 9º (o titular tem direito a saber com quem seus dados são
@@ -67,7 +67,7 @@ uso real:
 > estiver implementado.
 
 Em uso real com pacientes da ADJ Birigui, a falha permitiria que um profissional
-visse o histórico clínico de alguém que nunca o autorizou — exposição de dado
+visse o histórico clínico de alguém que nunca o autorizou - exposição de dado
 sensível, com o agravante de ser silenciosa.
 
 Correção proposta (trabalho futuro)
@@ -84,7 +84,7 @@ Transformar o vínculo em um convite com aceite:
 4. `existeVinculo` e `garantirVinculo` passam a exigir `status = 'aceito'`.
    Como **todo acesso a dado de paciente já passa por esses dois métodos**
    ([vinculos.service.ts:34](../apps/api/src/modules/vinculos/vinculos.service.ts#L34)),
-   a mudança fecha o acesso no sistema inteiro em um só ponto — planos,
+   a mudança fecha o acesso no sistema inteiro em um só ponto - planos,
    relatórios, mensagens, alertas e registros incluídos.
 5. Texto de consentimento específico e destacado na tela de aceite, informando
    quais dados o nutricionista passará a ver, e registro da data do aceite.
@@ -108,7 +108,7 @@ Por que isso é uma limitação
 
 O art. 11, II, "f" condiciona a dispensa de consentimento a que o tratamento
 seja feito **por profissionais de saúde**. Sem validar o registro profissional,
-o sistema não consegue sustentar essa condição — e a falha se combina com a do
+o sistema não consegue sustentar essa condição - e a falha se combina com a do
 item 1: conta falsa de nutricionista + vínculo sem aceite = acesso a dados de
 saúde de terceiros.
 
@@ -131,7 +131,7 @@ condicionar o login do nutricionista à liberação.
 - **Exportação.** O relatório em CSV
   ([relatorios.service.ts](../apps/api/src/modules/relatorios/relatorios.service.ts))
   atende parcialmente o direito de portabilidade (art. 18, V), mas é gerado pelo
-  nutricionista ou pelo paciente sobre um período — não é uma exportação
+  nutricionista ou pelo paciente sobre um período - não é uma exportação
   completa da conta.
 - **Registro de acessos.** Não há log de quem leu o quê. Auditoria de acesso a
   dado sensível é boa prática e ajudaria a demonstrar conformidade.

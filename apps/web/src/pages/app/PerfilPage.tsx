@@ -100,7 +100,7 @@ export default function PerfilPage() {
       <header className={s.header}>
         <p className={s.eyebrow}>Sua conta</p>
         <h1 className={s.title}>Gerenciar perfil</h1>
-        <p className={s.subtitle}>Hub de configurações do NutriCare — dados, segurança e suporte.</p>
+        <p className={s.subtitle}>Hub de configurações do NutriCare - dados, segurança e suporte.</p>
       </header>
 
       {success && (
@@ -113,12 +113,12 @@ export default function PerfilPage() {
         <aside className={s.rail}>
           <div className={s.railTop}>
             <div className={s.avatar} aria-hidden>{initial}</div>
-            <h2 className={s.railName}>{user?.nome ?? '—'}</h2>
+            <h2 className={s.railName}>{user?.nome ?? '-'}</h2>
             <p className={s.railRole}>{roleLabel}</p>
             <p className={s.railBio}>
               Olá, {firstName}. Use o menu ao lado para editar dados, senha e ver suporte.
             </p>
-            <p className={s.railEmail}>{user?.email ?? '—'}</p>
+            <p className={s.railEmail}>{user?.email ?? '-'}</p>
           </div>
 
           <nav className={s.railNav} aria-label="Seções do perfil">
@@ -226,9 +226,9 @@ export default function PerfilPage() {
                 <p>Atalhos rápidos do painel do nutricionista.</p>
               </div>
               <ul className={s.infoList}>
-                <li>Pacientes — vínculos e fichas</li>
-                <li>Registros — glicemia e histórico</li>
-                <li>Alimentação / Relatórios — acompanhamento nutricional</li>
+                <li>Pacientes - vínculos e fichas</li>
+                <li>Registros - glicemia e histórico</li>
+                <li>Alimentação / Relatórios - acompanhamento nutricional</li>
               </ul>
             </>
           )}
@@ -249,9 +249,9 @@ export default function PerfilPage() {
             <>
               <div className={s.panelHead}>
                 <h3>Sobre o sistema</h3>
-                <p>NutriCare — painel web do nutricionista · TCC · tema FEZ roxo escuro.</p>
+                <p>NutriCare - painel web do nutricionista - TCC - tema FEZ roxo escuro.</p>
               </div>
-              <div className={s.metaChip}>Versão web · perfil hub</div>
+              <div className={s.metaChip}>Versão web - perfil hub</div>
             </>
           )}
         </section>

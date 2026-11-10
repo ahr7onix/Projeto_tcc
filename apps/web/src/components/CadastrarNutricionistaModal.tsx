@@ -76,7 +76,7 @@ export default function CadastrarNutricionistaModal({ onClose, onCadastrado }: P
                 Cadastro de {resultado.nutricionista.nome} criado e já aprovado, mas este
                 servidor não tem envio de e-mail configurado: o link para criar a senha não
                 chegou. Depois que o e-mail estiver configurado (docs/PUBLICAR.md), basta usar
-                “Esqueceu a senha?” no login do painel com {resultado.nutricionista.email}.
+                "Esqueceu a senha?" no login do painel com {resultado.nutricionista.email}.
               </div>
             )}
             {resultado.linkDefinirSenha && (
@@ -113,7 +113,7 @@ export default function CadastrarNutricionistaModal({ onClose, onCadastrado }: P
                 onChange={(e) => setCrn(e.target.value)}
               />
               <Input
-                label="Especialidade — opcional"
+                label="Especialidade - opcional"
                 value={especialidade}
                 onChange={(e) => setEspecialidade(e.target.value)}
               />

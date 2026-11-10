@@ -35,7 +35,7 @@ function esperar(ms: number) {
  * Divide o texto que chega no fluxo em eventos SSE completos.
  *
  * Um evento termina em linha em branco. O `resto` que sobra é o começo de um
- * evento ainda incompleto — a leitura corta em qualquer ponto, inclusive no
+ * evento ainda incompleto - a leitura corta em qualquer ponto, inclusive no
  * meio de um JSON, então ele precisa esperar o próximo pedaço.
  */
 function separarEventos(buffer: string) {
@@ -74,7 +74,7 @@ export function assinarMensagens(
   async function ler(corpo: ReadableStream<Uint8Array>) {
     const leitor = corpo.getReader()
     // `stream: true` guarda os bytes de um caractere multibyte que ficou
-    // partido entre dois pedaços — acentos são a regra aqui.
+    // partido entre dois pedaços - acentos são a regra aqui.
     const decodificador = new TextDecoder()
     let buffer = ''
     while (true) {

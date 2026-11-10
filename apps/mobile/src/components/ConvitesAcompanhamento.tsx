@@ -9,7 +9,7 @@ import { colors, radius, spacing, typography } from '@/lib/theme';
 /**
  * Convites de acompanhamento na tela inicial. O paciente precisa saber o que
  * está autorizando antes de aceitar, por isso o cartão diz o que o
- * nutricionista passa a ver — e que dá para voltar atrás.
+ * nutricionista passa a ver - e que dá para voltar atrás.
  *
  * Aceitar ou recusar pede uma segunda confirmação (ideia trazida do PR #7):
  * consentimento não deve sair de um toque acidental. A confirmação fica no
@@ -59,7 +59,7 @@ export function ConvitesAcompanhamento() {
                 </Text>
                 {(nutricionista.crn || nutricionista.especialidade) && (
                   <Text style={styles.detalhe}>
-                    {[nutricionista.crn, nutricionista.especialidade].filter(Boolean).join(' · ')}
+                    {[nutricionista.crn, nutricionista.especialidade].filter(Boolean).join(' - ')}
                   </Text>
                 )}
               </View>

@@ -12,7 +12,7 @@ import { PushService } from '../push/push.service';
 import { VinculosService } from './vinculos.service';
 
 /**
- * Consentimento no vínculo (LGPD, art. 11 — dado de saúde é sensível).
+ * Consentimento no vínculo (LGPD, art. 11 - dado de saúde é sensível).
  *
  * O nutricionista convida; o paciente aceita ou recusa pelo aplicativo; e só o
  * aceite cria a linha em nutricionista_paciente, que é o que todo o resto do
@@ -232,7 +232,7 @@ export class ConvitesService {
     return { id: idSolicitacao, status: 'cancelada' };
   }
 
-  /** Quem acompanha o paciente hoje — para ele saber quem vê os seus dados. */
+  /** Quem acompanha o paciente hoje - para ele saber quem vê os seus dados. */
   async listarNutricionistasDoPaciente(idUsuarioPaciente: string) {
     const { rows } = await this.pool.query(
       `SELECT un.id_usuario, un.nome, n.crn, n.especialidade, np.criado_em

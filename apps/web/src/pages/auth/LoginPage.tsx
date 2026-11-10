@@ -238,7 +238,7 @@ export default function LoginPage() {
   }
 
   // `Ref` (e nao `RefObject`) porque o `useRef<HTMLDivElement | null>` do React 19
-  // devolve um ref que aceita null — é o tipo que o atributo `ref` espera.
+  // devolve um ref que aceita null - é o tipo que o atributo `ref` espera.
   const googleSlot = (ref: React.Ref<HTMLDivElement>, visible: boolean) => (
     <div className={styles.googleWrap}>
       {GOOGLE_CLIENT_ID ? (

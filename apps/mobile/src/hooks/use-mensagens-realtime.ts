@@ -8,7 +8,7 @@ import { useAuthStore } from '@/stores/auth';
  * Conversa que está aberta na tela, se houver.
  *
  * O canal é assinado uma vez só, no layout das abas, e precisa saber disso
- * para marcar como lida a mensagem que chega com o usuário lendo — é o mesmo
+ * para marcar como lida a mensagem que chega com o usuário lendo - é o mesmo
  * papel que a `selecionadaRef` cumpre no painel web.
  */
 let conversaEmFoco: string | null = null;
@@ -20,8 +20,8 @@ export function marcarConversaEmFoco(contraparteId: string | null): void {
 /**
  * Acrescenta a mensagem só se ela ainda não estiver na lista.
  *
- * Quem envia recebe a mensagem por dois caminhos — a resposta do POST e o eco
- * do canal em tempo real — e não há ordem garantida entre eles.
+ * Quem envia recebe a mensagem por dois caminhos - a resposta do POST e o eco
+ * do canal em tempo real - e não há ordem garantida entre eles.
  */
 function acrescentar(atual: Mensagem[], nova: Mensagem): Mensagem[] {
   return atual.some((m) => m.id === nova.id) ? atual : [...atual, nova];
@@ -32,7 +32,7 @@ function acrescentar(atual: Mensagem[], nova: Mensagem): Mensagem[] {
  * nova sozinhas, sem o usuário puxar para atualizar.
  *
  * Fica montado no layout das abas, e não em cada tela, para haver uma única
- * conexão aberta — a lista de conversas e a conversa aberta leem o mesmo cache
+ * conexão aberta - a lista de conversas e a conversa aberta leem o mesmo cache
  * do react-query.
  */
 export function useMensagensRealtime(): void {
@@ -56,7 +56,7 @@ export function useMensagensRealtime(): void {
           atual ? { ...atual, data: acrescentar(atual.data, evento.mensagem) } : atual,
         );
 
-        // Com a conversa na tela, o GET marca como lida na API — assim o
+        // Com a conversa na tela, o GET marca como lida na API - assim o
         // contador não sobe enquanto o usuário está justamente lendo.
         if (conversaEmFoco === evento.contraparteId && !evento.mensagem.propria) {
           abrirConversa(evento.contraparteId).catch(() => undefined);

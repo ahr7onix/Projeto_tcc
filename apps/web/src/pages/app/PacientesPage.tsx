@@ -109,7 +109,7 @@ export default function PacientesPage() {
   //
   // Este efeito também cobre o primeiro carregamento (busca vazia dispara na
   // hora, sem timer). Antes havia um segundo efeito só para isso, e os dois
-  // disparavam juntos na montagem — duas requisições iguais competindo.
+  // disparavam juntos na montagem - duas requisições iguais competindo.
   useEffect(() => {
     let cancelado = false
     const ativo = () => !cancelado
@@ -174,7 +174,7 @@ export default function PacientesPage() {
               <div style={{ flex: 1, minWidth: 0, fontSize: 14, color: 'var(--text)' }}>
                 {c.paciente.nome}{' '}
                 <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>
-                  {c.paciente.email} · enviado em {new Date(c.criadoEm).toLocaleDateString('pt-BR')}
+                  {c.paciente.email} - enviado em {new Date(c.criadoEm).toLocaleDateString('pt-BR')}
                 </span>
               </div>
               <Btn
@@ -277,7 +277,7 @@ export default function PacientesPage() {
 
                 {}
                 <div className={s.glicemia} style={{ color: glicemiaColor(p.glicemiaMedia) }}>
-                  {p.glicemiaMedia ? `${p.glicemiaMedia.toLocaleString('pt-BR')} mg/dL` : '—'}
+                  {p.glicemiaMedia ? `${p.glicemiaMedia.toLocaleString('pt-BR')} mg/dL` : '-'}
                 </div>
 
                 {}

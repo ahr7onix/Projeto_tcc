@@ -54,7 +54,7 @@ export default function RegistrarGlicemiaScreen() {
       const corpo =
         severidade === 'normal'
           ? 'Sua glicemia foi registrada.'
-          : `${mensagem}\n\nFaixa de referência: ${faixaReferencia.min}–${faixaReferencia.max} mg/dL.`;
+          : `${mensagem}\n\nFaixa de referência: ${faixaReferencia.min}-${faixaReferencia.max} mg/dL.`;
 
       Alert.alert(titulo, corpo, [{ text: 'OK', onPress: () => router.back() }]);
     } catch {

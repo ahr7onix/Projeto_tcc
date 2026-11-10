@@ -1,4 +1,4 @@
-# Login com Google — como está configurado
+# Login com Google - como está configurado
 
 O botão "Entrar com Google" do painel web **já está funcionando** em ambiente de
 desenvolvimento. Este documento registra o que foi configurado, para que seja
@@ -23,7 +23,7 @@ Por isso o mesmo Client ID precisa estar nos dois lugares:
 | API | `GOOGLE_CLIENT_ID` | `apps/api/.env` |
 
 Se a API ficar sem `GOOGLE_CLIENT_ID`, o login social é recusado com uma mensagem
-explicando isso — o resto do sistema continua funcionando normalmente.
+explicando isso - o resto do sistema continua funcionando normalmente.
 
 ---
 
@@ -31,7 +31,7 @@ O que está configurado hoje
 
 Projeto no Google Cloud: `my-project-1572287916923`.
 
-Credencial em uso — tipo **Aplicativo da Web**, nome **"NutriCare - Painel Web"**:
+Credencial em uso - tipo **Aplicativo da Web**, nome **"NutriCare - Painel Web"**:
 
 ```
 579066584754-mjlmqjmtscn5lgs7depm8uvovn92lm5d.apps.googleusercontent.com
@@ -44,7 +44,7 @@ http://localhost:5173
 http://127.0.0.1:5173
 ```
 
-O Client ID **não é segredo** — ele aparece no código da página. O que não pode
+O Client ID **não é segredo** - ele aparece no código da página. O que não pode
 ser divulgado é a "chave secreta do cliente", que este modo de login nem usa.
 
 > **Atenção ao tipo da credencial.** O projeto tinha uma credencial antiga do tipo
@@ -74,7 +74,7 @@ adicionar os e-mails na mesma lista: **Google Auth Platform > Público-alvo >
 Usuários de teste > Add users**.
 
 Para liberar qualquer conta Google, é preciso clicar em **Publicar app** na mesma
-tela — o que exige preencher os dados da tela de consentimento e, dependendo dos
+tela - o que exige preencher os dados da tela de consentimento e, dependendo dos
 escopos, passar pela verificação do Google. Para o TCC, a lista de usuários de
 teste é suficiente.
 
@@ -108,7 +108,7 @@ cima continua sendo o da cópia original e o de quem roda o projeto na máquina.
 
 Projeto no Google Cloud: `nutricare-tcc`, na conta Google do Natan.
 
-Credencial — tipo **Aplicativo da Web**, nome **"NutriCare - Painel Web"**:
+Credencial - tipo **Aplicativo da Web**, nome **"NutriCare - Painel Web"**:
 
 ```
 358396813214-n1fmvb21ph02u56f71ns4v02i4o6r9fd.apps.googleusercontent.com
@@ -147,7 +147,7 @@ Erros comuns
 | `Falha ao validar o token do Google: Wrong recipient` | Client ID diferente entre site e API | Deixar os dois iguais |
 | Botão nem aparece | Falta `VITE_GOOGLE_CLIENT_ID` no `.env` da web | Preencher e reiniciar o Vite |
 
-Depois de mexer em qualquer `.env`, **reiniciar o serviço** — tanto o NestJS
+Depois de mexer em qualquer `.env`, **reiniciar o serviço** - tanto o NestJS
 quanto o Vite leem essas variáveis só na inicialização.
 
 ---
@@ -218,7 +218,7 @@ http://127.0.0.1:8081
 ```
 
 No **Expo web** (`http://localhost:8081`) o app usa Google Identity Services
-em modo popup — **não precisa** de URI de redirecionamento para esse fluxo.
+em modo popup - **não precisa** de URI de redirecionamento para esse fluxo.
 Basta a origem JavaScript acima.
 
 Para login Google no **Expo Go / app nativo** (auth-session), aí sim cadastre

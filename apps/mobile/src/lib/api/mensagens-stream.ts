@@ -34,7 +34,7 @@ const LIMITE_BUFFER = 256 * 1024;
  * Divide o texto que chega no fluxo em eventos SSE completos.
  *
  * Um evento termina em linha em branco. O `resto` que sobra é o começo de um
- * evento ainda incompleto — a leitura corta em qualquer ponto, inclusive no
+ * evento ainda incompleto - a leitura corta em qualquer ponto, inclusive no
  * meio de um JSON, então ele precisa esperar o próximo pedaço.
  */
 function separarEventos(buffer: string) {
@@ -58,7 +58,7 @@ function separarEventos(buffer: string) {
  *
  * É o mesmo canal SSE do painel web, mas lido com `XMLHttpRequest`: no React
  * Native o `fetch` é um verniz sobre o XHR e não entrega `response.body`, e
- * `EventSource` não existe — então ler o `responseText` conforme ele cresce é
+ * `EventSource` não existe - então ler o `responseText` conforme ele cresce é
  * a forma de consumir o fluxo sem dependência nova. De quebra, o XHR aceita
  * cabeçalho: o token vai em `Authorization`, e não na URL (onde acabaria em
  * log de servidor), igual ao web.
@@ -223,7 +223,7 @@ export function assinarMensagens(
 
   /**
    * Em segundo plano o sistema suspende a conexão e ela morre em silêncio.
-   * Então o canal é fechado ao sair e reaberto ao voltar — e o `aoReconectar`
+   * Então o canal é fechado ao sair e reaberto ao voltar - e o `aoReconectar`
    * da nova conexão recarrega o que chegou nesse meio-tempo.
    */
   function aoMudarAppState(estado: AppStateStatus) {

@@ -17,7 +17,7 @@ function calcularIdade(dataNascimento: string): number {
 /**
  * Modo simplificado (texto/botões maiores, menos informação por tela) para
  * pacientes com 55 anos ou mais, calculado a partir da data de nascimento
- * cadastrada no perfil — sem exigir nenhuma configuração manual.
+ * cadastrada no perfil - sem exigir nenhuma configuração manual.
  */
 export function useAccessibleMode() {
   const { data } = useQuery({

@@ -76,7 +76,7 @@ export class EmocionalService {
 
   /**
    * Resumo do período: quantas vezes cada estado apareceu, a média na escala e
-   * os fatores mais citados. É o que dá contexto ao nutricionista na consulta —
+   * os fatores mais citados. É o que dá contexto ao nutricionista na consulta -
    * uma glicemia alta acompanhada de "noite mal dormida" se lê diferente.
    */
   async resumo(user: JwtPayload, pacienteId?: string, dias = 30) {
@@ -135,7 +135,7 @@ export class EmocionalService {
    *
    * O briefing pede o registro emocional "para análise de possíveis relações
    * com alterações glicêmicas". Os dois dados existiam em tabelas separadas e
-   * nunca se encontravam — este método os põe na mesma linha.
+   * nunca se encontravam - este método os põe na mesma linha.
    *
    * O agrupamento e a média são feitos aqui, e não em SQL, porque contar
    * quantas medições ficaram fora da faixa exige o alvo de cada momento do
@@ -263,7 +263,7 @@ export class EmocionalService {
     };
   }
 
-  /** Só o paciente registra como se sente — não é medida que outro informe. */
+  /** Só o paciente registra como se sente - não é medida que outro informe. */
   async criar(user: JwtPayload, dto: CreateEmocionalDto) {
     const { idPaciente } = await this.vinculos.resolverPacienteAlvo(
       user,

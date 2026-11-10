@@ -5,7 +5,7 @@
  *
  *   npm run health      (ou npm run diagnose)
  *
- * Credenciais são opcionais e vêm só do ambiente — nunca ficam no código e
+ * Credenciais são opcionais e vêm só do ambiente - nunca ficam no código e
  * nunca são impressas. Sem elas, os testes autenticados saem como SKIPPED:
  *
  *   DIAG_EMAIL / DIAG_SENHA               conta de nutricionista
@@ -207,7 +207,7 @@ async function main() {
 
   // --- Tabela ------------------------------------------------------------
   const largura = Math.max(...resultados.map((r) => r.nome.length)) + 4;
-  console.log(`\nNutriCare — diagnostico (${BASE})\n`);
+  console.log(`\nNutriCare - diagnostico (${BASE})\n`);
   for (const { nome, estado, detalhe } of resultados) {
     const pontos = '.'.repeat(Math.max(3, largura - nome.length));
     console.log(`${nome} ${pontos} ${estado}${detalhe ? `   (${detalhe})` : ''}`);

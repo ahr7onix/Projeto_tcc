@@ -1,4 +1,4 @@
-# NutriCare — Situação do projeto
+# NutriCare - Situação do projeto
 
 **Para:** equipe de Nutrição / ADJ Birigui
 **De:** Natan Lourenço e Silva, Isac Buzelli dos Santos, Henrique Payá Ferreira
@@ -22,7 +22,7 @@ dados.** Em julho, só um estava completo.
 
 O que falta agora não é programação. São duas coisas:
 
-1. **as definições clínicas que cabem a vocês** — a tabela nutricional oficial e a
+1. **as definições clínicas que cabem a vocês** - a tabela nutricional oficial e a
    conferência das faixas de glicemia, das fórmulas e da distribuição de
    macronutrientes (seção 4);
 2. **colocar o ambiente de demonstração no ar de novo** e testar tudo num celular
@@ -57,7 +57,7 @@ Tudo o que está nesta lista foi usado do começo ao fim e conferido.
 
 **No painel do nutricionista**
 
-- Lista dos seus pacientes — só quem aceitou o convite
+- Lista dos seus pacientes - só quem aceitou o convite
 - Convite de paciente pelo e-mail e **cadastro de paciente** que ainda não tem
   conta (o paciente recebe o link para criar a senha no próprio e-mail)
 - Ficha do paciente com histórico, gráficos e calendário de glicemia
@@ -94,18 +94,18 @@ Tudo o que está nesta lista foi usado do começo ao fim e conferido.
 | RF09 | Receitas e orientações | **Atendido** |
 | RF10 | Controle de acesso por perfil | **Atendido**, agora com consentimento do paciente e aprovação do nutricionista |
 
-**RF01 — Tabela de alimentos.** O sistema importa uma tabela inteira de uma vez:
+**RF01 - Tabela de alimentos.** O sistema importa uma tabela inteira de uma vez:
 basta salvar a planilha como CSV. O painel mostra uma prévia e as linhas com
 problema antes de gravar. No ambiente publicado já está carregada a **TACO 4ª
 edição** (578 alimentos; a importação levou 7 segundos), no lugar dos 36 exemplos
 com valores aproximados. Ficaram de fora 19 que a própria TACO traz sem valor
 (óleos e azeites sem carboidrato e proteína, por exemplo): digam como tratá-los.
 
-**RF02, RF03 e RF05 — Cálculos e faixas.** As fórmulas e faixas estão em uso, mas
+**RF02, RF03 e RF05 - Cálculos e faixas.** As fórmulas e faixas estão em uso, mas
 são referências gerais. Cada valor fica num lugar só do sistema, e corrigir um
 corrige todas as telas.
 
-**RF06 — Registro emocional.** Escala de cinco pontos (de "muito mal" a "muito
+**RF06 - Registro emocional.** Escala de cinco pontos (de "muito mal" a "muito
 bem") com fatores em texto livre. Se outro formato servir melhor ao atendimento
 de vocês, dá para mudar.
 
@@ -117,7 +117,7 @@ de vocês, dá para mudar.
    planilha, a importação já está pronta.
 2. **Conferência da fórmula de necessidade energética** (hoje Mifflin-St Jeor, com
    Harris-Benedict como alternativa) e dos fatores de atividade.
-3. **Conferência da distribuição de macronutrientes** — hoje o ponto de partida é
+3. **Conferência da distribuição de macronutrientes** - hoje o ponto de partida é
    50% carboidratos, 20% proteínas e 30% lipídios, editável pela nutricionista.
 4. **Conferência das faixas de glicemia.** Os alvos mudam conforme o tipo de
    diabetes, a idade e a condição de cada pessoa. **Elas precisam ser validadas
@@ -135,7 +135,7 @@ educativos a nutricionista publica direto pelo painel, sem depender de nós.
 Os dois pontos de LGPD que estavam abertos em julho foram resolvidos:
 
 1. **Consentimento no vínculo.** O nutricionista só vê os dados de saúde de um
-   paciente depois que o paciente aceita o convite pelo aplicativo — e o paciente
+   paciente depois que o paciente aceita o convite pelo aplicativo - e o paciente
    pode encerrar o acompanhamento quando quiser.
 2. **Conferência do registro profissional.** Quem se cadastra como nutricionista
    só entra no painel depois que a administração confere o CRN e aprova.
@@ -177,7 +177,7 @@ entrada com a conta Google), e a tabela TACO está carregada.
 
 1. **Banco de dados sem prazo.** O banco gratuito do ambiente no ar vence em
    cerca de 30 dias e precisa ir para um provedor sem prazo.
-2. **A conferência de vocês (seção 4)** — o único item que libera o uso com
+2. **A conferência de vocês (seção 4)** - o único item que libera o uso com
    paciente real.
 
 ---

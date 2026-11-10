@@ -2,7 +2,7 @@
  * Log do painel: só informação técnica.
  *
  * O que aparece aqui é rota, status HTTP, tipo do erro e o `requestId` que a
- * API devolve no cabeçalho `X-Request-Id` — é ele que liga o erro visto na
+ * API devolve no cabeçalho `X-Request-Id` - é ele que liga o erro visto na
  * tela à linha correspondente no log do servidor.
  *
  * Nunca entram: token, senha, corpo da requisição, corpo da resposta, dado de
@@ -74,7 +74,7 @@ export function registrarErroDeApi(erro: unknown, contexto?: string) {
 
 /**
  * Erro de JavaScript que escapou de um componente e promessa rejeitada sem
- * tratamento — os dois casos em que a tela quebra sem ninguém registrar nada.
+ * tratamento - os dois casos em que a tela quebra sem ninguém registrar nada.
  */
 export function capturarErrosGlobais() {
   window.addEventListener('error', (evento) => {

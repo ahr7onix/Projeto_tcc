@@ -4,7 +4,7 @@ import { api } from './api'
 export interface ItemRefeicao {
   id?: string
   alimentoId?: string | null
-  /** Nome exibido — vem do alimento da tabela ou da descrição livre. */
+  /** Nome exibido - vem do alimento da tabela ou da descrição livre. */
   nome?: string | null
   descricao?: string | null
   quantidadeG: number

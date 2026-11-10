@@ -11,11 +11,11 @@ const API = 'http://127.0.0.1:3000';
 const results = [];
 function pass(name, detail = '') {
   results.push({ ok: true, name, detail });
-  console.log(`PASS  ${name}${detail ? ' — ' + detail : ''}`);
+  console.log(`PASS  ${name}${detail ? ' - ' + detail : ''}`);
 }
 function fail(name, detail = '') {
   results.push({ ok: false, name, detail });
-  console.log(`FAIL  ${name}${detail ? ' — ' + detail : ''}`);
+  console.log(`FAIL  ${name}${detail ? ' - ' + detail : ''}`);
 }
 
 async function waitText(page, re, ms = 15000) {
@@ -160,10 +160,10 @@ async function main() {
       method: 'PATCH',
       headers: comToken(loginPaciente.accessToken),
     });
-    if (await naLista()) pass('API convite aceito → lista Camila', `convite=${convite.id}`);
-    else fail('API convite aceito → lista Camila', 'paciente não encontrado');
+    if (await naLista()) pass('API convite aceito -> lista Camila', `convite=${convite.id}`);
+    else fail('API convite aceito -> lista Camila', 'paciente não encontrado');
   } catch (e) {
-    fail('API convite aceito → lista Camila', String(e.message || e));
+    fail('API convite aceito -> lista Camila', String(e.message || e));
   }
 
   // --- WEB: login Camila + Pacientes page shows new patient ---
@@ -237,8 +237,8 @@ async function main() {
       headers: { Authorization: `Bearer ${loginNutri2.accessToken}` },
     }).then((r) => r.json());
     const found2 = (list2.data || []).find((p) => p.email === uiEmail);
-    if (found2) pass('Fluxo combinado: cadastro mobile → lista nutri', uiEmail);
-    else fail('Fluxo combinado: cadastro mobile → lista nutri', 'não apareceu na API');
+    if (found2) pass('Fluxo combinado: cadastro mobile -> lista nutri', uiEmail);
+    else fail('Fluxo combinado: cadastro mobile -> lista nutri', 'não apareceu na API');
   } catch (e) {
     fail('Mobile cadastro UI / fluxo combinado', String(e.message || e));
   }

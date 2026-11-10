@@ -1,4 +1,4 @@
-// Prepara o banco de dados para uso — pode ser executado quantas vezes for
+// Prepara o banco de dados para uso - pode ser executado quantas vezes for
 // preciso, que ele só aplica o que ainda falta.
 //
 //   node preparar-banco.mjs                (a partir de apps/api)
@@ -93,13 +93,13 @@ async function main() {
   ).rows[0].t !== null;
 
   if (!bancoJaTemTabelas) {
-    console.log('Banco vazio — criando a estrutura a partir do schema.sql.');
+    console.log('Banco vazio - criando a estrutura a partir do schema.sql.');
     await client.query(ler('schema.sql'));
     await registrar('schema.sql');
   } else if (!(await jaAplicado('schema.sql'))) {
     // Banco criado por outro caminho (docker-compose, psql na mão).
     await registrar('schema.sql');
-    console.log('Banco já existia — controle de migrations inicializado.');
+    console.log('Banco já existia - controle de migrations inicializado.');
   }
 
   // As migrations rodam sempre, inclusive logo depois do schema.sql.

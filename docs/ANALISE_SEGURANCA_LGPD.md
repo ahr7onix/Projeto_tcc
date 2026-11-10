@@ -1,12 +1,12 @@
-# Análise de segurança, redes e LGPD — NutriCare
+# Análise de segurança, redes e LGPD - NutriCare
 
 Análise feita em 28/10/2026 sobre o estado atual da `main` (mais a branch
 `feat/olho-senha`), cobrindo API, painel web, app mobile, infraestrutura de
 rede e conformidade com a LGPD. Complementa, não substitui, o
 `docs/REVISAO_CODIGO.md` e o `docs/LIMITACOES_LGPD.md`.
 
-Legenda de gravidade: **[CRÍTICO]** · **[ALTO]** · **[MÉDIO]** · **[BAIXO]** ·
-**[INFO]** (observação, sem ação obrigatória) · **[OK]** (testado e correto).
+Legenda de gravidade: **[CRÍTICO]** - **[ALTO]** - **[MÉDIO]** - **[BAIXO]** -
+**[INFO]** (observação, sem ação obrigatória) - **[OK]** (testado e correto).
 
 Como foi testado
 
@@ -19,12 +19,12 @@ Como foi testado
   foi tocado.
 - **Deploy publicado:** verificações **passivas** na própria cópia do time
   (`nutricare-tcc-*.onrender.com`): cabeçalhos HTTP, versões de TLS, CORS,
-  redirecionamento HTTP→HTTPS, bundle do painel e comportamento do limite de
+  redirecionamento HTTP->HTTPS, bundle do painel e comportamento do limite de
   tentativas. Só leitura e requisições de login com as credenciais que já são
   públicas no README; nada destrutivo.
 - **Dependências:** `npm audit` de produção nos três aplicativos.
 - **Regulatório:** levantamento das normas vigentes (LGPD, resoluções da ANPD,
-  CFN, Lei 13.787/2018 e a Lei 15.211/2025 — "ECA Digital").
+  CFN, Lei 13.787/2018 e a Lei 15.211/2025 - "ECA Digital").
 
 O que o navegador/celular não mostra (comportamento do app Android empacotado)
 não entrou nesta rodada.
@@ -56,7 +56,7 @@ O que precisa de atenção se divide em três blocos:
    resposta a incidente, transferência internacional). Detalhado na seção 6.
 
 **Conclusão honesta para a banca:** o sistema **não está frágil a ataque
-técnico comum** (injeção, escalada de perfil, token forjado — tudo barrado). A
+técnico comum** (injeção, escalada de perfil, token forjado - tudo barrado). A
 fragilidade está em **configuração de demonstração** (senhas públicas no ar) e
 em **requisitos de conformidade** que faltam para sair da demonstração. É
 exatamente o recorte de um TCC, e dá uma ótima seção de "limitações e trabalhos
@@ -90,7 +90,7 @@ também o **administrador**, leram o plano alimentar ativo completo do João
 (OWASP API #1 / A01:2025 Broken Access Control) e um vazamento de dado sensível.
 
 **Correção:** no `findAtivo`, quando `user.role === 'nutricionista'`, chamar
-`this.vinculos.garantirVinculo(user.sub, pacienteId)` antes da consulta — igual
+`this.vinculos.garantirVinculo(user.sub, pacienteId)` antes da consulta - igual
 ao que o `findAll` do mesmo serviço já faz pelo filtro por `un.id_usuario`. E o
 administrador não deve alcançar este recurso (os outros módulos clínicos já o
 recusam). É uma correção de poucas linhas, no padrão que o resto do serviço já
@@ -98,7 +98,7 @@ usa.
 
 2.2 [CRÍTICO (operacional)] Credenciais padrão públicas e ativas no ar
 
-[README.md:105](../README.md#L105) · [seeds_admin.sql](../database/seeds_admin.sql) · [preparar-banco.mjs:121](../apps/api/preparar-banco.mjs#L121)
+[README.md:105](../README.md#L105) - [seeds_admin.sql](../database/seeds_admin.sql) - [preparar-banco.mjs:121](../apps/api/preparar-banco.mjs#L121)
 
 - O repositório é **público** (`ahr7onix/Projeto_tcc`, `visibility: public`).
 - O README traz `admin@nutricare.local` / `NutriCare@2026`, e o `PUBLICAR.md`
@@ -107,7 +107,7 @@ usa.
 - `preparar-banco.mjs` roda `seeds_admin.sql` **a cada inicialização** (não só
   na primeira), e o `render-tcc.yaml` sobe com `SEED_DEMO=true`.
 
-Verificado no site no ar: as três credenciais **entram** — inclusive a de
+Verificado no site no ar: as três credenciais **entram** - inclusive a de
 administrador. Ou seja, qualquer pessoa que ache o repositório tem o painel de
 administração da cópia publicada.
 
@@ -124,12 +124,12 @@ dos usuários de exemplo, e **antes de qualquer uso real** subir com
 
 2.3 [MÉDIO] Limite de tentativas de login não confiável no Render
 
-[limite-tentativas.ts](../apps/api/src/common/limite-tentativas.ts) · [auth.controller.ts:66](../apps/api/src/modules/auth/auth.controller.ts#L66) · [main.ts:21](../apps/api/src/main.ts#L21)
+[limite-tentativas.ts](../apps/api/src/common/limite-tentativas.ts) - [auth.controller.ts:66](../apps/api/src/modules/auth/auth.controller.ts#L66) - [main.ts:21](../apps/api/src/main.ts#L21)
 
 A chave do bloqueio é `req.ip | email`. Dois problemas observados:
 
 - **Local:** o bloqueio funciona (11ª senha errada vira 429), **mas** é
-  contornável mandando um cabeçalho `X-Forwarded-For` falso — a chave muda de IP
+  contornável mandando um cabeçalho `X-Forwarded-For` falso - a chave muda de IP
   e a contagem zera. Com `app.set('trust proxy', 1)` e sem proxy real na
   frente, o IP que o Express usa passa a ser o que o cliente declarou.
 - **Produção:** 11 logins errados seguidos na mesma conta **não** dispararam o
@@ -150,7 +150,7 @@ terceiros (OWASP API #4/#6). O `LEIA_PRIMEIRO_IA.md` já registra que esse limit
 
 **Correção:** definir o `trust proxy` conforme a cadeia real do Render (número
 de saltos correto, ou a função de confiança do Express), atualizar o
-`proxy-addr`, e — antes de escalar para mais de uma instância — trocar o
+`proxy-addr`, e - antes de escalar para mais de uma instância - trocar o
 armazenamento do limite por algo compartilhado (ex.: Redis) ou um
 rate-limit na borda. Para o e-mail, um teto por IP independente do e-mail.
 
@@ -161,13 +161,13 @@ rate-limit na borda. Para o e-mail, um teto por IP independente do e-mail.
 Já listado como pendência conhecida; aqui vai medido. O refresh token é
 revogado, mas o **access token** (15 min) segue aceito depois de:
 
-- **logout** — testado: `/auth/me` responde 200 com o token antigo;
-- **troca de senha pelo perfil** — testado: 200; e, pior, a troca pelo perfil
+- **logout** - testado: `/auth/me` responde 200 com o token antigo;
+- **troca de senha pelo perfil** - testado: 200; e, pior, a troca pelo perfil
   **não revoga as sessões de outros aparelhos** (o refresh de outro aparelho
   continuou renovando). O fluxo de "esqueci a senha"
   ([auth.service.ts](../apps/api/src/modules/auth/auth.service.ts)) revoga tudo;
-  a troca pelo perfil, não — é uma inconsistência.
-- **exclusão da conta** — testado: 200 em `/registros` com o token antigo.
+  a troca pelo perfil, não - é uma inconsistência.
+- **exclusão da conta** - testado: 200 em `/registros` com o token antigo.
 
 Numa situação de aparelho roubado ou compartilhado, isso deixa uma janela de 15
 minutos.
@@ -180,7 +180,7 @@ uma lista curta de revogação.
 
 2.5 [MÉDIO] `?dias=` / `?limite=` inválido ainda gera 500
 
-[registros.controller.ts](../apps/api/src/modules/registros/registros.controller.ts) · [admin.controller.ts:34](../apps/api/src/modules/admin/admin.controller.ts#L34)
+[registros.controller.ts](../apps/api/src/modules/registros/registros.controller.ts) - [admin.controller.ts:34](../apps/api/src/modules/admin/admin.controller.ts#L34)
 
 Já na lista de pendências. Confirmado: `/registros?dias=abc`,
 `/registros?dias=99999999999` e `/admin/analise?dias=abc` respondem **500**
@@ -192,10 +192,10 @@ preferência validando na borda (DTO de query com `@IsInt`/`@Min`/`@Max`).
 
 2.6 [MÉDIO] Enumeração de contas (três canais)
 
-- **Cadastro** com e-mail existente → 409 "E-mail já cadastrado" (revela que a
+- **Cadastro** com e-mail existente -> 409 "E-mail já cadastrado" (revela que a
   conta existe).
 - **Tempo do login:** conta existente ~66 ms vs inexistente ~3 ms. O `bcrypt.
-  compare` só roda quando o usuário é encontrado, criando um oráculo de tempo —
+  compare` só roda quando o usuário é encontrado, criando um oráculo de tempo -
   mesmo com a mensagem genérica. **Correção:** rodar sempre um `bcrypt.compare`
   contra um hash fixo quando o e-mail não existe, para igualar o tempo.
 - **Convite** ([convites.service.ts](../apps/api/src/modules/vinculos/convites.service.ts)):
@@ -208,13 +208,13 @@ preferência validando na borda (DTO de query com `@IsInt`/`@Min`/`@Max`).
   enviado") e não devolver nome/e-mail de volta para quem convida.
 
 Positivo: o "esqueci a senha" responde mensagem genérica e teve tempo
-equivalente para e-mail existente vs inexistente — está correto.
+equivalente para e-mail existente vs inexistente - está correto.
 
 2.7 [BAIXO] Política de senha fraca e inconsistente na troca
 
-[perfil.controller.ts:29](../apps/api/src/modules/perfil/perfil.controller.ts) · [redefinir-senha.dto.ts](../apps/api/src/modules/auth/dto/redefinir-senha.dto.ts)
+[perfil.controller.ts:29](../apps/api/src/modules/perfil/perfil.controller.ts) - [redefinir-senha.dto.ts](../apps/api/src/modules/auth/dto/redefinir-senha.dto.ts)
 
-O cadastro exige 8 caracteres, mas a troca pelo perfil aceita **6** — testado:
+O cadastro exige 8 caracteres, mas a troca pelo perfil aceita **6** - testado:
 `123456` foi aceito. Não há verificação de senha óbvia/vazada em lugar nenhum.
 **Correção:** unificar em ≥ 8 e recusar as senhas mais comuns.
 
@@ -230,32 +230,32 @@ O cadastro exige 8 caracteres, mas a troca pelo perfil aceita **6** — testado:
 
 2.9 O que foi testado e está correto [OK]
 
-- **Escalada de perfil:** paciente → `/pacientes`, `/admin/*`, `POST /alimentos`,
-  `POST /conteudos` → 403/400. Nutricionista → `/admin/*` → 403. Administrador →
-  `/registros`, `/saude`, `/relatorios` de paciente → 403. Cadastro legado com
-  `role: 'administrador'` no corpo → vira paciente. A escolha do papel pela rota
+- **Escalada de perfil:** paciente -> `/pacientes`, `/admin/*`, `POST /alimentos`,
+  `POST /conteudos` -> 403/400. Nutricionista -> `/admin/*` -> 403. Administrador ->
+  `/registros`, `/saude`, `/relatorios` de paciente -> 403. Cadastro legado com
+  `role: 'administrador'` no corpo -> vira paciente. A escolha do papel pela rota
   (e não pelo corpo) está certa.
-- **IDOR horizontal:** paciente pedindo dados de outro via `?pacienteId=` →
-  ignorado (devolve os próprios) ou 403; `/mensagens/:outro` → 403;
-  `/planos/:id` de outro → 403/404. (A exceção é o 2.1.)
+- **IDOR horizontal:** paciente pedindo dados de outro via `?pacienteId=` ->
+  ignorado (devolve os próprios) ou 403; `/mensagens/:outro` -> 403;
+  `/planos/:id` de outro -> 403/404. (A exceção é o 2.1.)
 - **IDOR sem vínculo:** registros, pacientes, saúde, anotações, relatórios, CSV,
-  mensagens, emocional, medicamentos → todos barrados para nutricionista sem
+  mensagens, emocional, medicamentos -> todos barrados para nutricionista sem
   vínculo. (A exceção é o 2.1.)
-- **JWT:** `alg=none` → 401; payload adulterado com assinatura velha → 401;
+- **JWT:** `alg=none` -> 401; payload adulterado com assinatura velha -> 401;
   token forjado com o segredo `troque-isto-em-producao` do `.env.example`/
-  `docker-compose` → 401 (produção usa `JWT_SECRET` gerado pelo Render).
+  `docker-compose` -> 401 (produção usa `JWT_SECRET` gerado pelo Render).
 - **Injeção SQL:** `' OR '1'='1`, `UNION SELECT`, `; DROP TABLE` em `/alimentos`,
-  `/pacientes`, `/admin/usuarios`, `/receitas` → sem 500, sem linhas a mais.
+  `/pacientes`, `/admin/usuarios`, `/receitas` -> sem 500, sem linhas a mais.
   Tudo parametrizado (`$1,$2`); as interpolações são só de identificadores
   internos.
 - **Injeção em CSV:** o `escaparCsv`
   ([relatorios.service.ts:223](../apps/api/src/modules/relatorios/relatorios.service.ts#L223))
-  prefixa `=`,`+`,`-`,`@` com aspa — fórmula maliciosa no Excel neutralizada.
-- **Robustez:** corpo de 2 MB → 413; senha de 90 mil caracteres → 401 em 72 ms
-  (bcrypt não trava); `__proto__` no corpo → 400/401 (sem prototype pollution);
-  JSON quebrado → 400 sem stack trace. O `AllExceptionsFilter` não vaza stack,
+  prefixa `=`,`+`,`-`,`@` com aspa - fórmula maliciosa no Excel neutralizada.
+- **Robustez:** corpo de 2 MB -> 413; senha de 90 mil caracteres -> 401 em 72 ms
+  (bcrypt não trava); `__proto__` no corpo -> 400/401 (sem prototype pollution);
+  JSON quebrado -> 400 sem stack trace. O `AllExceptionsFilter` não vaza stack,
   SQL nem nome de tabela.
-- **Sessão (parcial):** refresh token reusado após rotação → 401; link de
+- **Sessão (parcial):** refresh token reusado após rotação -> 401; link de
   redefinir senha é de uso único (UPDATE atômico); troca pelo "esqueci a senha"
   revoga as sessões.
 
@@ -303,7 +303,7 @@ O cadastro exige 8 caracteres, mas a troca pelo perfil aceita **6** — testado:
   "Termos" tem só uma frase genérica. Para a LGPD (art. 9º) o aviso de
   privacidade precisa existir de verdade e dizer finalidade, retenção e com quem
   os dados são compartilhados (Render, Brevo, Google, Expo). Ver seção 6.
-- **[INFO] `EXPO_PUBLIC_API_URL`** vai embutida no APK — é só a URL da API,
+- **[INFO] `EXPO_PUBLIC_API_URL`** vai embutida no APK - é só a URL da API,
   pública por natureza. Sem segredo no cliente.
 - **[INFO] Push:** a notificação de "nova mensagem" leva os primeiros 120
   caracteres do texto no corpo do push
@@ -319,7 +319,7 @@ O cadastro exige 8 caracteres, mas a troca pelo perfil aceita **6** — testado:
 
 ---
 
-5. Dependências (cadeia de suprimento — A03:2025)
+5. Dependências (cadeia de suprimento - A03:2025)
 
 `npm audit` de **produção** (28/10/2026):
 
@@ -331,18 +331,18 @@ O cadastro exige 8 caracteres, mas a troca pelo perfil aceita **6** — testado:
 
 Destaques que importam para este sistema:
 
-- **API — `proxy-addr` (CRÍTICA):** IP spoofing via IPv4 mapeado em IPv6. Bate
+- **API - `proxy-addr` (CRÍTICA):** IP spoofing via IPv4 mapeado em IPv6. Bate
   direto no limite de tentativas por IP (item 2.3). Tem correção.
-- **API — `nodemailer` (ALTA):** usado no envio de e-mail; a correção está
+- **API - `nodemailer` (ALTA):** usado no envio de e-mail; a correção está
   disponível sem salto maior.
-- **API — `body-parser`/`multer`/`lodash` (ALTA):** vêm por baixo do
+- **API - `body-parser`/`multer`/`lodash` (ALTA):** vêm por baixo do
   `@nestjs/platform-express`; a maioria só fecha com um salto de versão maior do
   Nest (teste antes, pode haver quebra).
-- **Mobile — `shell-quote` (CRÍTICA)** e `node-forge`, `undici`, `postcss`,
+- **Mobile - `shell-quote` (CRÍTICA)** e `node-forge`, `undici`, `postcss`,
   `image-size` (ALTAS): quase tudo é cadeia de build do Expo; `undici` (fetch) e
   `node-forge` (cripto) são os que mais pesam em runtime. Só fecham com salto
-  de SDK do Expo — combina com a decisão de atualizar depois da banca.
-- **Web — `follow-redirects` (ALTA)** e `react-router` (open redirect, MÉDIA).
+  de SDK do Expo - combina com a decisão de atualizar depois da banca.
+- **Web - `follow-redirects` (ALTA)** e `react-router` (open redirect, MÉDIA).
 
 **Recomendação:** rodar `npm audit fix` (sem `--force`) nos três agora para o
 que fecha sem salto maior; agendar os saltos de major (Nest, Expo) para depois
@@ -356,7 +356,7 @@ O que está correto [OK]
 
 - **TLS 1.3**, com TLS 1.0/1.1 **recusados** nas duas pontas; certificado válido
   (Google Trust Services, via Cloudflare).
-- **HTTP → HTTPS** com 301; **HSTS** presente (no painel, com `preload`).
+- **HTTP -> HTTPS** com 301; **HSTS** presente (no painel, com `preload`).
 - **helmet** aplica CSP, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options:
   nosniff`, `Referrer-Policy`, e remove `X-Powered-By`.
 - **CORS** restrito à origem do painel; origem estranha não recebe
@@ -370,7 +370,7 @@ O que está correto [OK]
 Pontos de atenção
 
 - **[CRÍTICO (operacional)] Repositório público + credenciais no README + site
-  no ar com essas credenciais** — ver item 2.2. É a soma que importa: os três
+  no ar com essas credenciais** - ver item 2.2. É a soma que importa: os três
   juntos é que dão o acesso.
 - **[MÉDIO] `sincronizar.ps1`** (removido do repositório em 28/10/2026) fazia `git add . && commit && push` **a cada 10
   segundos**. Foi assim que `.env` e `node_modules` foram parar no histórico
@@ -378,7 +378,7 @@ Pontos de atenção
   rodar, qualquer segredo que cair na árvore vai para o repositório público em
   10 s. **Recomendação:** não usar; se for manter, garantir que nada sensível
   entre na pasta. Reescrever o histórico para limpar o que já passou tem o custo
-  já discutido no `REVISAO_CODIGO.md` (quebra os clones do time) — e, como o
+  já discutido no `REVISAO_CODIGO.md` (quebra os clones do time) - e, como o
   único dado era um Client ID público, não compensa.
 - **[INFO] `DATABASE_SSL=no-verify`** no Render: a conexão com o banco é
   criptografada, mas o certificado não é verificado. É o aceitável para o
@@ -388,7 +388,7 @@ Pontos de atenção
 - **[INFO] `/health` e `/health/services` são públicos** e mostram estado,
   uptime e contagem de conexões em tempo real. Sem segredo nem PII; aceitável.
 - **[INFO] `docker-compose.yml`** tem `JWT_SECRET: troque-isto-em-producao` e
-  `CORS_ORIGIN: '*'` — é só desenvolvimento local, mas convém deixar claro que
+  `CORS_ORIGIN: '*'` - é só desenvolvimento local, mas convém deixar claro que
   esse arquivo nunca descreve produção.
 
 ---
@@ -401,31 +401,31 @@ e esta seção o atualiza.
 
 **Papéis (art. 5º):** o controlador é a ADJ Birigui (ou quem operar o sistema);
 Render (EUA), Brevo (França), Google (EUA) e Expo (EUA) são operadores. Hoje,
-com dados fictícios, não há tratamento de dado pessoal real — é o que sustenta a
+com dados fictícios, não há tratamento de dado pessoal real - é o que sustenta a
 operação atual.
 
 **O que o projeto já resolve [OK]:**
 
 - **Consentimento para dado sensível (art. 11):** o vínculo só nasce do aceite
   do paciente, e o acesso clínico passa por ele. Some-se a aprovação do CRN pela
-  administração (base do art. 11, II, "f" — tutela da saúde por profissional).
+  administração (base do art. 11, II, "f" - tutela da saúde por profissional).
 - **Revogação / oposição (art. 18):** o paciente encerra o acompanhamento e
   desativa a conta pelo app.
 - **Portabilidade parcial (art. 18, V):** exportação em CSV do período.
 - **Segurança (art. 46/49):** TLS, hash de senha (bcrypt), logs higienizados,
-  autorização por vínculo — privacidade desde a concepção em boa parte.
+  autorização por vínculo - privacidade desde a concepção em boa parte.
 
 **O que falta para sair da demonstração:**
 
 - **[ALTO] Crianças e adolescentes (art. 14 + Lei 15.211/2025 "ECA Digital", em
-  vigor desde 17/03/2026).** A ADJ é de diabetes **juvenil** → é provável haver
+  vigor desde 17/03/2026).** A ADJ é de diabetes **juvenil** -> é provável haver
   menores. Hoje não há verificação de idade, consentimento de responsável
   (art. 14, §1º, para menores de 12), nem ferramenta de supervisão parental.
   O ECA Digital alcança serviço de "acesso provável" por crianças/adolescentes
   e **não abre exceção para saúde**; exige privacidade por padrão, supervisão
   parental e relatório de impacto. É o maior item de conformidade para uso real.
 - **[ALTO] Transferência internacional (art. 33).** A ANPD reconheceu UE/EEE
-  como adequados (Res. 32/2026) — cobre a Brevo (França). Render, Expo e Google
+  como adequados (Res. 32/2026) - cobre a Brevo (França). Render, Expo e Google
   (EUA) **não** têm decisão de adequação; precisariam das cláusulas-padrão da
   ANPD ou de consentimento específico. Os contratos padrão desses fornecedores
   trazem as cláusulas da UE, não as da ANPD.
@@ -467,7 +467,7 @@ operação atual.
 
 1. Trocar as senhas do admin e dos usuários de exemplo na cópia publicada
    (item 2.2).
-2. Corrigir o `/planos/ativo` (item 2.1) — poucas linhas, fecha o único
+2. Corrigir o `/planos/ativo` (item 2.1) - poucas linhas, fecha o único
    vazamento clínico encontrado.
 3. `npm audit fix` sem `--force` nos três apps (seção 5).
 4. Corrigir o 500 do `?dias=` inválido (item 2.5) e o logout do painel chamar a

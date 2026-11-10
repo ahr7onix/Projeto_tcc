@@ -41,7 +41,7 @@ describe('classificarGlicemia', () => {
   });
 
   it('should flag values under the momento floor even when above 70', () => {
-    // Antes de dormir o alvo é 90–150: 78 mg/dL ainda não é hipoglicemia
+    // Antes de dormir o alvo é 90-150: 78 mg/dL ainda não é hipoglicemia
     // absoluta, mas é baixo para o horário e merece alerta.
     expect(classificarGlicemia(78, 'antes_dormir')).toBe('hipoglicemia');
     expect(classificarGlicemia(90, 'antes_dormir')).toBe('normal');

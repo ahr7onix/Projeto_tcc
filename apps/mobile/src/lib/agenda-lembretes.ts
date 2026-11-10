@@ -10,7 +10,7 @@ import { ROTULO_TIPO, type Lembrete } from '@/lib/api/lembretes';
  * Render, que derruba o serviço quando ele fica ocioso. Um lembrete de "medir
  * a glicemia às 7h" que dependesse do servidor simplesmente não tocaria de
  * madrugada. Aqui o servidor guarda a regra e o aparelho materializa em
- * notificações — funciona offline e com o servidor dormindo.
+ * notificações - funciona offline e com o servidor dormindo.
  */
 
 /** Marca as notificações que são nossas, para não cancelar as dos outros. */
@@ -19,8 +19,8 @@ const ORIGEM = 'lembrete';
 /**
  * Modo alarme: escolha guardada só no aparelho, como o volume de um
  * despertador. No Android os lembretes vão para um canal próprio, com som de
- * 30 s (assets/sounds/alarme.wav) tocado no volume do alarme — por isso toca
- * mesmo com o celular no silencioso — e vibração longa. O Android para o som
+ * 30 s (assets/sounds/alarme.wav) tocado no volume do alarme - por isso toca
+ * mesmo com o celular no silencioso - e vibração longa. O Android para o som
  * quando a pessoa abre a barra de notificações, toca no aviso ou o descarta.
  *
  * O Android grava som e vibração do canal na primeira vez e ignora mudanças

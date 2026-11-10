@@ -209,7 +209,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safe} edges={['top']}>
-        {/* Header fixo — perfil sempre à mão, sem competir com o scroll */}
+        {/* Header fixo - perfil sempre à mão, sem competir com o scroll */}
         <View style={styles.header}>
           <View style={styles.brandBlock}>
             <Text style={styles.brand}>NutriCare</Text>
@@ -250,7 +250,7 @@ export default function HomeScreen() {
 
           <GlicemicStatusBanner />
 
-          {/* Ações principais — primeiro no fluxo, alvos grandes */}
+          {/* Ações principais - primeiro no fluxo, alvos grandes */}
           <View style={styles.primaryRow}>
             {primaryActions.map((a) => (
               <Pressable
@@ -349,7 +349,7 @@ export default function HomeScreen() {
             <View style={styles.emptyCard}>
               <Text style={styles.emptyTitle}>Ainda sem registros hoje</Text>
               <Text style={styles.emptyText}>
-                Use os atalhos acima — tudo fica a um toque.
+                Use os atalhos acima - tudo fica a um toque.
               </Text>
               <View style={styles.emptyActions}>
                 <Pressable

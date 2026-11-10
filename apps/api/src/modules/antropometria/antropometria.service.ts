@@ -75,7 +75,7 @@ export class AntropometriaService {
 
   /**
    * As fórmulas de risco são baseadas em sexo biológico. Quem se declara
-   * "outro" não recebe classificação automática — a leitura fica com o
+   * "outro" não recebe classificação automática - a leitura fica com o
    * profissional, em vez de o sistema escolher uma referência por conta.
    */
   private async sexoReferencia(idPaciente: string): Promise<SexoReferencia | null> {

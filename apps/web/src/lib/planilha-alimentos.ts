@@ -56,7 +56,7 @@ export interface LinhaPlanilha {
 }
 
 export interface PlanilhaLida {
-  /** Colunas obrigatórias que o cabeçalho não tem — sem elas nada é lido. */
+  /** Colunas obrigatórias que o cabeçalho não tem - sem elas nada é lido. */
   colunasFaltando: string[]
   /** Colunas do arquivo que o sistema não reconheceu e vai ignorar. */
   colunasIgnoradas: string[]
@@ -80,7 +80,7 @@ function detectarSeparador(primeiraLinha: string): string {
 
 /** CSV com campos entre aspas, aspas dobradas, CRLF e o BOM que o Excel grava. */
 export function lerCsv(texto: string): string[][] {
-  const limpo = texto.replace(/^﻿/, '')
+  const limpo = texto.replace(/^\uFEFF/, '')
   const separador = detectarSeparador(limpo.split(/\r?\n/, 1)[0] ?? '')
   const linhas: string[][] = []
   let linha: string[] = []
@@ -260,7 +260,7 @@ export function modeloCsv(): string {
 export function baixarModeloCsv(): void {
   // O BOM faz o Excel abrir o arquivo em UTF-8, com os acentos certos.
   const url = URL.createObjectURL(
-    new Blob(['﻿' + modeloCsv()], { type: 'text/csv;charset=utf-8' }),
+    new Blob(['\uFEFF' + modeloCsv()], { type: 'text/csv;charset=utf-8' }),
   )
   const link = document.createElement('a')
   link.href = url

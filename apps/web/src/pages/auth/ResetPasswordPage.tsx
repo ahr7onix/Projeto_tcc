@@ -83,7 +83,7 @@ export default function ResetPasswordPage() {
               </p>
               {!token && (
                 <div className={styles.error}>
-                  Link incompleto. Peça um novo e-mail em “Esqueceu a senha?”.
+                  Link incompleto. Peça um novo e-mail em "Esqueceu a senha?".
                 </div>
               )}
               {error && <div className={styles.error}>{error}</div>}

@@ -203,7 +203,7 @@ export default function ImportarAlimentosModal({ onClose, onImportado }: Props) 
                         {comProblema.slice(0, PROBLEMAS_LISTADOS).map((l) => (
                           <li key={l.linha}>
                             Linha {l.linha}
-                            {l.nome ? ` · ${l.nome}` : ''}: {l.problemas.join(', ')}
+                            {l.nome ? ` - ${l.nome}` : ''}: {l.problemas.join(', ')}
                           </li>
                         ))}
                       </ul>
@@ -316,7 +316,7 @@ function ResumoImportacao({ resultado, fonte }: { resultado: Resultado; fonte: s
         <ul style={lista}>
           {resultado.recusados.map((r) => (
             <li key={r.linha}>
-              Linha {r.linha} · {r.nome}: {r.motivo}
+              Linha {r.linha} - {r.nome}: {r.motivo}
             </li>
           ))}
         </ul>

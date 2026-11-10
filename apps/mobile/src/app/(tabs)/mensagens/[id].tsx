@@ -39,7 +39,7 @@ export default function ConversaScreen() {
   });
 
   // Enquanto esta conversa esta na tela, o canal em tempo real entrega a
-  // mensagem aqui e ja a marca como lida — nada de puxar para atualizar.
+  // mensagem aqui e ja a marca como lida - nada de puxar para atualizar.
   useFocusEffect(
     useCallback(() => {
       marcarConversaEmFoco(String(id));

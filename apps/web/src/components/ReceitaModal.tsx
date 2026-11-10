@@ -145,7 +145,7 @@ export default function ReceitaModal({ receita, onClose, onSaved }: Props) {
           </div>
 
           <Textarea
-            label="Resumo — opcional"
+            label="Resumo - opcional"
             placeholder="Uma frase curta que aparece na lista do aplicativo."
             value={resumo}
             onChange={(e) => setResumo(e.target.value)}

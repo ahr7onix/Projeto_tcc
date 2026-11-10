@@ -19,7 +19,7 @@ import { colors, radius, spacing } from '@/lib/theme';
 const CONSEQUENCIAS = [
   'Você sai do aplicativo e não consegue mais entrar com este e-mail.',
   'Seu nutricionista deixa de ver você na lista de pacientes.',
-  'Suas glicemias, refeições e mensagens não são apagadas — ficam guardadas no prontuário.',
+  'Suas glicemias, refeições e mensagens não são apagadas - ficam guardadas no prontuário.',
 ];
 
 export default function ExcluirContaScreen() {

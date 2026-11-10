@@ -60,7 +60,7 @@ export class VinculosService {
   /**
    * Descobre de qual paciente é o dado que está sendo lido ou gravado.
    *
-   * O paciente só mexe nos próprios dados — se mandar um pacienteId de outra
+   * O paciente só mexe nos próprios dados - se mandar um pacienteId de outra
    * pessoa, é ignorado de propósito, para não existir caminho de leitura
    * cruzada. O nutricionista precisa dizer de quem é, e o vínculo é conferido
    * (RN02). O administrador não entra aqui: ele não acompanha paciente.

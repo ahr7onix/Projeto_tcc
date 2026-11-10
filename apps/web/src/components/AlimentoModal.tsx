@@ -185,7 +185,7 @@ export default function AlimentoModal({ alimento, onClose, onSaved }: Props) {
               onChange={(e) => setLipidiosG(e.target.value)}
             />
             <Input
-              label="Fibras (g) — opcional"
+              label="Fibras (g) - opcional"
               type="number"
               min="0"
               step="0.1"
@@ -193,7 +193,7 @@ export default function AlimentoModal({ alimento, onClose, onSaved }: Props) {
               onChange={(e) => setFibrasG(e.target.value)}
             />
             <Input
-              label="Índice glicêmico — opcional"
+              label="Índice glicêmico - opcional"
               type="number"
               min="0"
               max="150"
@@ -205,7 +205,7 @@ export default function AlimentoModal({ alimento, onClose, onSaved }: Props) {
 
           <div style={grade}>
             <Input
-              label="Medida caseira — opcional"
+              label="Medida caseira - opcional"
               placeholder="Ex: 1 colher de sopa"
               value={medidaCaseira}
               onChange={(e) => setMedidaCaseira(e.target.value)}
@@ -220,7 +220,7 @@ export default function AlimentoModal({ alimento, onClose, onSaved }: Props) {
             />
             <div style={{ gridColumn: '1 / -1' }}>
               <Input
-                label="Fonte dos dados — opcional"
+                label="Fonte dos dados - opcional"
                 placeholder="Ex: TACO 4ª edição"
                 value={fonte}
                 onChange={(e) => setFonte(e.target.value)}

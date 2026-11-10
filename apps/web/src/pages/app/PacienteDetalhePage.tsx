@@ -124,7 +124,7 @@ export default function PacienteDetalhePage() {
   if (loading) {
     return (
       <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
-        Carregando ficha do paciente…
+        Carregando ficha do paciente...
       </div>
     )
   }
@@ -228,7 +228,7 @@ export default function PacienteDetalhePage() {
                       : 'var(--text-muted)',
                 }}
               >
-                {paciente.glicemiaMedia?.toLocaleString('pt-BR') ?? '—'}
+                {paciente.glicemiaMedia?.toLocaleString('pt-BR') ?? '-'}
                 {paciente.glicemiaMedia && (
                   <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-muted)', marginLeft: 4 }}>mg/dL</span>
                 )}
@@ -243,7 +243,7 @@ export default function PacienteDetalhePage() {
               <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginTop: 6 }}>
                 {paciente.ultimoRegistro
                   ? new Date(paciente.ultimoRegistro).toLocaleDateString('pt-BR')
-                  : '—'}
+                  : '-'}
               </div>
             </div>
           </div>
@@ -284,7 +284,7 @@ export default function PacienteDetalhePage() {
           <div>
             <Card
               title="Evolução da glicemia (mg/dL)"
-              subtitle="Últimas 30 medições, com a faixa de referência geral (70–180 mg/dL) ao fundo. Cada ponto é avaliado pelo alvo do seu momento, que a tabela mostra abaixo."
+              subtitle="Últimas 30 medições, com a faixa de referência geral (70-180 mg/dL) ao fundo. Cada ponto é avaliado pelo alvo do seu momento, que a tabela mostra abaixo."
               style={{ marginBottom: 20 }}
             >
               <GraficoLinha
@@ -311,7 +311,7 @@ export default function PacienteDetalhePage() {
                   {pagGlicemia.visiveis.map((r) => (
                     <tr key={r.id}>
                       <td style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{dataHora(r.dataHora)}</td>
-                      <td>{MOMENTO_LABEL[r.momento] ?? r.momento ?? '—'}</td>
+                      <td>{MOMENTO_LABEL[r.momento] ?? r.momento ?? '-'}</td>
                       <td>
                         <span className={`${s.badge} ${classeDaSeveridade(r.alerta?.severidade)}`}>
                           {r.valor} mg/dL
@@ -322,12 +322,12 @@ export default function PacienteDetalhePage() {
                           <>
                             <div style={{ fontSize: 13 }}>{rotuloClassificacao(r.alerta.classificacao)}</div>
                             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                              alvo {r.alerta.faixaReferencia.min}–{r.alerta.faixaReferencia.max}
+                              alvo {r.alerta.faixaReferencia.min}-{r.alerta.faixaReferencia.max}
                             </div>
                           </>
-                        ) : '—'}
+                        ) : '-'}
                       </td>
-                      <td style={{ color: 'var(--text-muted)', fontSize: 13 }}>{r.observacao || '—'}</td>
+                      <td style={{ color: 'var(--text-muted)', fontSize: 13 }}>{r.observacao || '-'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -371,9 +371,9 @@ export default function PacienteDetalhePage() {
                   {pagAlimentacao.visiveis.map((r) => (
                     <tr key={r.id}>
                       <td style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{dataHora(r.dataHora)}</td>
-                      <td style={{ fontWeight: 600 }}>{refeicaoLabel[r.tipoRefeicao] ?? r.tipoRefeicao ?? '—'}</td>
-                      <td style={{ color: 'var(--text-muted)' }}>{r.descricao || '—'}</td>
-                      <td>{r.carboidratos ? `${r.carboidratos} g` : '—'}</td>
+                      <td style={{ fontWeight: 600 }}>{refeicaoLabel[r.tipoRefeicao] ?? r.tipoRefeicao ?? '-'}</td>
+                      <td style={{ color: 'var(--text-muted)' }}>{r.descricao || '-'}</td>
+                      <td>{r.carboidratos ? `${r.carboidratos} g` : '-'}</td>
                       {/* Carboidrato calculado pela tabela e carboidrato que o
                           paciente estimou de cabeça não têm o mesmo peso na
                           consulta: a coluna diz de onde veio o número. */}
@@ -383,12 +383,12 @@ export default function PacienteDetalhePage() {
                             <span className={`${s.badge} ${s.badgeSuccess}`}>Tabela</span>
                             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
                               {r.alimento.nome}
-                              {r.quantidadeG ? ` · ${r.quantidadeG} g` : ''}
+                              {r.quantidadeG ? ` - ${r.quantidadeG} g` : ''}
                             </div>
                           </>
                         ) : r.carboidratos ? (
                           <span className={`${s.badge} ${s.badgeWarning}`}>Estimado</span>
-                        ) : '—'}
+                        ) : '-'}
                       </td>
                     </tr>
                   ))}

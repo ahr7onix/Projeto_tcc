@@ -1,12 +1,12 @@
-# Conferência técnica — curso de Nutrição
+# Conferência técnica - curso de Nutrição
 
 Este documento reúne **todos os parâmetros de conteúdo nutricional e clínico**
 que o NutriCare usa, para conferência por professor ou aluno do curso de
 Nutrição. Nada aqui é decisão de programação: são valores que o sistema aplica e
 que precisam de validação profissional antes de qualquer uso com paciente real.
 
-**Como usar:** marque cada linha com ✔ (confere) ou anote o valor correto na
-coluna de observação. Não é preciso instalar nada — todos os valores estão neste
+**Como usar:** marque cada linha com OK (confere) ou anote o valor correto na
+coluna de observação. Não é preciso instalar nada - todos os valores estão neste
 documento. No fim há o campo de assinatura.
 
 > **Situação atual:** os valores de alimentos estão gravados no sistema com a
@@ -48,7 +48,7 @@ mínimo), ambas com severidade "atenção".
 **Ponto que pedimos atenção especial:** o piso da faixa também classifica. Uma
 medição de **78 mg/dL antes de dormir** é apresentada como *hipoglicemia*,
 porque o alvo desse momento começa em 90. A mesma medição em jejum é *normal*.
-A intenção foi dar margem contra hipoglicemia noturna — confirmem se essa
+A intenção foi dar margem contra hipoglicemia noturna - confirmem se essa
 conduta é adequada ou se o piso de 90 deve valer só como orientação visual, sem
 gerar alerta.
 
@@ -77,7 +77,7 @@ faixas.
 > escolha da TACO e dizer como tratar os 19 alimentos que ela traz sem valor.
 
 Todos os valores são **por 100 g** do alimento na forma indicada no nome. A
-coluna "medida caseira" informa a quantos gramas equivale a medida citada — é o
+coluna "medida caseira" informa a quantos gramas equivale a medida citada - é o
 que aparece no app quando o paciente monta a refeição.
 
 Os valores foram levantados a partir de tabelas de composição de uso comum, mas
@@ -159,7 +159,7 @@ Hortaliças
 Perguntas abertas sobre esta tabela
 
 1. **Fonte a adotar.** Qual tabela oficial deve substituir estes valores?
-   Cada alimento guarda a própria fonte, e o rótulo aparece na tela — então dá
+   Cada alimento guarda a própria fonte, e o rótulo aparece na tela - então dá
    para conviver com mais de uma tabela e ir substituindo. O que falta é a
    definição de qual adotar.
 2. **Índice glicêmico.** O sistema tem campo para índice glicêmico de cada
@@ -175,17 +175,17 @@ Perguntas abertas sobre esta tabela
 3. Fórmulas de cálculo
 
 Estas fórmulas geram a **sugestão** apresentada ao nutricionista na tela de
-plano alimentar. A prescrição continua sendo dele — o sistema não fecha nada
+plano alimentar. A prescrição continua sendo dele - o sistema não fecha nada
 sozinho.
 
 3.1 Taxa metabólica basal
 
 | Fórmula | Expressão usada | Confere? |
 |---|---|---|
-| Mifflin-St Jeor (padrão) | 10 × peso(kg) + 6,25 × altura(cm) − 5 × idade **+ 5** (masculino) / **− 161** (feminino) | |
-| Harris-Benedict revisada | M: 88,362 + 13,397×peso + 4,799×altura(cm) − 5,677×idade · F: 447,593 + 9,247×peso + 3,098×altura(cm) − 4,330×idade | |
+| Mifflin-St Jeor (padrão) | 10 × peso(kg) + 6,25 × altura(cm) - 5 × idade **+ 5** (masculino) / **- 161** (feminino) | |
+| Harris-Benedict revisada | M: 88,362 + 13,397×peso + 4,799×altura(cm) - 5,677×idade - F: 447,593 + 9,247×peso + 3,098×altura(cm) - 4,330×idade | |
 
-O padrão do sistema é Mifflin-St Jeor. **Confirmem se é a escolha adequada** —
+O padrão do sistema é Mifflin-St Jeor. **Confirmem se é a escolha adequada** -
 ou se para o público com diabetes há outra recomendação.
 
 3.2 Fatores de atividade física
@@ -207,7 +207,7 @@ O gasto energético total é a TMB multiplicada por:
 | Carboidratos | 4 kcal/g | |
 | Proteínas | 4 kcal/g | |
 | Lipídios | 9 kcal/g | |
-| Distribuição sugerida na tela | 50% carboidratos · 20% proteínas · 30% lipídios | |
+| Distribuição sugerida na tela | 50% carboidratos - 20% proteínas - 30% lipídios | |
 
 A distribuição é apenas o ponto de partida do formulário e é editável pelo
 nutricionista; o sistema só exige que os três percentuais somem 100.
@@ -228,7 +228,7 @@ IMC = peso(kg) ÷ altura(m)², apresentado com duas casas decimais.
 | ≥ 40,0 | Obesidade grau III | |
 
 Os pontos de corte adotados são os da OMS para **adultos**. O sistema aplica a
-mesma tabela independentemente da idade — **idosos e menores de 19 anos ficam
+mesma tabela independentemente da idade - **idosos e menores de 19 anos ficam
 classificados por critério que não é o deles**. Precisamos saber se isso deve
 ser corrigido antes do uso real e, em caso positivo, quais referências usar.
 
@@ -238,12 +238,12 @@ ser corrigido antes do uso real e, em caso positivo, quais referências usar.
 
 | Bloco | Situação | Observações |
 |---|---|---|
-| 1. Faixas de glicemia | ☐ aprovado ☐ aprovado com correções ☐ refazer | |
-| 2. Tabela de 36 alimentos | ☐ aprovado ☐ aprovado com correções ☐ refazer | |
-| 3.1 Fórmulas de TMB | ☐ aprovado ☐ aprovado com correções ☐ refazer | |
-| 3.2 Fatores de atividade | ☐ aprovado ☐ aprovado com correções ☐ refazer | |
-| 3.3 Macronutrientes | ☐ aprovado ☐ aprovado com correções ☐ refazer | |
-| 3.4 IMC | ☐ aprovado ☐ aprovado com correções ☐ refazer | |
+| 1. Faixas de glicemia | ( ) aprovado ( ) aprovado com correções ( ) refazer | |
+| 2. Tabela de 36 alimentos | ( ) aprovado ( ) aprovado com correções ( ) refazer | |
+| 3.1 Fórmulas de TMB | ( ) aprovado ( ) aprovado com correções ( ) refazer | |
+| 3.2 Fatores de atividade | ( ) aprovado ( ) aprovado com correções ( ) refazer | |
+| 3.3 Macronutrientes | ( ) aprovado ( ) aprovado com correções ( ) refazer | |
+| 3.4 IMC | ( ) aprovado ( ) aprovado com correções ( ) refazer | |
 
 **Correções e observações gerais:**
 
@@ -270,7 +270,7 @@ Onde cada valor fica no sistema (para quem for aplicar as correções)
 | TMB, fatores de atividade, macros, IMC | `apps/api/src/common/nutricao/nutricao.ts` |
 
 Cada bloco tem um único ponto de definição no código e é consumido por todas as
-telas a partir dele — corrigir um valor aqui corrige o sistema inteiro, sem
+telas a partir dele - corrigir um valor aqui corrige o sistema inteiro, sem
 risco de uma tela ficar divergente da outra. Os testes automatizados
 (`glicemia.spec.ts`, `nutricao.spec.ts`) travam esses números: se um valor for
 alterado sem atualizar o teste correspondente, a suíte acusa.

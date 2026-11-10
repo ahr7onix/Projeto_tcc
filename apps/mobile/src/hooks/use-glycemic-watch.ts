@@ -43,7 +43,7 @@ export function useGlycemicWatch() {
         await Notifications.scheduleNotificationAsync({
           content: {
             title: TITULO[registro.avaliacao.severidade as 'critico' | 'atencao'],
-            body: `${registro.valor} mg/dL — ${registro.avaliacao.mensagem}`,
+            body: `${registro.valor} mg/dL - ${registro.avaliacao.mensagem}`,
           },
           trigger: null,
         });

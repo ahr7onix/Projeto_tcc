@@ -22,7 +22,7 @@
 // Nada no repositorio obrigava as duas a concordarem, e elas ja divergiram em
 // producao: a tabela `mensagem` entrou so na migration 003 e nunca no
 // schema.sql. Todo banco novo nascia sem ela e qualquer chamada a /mensagens
-// respondia 500 — inclusive o contador de nao lidas da tela inicial. A
+// respondia 500 - inclusive o contador de nao lidas da tela inicial. A
 // migration 014 existe unicamente para remendar isso, repetindo a 003 palavra
 // por palavra. Nada impedia a proxima divergencia.
 //
@@ -41,8 +41,8 @@
 //
 // A comparacao le os catalogos do proprio PostgreSQL (pg_constraint,
 // pg_indexes, format_type), e nao o texto dos arquivos .sql. O banco ja
-// normaliza tudo — `VARCHAR(160)` e `character varying(160)` viram a mesma
-// coisa —, entao diferenca de escrita entre os dois arquivos nao vira alarme
+// normaliza tudo - `VARCHAR(160)` e `character varying(160)` viram a mesma
+// coisa -, entao diferenca de escrita entre os dois arquivos nao vira alarme
 // falso, e mudanca real e pega mesmo escrita de outro jeito.
 
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
@@ -193,7 +193,7 @@ function comparar(estruturaA, estruturaB) {
       }
     }
 
-    // O caso oposto nao deveria acontecer — as migrations so acrescentam —,
+    // O caso oposto nao deveria acontecer - as migrations so acrescentam -,
     // mas se acontecer e porque alguma delas apaga o que o schema.sql cria, e
     // isso precisa aparecer em vez de passar batido.
     for (const chave of a.keys()) {
@@ -238,7 +238,7 @@ function relatar(divergencias) {
 
   console.error(
     '\nBanco novo e banco antigo nao ficam com a mesma estrutura.\n' +
-      'Leve para o database/schema.sql o que as migrations acrescentam — e\n' +
+      'Leve para o database/schema.sql o que as migrations acrescentam - e\n' +
       'mantenha a migration onde esta: os bancos que ja existem dependem dela.\n',
   );
 }

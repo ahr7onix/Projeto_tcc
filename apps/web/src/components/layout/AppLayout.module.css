@@ -1,7 +1,7 @@
 /*
  * Estrutura do painel: barra lateral fixa + área de conteúdo.
  *
- * A lateral é branca com uma borda de 1px — o contraste vem do fundo cinza da
+ * A lateral é branca com uma borda de 1px - o contraste vem do fundo cinza da
  * página, não de sombra ou degradê. Nada aqui pisca, flutua ou anima sozinho:
  * é uma ferramenta de trabalho usada o dia inteiro.
  */

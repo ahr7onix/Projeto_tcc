@@ -116,7 +116,7 @@ export default function AppLayout() {
         <NavLink
           to="/perfil"
           className={({ isActive }) => `${s.perfil} ${isActive ? s.perfilActive : ''}`}
-          title={`${user?.nome ?? 'Nutricionista'} — abrir perfil`}
+          title={`${user?.nome ?? 'Nutricionista'} - abrir perfil`}
           onClick={fechar}
         >
           <div className={s.userAvatar}>{initial}</div>

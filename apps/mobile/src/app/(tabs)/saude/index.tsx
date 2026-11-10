@@ -308,7 +308,7 @@ export default function SaudeScreen() {
                 {emocional.fatoresFrequentes.slice(0, 4).map((f) => (
                   <View key={f.fator} style={styles.fator}>
                     <Text style={styles.fatorTexto}>
-                      {f.fator} · {f.vezes}
+                      {f.fator} - {f.vezes}
                     </Text>
                   </View>
                 ))}
@@ -350,7 +350,7 @@ export default function SaudeScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.remedioNome}>{m.nome}</Text>
                 <Text style={styles.remedioNota}>
-                  {m.dosagem} · {m.frequencia}
+                  {m.dosagem} - {m.frequencia}
                 </Text>
               </View>
               <Text style={styles.remedioHora}>{horaCurta(m.horarioInicial)}</Text>

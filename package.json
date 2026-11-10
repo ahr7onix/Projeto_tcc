@@ -2,7 +2,7 @@
   "name": "projeto-tcc",
   "version": "1.0.0",
   "private": true,
-  "description": "NutriCare — monorepo com a API (NestJS), o app do paciente (Expo) e o painel da nutricionista (React).",
+  "description": "NutriCare - monorepo com a API (NestJS), o app do paciente (Expo) e o painel da nutricionista (React).",
   "scripts": {
     "instalar": "npm --prefix apps/api ci && npm --prefix apps/mobile ci && npm --prefix apps/web ci",
     "typecheck": "npm --prefix apps/api run typecheck && npm --prefix apps/web run typecheck && npm --prefix apps/mobile run typecheck",

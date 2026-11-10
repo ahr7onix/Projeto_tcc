@@ -40,7 +40,7 @@ export default function TabsLayout() {
           elevation: 4,
         },
         // Em celular de 360 de largura "Alimentação" não cabe na aba e virava
-        // "Alimenta…": o texto encolhe um pouco só quando não cabe.
+        // "Alimenta...": o texto encolhe um pouco só quando não cabe.
         tabBarLabel: ({ color, children }) => (
           <Text
             numberOfLines={1}

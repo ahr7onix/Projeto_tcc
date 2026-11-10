@@ -3,7 +3,7 @@ import React, { useEffect, useId, useRef } from 'react'
 /*
  * Componentes compartilhados do painel.
  *
- * Todos leem as variáveis de `index.css` — nenhum fixa cor no código. Trocar a
+ * Todos leem as variáveis de `index.css` - nenhum fixa cor no código. Trocar a
  * identidade visual do sistema é mexer só naquele arquivo.
  */
 
@@ -15,7 +15,7 @@ interface CardProps {
   action?: React.ReactNode
   children: React.ReactNode
   style?: React.CSSProperties
-  /** Remove o respiro interno — para cards que abrigam uma tabela inteira. */
+  /** Remove o respiro interno - para cards que abrigam uma tabela inteira. */
   flush?: boolean
 }
 export function Card({ title, subtitle, action, children, style, flush }: CardProps) {
@@ -87,7 +87,7 @@ export function StatTile({ label, value, icon, tint = 'primary', sub, onClick }:
       <div style={{ fontSize: 28, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
         {value}
       </div>
-      <div style={{ fontSize: 12, color: sub ? t.fg : 'transparent', fontWeight: 500 }}>{sub || '—'}</div>
+      <div style={{ fontSize: 12, color: sub ? t.fg : 'transparent', fontWeight: 500 }}>{sub || '-'}</div>
     </>
   )
 
@@ -452,7 +452,7 @@ export function AlertBanner({ message, type = 'danger' }: { message: string; typ
  * inteiro do paciente de uma vez (a API não tem `offset`). Isso mantém o
  * contador honesto: o total exibido é o número real de itens recebidos.
  *
- * A página volta para 1 sempre que a lista muda de tamanho — trocar de paciente
+ * A página volta para 1 sempre que a lista muda de tamanho - trocar de paciente
  * ou de filtro deixaria o nutricionista parado numa página que não existe mais.
  * Quando a troca de filtro pode devolver uma lista do mesmo tamanho, passe o
  * filtro em `chaveReset` para forçar a volta ao início.
@@ -529,7 +529,7 @@ export function Paginacao({ pagina, totalPaginas, total, primeiro, ultimo, onCha
       ...style,
     }}>
       <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-        {primeiro}–{ultimo} de {total} {rotulo}
+        {primeiro}-{ultimo} de {total} {rotulo}
       </span>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <button

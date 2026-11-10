@@ -9,7 +9,7 @@ import { limparDados, limparUrl } from '../logging/redacao';
  * TCC existe só isto: um enfileirador que envia telemetria técnica por HTTP.
  *
  * Regra que manda em todo o arquivo: o monitoramento NUNCA pode derrubar nem
- * atrasar o NutriCare. Por isso —
+ * atrasar o NutriCare. Por isso -
  *
  *   - nenhuma função aqui lança exceção nem devolve promessa que o chamador
  *     precise esperar (`registrar` retorna `void`);
@@ -207,7 +207,7 @@ class ClienteDeMonitoramento {
 
   /**
    * "Continuo online". A central declara o serviço OFFLINE quando as batidas
-   * param — é o sinal que sobrevive a um processo que morreu sem avisar.
+   * param - é o sinal que sobrevive a um processo que morreu sem avisar.
    */
   iniciarHeartbeat(medirBanco: () => Promise<{ ok: boolean; ms: number }>): void {
     if (!this.ativo || this.batida) return;

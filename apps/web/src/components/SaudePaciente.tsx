@@ -47,7 +47,7 @@ function formatarData(iso: string): string {
 
 /** Uma casa decimal só quando o número precisa: 72 e 72,4. */
 const formatar = (valor: number | null | undefined): string => {
-  if (valor === null || valor === undefined) return '—'
+  if (valor === null || valor === undefined) return '-'
   return Number.isInteger(valor) ? String(valor) : valor.toFixed(1).replace('.', ',')
 }
 
@@ -118,7 +118,7 @@ export default function SaudePaciente({ pacienteId, pacienteNome }: Props) {
 
   // A guarda `cancelado` é o que impede a página de atribuir dado clínico ao
   // paciente errado: trocar de paciente antes de as quatro consultas voltarem
-  // deixava dois conjuntos de respostas no ar, e o mais lento vencia — medidas,
+  // deixava dois conjuntos de respostas no ar, e o mais lento vencia - medidas,
   // medicamentos e humor de um paciente apareciam sob o nome de outro.
   useEffect(() => {
     if (!pacienteId) {
@@ -201,7 +201,7 @@ export default function SaudePaciente({ pacienteId, pacienteNome }: Props) {
       <div style={barraAcoes}>
         {ultima && (
           <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-            Última medida em {formatarData(ultima.dataMedicao)} · {registros.length} registro
+            Última medida em {formatarData(ultima.dataMedicao)} - {registros.length} registro
             {registros.length === 1 ? '' : 's'} no histórico
           </span>
         )}
@@ -221,7 +221,7 @@ export default function SaudePaciente({ pacienteId, pacienteNome }: Props) {
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <StatTile
               label="Peso atual"
-              value={ultima?.peso !== null && ultima ? `${formatar(ultima.peso)} kg` : '—'}
+              value={ultima?.peso !== null && ultima ? `${formatar(ultima.peso)} kg` : '-'}
               icon={<ScaleIcon />}
               sub={
                 evolucao?.variacaoPeso !== null && evolucao?.variacaoPeso !== undefined
@@ -231,7 +231,7 @@ export default function SaudePaciente({ pacienteId, pacienteNome }: Props) {
             />
             <StatTile
               label="IMC"
-              value={ultima?.imc !== null && ultima ? formatar(ultima.imc) : '—'}
+              value={ultima?.imc !== null && ultima ? formatar(ultima.imc) : '-'}
               icon={<BodyIcon />}
               tint={tintDoImc(ultima?.classificacaoImc ?? null)}
               sub={ultima?.rotuloImc ?? undefined}
@@ -239,7 +239,7 @@ export default function SaudePaciente({ pacienteId, pacienteNome }: Props) {
             <StatTile
               label="Circunferência da cintura"
               value={
-                ultima?.circCintura !== null && ultima ? `${formatar(ultima.circCintura)} cm` : '—'
+                ultima?.circCintura !== null && ultima ? `${formatar(ultima.circCintura)} cm` : '-'
               }
               icon={<RulerIcon />}
               tint={tintDoRisco(ultima?.riscoCintura ?? null)}
@@ -247,7 +247,7 @@ export default function SaudePaciente({ pacienteId, pacienteNome }: Props) {
             />
             <StatTile
               label="Relação cintura/quadril"
-              value={ultima?.rcq !== null && ultima ? formatar(ultima.rcq) : '—'}
+              value={ultima?.rcq !== null && ultima ? formatar(ultima.rcq) : '-'}
               icon={<TrendIcon />}
               tint={tintDoRisco(ultima?.riscoRcq ?? null)}
               sub={rotuloRisco(ultima?.riscoRcq ?? null) ?? undefined}
@@ -330,7 +330,7 @@ export default function SaudePaciente({ pacienteId, pacienteNome }: Props) {
                           {medicamento.nome}
                         </div>
                         <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                          {medicamento.dosagem} · {medicamento.frequencia} · a partir das{' '}
+                          {medicamento.dosagem} - {medicamento.frequencia} - a partir das{' '}
                           {medicamento.horarioInicial.slice(0, 5)}
                         </div>
                         {medicamento.observacoes && (
@@ -394,7 +394,7 @@ export default function SaudePaciente({ pacienteId, pacienteNome }: Props) {
                       {formatar(emocional.mediaEscala)}
                     </span>
                     <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                      média na escala de 1 a 5 · {emocional.total} registro
+                      média na escala de 1 a 5 - {emocional.total} registro
                       {emocional.total === 1 ? '' : 's'}
                     </span>
                   </div>
@@ -457,7 +457,7 @@ export default function SaudePaciente({ pacienteId, pacienteNome }: Props) {
                     <div style={{ flex: 1, minWidth: 160 }}>
                       <div style={subtitulo}>Dias em que se sentiu bem</div>
                       <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--success)' }}>
-                        {humorGlicemia.comparativo.mediaGlicemiaDiasBem ?? '—'}
+                        {humorGlicemia.comparativo.mediaGlicemiaDiasBem ?? '-'}
                         <span style={{ fontSize: 12, color: 'var(--text-muted)' }}> mg/dL</span>
                       </div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
@@ -468,7 +468,7 @@ export default function SaudePaciente({ pacienteId, pacienteNome }: Props) {
                     <div style={{ flex: 1, minWidth: 160 }}>
                       <div style={subtitulo}>Dias em que se sentiu mal</div>
                       <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--warning)' }}>
-                        {humorGlicemia.comparativo.mediaGlicemiaDiasMal ?? '—'}
+                        {humorGlicemia.comparativo.mediaGlicemiaDiasMal ?? '-'}
                         <span style={{ fontSize: 12, color: 'var(--text-muted)' }}> mg/dL</span>
                       </div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
@@ -497,7 +497,7 @@ export default function SaudePaciente({ pacienteId, pacienteNome }: Props) {
                         </div>
                         {d.fatores.length > 0 && (
                           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-                            {d.fatores.join(' · ')}
+                            {d.fatores.join(' - ')}
                           </div>
                         )}
                       </div>
@@ -509,8 +509,8 @@ export default function SaudePaciente({ pacienteId, pacienteNome }: Props) {
                             </div>
                             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                               {d.glicemia.total} medi{d.glicemia.total === 1 ? 'ção' : 'ções'}
-                              {/* Com uma medição só, a faixa repetiria a média: "99 · 99–99". */}
-                              {d.glicemia.total > 1 && ` · ${d.glicemia.minima}–${d.glicemia.maxima}`}
+                              {/* Com uma medição só, a faixa repetiria a média: "99 - 99-99". */}
+                              {d.glicemia.total > 1 && ` - ${d.glicemia.minima}-${d.glicemia.maxima}`}
                             </div>
                             {d.glicemia.foraDaFaixa > 0 && (
                               <div style={{ fontSize: 11, color: 'var(--warning)', fontWeight: 600 }}>
@@ -541,7 +541,7 @@ export default function SaudePaciente({ pacienteId, pacienteNome }: Props) {
               <EmptyState
                 icon={<RulerIcon />}
                 title="Nenhuma medida registrada"
-                message="Use o botão “Nova medida” para registrar a primeira avaliação."
+                message='Use o botão "Nova medida" para registrar a primeira avaliação.'
               />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -561,12 +561,12 @@ export default function SaudePaciente({ pacienteId, pacienteNome }: Props) {
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
                         {registro.peso !== null && `Peso ${formatar(registro.peso)} kg`}
-                        {registro.imc !== null && ` · IMC ${formatar(registro.imc)}`}
+                        {registro.imc !== null && ` - IMC ${formatar(registro.imc)}`}
                         {registro.circCintura !== null &&
-                          ` · Cintura ${formatar(registro.circCintura)} cm`}
+                          ` - Cintura ${formatar(registro.circCintura)} cm`}
                         {registro.circQuadril !== null &&
-                          ` · Quadril ${formatar(registro.circQuadril)} cm`}
-                        {registro.rcq !== null && ` · RCQ ${formatar(registro.rcq)}`}
+                          ` - Quadril ${formatar(registro.circQuadril)} cm`}
+                        {registro.rcq !== null && ` - RCQ ${formatar(registro.rcq)}`}
                       </div>
                       {registro.observacao && (
                         <div style={{ fontSize: 12, color: 'var(--text-soft)', marginTop: 4 }}>

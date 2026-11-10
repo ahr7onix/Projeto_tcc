@@ -9,7 +9,7 @@
 
 /**
  * Nomes de campo cujo valor nunca é escrito em log. Comparação por trecho, em
- * minúsculas — `senhaAtual`, `nova_senha` e `SENHA` caem todos aqui.
+ * minúsculas - `senhaAtual`, `nova_senha` e `SENHA` caem todos aqui.
  */
 const CAMPOS_PROIBIDOS = [
   'senha',
@@ -69,7 +69,7 @@ export function mascararEmail(email: unknown): string {
 /** Só os primeiros caracteres, para correlacionar sessões sem permitir reuso. */
 export function mascararToken(token: unknown): string {
   if (typeof token !== 'string' || token.length < 8) return MARCA;
-  return `${token.slice(0, 4)}…(${token.length})`;
+  return `${token.slice(0, 4)}...(${token.length})`;
 }
 
 /**
@@ -80,13 +80,13 @@ export function limparDados(valor: unknown, profundidade = 0): unknown {
   if (valor === null || valor === undefined) return valor;
 
   if (typeof valor === 'string') {
-    return valor.length > LIMITE_TEXTO ? `${valor.slice(0, LIMITE_TEXTO)}…` : valor;
+    return valor.length > LIMITE_TEXTO ? `${valor.slice(0, LIMITE_TEXTO)}...` : valor;
   }
 
   if (typeof valor === 'number' || typeof valor === 'boolean') return valor;
   if (valor instanceof Date) return valor.toISOString();
 
-  if (profundidade >= PROFUNDIDADE_MAXIMA) return '[…]';
+  if (profundidade >= PROFUNDIDADE_MAXIMA) return '[...]';
 
   if (Array.isArray(valor)) {
     return valor.slice(0, 5).map((item) => limparDados(item, profundidade + 1));
@@ -97,7 +97,7 @@ export function limparDados(valor: unknown, profundidade = 0): unknown {
     let contados = 0;
     for (const [chave, item] of Object.entries(valor as Record<string, unknown>)) {
       if (contados >= LIMITE_CAMPOS) {
-        saida['…'] = 'campos omitidos';
+        saida['...'] = 'campos omitidos';
         break;
       }
       contados += 1;

@@ -212,7 +212,7 @@ export class LembretesService {
   }
 
   /**
-   * Concluir um recorrente não faz sentido — ele volta amanhã. Nesse caso o
+   * Concluir um recorrente não faz sentido - ele volta amanhã. Nesse caso o
    * que o usuário quer é desativar, e é isso que o app oferece.
    */
   async concluir(user: JwtPayload, id: string) {

@@ -12,7 +12,7 @@ export interface EnvioEmailResultado {
  * Tempo máximo para falar com o servidor de e-mail. O padrão do nodemailer é
  * 2 minutos: com a porta bloqueada (o plano gratuito do Render bloqueia 25,
  * 465 e 587), o "esqueci a senha" ficava 2 minutos carregando antes de
- * responder — conferido no servidor publicado, 121 segundos.
+ * responder - conferido no servidor publicado, 121 segundos.
  */
 export const LIMITES_SMTP = {
   connectionTimeout: 10_000,
@@ -42,7 +42,7 @@ export class MailService {
     const info = await transporter.sendMail({
       from,
       to: opts.para,
-      subject: 'NutriCare — redefinir sua senha',
+      subject: 'NutriCare - redefinir sua senha',
       text: [
         `Olá, ${primeiroNome}.`,
         '',
@@ -52,7 +52,7 @@ export class MailService {
         '',
         'Se você não pediu isso, ignore este e-mail.',
         '',
-        '— Equipe NutriCare',
+        '- Equipe NutriCare',
       ].join('\n'),
       html: buildResetEmailHtml({
         nome: primeiroNome,
@@ -107,7 +107,7 @@ export class MailService {
     const info = await transporter.sendMail({
       from,
       to: opts.para,
-      subject: 'NutriCare — crie sua senha',
+      subject: 'NutriCare - crie sua senha',
       text: [
         `Olá, ${primeiroNome}.`,
         '',
@@ -116,7 +116,7 @@ export class MailService {
         '',
         'Se você não esperava este e-mail, pode ignorá-lo.',
         '',
-        '— Equipe NutriCare',
+        '- Equipe NutriCare',
       ].join('\n'),
       html: buildBoasVindasHtml({ nome: primeiroNome, paragrafos, link: opts.link }),
     });
@@ -158,14 +158,14 @@ export class MailService {
     // Desiste na hora, e quem chamou trata como "e-mail não enviado".
     if (this.config.get<string>('NODE_ENV') === 'production') {
       this.logger.warn(
-        'SMTP não configurado em produção — nenhum e-mail será enviado. Ver docs/PUBLICAR.md, seção "E-mail".',
+        'SMTP não configurado em produção - nenhum e-mail será enviado. Ver docs/PUBLICAR.md, seção "E-mail".',
       );
       throw new Error('SMTP não configurado');
     }
 
     // Em desenvolvimento: conta de teste Ethereal (e-mail "falso" com link de prévia).
     this.logger.warn(
-      'SMTP não configurado — usando Ethereal (prévia no log). Defina SMTP_HOST/SMTP_USER/SMTP_PASS para e-mail real.',
+      'SMTP não configurado - usando Ethereal (prévia no log). Defina SMTP_HOST/SMTP_USER/SMTP_PASS para e-mail real.',
     );
     const test = await nodemailer.createTestAccount();
     return nodemailer.createTransport({
@@ -197,7 +197,7 @@ function buildBoasVindasHtml(opts: { nome: string; paragrafos: string[]; link: s
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
-<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Crie sua senha — NutriCare</title></head>
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Crie sua senha - NutriCare</title></head>
 <body style="margin:0;padding:24px 12px;background:#f5f7fa;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
     <tr><td align="center">
@@ -232,7 +232,7 @@ function buildResetEmailHtml(opts: { nome: string; resetUrl: string }): string {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Redefinir senha — NutriCare</title>
+  <title>Redefinir senha - NutriCare</title>
 </head>
 <body style="margin:0;padding:0;background:#0b001a;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(160deg,#0b001a 0%,#1a0b2e 45%,#2d124d 100%);background-color:#0b001a;padding:32px 12px;">
@@ -298,7 +298,7 @@ function buildResetEmailHtml(opts: { nome: string; resetUrl: string }): string {
                       <tr>
                         <td style="background:#f6f1ff;border:1px solid #e6daf8;border-radius:14px;padding:14px 16px;">
                           <p style="margin:0;font-size:13px;line-height:1.5;color:#5b4a78;">
-                            ⏱️ Este link é válido por <strong>1 hora</strong>. Depois disso, peça um novo em “Esqueceu a senha?”.
+                            Este link é válido por <strong>1 hora</strong>. Depois disso, peça um novo em "Esqueceu a senha?".
                           </p>
                         </td>
                       </tr>
@@ -312,7 +312,7 @@ function buildResetEmailHtml(opts: { nome: string; resetUrl: string }): string {
                     </p>
 
                     <p style="margin:0;font-size:13px;line-height:1.55;color:#8a849c;">
-                      Não foi você? Pode ignorar este e-mail com segurança — sua senha atual continua a mesma.
+                      Não foi você? Pode ignorar este e-mail com segurança - sua senha atual continua a mesma.
                     </p>
                   </td>
                 </tr>
@@ -323,7 +323,7 @@ function buildResetEmailHtml(opts: { nome: string; resetUrl: string }): string {
                 <tr>
                   <td style="padding:18px 32px 24px;border-top:1px solid #efeaf7;background:#fbf9ff;">
                     <p style="margin:0;font-size:12px;line-height:1.5;color:#9a93ad;text-align:center;">
-                      NutriCare · painel do nutricionista · pacientes usam o aplicativo mobile
+                      NutriCare - painel do nutricionista - pacientes usam o aplicativo mobile
                     </p>
                   </td>
                 </tr>

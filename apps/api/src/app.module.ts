@@ -78,7 +78,7 @@ export class AppModule implements NestModule {
   /**
    * Uma linha de log por requisição, para toda rota. Em middleware, e não em
    * interceptor, porque assim também caem no log as respostas que nunca chegam
-   * a um controller — 404 e falha de validação, entre elas.
+   * a um controller - 404 e falha de validação, entre elas.
    */
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(HttpLoggerMiddleware).forRoutes('*');

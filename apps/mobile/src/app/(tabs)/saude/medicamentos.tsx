@@ -282,7 +282,7 @@ export default function MedicamentosScreen() {
                   {m.nome}
                 </Text>
                 <Text style={[styles.remedioNota, isSimplified && styles.remedioNotaGrande]}>
-                  {m.dosagem} · {m.frequencia} · {horaCurta(m.horarioInicial)}
+                  {m.dosagem} - {m.frequencia} - {horaCurta(m.horarioInicial)}
                 </Text>
               </View>
               <Pressable

@@ -5,7 +5,7 @@ import type { VinculosService } from '../vinculos/vinculos.service';
 import { RelatoriosService } from './relatorios.service';
 
 /** Marca de ordem de bytes que o Excel usa para reconhecer o arquivo como UTF-8. */
-const BOM = '﻿';
+const BOM = '\uFEFF';
 
 function criarPoolMock(respostas: unknown[][]) {
   const query = jest.fn();
@@ -190,7 +190,7 @@ describe('RelatoriosService', () => {
     });
 
     it('should use the range of each moment to classify', async () => {
-      // 78 mg/dL é normal em jejum (70–180) e baixo antes de dormir (90–150).
+      // 78 mg/dL é normal em jejum (70-180) e baixo antes de dormir (90-150).
       const { service } = criarServico([
         [linhaPaciente()],
         [

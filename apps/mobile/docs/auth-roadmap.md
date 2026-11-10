@@ -29,7 +29,7 @@ Levantamento dos principais apps do ramo (nutrição, diabetes, fitness):
 | Yazio               | sim         | sim    | sim   | sim      | não       |
 
 **Conclusões:**
-- **Nenhum** app de saúde oferece login com Instagram. O "Login com Instagram" hoje é, na prática, Facebook Login for Business via Meta Graph API — feito para apps de marketing/criadores, não para identidade. **Não vamos suportar.**
+- **Nenhum** app de saúde oferece login com Instagram. O "Login com Instagram" hoje é, na prática, Facebook Login for Business via Meta Graph API - feito para apps de marketing/criadores, não para identidade. **Não vamos suportar.**
 - Apps com classificação **médica/regulatória** (MySugr é dispositivo médico CE/FDA) ficam **só em e-mail/senha**. Apps **wellness** (MyFitnessPal, Yazio, Cronometer) liberam social login.
 - Facebook está em queda nesse setor (Cronometer removeu). Apple e Google são consenso.
 
@@ -39,7 +39,7 @@ Se o app oferece **qualquer** login social de terceiros (Google, Facebook, X, et
 
 LGPD
 
-Glicemia, registros alimentares ligados a diabetes e HbA1c são **dados pessoais sensíveis** (LGPD Art. 5º II + Art. 11). O OAuth provider nunca vê PHI — ele só atesta identidade. Mas:
+Glicemia, registros alimentares ligados a diabetes e HbA1c são **dados pessoais sensíveis** (LGPD Art. 5º II + Art. 11). O OAuth provider nunca vê PHI - ele só atesta identidade. Mas:
 1. Consentimento de identidade (login social) tem que ser **separado** do consentimento de tratamento de dados de saúde.
 2. **Nunca** envie PHI para o provedor (sem custom claims com dados de saúde, sem analytics piggybacking no SDK social).
 
@@ -49,14 +49,14 @@ Recomendação para o nosso projeto
 
 Suportar, nesta ordem, **três** mecanismos:
 
-1. **E-mail + senha** — primário, LGPD-friendly, funciona para todo mundo. Já está no código.
-2. **Sign in with Apple** — obrigatório no iOS por causa da regra 4.8. Biblioteca: [`expo-apple-authentication`](https://docs.expo.dev/versions/latest/sdk/apple-authentication/).
-3. **Google Sign-In** — maior conversão no Brasil. Biblioteca: `expo-auth-session/providers/google` (mais simples) ou `@react-native-google-signin/google-signin` (UX nativa, requer build dev).
+1. **E-mail + senha** - primário, LGPD-friendly, funciona para todo mundo. Já está no código.
+2. **Sign in with Apple** - obrigatório no iOS por causa da regra 4.8. Biblioteca: [`expo-apple-authentication`](https://docs.expo.dev/versions/latest/sdk/apple-authentication/).
+3. **Google Sign-In** - maior conversão no Brasil. Biblioteca: `expo-auth-session/providers/google` (mais simples) ou `@react-native-google-signin/google-signin` (UX nativa, requer build dev).
 
 **Pular:**
-- **Facebook** — tendência de queda, exige Meta Business review, Cronometer já removeu. Se um dia for pedido, usar `react-native-fbsdk-next`.
-- **Instagram** — não é login de identidade, não faz sentido para saúde.
-- **Magic-link** — adiar para v2; é fácil incluir depois com `expo-auth-session` genérico.
+- **Facebook** - tendência de queda, exige Meta Business review, Cronometer já removeu. Se um dia for pedido, usar `react-native-fbsdk-next`.
+- **Instagram** - não é login de identidade, não faz sentido para saúde.
+- **Magic-link** - adiar para v2; é fácil incluir depois com `expo-auth-session` genérico.
 
 ---
 
@@ -75,8 +75,8 @@ Refresh token
 
 Adicionar interceptor de response no [api.ts](../src/lib/api.ts):
 - Em `401`, tentar `POST /auth/refresh` com o `refreshToken` armazenado.
-- Sucesso → atualizar tokens e re-emitir a request original (a Axios chama com a nova `Authorization`).
-- Falha → limpar sessão (já é o comportamento atual).
+- Sucesso -> atualizar tokens e re-emitir a request original (a Axios chama com a nova `Authorization`).
+- Falha -> limpar sessão (já é o comportamento atual).
 
 Cuidado para não cair em loop: se o próprio `/auth/refresh` retornar 401, **não tentar de novo**.
 
@@ -118,7 +118,7 @@ Como adicionar Sign in with Apple (passos)
    - Endpoint `POST /auth/apple` recebendo `{ identityToken, fullName?, email? }`.
    - Validar o `identityToken` contra o JWKS público da Apple (`https://appleid.apple.com/auth/keys`) usando `jose`.
    - `sub` do token vira o `apple_id` do usuário (link de conta, nunca identificador único do app).
-   - Apple só envia `email`/`fullName` na **primeira** autenticação — armazenar imediatamente.
+   - Apple só envia `email`/`fullName` na **primeira** autenticação - armazenar imediatamente.
    - Retornar o mesmo `AuthResponse` do login normal.
 
 4. **Mobile (handler do botão):**
@@ -136,7 +136,7 @@ Como adicionar Google Sign-In (passos)
    - Criar **três** OAuth Client IDs: Web (para o backend validar), iOS, Android.
    - No Android, registrar o SHA-1 do keystore (debug e prod).
 
-2. **Mobile (caminho mais simples — Expo AuthSession):**
+2. **Mobile (caminho mais simples - Expo AuthSession):**
    ```bash
    npx expo install expo-auth-session expo-crypto
    ```
@@ -197,12 +197,12 @@ Vantagem: um mesmo usuário pode vincular vários métodos. Login social que ret
 
 Ordem de implementação sugerida
 
-1. ✅ UI de login pronta (este commit)
-2. ⏭️ Implementar módulo `auth` no NestJS (e-mail/senha + JWT + refresh)
-3. ⏭️ Adicionar interceptor de refresh no mobile
-4. ⏭️ Sign in with Apple (necessário antes da primeira submissão à App Store)
-5. ⏭️ Google Sign-In
-6. ⏭️ Esqueci minha senha (e-mail com token via SMTP/Resend)
-7. ⏭️ Verificação de e-mail (opcional para MVP)
+1. [feito] UI de login pronta (este commit)
+2. [a fazer] Implementar módulo `auth` no NestJS (e-mail/senha + JWT + refresh)
+3. [a fazer] Adicionar interceptor de refresh no mobile
+4. [a fazer] Sign in with Apple (necessário antes da primeira submissão à App Store)
+5. [a fazer] Google Sign-In
+6. [a fazer] Esqueci minha senha (e-mail com token via SMTP/Resend)
+7. [a fazer] Verificação de e-mail (opcional para MVP)
 
 Facebook fica como "se alguém pedir explicitamente". Instagram não entra.

@@ -14,7 +14,7 @@ export const JANELA_POR_MINUTO_MS = 60_000;
  *
  * Só o IP não serve: os pacientes da associação podem usar todos a mesma rede
  * (o mesmo IP) num encontro de grupo, e o limite de um bloquearia os outros.
- * Com o e-mail junto, cada conta tem a sua contagem — e disparar "esqueci a
+ * Com o e-mail junto, cada conta tem a sua contagem - e disparar "esqueci a
  * senha" em massa contra uma conta continua limitado.
  */
 export function chaveDaTentativa(req: { ip?: string; body?: unknown }): string {

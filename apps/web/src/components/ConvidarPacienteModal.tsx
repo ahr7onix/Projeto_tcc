@@ -22,7 +22,7 @@ interface Props {
 type Modo = 'convite' | 'cadastro'
 
 /**
- * Duas portas para o mesmo resultado — um convite que o paciente aceita pelo
+ * Duas portas para o mesmo resultado - um convite que o paciente aceita pelo
  * aplicativo: convidar quem já tem conta, ou cadastrar quem chegou ao
  * consultório sem conta. Em nenhuma das duas o paciente entra na lista antes
  * de aceitar.
@@ -286,7 +286,7 @@ export default function ConvidarPacienteModal({ onClose, onConvitesAlterados }: 
                       {c.paciente.nome}
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                      {c.paciente.email} · enviado em{' '}
+                      {c.paciente.email} - enviado em{' '}
                       {new Date(c.criadoEm).toLocaleDateString('pt-BR')}
                     </div>
                   </div>
@@ -331,7 +331,7 @@ function ResultadoCadastro({ resultado }: { resultado: CadastroPacienteResultado
         <div style={alerta}>
           Cadastro de {paciente.nome} criado, mas este servidor não tem envio de e-mail
           configurado: o link para criar a senha não chegou. Depois que o e-mail estiver
-          configurado (docs/PUBLICAR.md), o paciente pode usar “Esqueci minha senha” no
+          configurado (docs/PUBLICAR.md), o paciente pode usar "Esqueci minha senha" no
           aplicativo com {paciente.email}.
         </div>
       )}

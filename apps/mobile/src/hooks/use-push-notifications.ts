@@ -7,7 +7,7 @@ import { registrarPushToken } from '@/lib/api/push';
 import { useAuthStore } from '@/stores/auth';
 
 // O Expo Go perdeu o push remoto no SDK 53. Tentar pegar o token ali só gera
-// erro no console — o push real só funciona em development build ou build final.
+// erro no console - o push real só funciona em development build ou build final.
 const RODANDO_NO_EXPO_GO =
   Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 

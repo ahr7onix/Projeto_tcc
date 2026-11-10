@@ -1,6 +1,6 @@
-# NutriCare — Acompanhamento nutricional para pacientes com diabetes
+# NutriCare - Acompanhamento nutricional para pacientes com diabetes
 
-Trabalho de Conclusão de Curso — Tecnologia em Desenvolvimento de Sistemas
+Trabalho de Conclusão de Curso - Tecnologia em Desenvolvimento de Sistemas
 Centro Universitário Católico Salesiano Auxilium, Araçatuba, 2026
 
 Autores: Natan Lourenço e Silva, Isac Buzelli dos Santos, Henrique Payá Ferreira
@@ -20,7 +20,7 @@ Arquitetura
 | API | `apps/api` | NestJS 10, TypeScript, PostgreSQL (driver `pg`) |
 | App mobile | `apps/mobile` | Expo SDK 54, React Native 0.81, Expo Router 6, React Query, Zustand |
 | Painel web | `apps/web` | React 18, Vite, React Router 6, Axios |
-| Banco | `database` | PostgreSQL 16 — schema + migrations |
+| Banco | `database` | PostgreSQL 16 - schema + migrations |
 
 Perfis de usuário: **paciente** (mobile), **nutricionista** (web) e **administrador** (web).
 
@@ -37,13 +37,13 @@ para não precisar entrar em cada pasta:
 | `npm run verificar` | typecheck dos três + testes da API + build |
 | `npm run typecheck` | só a verificação de tipos, nos três |
 | `npm test` | testes da API |
-| `npm run dev:api` · `dev:web` · `dev:mobile` | sobe cada aplicação |
+| `npm run dev:api` - `dev:web` - `dev:mobile` | sobe cada aplicação |
 | `npm run db:preparar` | cria e atualiza as tabelas do banco |
 | `npm run db:verificar` | confere se o `schema.sql` está em dia com as migrations |
 | `npm run e2e:fluxo` | percorre a demonstração inteira no navegador (precisa da API, do painel e do app web rodando; ver o topo de `scripts/e2e-fluxo.mjs`) |
 
 Cada projeto mantém o seu próprio `package.json` e `package-lock.json`. A raiz
-só delega — não são workspaces do npm, de propósito: o Render instala cada
+só delega - não são workspaces do npm, de propósito: o Render instala cada
 serviço isoladamente pelo seu `rootDir`, e workspaces quebrariam isso.
 
 O passo a passo detalhado, projeto por projeto:
@@ -68,7 +68,7 @@ A estrutura do banco está escrita em dois lugares que precisam concordar:
 | `database/schema.sql` | o retrato completo, aplicado em banco vazio |
 | `database/migrations/*.sql` | os deltas, aplicados em banco que já existe |
 
-Toda migration nova tem que ser levada **também** para o `schema.sql` — e a
+Toda migration nova tem que ser levada **também** para o `schema.sql` - e a
 migration continua onde está, porque os bancos que já rodam dependem dela.
 
 Isso não é preciosismo: a tabela `mensagem` entrou só na migration 003 e nunca
@@ -78,7 +78,7 @@ no `schema.sql`, então todo banco novo nascia sem ela e qualquer chamada a
 Quem garante que não acontece de novo é o `npm run db:verificar`, que monta os
 dois caminhos em bancos descartáveis e compara a estrutura resultante. Ele roda
 no CI a cada push, no job **Banco (schema.sql x migrations)**. Precisa de um
-PostgreSQL onde dê para criar bancos — o do `docker-compose` serve:
+PostgreSQL onde dê para criar bancos - o do `docker-compose` serve:
 
 ```bash
 docker compose up -d postgres
@@ -160,7 +160,7 @@ cp .env.example .env      # EXPO_PUBLIC_API_URL=http://SEU_IP:3000
 npm start
 ```
 
-Use o IP da máquina na rede local, não `localhost` — o celular não enxerga o
+Use o IP da máquina na rede local, não `localhost` - o celular não enxerga o
 `localhost` do computador.
 
 Docker
@@ -170,7 +170,7 @@ docker compose up -d --build
 ```
 
 Sobe o PostgreSQL 16 na porta **5433** e a API na **3000**. Na primeira execução o
-container do banco aplica sozinho `schema.sql`, `seeds.sql` e `seeds_admin.sql` —
+container do banco aplica sozinho `schema.sql`, `seeds.sql` e `seeds_admin.sql` -
 não é preciso rodar o `psql` da seção 1.
 
 Os scripts de inicialização só rodam com o volume vazio. Para reaplicá-los depois de
@@ -188,7 +188,7 @@ O sistema está no ar no Render, plano gratuito, em duas cópias do mesmo códig
 | API | <https://nutricare-tcc-api.onrender.com> | <https://nutricare-adj-api.onrender.com> |
 
 Os arquivos `render-tcc.yaml` e `render.yaml` na raiz descrevem as três peças de
-cada cópia — banco, API e painel web — e o Render as monta sozinho a partir
+cada cópia - banco, API e painel web - e o Render as monta sozinho a partir
 deles. O aplicativo do paciente é um APK para Android (versão 1.0.0), gerado pelo
 EAS Build. Detalhes, credenciais de acesso e limitações do plano gratuito em
 [docs/PUBLICAR.md](docs/PUBLICAR.md).
@@ -208,7 +208,7 @@ O script cria a estrutura na primeira execução, aplica só as migrations
 pendentes nas seguintes e anota tudo na tabela `migracao_aplicada`. Definir
 `SEED_DEMO=true` carrega também os usuários e registros fictícios de exemplo.
 
-A rota pública `GET /status` responde se a API e o banco estão de pé — é o que o
+A rota pública `GET /status` responde se a API e o banco estão de pé - é o que o
 servidor de hospedagem usa para monitorar o serviço.
 
 ---
@@ -226,26 +226,26 @@ npm run test:cov      # com cobertura
 Funcionalidades por requisito
 
 > A numeração abaixo é interna do projeto e **não** é a do briefing da equipe de
-> Nutrição (RF01–RF10). O comparativo contra os requisitos do cliente está em
+> Nutrição (RF01-RF10). O comparativo contra os requisitos do cliente está em
 > [docs/RESUMO_ENTREGA.md](docs/RESUMO_ENTREGA.md).
 
 | Req. | Descrição | Situação |
 |---|---|---|
 | RF01 | Cadastro de usuários | Implementado |
-| RF02 | Login e autenticação (JWT + Google OAuth) | Implementado — Google funcionando no painel web; detalhes em [docs/LOGIN_GOOGLE.md](docs/LOGIN_GOOGLE.md). No app mobile o login social ainda não funciona |
+| RF02 | Login e autenticação (JWT + Google OAuth) | Implementado - Google funcionando no painel web; detalhes em [docs/LOGIN_GOOGLE.md](docs/LOGIN_GOOGLE.md). No app mobile o login social ainda não funciona |
 | RF03 | Registro de glicemia | Implementado |
 | RF04 | Registro de alimentação | Implementado |
 | RF05 | Registro de peso e dados de saúde | Implementado |
 | RF06 | Histórico de registros | Implementado |
-| RF07 | Nutricionista visualiza dados do paciente | Implementado — só depois que o paciente aceita o convite |
+| RF07 | Nutricionista visualiza dados do paciente | Implementado - só depois que o paciente aceita o convite |
 | RF08 | Planos alimentares personalizados | Implementado |
 | RF09 | Acompanhamento da evolução | Implementado |
 | RF10 | Relatórios (CSV e PDF via impressão) | Implementado |
-| RF11 | Comunicação paciente ↔ nutricionista | Implementado |
+| RF11 | Comunicação paciente e nutricionista | Implementado |
 | RF12 | Conteúdos educativos | Implementado |
 | RF13 | Gestão administrativa | Implementado |
 | RF14 | Integração web + mobile | Implementado |
-| RF15 | Importação de tabela nutricional (CSV, cabeçalho da TACO reconhecido) | Implementado — TACO 4ª edição importada no ambiente publicado (578 alimentos) |
+| RF15 | Importação de tabela nutricional (CSV, cabeçalho da TACO reconhecido) | Implementado - TACO 4ª edição importada no ambiente publicado (578 alimentos) |
 | RF16 | Consentimento do paciente no vínculo (convite, aceite, encerramento) | Implementado |
 | RF17 | Cadastro de paciente pelo nutricionista e de nutricionista pela administração, com aprovação do CRN | Implementado |
 
@@ -255,14 +255,14 @@ Regras de negócio aplicadas no código
 
 | Regra | Onde é garantida |
 |---|---|
-| RN01 — paciente só acessa os próprios dados | `planos.service.ts`, `relatorios.service.ts`, filtros por `id_usuario` |
-| RN02 — nutricionista só acessa pacientes vinculados | `vinculos.service.ts` + tabela `nutricionista_paciente` |
-| RN17 — o vínculo só nasce quando o paciente aceita o convite (LGPD) | `convites.service.ts` + tabela `solicitacao_vinculo` |
-| RN18 — nutricionista só entra no painel depois de aprovado pela administração | `auth.service.ts` + `nutricionista.aprovado_em` |
-| RN05 — apenas nutricionistas criam planos | `@Roles('nutricionista')` + `RolesGuard` |
-| RN06 — apenas administradores gerenciam usuários | `@Roles('administrador')` no `AdminController` |
-| RN07 — registros vão para o histórico | Tabelas `registro_glicemia` e `registro_refeicao` |
-| RN10 — acesso separado por perfil | `RolesGuard` + rotas distintas em web e mobile |
+| RN01 - paciente só acessa os próprios dados | `planos.service.ts`, `relatorios.service.ts`, filtros por `id_usuario` |
+| RN02 - nutricionista só acessa pacientes vinculados | `vinculos.service.ts` + tabela `nutricionista_paciente` |
+| RN17 - o vínculo só nasce quando o paciente aceita o convite (LGPD) | `convites.service.ts` + tabela `solicitacao_vinculo` |
+| RN18 - nutricionista só entra no painel depois de aprovado pela administração | `auth.service.ts` + `nutricionista.aprovado_em` |
+| RN05 - apenas nutricionistas criam planos | `@Roles('nutricionista')` + `RolesGuard` |
+| RN06 - apenas administradores gerenciam usuários | `@Roles('administrador')` no `AdminController` |
+| RN07 - registros vão para o histórico | Tabelas `registro_glicemia` e `registro_refeicao` |
+| RN10 - acesso separado por perfil | `RolesGuard` + rotas distintas em web e mobile |
 
 ---
 
@@ -337,12 +337,12 @@ A classificação usada em alertas e relatórios está em
 
 | Momento | Faixa alvo (mg/dL) |
 |---|---|
-| Jejum | 70 – 180 |
-| Pré-refeição | 70 – 180 |
-| Pós-refeição | 70 – 180 |
-| Antes de dormir | 90 – 150 |
-| Madrugada | 70 – 140 |
-| Aleatório | 70 – 180 |
+| Jejum | 70 - 180 |
+| Pré-refeição | 70 - 180 |
+| Pós-refeição | 70 - 180 |
+| Antes de dormir | 90 - 150 |
+| Madrugada | 70 - 140 |
+| Aleatório | 70 - 180 |
 
 Limiares críticos: hipoglicemia grave abaixo de 54 e hiperglicemia grave acima de 250.
 
@@ -359,14 +359,14 @@ Limitações conhecidas
 - O PDF é gerado pelo diálogo de impressão do navegador, não no servidor
 - O CRN não é consultado automaticamente no conselho (não há consulta pública
   automatizada): a administração confere à mão antes de aprovar o nutricionista
-- Sem SMTP configurado nenhum e-mail sai do sistema — nem o link de criar senha
+- Sem SMTP configurado nenhum e-mail sai do sistema - nem o link de criar senha
   de quem é cadastrado pelo painel. Na cópia `nutricare-tcc` ele está configurado
   (Brevo). Ver [docs/PUBLICAR.md](docs/PUBLICAR.md)
 - O push mandado pelo servidor não chega ao APK: depende do Firebase Cloud
   Messaging, que não foi configurado. Os lembretes e avisos do app são
   notificações locais do aparelho
 - Remover um usuário pela administração apaga a conta de vez, com tudo o que
-  depende dela — no caso do paciente, o histórico clínico. A exclusão feita pelo
+  depende dela - no caso do paciente, o histórico clínico. A exclusão feita pelo
   próprio paciente, no app, é suave e preserva o histórico
 - O limite de tentativas de login guarda a contagem na memória do servidor:
   vale para uma instância só, como a do plano gratuito do Render
@@ -375,14 +375,14 @@ Limitações conhecidas
 Arquitetura
 
 Pontos levantados numa revisão de arquitetura do monorepo e conscientemente não
-resolvidos. Os dois defeitos que a mesma revisão encontrou — a divergência entre
-o `schema.sql` e as migrations, e as respostas obsoletas nas telas do painel —
+resolvidos. Os dois defeitos que a mesma revisão encontrou - a divergência entre
+o `schema.sql` e as migrations, e as respostas obsoletas nas telas do painel -
 foram corrigidos, e o primeiro deles hoje tem verificação automática no CI.
 
 - **Os tipos de resposta da API são declarados três vezes**: no mapper do
   service, em `apps/web/src/lib` e em `apps/mobile/src/lib/api`, somando 85
   interfaces mantidas à mão. Renomear um campo na API passa no `typecheck` das
-  três aplicações e só aparece como campo em branco na tela — é a única falha
+  três aplicações e só aparece como campo em branco na tela - é a única falha
   conhecida que o CI não alcança por construção. A correção seria gerar os tipos
   a partir da API e verificar no CI que o arquivo gerado está em dia, o mesmo
   padrão do `verificar-schema.mjs`. Não foi feita porque a raiz não usa
@@ -391,7 +391,7 @@ foram corrigidos, e o primeiro deles hoje tem verificação automática no CI.
 
 - **Quinze chamadas à API acontecem dentro de páginas do painel**, furando a
   camada `lib/` que existe para isso. Como não têm tipo de retorno, a resposta é
-  `any` e o acesso aos campos deixa de ser verificado — o que agrava o ponto
+  `any` e o acesso aos campos deixa de ser verificado - o que agrava o ponto
   acima justamente nas telas centrais. O app do paciente não tem nenhuma.
 
 - **O painel e o app não têm teste de comportamento**, só `typecheck` e lint no
@@ -403,10 +403,10 @@ foram corrigidos, e o primeiro deles hoje tem verificação automática no CI.
 - **O painel busca dados com `useEffect` na mão, e o app usa react-query.** As
   corridas de resposta que isso causava foram corrigidas uma a uma, com guarda
   de cancelamento; unificar os dois em react-query é a correção de fundo, e
-  depende do item anterior — refatorar quinze telas sem teste é trabalho às
+  depende do item anterior - refatorar quinze telas sem teste é trabalho às
   cegas.
 
 - **O painel mistura CSS modules e estilo inline** (5 arquivos contra 28), e o
   inline não alcança `:hover`, `:focus-visible` nem media query. Uma passada de
-  acessibilidade — contraste e foco de teclado, que importam para o público
-  deste sistema — tocaria 28 arquivos em vez do bloco de tokens do `index.css`.
+  acessibilidade - contraste e foco de teclado, que importam para o público
+  deste sistema - tocaria 28 arquivos em vez do bloco de tokens do `index.css`.

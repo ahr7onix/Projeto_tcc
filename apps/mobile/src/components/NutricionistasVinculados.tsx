@@ -49,7 +49,7 @@ export function NutricionistasVinculados() {
                 <Text style={styles.detalhe}>
                   {[n.crn, `desde ${new Date(n.vinculadoEm).toLocaleDateString('pt-BR')}`]
                     .filter(Boolean)
-                    .join(' · ')}
+                    .join(' - ')}
                 </Text>
               </View>
               {confirmandoId !== n.id && (

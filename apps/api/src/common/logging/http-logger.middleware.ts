@@ -38,7 +38,7 @@ function origem(req: Request): string {
 }
 
 /**
- * Uma linha por requisição, escrita quando a resposta termina — só aí o
+ * Uma linha por requisição, escrita quando a resposta termina - só aí o
  * status final é conhecido, inclusive o das que nem chegam a um controller
  * (404) e o das que passaram pelo filtro de exceção (500).
  *
@@ -88,7 +88,7 @@ export class HttpLoggerMiddleware implements NestMiddleware {
       else if (sonda) logger.escrever('DEBUG', linha, dados);
       else logger.escrever('INFO', linha, dados);
 
-      // Central de monitoramento: só o que interessa lá — requisição que falhou
+      // Central de monitoramento: só o que interessa lá - requisição que falhou
       // (4xx e 5xx) e requisição lenta. Sucesso rápido não vira tráfego de rede.
       // O 5xx já é enviado pelo filtro de exceção, com tipo e stack; aqui
       // entram as respostas de erro que nunca chegam a um controller.

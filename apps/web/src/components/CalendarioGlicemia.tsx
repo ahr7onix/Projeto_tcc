@@ -21,8 +21,8 @@ const MESES = [
 
 /**
  * Faixa de referência geral usada no rótulo de tempo na faixa. As faixas por
- * momento do dia continuam valendo na classificação de cada medição — aqui o
- * 70–180 aparece só para nomear o alvo, como fazem os relatórios de glicemia.
+ * momento do dia continuam valendo na classificação de cada medição - aqui o
+ * 70-180 aparece só para nomear o alvo, como fazem os relatórios de glicemia.
  */
 const FAIXA_GERAL = { min: 70, max: 180 }
 
@@ -59,7 +59,7 @@ const ROTULO_ESTADO: Record<Estado, string> = {
  *
  * O padrão internacional de relatório de glicemia (AGP) apresenta os dias em
  * grade de calendário justamente porque a leitura que importa não é "a lista
- * inteira", e sim "que dias fugiram do padrão" — daí o profissional abre só
+ * inteira", e sim "que dias fugiram do padrão" - daí o profissional abre só
  * aquele dia. A lista corrida, que existia antes, obrigava a percorrer
  * cinquenta medições para achar as três que interessavam.
  *
@@ -210,7 +210,7 @@ export default function CalendarioGlicemia({
                 key={chave}
                 onClick={() => setDiaSelecionado(chave)}
                 disabled={total === 0}
-                title={`${dia} — ${ROTULO_ESTADO[estado]}${total ? `: ${total} medição${total === 1 ? '' : 'ões'}` : ''}`}
+                title={`${dia} - ${ROTULO_ESTADO[estado]}${total ? `: ${total} medição${total === 1 ? '' : 'ões'}` : ''}`}
                 style={{
                   ...celula,
                   background: cor.fundo,
@@ -282,7 +282,7 @@ export default function CalendarioGlicemia({
                       />
                     </td>
                     <td style={td}>{MOMENTO_LABEL[r.momento] ?? r.momento}</td>
-                    <td style={tdSuave}>{r.observacao || '—'}</td>
+                    <td style={tdSuave}>{r.observacao || '-'}</td>
                   </tr>
                 ))}
               </tbody>

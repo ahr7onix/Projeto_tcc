@@ -75,7 +75,7 @@ export default function RegistrarRefeicaoScreen() {
   const quantidadeG = numero(quantidade) > 0 ? numero(quantidade) : null;
 
   // Prévia do que vai ser gravado. Quem calcula o valor guardado é a API, com
-  // a mesma regra de três — aqui é só para o paciente ver enquanto digita.
+  // a mesma regra de três - aqui é só para o paciente ver enquanto digita.
   const previa = useMemo(() => {
     if (!alimento || !quantidadeG) return null;
     const proporcao = quantidadeG / alimento.porcaoG;
@@ -215,7 +215,7 @@ export default function RegistrarRefeicaoScreen() {
               <View style={styles.previa}>
                 <Text style={styles.previaValor}>{formatar(previa.carboidratosG)} g</Text>
                 <Text style={styles.previaTexto}>
-                  de carboidrato — {formatar(previa.kcal)} kcal. O sistema faz a conta;
+                  de carboidrato - {formatar(previa.kcal)} kcal. O sistema faz a conta;
                   você não precisa calcular nada.
                 </Text>
               </View>

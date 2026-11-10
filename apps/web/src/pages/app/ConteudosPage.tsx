@@ -52,7 +52,7 @@ const ROTULO_PUBLICO: Record<PublicoAlvo, string> = {
 /**
  * O `<input type="datetime-local">` fala no fuso do navegador e sem zona
  * ("2026-09-10T14:30"); a API espera ISO 8601 completo. Estas duas funções
- * fazem a ida e a volta — sem elas o horário escolhido chegava deslocado.
+ * fazem a ida e a volta - sem elas o horário escolhido chegava deslocado.
  */
 function paraCampoLocal(iso: string | null): string {
   if (!iso) return ''
@@ -317,7 +317,7 @@ export default function ConteudosPage() {
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
                     {CATEGORIAS.find((item) => item.value === c.categoria)?.label ?? c.categoria}
-                    {' · '}
+                    {' - '}
                     {c.autorNome ?? 'Autor desconhecido'}
                   </div>
                 </div>

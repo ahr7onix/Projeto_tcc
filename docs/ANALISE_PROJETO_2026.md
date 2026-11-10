@@ -1,4 +1,4 @@
-# Análise do projeto NutriCare — conferência da documentação contra o código
+# Análise do projeto NutriCare - conferência da documentação contra o código
 
 **Data da conferência:** 30 de agosto de 2026
 **Base analisada:** `Projeto_tcc` (branch `feature/fase1-nutricare`), `Projeto_tcc_testes`, `monitoramento-nutricare`
@@ -27,7 +27,7 @@ documentos existentes em `docs/` e com o `README.md` recuperado do Git.
 Fora do repositório principal existem `Projeto_tcc_testes` (cópia de trabalho divergente) e
 `monitoramento-nutricare` (central de monitoramento externa, desligada por padrão).
 
-1.2 Backend — o que está implementado
+1.2 Backend - o que está implementado
 
 26 módulos NestJS, 24 controllers e cerca de 90 rotas HTTP. Os módulos são:
 `auth`, `perfil`, `pacientes`, `vinculos`, `registros`, `saude`, `antropometria`, `emocional`,
@@ -47,7 +47,7 @@ por e-mail com token de uso único e validade de 1 hora, e desativação de cont
 **Notificações:** push via Expo (`push_token` + `notificacao`) e notificação local no aparelho
 disparada pelo hook `use-glycemic-watch`.
 
-1.3 Banco de dados — o que existe de fato
+1.3 Banco de dados - o que existe de fato
 
 PostgreSQL 16, **7 tipos ENUM** e **24 tabelas** (mais `migracao_aplicada`, criada pelo
 `preparar-banco.mjs` para controlar o que já foi aplicado):
@@ -58,7 +58,7 @@ PostgreSQL 16, **7 tipos ENUM** e **24 tabelas** (mais `migracao_aplicada`, cria
 `medicamento`, `restricao_alimentar`, `anotacao_paciente`, `plano_alimentar`, `refeicao`,
 `refeicao_item`, `lembrete`, `senha_reset_token`.
 
-1.4 Testes — número conferido rodando
+1.4 Testes - número conferido rodando
 
 Execução de `npx jest --ci` em `apps/api` no dia 30/08/2026:
 
@@ -71,7 +71,7 @@ ponta a ponta em `scripts/e2e-smoke.mjs` (Playwright), que cobre 9 casos.
 
 1.5 Sistema publicado
 
-Painel: `https://nutricare-adj-painel.onrender.com` · API: `https://nutricare-adj-api.onrender.com`
+Painel: `https://nutricare-adj-painel.onrender.com` - API: `https://nutricare-adj-api.onrender.com`
 Plano gratuito do Render: a API hiberna e leva cerca de 50 s para responder à primeira
 requisição; o banco gratuito expira em 30 dias.
 
@@ -83,11 +83,11 @@ requisição; o banco gratuito expira em 30 dias.
 |---|---|---|
 | Mensagens em tempo real | Consulta repetida a cada 15 s / 30 s (`README.md`, `REVISAO_CODIGO.md`) | **SSE** em `GET /mensagens/stream`, com sinais de "digitando" e "leitura" |
 | Quantidade de testes | 104 (`O_QUE_FOI_FEITO.md`) e 161 (`REVISAO_CODIGO.md`) | **168**, em 12 suítes |
-| RF01 — tabela de alimentos | "Em construção" (`RESUMO_ENTREGA.md`) | Tabela `alimento` + módulo + tela `AlimentosPage` + busca no plano: **implementado** |
-| RF02 — necessidade energética | "O cálculo não existe ainda" | `calcularVet` (Mifflin-St Jeor e Harris-Benedict) + `POST /nutricional/calcular` + campo no plano: **implementado** |
-| RF03 — macronutrientes | "Depende dos dois itens acima" | `calcularMacros`, colunas `perc_*` no plano, CHECK somando 100, cálculo em gramas na tela: **implementado** |
-| RF09 — receitas | "Mostra três exemplos fixos gravados dentro do programa" | Tabela `receita`, módulo, `ReceitasPage` no painel e telas de receita no app: **implementado** |
-| RF08 — gráficos | "Nenhum gráfico existe ainda" | Existe **um** gráfico no painel (evolução dos alertas, na tela inicial). No aplicativo, nenhum |
+| RF01 - tabela de alimentos | "Em construção" (`RESUMO_ENTREGA.md`) | Tabela `alimento` + módulo + tela `AlimentosPage` + busca no plano: **implementado** |
+| RF02 - necessidade energética | "O cálculo não existe ainda" | `calcularVet` (Mifflin-St Jeor e Harris-Benedict) + `POST /nutricional/calcular` + campo no plano: **implementado** |
+| RF03 - macronutrientes | "Depende dos dois itens acima" | `calcularMacros`, colunas `perc_*` no plano, CHECK somando 100, cálculo em gramas na tela: **implementado** |
+| RF09 - receitas | "Mostra três exemplos fixos gravados dentro do programa" | Tabela `receita`, módulo, `ReceitasPage` no painel e telas de receita no app: **implementado** |
+| RF08 - gráficos | "Nenhum gráfico existe ainda" | Existe **um** gráfico no painel (evolução dos alertas, na tela inicial). No aplicativo, nenhum |
 | Login Google no mobile | `README.md` diz que não funciona no Expo Go | Implementado com `expo-auth-session`, com Client ID configurado no `.env`. **[PENDENTE DE CONFIRMAÇÃO]** se funciona no Expo Go ou só em *development build* |
 | Migrations | O `README.md` lista a instalação até a migration 010 | Existem **14** migrations (011 a 014 não estão na lista) |
 | ORM | Nenhum documento afirma TypeORM, mas o roteiro do TCC pede o item | **Não há ORM**. O acesso ao banco é feito com o driver `pg` e SQL parametrizado |
@@ -122,7 +122,7 @@ requisição; o banco gratuito expira em 30 dias.
 
 4 O QUE PRECISA SER REMOVIDO
 
-**Código inalcançável no painel web — cerca de 1.643 linhas.** Confirmado por leitura das rotas
+**Código inalcançável no painel web - cerca de 1.643 linhas.** Confirmado por leitura das rotas
 em `App.tsx` e por busca de importações:
 
 | Arquivo | Linhas | Situação |
@@ -136,7 +136,7 @@ em `App.tsx` e por busca de importações:
 
 Consequência prática: **o componente de gráfico de linha do painel não pode ser aberto por
 ninguém**, e as telas web de medidas corporais e de medicamentos ficaram inacessíveis. Isso
-explica a impressão de que "não há gráficos" — há um só, escrito diretamente em SVG dentro de
+explica a impressão de que "não há gráficos" - há um só, escrito diretamente em SVG dentro de
 `HomePage.tsx`.
 
 Também deve sair da documentação:
@@ -200,10 +200,10 @@ as fórmulas de VET e a distribuição de macronutrientes ainda não foram valid
 
 6.6 Consentimento no vínculo
 
-No cadastro de um paciente — tanto por e-mail quanto pelo Google — o sistema **vincula
+No cadastro de um paciente - tanto por e-mail quanto pelo Google - o sistema **vincula
 automaticamente o novo paciente a todos os nutricionistas já cadastrados**
-(`auth.service.ts`, linhas 108–122 e 240–252). O comportamento é intencional e está coberto
-pelo teste de fumaça ("API vínculo auto → lista Camila"), mas nenhum documento o descreve, e ele
+(`auth.service.ts`, linhas 108-122 e 240-252). O comportamento é intencional e está coberto
+pelo teste de fumaça ("API vínculo auto -> lista Camila"), mas nenhum documento o descreve, e ele
 contraria o que o `LIMITACOES_LGPD.md` diz sobre consentimento.
 
 ---
@@ -223,8 +223,8 @@ Figuras a capturar, na ordem em que aparecem na documentação:
 | 2 | Tela de cadastro (painel deslizante) | `/cadastro` |
 | 3 | Tela inicial do nutricionista, com o gráfico de alertas | `/inicio` |
 | 4 | Lista de pacientes | `/pacientes` |
-| 5 | Acompanhamento do paciente — aba Informações | `/acompanhamento/:id` |
-| 6 | Acompanhamento — aba Glicemia | `/acompanhamento/:id/glicemia` |
+| 5 | Acompanhamento do paciente - aba Informações | `/acompanhamento/:id` |
+| 6 | Acompanhamento - aba Glicemia | `/acompanhamento/:id/glicemia` |
 | 7 | Montagem do plano alimentar, com VET e macronutrientes | modal em `/alimentacao` |
 | 8 | Tabela de alimentos | `/alimentos` |
 | 9 | Conversa com o paciente | `/mensagens` |
@@ -241,7 +241,7 @@ Figuras a capturar, na ordem em que aparecem na documentação:
 | 20 | Diagrama de classes | exportar de `docs/DIAGRAMAS.md` |
 | 21 | Modelo entidade-relacionamento (versão corrigida) | exportar da nova documentação |
 | 22 | Diagrama de arquitetura em camadas | exportar da nova documentação |
-| 23 | Diagrama de sequência — registro de glicemia com alerta | exportar de `docs/DIAGRAMAS.md` |
+| 23 | Diagrama de sequência - registro de glicemia com alerta | exportar de `docs/DIAGRAMAS.md` |
 
 ---
 
@@ -262,7 +262,7 @@ documentação.
    completos, mas o Docker **não está instalado na máquina de desenvolvimento**
    (`docker: command not found`), e o documento de entrega diz que foi usado um PostgreSQL
    portátil na porta 5433. Além disso, no `Dockerfile` a troca para o usuário `node` aparece
-   **antes** da instalação das dependências, num diretório pertencente ao root — o que costuma
+   **antes** da instalação das dependências, num diretório pertencente ao root - o que costuma
    falhar. Não foi possível testar.
 4. **Login pelo Google no aplicativo.** Está implementado com `expo-auth-session` e o Client ID
    está configurado, mas não foi possível verificar se funciona dentro do Expo Go ou se exige
@@ -272,7 +272,7 @@ documentação.
    da notificação em um aparelho.
 6. **`Projeto_tcc_testes`.** É uma cópia divergente, com módulos que o projeto principal não
    tem (`common/acesso`, `modules/acesso`). Precisa ser dito se é uma linha de trabalho ativa ou
-   material descartado — a documentação a trata como cópia de apoio, fora da entrega.
+   material descartado - a documentação a trata como cópia de apoio, fora da entrega.
 7. **`monitoramento-nutricare`.** Projeto separado, desligado por padrão
    (`MONITORING_ENABLED=false`). Precisa ser dito se entra no escopo do TCC.
 8. **Faixas de glicemia e fórmulas nutricionais.** Sem a assinatura da equipe de Nutrição, os

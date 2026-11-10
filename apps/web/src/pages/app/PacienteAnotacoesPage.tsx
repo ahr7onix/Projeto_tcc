@@ -25,7 +25,7 @@ export default function PacienteAnotacoesPage() {
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
-  // Ir de um paciente para outro não desmonta esta tela — o React Router só
+  // Ir de um paciente para outro não desmonta esta tela - o React Router só
   // troca o parâmetro da rota. Sem a guarda, as duas buscas ficavam no ar e a
   // mais lenta vencia: dava para ver as anotações de um paciente no prontuário
   // de outro.
@@ -70,7 +70,7 @@ export default function PacienteAnotacoesPage() {
   return (
     <div>
       <Btn variant="ghost" onClick={() => navigate(`${raiz}/${pacienteId}/informacoes`)}>← Voltar para o paciente</Btn>
-      <PageHeader eyebrow="Acompanhamento" title="Registrar nova informação" subtitle={`${paciente.nome} · ${paciente.email}`} />
+      <PageHeader eyebrow="Acompanhamento" title="Registrar nova informação" subtitle={`${paciente.nome} - ${paciente.email}`} />
       {erro && <div style={{ marginBottom: 16 }}><AlertBanner message={erro} /></div>}
       <div style={styles.layout}>
         <Card title="Nova anotação" subtitle="O registro ficará vinculado ao paciente e aparecerá no relatório.">

@@ -31,7 +31,7 @@ const POR_PAGINA = 25
 
 /** Uma casa decimal só quando o número precisa: 89 e 89,5. */
 const formatar = (valor: number | null): string => {
-  if (valor === null) return '—'
+  if (valor === null) return '-'
   return Number.isInteger(valor) ? String(valor) : valor.toFixed(1).replace('.', ',')
 }
 
@@ -263,7 +263,7 @@ export default function AlimentosPage() {
                       <div style={{ fontWeight: 600, color: 'var(--text)' }}>{alimento.nome}</div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
                         {alimento.grupo}
-                        {alimento.fonte ? ` · ${alimento.fonte}` : ''}
+                        {alimento.fonte ? ` - ${alimento.fonte}` : ''}
                       </div>
                     </td>
                     <td style={{ ...td, whiteSpace: 'nowrap' }}>{descreverPorcao(alimento)}</td>
@@ -276,7 +276,7 @@ export default function AlimentosPage() {
                     <td style={td}>{formatar(alimento.fibrasG)}</td>
                     <td style={td}>
                       {alimento.indiceGlicemico === null ? (
-                        '—'
+                        '-'
                       ) : (
                         <Badge
                           label={String(alimento.indiceGlicemico)}

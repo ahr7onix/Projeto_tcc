@@ -158,7 +158,7 @@ export class PerfilService {
 
   /**
    * As telas mandam a data no formato brasileiro (DD/MM/AAAA), que o Postgres
-   * leria como MM/DD/AAAA — 12/04/1985 viraria dezembro. Converte para ISO
+   * leria como MM/DD/AAAA - 12/04/1985 viraria dezembro. Converte para ISO
    * antes de gravar; o que já vier em ISO passa direto.
    */
   private normalizarData(valor?: string): string | null {

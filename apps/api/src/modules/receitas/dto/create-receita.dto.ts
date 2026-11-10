@@ -20,7 +20,7 @@ export class CreateReceitaDto {
   @MaxLength(300)
   resumo?: string;
 
-  /** Texto livre, uma linha por ingrediente — é assim que a nutricionista escreve. */
+  /** Texto livre, uma linha por ingrediente - é assim que a nutricionista escreve. */
   @IsString()
   @MinLength(3, { message: 'Informe os ingredientes' })
   ingredientes!: string;

@@ -69,7 +69,7 @@ export interface HumorGlicemia {
   }
 }
 
-/** Humor e glicemia do mesmo dia, lado a lado — RF06 do briefing. */
+/** Humor e glicemia do mesmo dia, lado a lado - RF06 do briefing. */
 export async function buscarHumorGlicemia(
   pacienteId: string,
   dias = 30,

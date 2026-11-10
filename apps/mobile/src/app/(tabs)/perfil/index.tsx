@@ -63,8 +63,8 @@ export default function PerfilScreen() {
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{initial}</Text>
         </View>
-        <Text style={styles.name}>{user?.nome ?? '—'}</Text>
-        <Text style={styles.email}>{user?.email ?? '—'}</Text>
+        <Text style={styles.name}>{user?.nome ?? '-'}</Text>
+        <Text style={styles.email}>{user?.email ?? '-'}</Text>
         <View style={styles.roleTag}>
           <View style={styles.roleDot} />
           <Text style={styles.roleText}>{role}</Text>
@@ -120,11 +120,11 @@ export default function PerfilScreen() {
 // Versão do app e, se o código veio pela atualização da internet, a data dela:
 // é como se confere no celular que a atualização nova já chegou.
 function textoDaVersao(): string {
-  const versao = `Versão ${Constants.expoConfig?.version ?? '—'}`;
+  const versao = `Versão ${Constants.expoConfig?.version ?? '-'}`;
   const data = Updates.isEnabled && !Updates.isEmbeddedLaunch ? Updates.createdAt : null;
   if (!data) return versao;
   const dois = (n: number) => String(n).padStart(2, '0');
-  return `${versao} · atualização de ${dois(data.getDate())}/${dois(data.getMonth() + 1)}, ${dois(data.getHours())}:${dois(data.getMinutes())}`;
+  return `${versao} - atualização de ${dois(data.getDate())}/${dois(data.getMonth() + 1)}, ${dois(data.getHours())}:${dois(data.getMinutes())}`;
 }
 
 const styles = StyleSheet.create({

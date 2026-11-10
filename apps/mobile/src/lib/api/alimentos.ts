@@ -23,7 +23,7 @@ export interface GrupoAlimento {
 }
 
 /**
- * A tabela de alimentos é de consulta livre para os três perfis — o paciente
+ * A tabela de alimentos é de consulta livre para os três perfis - o paciente
  * precisa dela para saber quanto carboidrato tem no que vai comer.
  */
 export async function listarAlimentos(

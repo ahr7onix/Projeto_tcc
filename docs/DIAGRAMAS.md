@@ -1,4 +1,4 @@
-# Diagramas do sistema — NutriCare
+# Diagramas do sistema - NutriCare
 
 Diagramas em Mermaid, renderizáveis no GitHub ou em https://mermaid.live
 para exportar como imagem e inserir na monografia.
@@ -295,7 +295,7 @@ erDiagram
 
 ---
 
-4. Diagrama de sequência — Criar plano alimentar
+4. Diagrama de sequência - Criar plano alimentar
 
 ```mermaid
 sequenceDiagram
@@ -332,7 +332,7 @@ sequenceDiagram
 
 ---
 
-5. Diagrama de sequência — Registro de glicemia com alerta
+5. Diagrama de sequência - Registro de glicemia com alerta
 
 ```mermaid
 sequenceDiagram

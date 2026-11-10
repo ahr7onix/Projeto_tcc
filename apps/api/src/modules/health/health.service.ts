@@ -35,7 +35,7 @@ export class HealthService {
   }
 
   /**
-   * Mesma verificação, com o tempo de resposta junto — é o que o heartbeat e
+   * Mesma verificação, com o tempo de resposta junto - é o que o heartbeat e
    * a rota `/health/database` mandam para a central de monitoramento.
    */
   async medirBanco(): Promise<{ ok: boolean; ms: number }> {

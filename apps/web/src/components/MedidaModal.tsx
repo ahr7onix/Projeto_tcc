@@ -187,7 +187,7 @@ export default function MedidaModal({
           </div>
 
           <Textarea
-            label="Observação — opcional"
+            label="Observação - opcional"
             placeholder="Ex: medida feita em jejum, paciente relatou edema."
             value={observacao}
             onChange={(e) => setObservacao(e.target.value)}

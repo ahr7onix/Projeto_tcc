@@ -28,6 +28,11 @@ Regras do fluxo de trabalho
     O título fica numa linha própria, com uma linha em branco antes e outra depois. Sem a linha
     em branco, o GitHub junta o título com o texto de baixo. A `#` única do título principal, na
     primeira linha, continua.
+11. Em código e documentos, só a pontuação do teclado (decisão de 09/11/2026): hífen (-) no lugar
+    de travessão, meia-risca e ponto médio, `->` no lugar de seta, três pontos no lugar de
+    reticências e aspas retas. Sem emoji de enfeite. Ficam os emojis que são função do sistema:
+    as carinhas do humor no app e o seletor de emojis das mensagens no painel. Caractere
+    invisível vai escrito como escape (`'\uFEFF'`), para quem lê o código enxergar.
 
 NÃO MEXA sem combinar com a equipe
 
@@ -37,7 +42,7 @@ e avise a equipe antes.
 | Parte | Por que não mexer |
 |---|---|
 | `database/schema.sql` e `database/migrations/*.sql` | Os dois têm que descrever o mesmo banco. Toda mudança de banco vai nos dois, e migration já criada nunca é editada: cria-se uma nova com o número seguinte (a próxima é a 018). O CI confere (`npm run db:verificar`). Já houve tabela que existia só na migration e todo banco novo nascia sem ela. |
-| Vínculo nutricionista–paciente (`nutricionista_paciente`, `VinculosService.garantirVinculo` / `resolverPacienteAlvo`, `ConvitesService`) | É o que autoriza o nutricionista a ver dado de saúde do paciente (LGPD, dado sensível). O vínculo só nasce quando o paciente aceita o convite. Não crie caminho que vincule sem aceite e não leia dado clínico sem passar por essa checagem. Já existiu vínculo automático com todos os nutricionistas e isso vazava dados. |
+| Vínculo nutricionista-paciente (`nutricionista_paciente`, `VinculosService.garantirVinculo` / `resolverPacienteAlvo`, `ConvitesService`) | É o que autoriza o nutricionista a ver dado de saúde do paciente (LGPD, dado sensível). O vínculo só nasce quando o paciente aceita o convite. Não crie caminho que vincule sem aceite e não leia dado clínico sem passar por essa checagem. Já existiu vínculo automático com todos os nutricionistas e isso vazava dados. |
 | Aprovação do nutricionista pela administração (migration 017) | O painel só abre depois que o admin confere o CRN e aprova. Não pule essa etapa. A única exceção é a `CADASTRO_TESTE_ABERTO`, temporária, ligada no Render só para a fase de testes (ver `docs/PUBLICAR.md`); desligue antes de qualquer uso real. |
 | `JwtAuthGuard`, `RolesGuard` e os `@Roles(...)` dos controllers | Afrouxar abre dado de um perfil para outro. Paciente só vê os próprios dados. |
 | Faixas de glicemia (`apps/api/src/common/glicemia`) e fórmulas de nutrição (`apps/api/src/common/nutricao`) | É regra clínica. Só muda com validação do curso de Nutrição (`docs/CONFERENCIA_NUTRICAO.md`). Os alimentos do seed (`fonte = 'exemplo'`) são aproximados. |
@@ -81,7 +86,7 @@ Ao rodar o projeto (armadilhas)
   O app espera até 60 s (`apps/mobile/src/lib/api.ts`) e manda um "acorda" ao abrir e ao voltar
   para a frente. Não baixe esse tempo: com 15 s o primeiro login do dia falhava.
 - **Tabela TACO:** o arquivo pronto é o `data/processed/taco/taco_composicao.csv` do
-  github.com/brolesi/taco (licença MIT, 597 alimentos). Importe pelo painel (Alimentos →
+  github.com/brolesi/taco (licença MIT, 597 alimentos). Importe pelo painel (Alimentos ->
   Importar planilha, fonte "TACO 4ª edição"): entram 578. Os 19 de fora não têm o dado na
   própria TACO (óleos e azeites sem carboidrato e proteína, 6 alimentos sem análise, 4 carnes e
   peixes com carboidrato levemente negativo), e a tela mostra o motivo de cada um. O arquivo
@@ -182,7 +187,7 @@ Como registrar o que você fez
 No fim de cada alteração, coloque uma entrada **no topo** do `docs/HISTORICO_ALTERACOES.md`:
 
 ```
-AAAA-MM-DD — título curto
+AAAA-MM-DD - título curto
 - Quem: nome da pessoa e/ou ferramenta de IA usada
 - PR/branch: link ou nome
 - O que foi adicionado: ...

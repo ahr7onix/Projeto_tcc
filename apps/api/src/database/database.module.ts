@@ -69,7 +69,7 @@ function resolverSsl(config: ConfigService, connectionString: string): ConfigSsl
          * processo, e nenhuma requisicao voltava mais.
          *
          * Aqui so registramos: o `pg` ja descarta o cliente quebrado sozinho e
-         * a proxima requisicao abre uma conexao nova. Nao ha erro escondido —
+         * a proxima requisicao abre uma conexao nova. Nao ha erro escondido -
          * a falha continua aparecendo no log em nivel ERROR.
          */
         pool.on('error', (erro) => {

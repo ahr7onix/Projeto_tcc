@@ -54,7 +54,7 @@ async function passo(nome, pagina, fn) {
   } catch (e) {
     const detalhe = String(e.message || e).split('\n')[0];
     resultados.push({ ok: false, nome, detalhe });
-    console.log(`FAIL  ${nome} — ${detalhe}`);
+    console.log(`FAIL  ${nome} - ${detalhe}`);
     mkdirSync(PASTA_FALHAS, { recursive: true });
     const arquivo = `${resultados.length}-${nome.normalize('NFD').replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.png`;
     await pagina.screenshot({ path: new URL(arquivo, PASTA_FALHAS) }).catch(() => {});
@@ -200,8 +200,8 @@ async function main() {
   await passo('Mensagens nos dois sentidos, em tempo real', nutri, async () => {
     await nutri.goto(`${PAINEL}/mensagens`, { waitUntil: 'domcontentloaded' });
     await nutri.getByText(PAC.nome).first().click({ timeout: 20000 });
-    await nutri.getByPlaceholder('Escreva sua mensagem…').fill(`Vi sua glicemia de 320. Como está? (${id})`);
-    await nutri.getByPlaceholder('Escreva sua mensagem…').press('Enter');
+    await nutri.getByPlaceholder('Escreva sua mensagem...').fill(`Vi sua glicemia de 320. Como está? (${id})`);
+    await nutri.getByPlaceholder('Escreva sua mensagem...').press('Enter');
     await abrirNoApp(app, '/mensagens');
     await app.getByText(NUTRI.nome).first().click({ timeout: 30000 });
     await app.getByText(`(${id})`).first().waitFor({ timeout: 20000 });

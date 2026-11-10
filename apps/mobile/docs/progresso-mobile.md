@@ -24,21 +24,21 @@ Setup completo do app Expo para que dê para abrir no Expo Go e começar a codar
 Telas de login e cadastro saíram do estado "casca" e agora submetem para a API real.
 
 **O que foi feito**
-- [docs/auth-contract.md](./auth-contract.md) — contrato esperado pelo mobile para os endpoints `/auth/login`, `/auth/cadastro`, `/auth/refresh`, `/auth/logout`
-- [src/types/auth.ts](../src/types/auth.ts) — `AuthUser`, `UserRole`, `AuthResponse`, `LoginInput`, `CadastroInput`
-- [src/lib/api/auth.ts](../src/lib/api/auth.ts) — funções `login`, `cadastro`, `logout`
-- [src/lib/validation/auth.ts](../src/lib/validation/auth.ts) — schemas Zod (`loginSchema`, `cadastroSchema`)
-- [src/hooks/use-auth.ts](../src/hooks/use-auth.ts) — `useLogin`, `useCadastro`, helper `extractAuthError`
-- [src/components/FormField.tsx](../src/components/FormField.tsx) — input controlado com label e erro inline
-- [src/components/RoleSelector.tsx](../src/components/RoleSelector.tsx) — chips paciente/nutricionista
+- [docs/auth-contract.md](./auth-contract.md) - contrato esperado pelo mobile para os endpoints `/auth/login`, `/auth/cadastro`, `/auth/refresh`, `/auth/logout`
+- [src/types/auth.ts](../src/types/auth.ts) - `AuthUser`, `UserRole`, `AuthResponse`, `LoginInput`, `CadastroInput`
+- [src/lib/api/auth.ts](../src/lib/api/auth.ts) - funções `login`, `cadastro`, `logout`
+- [src/lib/validation/auth.ts](../src/lib/validation/auth.ts) - schemas Zod (`loginSchema`, `cadastroSchema`)
+- [src/hooks/use-auth.ts](../src/hooks/use-auth.ts) - `useLogin`, `useCadastro`, helper `extractAuthError`
+- [src/components/FormField.tsx](../src/components/FormField.tsx) - input controlado com label e erro inline
+- [src/components/RoleSelector.tsx](../src/components/RoleSelector.tsx) - chips paciente/nutricionista
 - Auth store passou a persistir `refreshToken` e a re-exportar tipos de `@/types/auth`
 - Login e cadastro refeitos com `react-hook-form` + Zod + mutations, com loading no botão, erros inline por campo e banner de erro vindo da API
 
 **Fluxo final**
-1. Usuário preenche → Zod valida → mutation chama a API
-2. Sucesso → `setSession` grava `accessToken`, `refreshToken` e `user` no `expo-secure-store`
+1. Usuário preenche -> Zod valida -> mutation chama a API
+2. Sucesso -> `setSession` grava `accessToken`, `refreshToken` e `user` no `expo-secure-store`
 3. Guard de `(auth)/_layout.tsx` redireciona para `/(tabs)/home`
-4. Falha → mensagem do `data.message` da API; sem rede → "Sem conexão com o servidor"
+4. Falha -> mensagem do `data.message` da API; sem rede -> "Sem conexão com o servidor"
 
 3. Funcionalidades do paciente
 
@@ -58,27 +58,27 @@ O app deixou de ser só autenticação. Rotas em [src/app/](../src/app/):
 Push notifications ligadas em [use-push-notifications.ts](../src/hooks/use-push-notifications.ts)
 + [lib/api/push.ts](../src/lib/api/push.ts), registrando o token no endpoint `POST /push/token`.
 
-O módulo `auth` da API existe e está implementado — o login funciona fim-a-fim.
+O módulo `auth` da API existe e está implementado - o login funciona fim-a-fim.
 
 ---
 
 Pendências
 
 - **`npm install`:** rodar localmente após clonar
-- **Refresh token automático:** o interceptor de 401 hoje só limpa a sessão; falta tentar `/auth/refresh` antes de deslogar. O painel web já faz isso corretamente em `web/web_nutricionista/src/lib/api.ts` — dá para espelhar a lógica
+- **Refresh token automático:** o interceptor de 401 hoje só limpa a sessão; falta tentar `/auth/refresh` antes de deslogar. O painel web já faz isso corretamente em `web/web_nutricionista/src/lib/api.ts` - dá para espelhar a lógica
 - **Tipos compartilhados:** `src/types/auth.ts` deve migrar para `packages/shared` quando o monorepo tiver workspace configurado (root `package.json` com `workspaces`)
 - **Logout no servidor:** `authApi.logout()` existe mas não é chamado pelo `signOut` do store (atualmente só limpa local), então o refresh token continua válido no banco
 - **Tema dark:** estrutura do `theme.ts` permite, falta o toggle e a leitura de `useColorScheme`
 - **Testes:** `jest-expo` + `@testing-library/react-native` ainda não configurados
-- **Ícone e splash:** [assets/](../assets/) só tem `.gitkeep`. O [app.json](../app.json) não referencia mais imagem nenhuma, então o app roda no Expo Go com os defaults — só vira bloqueio na hora de gerar APK pelo EAS Build
+- **Ícone e splash:** [assets/](../assets/) só tem `.gitkeep`. O [app.json](../app.json) não referencia mais imagem nenhuma, então o app roda no Expo Go com os defaults - só vira bloqueio na hora de gerar APK pelo EAS Build
 
 ---
 
 Próximos passos sugeridos (ordem de prioridade)
 
-1. **Refresh token automático** — é a pendência que o usuário sente: a sessão cai a cada 15 minutos (`JWT_EXPIRES_IN`) mesmo com refresh token válido.
-2. **Logout server-side** — chamar `authApi.logout()` no `signOut` para invalidar o refresh token no banco.
-3. **Tipos compartilhados** — montar `packages/shared` como workspace e migrar `types/auth.ts`. Desbloqueia tipagem fim-a-fim entre web/mobile/api.
-4. **Testes** — `jest-expo` nos fluxos críticos (login, registro de glicemia).
-5. **Tema dark** — toggle + `useColorScheme`.
-6. **EAS Build** — `eas.json` e os assets de ícone/splash quando for hora de gerar o APK para a apresentação.
+1. **Refresh token automático** - é a pendência que o usuário sente: a sessão cai a cada 15 minutos (`JWT_EXPIRES_IN`) mesmo com refresh token válido.
+2. **Logout server-side** - chamar `authApi.logout()` no `signOut` para invalidar o refresh token no banco.
+3. **Tipos compartilhados** - montar `packages/shared` como workspace e migrar `types/auth.ts`. Desbloqueia tipagem fim-a-fim entre web/mobile/api.
+4. **Testes** - `jest-expo` nos fluxos críticos (login, registro de glicemia).
+5. **Tema dark** - toggle + `useColorScheme`.
+6. **EAS Build** - `eas.json` e os assets de ícone/splash quando for hora de gerar o APK para a apresentação.

@@ -25,7 +25,7 @@ export class ContasService {
 
   /**
    * Usa a mesma tabela do "esqueci a senha", e por isso o mesmo uso único e o
-   * mesmo hash — só a validade é maior. Recebe o executor para entrar na
+   * mesmo hash - só a validade é maior. Recebe o executor para entrar na
    * transação de quem está criando a conta.
    */
   async gerarLinkDefinirSenha(db: Executor, idUsuario: string): Promise<string> {

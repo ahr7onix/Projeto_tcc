@@ -4,8 +4,8 @@ import { logger } from '../../common/logging/logger.service';
 import { HealthService } from './health.service';
 
 /**
- * Sondas públicas de disponibilidade. Não exigem autenticação de propósito —
- * quem monitora normalmente não tem sessão — e por isso não devolvem nada
+ * Sondas públicas de disponibilidade. Não exigem autenticação de propósito -
+ * quem monitora normalmente não tem sessão - e por isso não devolvem nada
  * além de estado: nenhum dado de paciente, nenhuma configuração, nenhuma
  * string de conexão.
  */

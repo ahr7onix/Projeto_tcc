@@ -34,7 +34,7 @@ services:
     region: oregon
     rootDir: apps/api
     # `--include=dev` porque NODE_ENV=production (abaixo) vale também no build, e
-    # com ele o npm deixa de instalar as devDependencies — entre elas o
+    # com ele o npm deixa de instalar as devDependencies - entre elas o
     # @nestjs/cli e o typescript, sem os quais o `nest build` falha.
     buildCommand: npm ci --include=dev && npm run build
     # O preparar-banco.mjs cria as tabelas na primeira vez e não faz nada nas
@@ -46,7 +46,7 @@ services:
         value: production
       - key: NODE_VERSION
         value: "20"
-      # Endereço do banco criado acima — preenchido pelo próprio Render.
+      # Endereço do banco criado acima - preenchido pelo próprio Render.
       - key: DATABASE_URL
         fromDatabase:
           name: nutricare-tcc-db
@@ -106,7 +106,7 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "20"
-      # A API desta cópia — não a do render.yaml.
+      # A API desta cópia - não a do render.yaml.
       - key: VITE_API_URL
         value: https://nutricare-tcc-api.onrender.com
       - key: VITE_GOOGLE_CLIENT_ID

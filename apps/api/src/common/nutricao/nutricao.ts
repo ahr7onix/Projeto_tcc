@@ -67,7 +67,7 @@ export interface DadosCalculoVet {
   idade: number;
   /** kg */
   peso: number;
-  /** metros — ex: 1.74 */
+  /** metros - ex: 1.74 */
   altura: number;
   nivelAtividade: NivelAtividade;
   formula?: FormulaVet;
@@ -177,7 +177,7 @@ export function calcularVet(dados: DadosCalculoVet): ResultadoVet {
 
 /**
  * Converte o VET e os percentuais em kcal e gramas de cada macronutriente.
- * Os percentuais precisam somar 100 — a mesma regra que o banco garante na
+ * Os percentuais precisam somar 100 - a mesma regra que o banco garante na
  * constraint `chk_plano_macros_100`.
  */
 export function calcularMacros(
@@ -236,7 +236,7 @@ export function calcularImc(peso: number, altura: number): number {
 
 /**
  * Classificação do IMC pelos pontos de corte da OMS para adultos.
- * Não vale para crianças, adolescentes, gestantes nem idosos — nesses casos a
+ * Não vale para crianças, adolescentes, gestantes nem idosos - nesses casos a
  * referência é outra e a classificação precisa ser feita pelo profissional.
  */
 export function classificarImc(imc: number): ClassificacaoImc {

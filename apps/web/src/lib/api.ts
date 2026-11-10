@@ -15,7 +15,7 @@ export const CHAVES_SESSAO = [
  * Limpa a sessao guardada no navegador.
  *
  * Antes o interceptor chamava `localStorage.clear()`, que apagava tudo o que
- * estivesse ali — inclusive a lista de notificacoes ja lidas, que voltava a
+ * estivesse ali - inclusive a lista de notificacoes ja lidas, que voltava a
  * aparecer como nova toda vez que a sessao expirava.
  */
 export function limparSessao() {

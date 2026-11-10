@@ -62,7 +62,7 @@ const SEM_ACENTO = 'aaaaaeeeeiiiiooooouuuucn';
  * Compara texto ignorando acento dos dois lados.
  *
  * No teclado do celular o paciente digita "pao" e "feijao"; a tabela guarda
- * "Pão" e "Feijão", e o ILIKE puro não casava nenhum dos dois — buscar por
+ * "Pão" e "Feijão", e o ILIKE puro não casava nenhum dos dois - buscar por
  * "pao" devolvia lista vazia com dois pães cadastrados.
  *
  * A extensão `unaccent` resolveria isso com menos código, mas exige
@@ -245,7 +245,7 @@ export class AlimentosService {
   }
 
   /**
-   * Carrega uma tabela inteira (TACO, IBGE ou outra) de uma vez — RF01.
+   * Carrega uma tabela inteira (TACO, IBGE ou outra) de uma vez - RF01.
    *
    * Cada linha passa pelas mesmas regras do cadastro manual. Linha com problema
    * é recusada com o motivo, sem derrubar as outras. As válidas entram numa

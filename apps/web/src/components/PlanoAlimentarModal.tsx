@@ -166,7 +166,7 @@ export default function PlanoAlimentarModal({
 
   /**
    * Prévia dos totais enquanto a nutricionista monta o plano. Quem manda é o
-   * cálculo da API, refeito a cada gravação — isto aqui é só para ela não
+   * cálculo da API, refeito a cada gravação - isto aqui é só para ela não
    * precisar salvar para saber quantas calorias a refeição tem.
    */
   function totaisDa(refeicao: RefeicaoPlano) {
@@ -305,7 +305,7 @@ export default function PlanoAlimentarModal({
 
   const opcoesAlimento = [
     { value: '', label: 'Selecione o alimento' },
-    ...catalogo.map((a) => ({ value: a.id, label: `${a.nome} — ${a.porcaoG} g` })),
+    ...catalogo.map((a) => ({ value: a.id, label: `${a.nome} - ${a.porcaoG} g` })),
   ]
 
   return (
@@ -425,14 +425,14 @@ export default function PlanoAlimentarModal({
                 Metabolismo basal de {calculo.tmb} kcal × fator {calculo.fatorAtividade} ={' '}
                 <strong>{calculo.vet} kcal/dia</strong>
                 {calculo.dadosUsados.origem === 'cadastro'
-                  ? ` — com peso ${calculo.dadosUsados.peso} kg, altura ${calculo.dadosUsados.altura} m e ${calculo.dadosUsados.idade} anos do cadastro.`
-                  : ' — a partir dos dados simulados.'}
+                  ? ` - com peso ${calculo.dadosUsados.peso} kg, altura ${calculo.dadosUsados.altura} m e ${calculo.dadosUsados.idade} anos do cadastro.`
+                  : ' - a partir dos dados simulados.'}
               </div>
             )}
 
             <div style={grade}>
               <Input
-                label={`Carboidratos (%)${gramasDoMacro(percCarboidratos, 4) ? ` — ${gramasDoMacro(percCarboidratos, 4)}` : ''}`}
+                label={`Carboidratos (%)${gramasDoMacro(percCarboidratos, 4) ? ` - ${gramasDoMacro(percCarboidratos, 4)}` : ''}`}
                 type="number"
                 min="0"
                 max="100"
@@ -441,7 +441,7 @@ export default function PlanoAlimentarModal({
                 onChange={(e) => setPercCarboidratos(e.target.value)}
               />
               <Input
-                label={`Proteínas (%)${gramasDoMacro(percProteinas, 4) ? ` — ${gramasDoMacro(percProteinas, 4)}` : ''}`}
+                label={`Proteínas (%)${gramasDoMacro(percProteinas, 4) ? ` - ${gramasDoMacro(percProteinas, 4)}` : ''}`}
                 type="number"
                 min="0"
                 max="100"
@@ -450,7 +450,7 @@ export default function PlanoAlimentarModal({
                 onChange={(e) => setPercProteinas(e.target.value)}
               />
               <Input
-                label={`Lipídios (%)${gramasDoMacro(percLipidios, 9) ? ` — ${gramasDoMacro(percLipidios, 9)}` : ''}`}
+                label={`Lipídios (%)${gramasDoMacro(percLipidios, 9) ? ` - ${gramasDoMacro(percLipidios, 9)}` : ''}`}
                 type="number"
                 min="0"
                 max="100"
@@ -463,7 +463,7 @@ export default function PlanoAlimentarModal({
             {/* A API recusa uma distribuição que não fecha 100%; o aviso aparece antes de salvar. */}
             {somaPercentuais > 0 && Math.round(somaPercentuais) !== 100 && (
               <div style={{ fontSize: 12, color: 'var(--danger)', fontWeight: 600 }}>
-                Os percentuais somam {arredondar(somaPercentuais)}% — precisam somar 100%.
+                Os percentuais somam {arredondar(somaPercentuais)}% - precisam somar 100%.
               </div>
             )}
 
@@ -565,7 +565,7 @@ export default function PlanoAlimentarModal({
                                 />
                               </div>
                               <span style={{ fontSize: 12, color: 'var(--text-muted)', minWidth: 62 }}>
-                                {kcalItem === null ? '—' : `${kcalItem} kcal`}
+                                {kcalItem === null ? '-' : `${kcalItem} kcal`}
                               </span>
                               <Btn variant="ghost" size="sm" type="button" onClick={() => removerItem(i, j)}>
                                 ×
@@ -580,7 +580,7 @@ export default function PlanoAlimentarModal({
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
                         <Badge label={`${Math.round(totais.kcal)} kcal`} tint="primary" />
                         <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                          C {totais.carboidratosG} g · P {totais.proteinasG} g · G{' '}
+                          C {totais.carboidratosG} g - P {totais.proteinasG} g - G{' '}
                           {totais.lipidiosG} g
                         </span>
                         {totais.semAnalise > 0 && (
@@ -601,10 +601,10 @@ export default function PlanoAlimentarModal({
               <div>
                 <div style={rotuloItens}>Total do dia pelos alimentos escolhidos</div>
                 <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
-                  C {totalDoPlano.carboidratosG} g · P {totalDoPlano.proteinasG} g · G{' '}
+                  C {totalDoPlano.carboidratosG} g - P {totalDoPlano.proteinasG} g - G{' '}
                   {totalDoPlano.lipidiosG} g
                   {totalDoPlano.semAnalise > 0 &&
-                    ` · ${totalDoPlano.semAnalise} item sem análise`}
+                    ` - ${totalDoPlano.semAnalise} item sem análise`}
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -621,7 +621,7 @@ export default function PlanoAlimentarModal({
           )}
 
           <Textarea
-            label="Observações — opcional"
+            label="Observações - opcional"
             placeholder="Orientações gerais, restrições, combinados da consulta."
             value={observacoes}
             onChange={(e) => setObservacoes(e.target.value)}

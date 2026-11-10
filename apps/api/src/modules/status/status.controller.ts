@@ -4,7 +4,7 @@ import { HealthService } from '../health/health.service';
 
 /**
  * Rota pública usada pelo servidor de hospedagem para saber se a API está de pé
- * (é o `healthCheckPath` do render.yaml). Não expõe nenhum dado — só responde
+ * (é o `healthCheckPath` do render.yaml). Não expõe nenhum dado - só responde
  * se o processo e o banco estão respondendo.
  *
  * Não confundir com o módulo `saude`, que guarda os dados de saúde do paciente

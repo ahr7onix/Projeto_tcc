@@ -66,7 +66,7 @@ export default function RegistrarHumorScreen() {
       const rotuloEstado = ESTADOS.find((e) => e.valor === estado)?.rotulo ?? 'seu estado';
       Alert.alert(
         'Registro salvo',
-        `Obrigado por compartilhar. Anotamos "${rotuloEstado}" para hoje — isso ajuda a nutricionista a entender como seus resultados se relacionam com o seu bem-estar.`,
+        `Obrigado por compartilhar. Anotamos "${rotuloEstado}" para hoje - isso ajuda a nutricionista a entender como seus resultados se relacionam com o seu bem-estar.`,
         [{ text: 'OK', onPress: () => router.back() }],
       );
     } catch {

@@ -238,7 +238,7 @@ export class PlanosService {
 
   /**
    * Confere de uma só vez todos os alimentos citados no plano e devolve o nome
-   * de cada um — usado para montar a descrição da refeição quando a
+   * de cada um - usado para montar a descrição da refeição quando a
    * nutricionista envia só a lista estruturada.
    */
   private async validarAlimentos(

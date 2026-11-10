@@ -249,7 +249,7 @@ export default function MensagensPage() {
   // responder deixava duas requisições no ar, e quem chegasse por último
   // vencia. Como o painel inteiro (mensagens, nome, ficha) vem da resposta e o
   // envio usa `selId`, dava para ler a conversa de um paciente com outro
-  // selecionado — e a resposta digitada ali ia para o paciente errado.
+  // selecionado - e a resposta digitada ali ia para o paciente errado.
   useEffect(() => {
     if (!selId) return
     let cancelado = false
@@ -479,7 +479,7 @@ export default function MensagensPage() {
               <FiltroChip
                 ativo={filtro === 'nao_lidas'}
                 onClick={() => setFiltro('nao_lidas')}
-                label={totalNaoLidas > 0 ? `Não lidas · ${totalNaoLidas}` : 'Não lidas'}
+                label={totalNaoLidas > 0 ? `Não lidas - ${totalNaoLidas}` : 'Não lidas'}
               />
             </div>
           </div>
@@ -578,10 +578,10 @@ export default function MensagensPage() {
                           color: 'var(--primary)',
                         }}
                       >
-                        <TypingDots /> digitando…
+                        <TypingDots /> digitando...
                       </span>
                     ) : infoPaciente.length > 0 ? (
-                      infoPaciente.join('  ·  ')
+                      infoPaciente.join('  -  ')
                     ) : (
                       'Paciente vinculado'
                     )}
@@ -653,7 +653,7 @@ export default function MensagensPage() {
                   onChange={handleTextoChange}
                   onKeyDown={handleTecla}
                   onBlur={pararDigitando}
-                  placeholder="Escreva sua mensagem…"
+                  placeholder="Escreva sua mensagem..."
                   rows={1}
                   maxLength={2000}
                   style={campoTexto}

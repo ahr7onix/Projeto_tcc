@@ -82,7 +82,7 @@ export default function RelatorioPacientePage() {
       <PageHeader
         eyebrow="Relatório individual"
         title={paciente.nome}
-        subtitle={`${paciente.email} · histórico dos últimos 10 anos`}
+        subtitle={`${paciente.email} - histórico dos últimos 10 anos`}
         action={<Btn variant="secondary" onClick={() => window.print()}>Imprimir</Btn>}
       />
 
@@ -117,9 +117,9 @@ export default function RelatorioPacientePage() {
           {glicemia.total === 0 ? <EmptyState icon={<ChartIcon />} title="Nenhuma medição registrada" message="O paciente ainda não enviou medições pelo aplicativo." /> : (
             <>
               <div style={styles.metrics}>
-                <Metrica label="Média" valor={glicemia.media != null ? `${glicemia.media} mg/dL` : '—'} />
-                <Metrica label="Mínimo / máximo" valor={glicemia.minimo != null ? `${glicemia.minimo} / ${glicemia.maximo} mg/dL` : '—'} />
-                <Metrica label="Na faixa" valor={glicemia.percentualNaFaixa != null ? `${glicemia.percentualNaFaixa}%` : '—'} />
+                <Metrica label="Média" valor={glicemia.media != null ? `${glicemia.media} mg/dL` : '-'} />
+                <Metrica label="Mínimo / máximo" valor={glicemia.minimo != null ? `${glicemia.minimo} / ${glicemia.maximo} mg/dL` : '-'} />
+                <Metrica label="Na faixa" valor={glicemia.percentualNaFaixa != null ? `${glicemia.percentualNaFaixa}%` : '-'} />
               </div>
               <CalendarioGlicemia registros={glicemia.registros} />
               {/* Na tela o profissional navega pelo calendario; no papel ele
@@ -192,7 +192,7 @@ function TabelaGlicemia({ porDia }: { porDia: Record<string, RelatorioRegistroGl
                     />
                   </td>
                   <td style={styles.td}>{MOMENTO_LABEL[registro.momento] ?? registro.momento}</td>
-                  <td style={styles.tdSuave}>{registro.observacao || '—'}</td>
+                  <td style={styles.tdSuave}>{registro.observacao || '-'}</td>
                 </tr>
               ))}
             </Fragment>
@@ -237,11 +237,11 @@ function TabelaAlimentacao({ porDia }: { porDia: Record<string, RelatorioRegistr
                   <td style={styles.td}>
                     <strong>{refeicaoLabel[registro.tipoRefeicao] ?? registro.tipoRefeicao}</strong>
                   </td>
-                  <td style={styles.td}>{registro.descricao || '—'}</td>
+                  <td style={styles.td}>{registro.descricao || '-'}</td>
                   <td style={styles.td}>
-                    {registro.carboidratos != null ? `${registro.carboidratos} g` : '—'}
+                    {registro.carboidratos != null ? `${registro.carboidratos} g` : '-'}
                   </td>
-                  <td style={styles.tdSuave}>{registro.observacao || '—'}</td>
+                  <td style={styles.tdSuave}>{registro.observacao || '-'}</td>
                 </tr>
               ))}
             </Fragment>

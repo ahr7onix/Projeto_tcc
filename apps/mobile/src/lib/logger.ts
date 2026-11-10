@@ -6,7 +6,7 @@
  * correspondente no log do servidor.
  *
  * Nunca entram: token, senha, corpo de requisição ou resposta, dado de saúde,
- * conteúdo de mensagem — nada pessoal do usuário.
+ * conteúdo de mensagem - nada pessoal do usuário.
  */
 
 type Nivel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
@@ -39,7 +39,7 @@ interface ErroHttp {
 
 /**
  * Uma linha por chamada que falhou. 401 é rotina (a sessão está sendo
- * renovada) e sai como WARN; 5xx e falta de rede são ERROR — no celular a
+ * renovada) e sai como WARN; 5xx e falta de rede são ERROR - no celular a
  * queda de rede é o caso mais comum e precisa aparecer.
  */
 export function registrarErroDeApi(erro: unknown, contexto?: string) {
@@ -60,7 +60,7 @@ export function registrarErroDeApi(erro: unknown, contexto?: string) {
 
 /**
  * Erro de JavaScript que ninguém tratou. O handler anterior continua sendo
- * chamado — em desenvolvimento é ele que mostra a tela vermelha, e em release
+ * chamado - em desenvolvimento é ele que mostra a tela vermelha, e em release
  * é ele que encerra o app; aqui só registramos o tipo antes disso.
  */
 export function capturarErrosGlobais() {

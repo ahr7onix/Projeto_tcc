@@ -33,7 +33,7 @@ export interface LembreteInput {
 }
 
 /**
- * Lembretes do próprio paciente — a API recorta pelo usuário do token,
+ * Lembretes do próprio paciente - a API recorta pelo usuário do token,
  * então não existe parâmetro de paciente para o app mandar.
  */
 export async function listarLembretes(apenasAtivos = false): Promise<Lembrete[]> {

@@ -32,7 +32,7 @@ export interface FiltroReceitas {
 }
 
 /**
- * O paciente só enxerga receitas publicadas — a API já filtra pelo perfil do
+ * O paciente só enxerga receitas publicadas - a API já filtra pelo perfil do
  * token, então o app não precisa mandar nada além da busca.
  */
 export async function listarReceitas(filtro: FiltroReceitas = {}): Promise<Receita[]> {

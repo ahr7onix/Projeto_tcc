@@ -90,7 +90,7 @@ export class NutricionalService {
     if (!idade) faltando.push('data de nascimento');
 
     // As fórmulas de TMB usam sexo como referência biológica e só têm as duas
-    // variantes. Quem declarou "outro" precisa informar qual referência usar —
+    // variantes. Quem declarou "outro" precisa informar qual referência usar -
     // o sistema não escolhe por conta própria.
     const generoCadastro =
       cadastro.genero === 'feminino' || cadastro.genero === 'masculino'

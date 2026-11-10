@@ -2,7 +2,7 @@
  * Identidade visual do app do paciente.
  *
  * É a mesma identidade do painel web do nutricionista (apps/web):
- * paleta clara de ambiente clínico — fundo cinza muito claro, superfícies
+ * paleta clara de ambiente clínico - fundo cinza muito claro, superfícies
  * brancas, azul como cor de ação e verde reservado ao que está saudável.
  * A separação entre elementos vem da borda de 1px, não do relevo; sombra
  * forte não é usada.
@@ -10,7 +10,7 @@
  * Os nomes das chaves são mantidos de propósito: as telas continuam lendo
  * `colors.primary`, `colors.surface` e companhia, então trocar a identidade
  * é trocar este arquivo. O antigo tema escuro "glass" das telas de entrada
- * foi removido — tudo segue a identidade clara do painel.
+ * foi removido - tudo segue a identidade clara do painel.
  */
 export const colors = {
   // Azul clínico: ações, links e a tela em que o usuário está.

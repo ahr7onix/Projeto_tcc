@@ -18,7 +18,7 @@ export class NutricionalController {
 
   /**
    * POST porque o cálculo aceita um corpo de simulação, mesmo não gravando
-   * nada — o resultado só é persistido quando vira plano alimentar.
+   * nada - o resultado só é persistido quando vira plano alimentar.
    */
   @Post('calcular')
   calcular(@CurrentUser() user: JwtPayload, @Body() dto: CalcularVetDto) {

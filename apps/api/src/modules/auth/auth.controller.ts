@@ -39,14 +39,14 @@ export class AuthController {
 
   constructor(private readonly auth: AuthService) {}
 
-  /** App mobile — sempre cria paciente. */
+  /** App mobile - sempre cria paciente. */
   @Post('cadastro/paciente')
   @HttpCode(HttpStatus.CREATED)
   cadastroPaciente(@Body() dto: CadastroDto) {
     return this.auth.cadastro(dto, 'paciente');
   }
 
-  /** Painel web — sempre cria nutricionista. */
+  /** Painel web - sempre cria nutricionista. */
   @Post('cadastro/nutricionista')
   @HttpCode(HttpStatus.CREATED)
   cadastroNutricionista(@Body() dto: CadastroDto) {

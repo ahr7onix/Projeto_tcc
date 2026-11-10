@@ -146,12 +146,12 @@ a senha". O painel avisa isso ao cadastrar alguém.
 > **2525** e o plano gratuito envia até 300 e-mails por dia.
 
 1. Criar uma conta gratuita em <https://www.brevo.com>.
-2. Em **Senders, Domains & Dedicated IPs → Senders**, cadastrar o endereço que
+2. Em **Senders, Domains & Dedicated IPs -> Senders**, cadastrar o endereço que
    vai aparecer como remetente (pode ser um Gmail) e confirmar pelo código que
    chega nele.
-3. Em **SMTP & API → SMTP**, gerar uma **chave SMTP** e anotar o login, que tem
+3. Em **SMTP & API -> SMTP**, gerar uma **chave SMTP** e anotar o login, que tem
    o formato `xxxxxx@smtp-brevo.com` (não é o e-mail da conta).
-4. No Render, serviço **nutricare-adj-api** → *Environment*, preencher:
+4. No Render, serviço **nutricare-adj-api** -> *Environment*, preencher:
 
 | Variável | Valor |
 |---|---|
@@ -162,12 +162,12 @@ a senha". O painel avisa isso ao cadastrar alguém.
 
 `SMTP_PORT` (2525) e `WEB_APP_URL` (o endereço do painel, para onde apontam os
 links) já vêm do `render.yaml`. Para conferir, use "Esqueceu a senha?" no login
-do painel com uma conta sua e veja se o e-mail chega — inclusive na caixa de
+do painel com uma conta sua e veja se o e-mail chega - inclusive na caixa de
 spam: remetente Gmail enviado por outro serviço costuma cair lá.
 
 Se o e-mail não chegar, a API não fica travada: ela desiste do servidor de
 e-mail em até 10 segundos e responde normalmente. O motivo fica no log do
-Render (serviço **nutricare-adj-api** → *Logs*).
+Render (serviço **nutricare-adj-api** -> *Logs*).
 
 > O link de criar ou redefinir senha **nunca** volta na resposta da API no
 > servidor publicado: só em desenvolvimento, com `RESET_LINK_NA_RESPOSTA=true`,
@@ -200,7 +200,7 @@ O que fazer quando o projeto mudar
 Toda vez que o código novo for enviado ao GitHub, o Render republica sozinho.
 Não precisa refazer nada deste guia.
 
-Se o banco ganhar tabelas novas, o próprio sistema aplica a mudança ao subir —
+Se o banco ganhar tabelas novas, o próprio sistema aplica a mudança ao subir -
 é o `preparar-banco.mjs`, que confere o que já foi aplicado antes de mexer em
 qualquer coisa.
 
@@ -210,13 +210,13 @@ Trocar o banco por um sem prazo
 
 O banco do Render tem 30 dias de validade e leva a demonstração junto quando
 vence. Neon e Supabase têm plano gratuito sem prazo. A troca leva poucos
-minutos porque o `preparar-banco.mjs` monta a estrutura inteira do zero — não é
+minutos porque o `preparar-banco.mjs` monta a estrutura inteira do zero - não é
 preciso migrar dado nenhum enquanto o ambiente for de demonstração.
 
 **1. Crie o banco no provedor novo** e copie a string de conexão. Ela se parece
 com `postgres://usuario:senha@host/base?sslmode=require`.
 
-**2. No Render**, abra o serviço **nutricare-adj-api** → *Environment* e troque:
+**2. No Render**, abra o serviço **nutricare-adj-api** -> *Environment* e troque:
 
 | Variável | Valor |
 |---|---|
@@ -225,7 +225,7 @@ com `postgres://usuario:senha@host/base?sslmode=require`.
 
 O `no-verify` existe para provedores que servem certificado próprio. Se a API
 subir e o `/status` responder `banco: indisponivel` com erro de certificado, é
-esse valor que está errado — os modos aceitos estão comentados no
+esse valor que está errado - os modos aceitos estão comentados no
 `apps/api/src/database/database.module.ts`.
 
 **3. Salve.** O Render republica sozinho, e o `preparar-banco.mjs` roda no start:
@@ -265,7 +265,7 @@ nomes (e por isso os endereços) e o Client ID do Google:
 | API | <https://nutricare-tcc-api.onrender.com> |
 
 As duas cópias não se atrapalham: cada conta do Render lê só o seu arquivo. O
-banco também é separado — as contas de exemplo existem nas duas, mas o que for
+banco também é separado - as contas de exemplo existem nas duas, mas o que for
 cadastrado numa não aparece na outra.
 
 1. Criar conta em <https://render.com> usando o **GitHub** de quem tem acesso
@@ -321,7 +321,7 @@ novo: vai pela internet para quem já tem o APK instalado.
    O script usa as variáveis do perfil `preview` do `eas.json`, não o `.env` da
    máquina.
 2. No celular: abrir o app (ele baixa a atualização), fechar e abrir de novo (ela
-   passa a valer). No fim da tela **Perfil** aparece "Versão 1.0.0 · atualização de
+   passa a valer). No fim da tela **Perfil** aparece "Versão 1.0.0 - atualização de
    DD/MM, HH:MM": é a data da atualização que o celular está usando.
 
 Mudança nativa **precisa de APK novo**: pacote com código nativo, plugin ou som no

@@ -219,7 +219,7 @@ export default function AdminPage() {
               <div style={{ flex: 1, minWidth: 220 }}>
                 <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>{u.nome}</div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  {u.email} · cadastro em {formatarData(u.criadoEm)}
+                  {u.email} - cadastro em {formatarData(u.criadoEm)}
                 </div>
               </div>
               <div style={{ fontSize: 13, color: u.crn ? 'var(--text)' : 'var(--warning)', minWidth: 160 }}>
@@ -354,7 +354,7 @@ export default function AdminPage() {
                     {analise.controle.evolucaoMensal
                       .filter((m) => m.percentualNaFaixa !== null)
                       .map((m) => `${rotuloMes(m.mes)} ${m.percentualNaFaixa}%`)
-                      .join(' · ') || 'sem dados'}
+                      .join(' - ') || 'sem dados'}
                   </div>
                 </div>
               </div>
@@ -463,7 +463,7 @@ export default function AdminPage() {
                             : 'CRN pendente'
                         : u.tipo === 'paciente'
                           ? `${u.vinculos} ${u.vinculos === 1 ? 'vínculo' : 'vínculos'}`
-                          : '—'}
+                          : '-'}
                     </td>
                     <td style={{ ...tdUsuario, fontSize: 12, color: 'var(--text-muted)' }}>
                       {formatarData(u.criadoEm)}

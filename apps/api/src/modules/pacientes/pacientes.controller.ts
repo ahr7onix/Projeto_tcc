@@ -38,7 +38,7 @@ export class PacientesController {
   @Get(':id')
   async findOne(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
     // Um id que não é número quebrava na conversão para bigint do Postgres e
-    // virava 500 — inclusive o antigo /pacientes/disponiveis, que caiu aqui.
+    // virava 500 - inclusive o antigo /pacientes/disponiveis, que caiu aqui.
     if (!/^\d+$/.test(id)) throw new NotFoundException('Paciente não encontrado');
     const paciente = await this.pacientes.findOne(user.sub, id);
     if (!paciente) throw new NotFoundException('Paciente não encontrado');

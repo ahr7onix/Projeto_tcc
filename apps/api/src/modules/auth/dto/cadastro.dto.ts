@@ -1,7 +1,7 @@
 import { IsEmail, IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 /**
- * Cadastro sem `role` no corpo — o papel é definido pela rota da API
+ * Cadastro sem `role` no corpo - o papel é definido pela rota da API
  * (`/auth/cadastro/paciente` ou `/auth/cadastro/nutricionista`), para o
  * cliente não conseguir se auto-promover.
  */

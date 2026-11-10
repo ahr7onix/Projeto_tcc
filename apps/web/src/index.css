@@ -9,7 +9,7 @@
  * Paleta clara de ambiente clínico: fundo cinza muito claro, superfícies
  * brancas, azul como cor de ação e verde reservado ao que está saudável.
  * Cor forte só aparece quando significa alguma coisa (estado, alerta, ação
- * principal) — o resto é branco, cinza e texto.
+ * principal) - o resto é branco, cinza e texto.
  *
  * Os nomes das variáveis são os mesmos de antes de propósito: as telas
  * continuam lendo `--primary`, `--surface`, `--danger-soft` e companhia, então
@@ -66,7 +66,7 @@
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Números de mesma largura: colunas de glicemia e peso não “dançam”. */
+  /* Números de mesma largura: colunas de glicemia e peso não "dançam". */
   font-variant-numeric: tabular-nums;
 }
 
@@ -114,7 +114,7 @@ input::placeholder, textarea::placeholder {
   color: var(--text-muted);
 }
 
-/* Foco visível em tudo que recebe teclado — exigência de acessibilidade e
+/* Foco visível em tudo que recebe teclado - exigência de acessibilidade e
    também de quem usa o painel o dia inteiro sem tirar a mão do teclado. */
 :focus-visible {
   outline: 2px solid var(--primary);

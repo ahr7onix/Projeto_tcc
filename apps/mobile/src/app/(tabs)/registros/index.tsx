@@ -85,7 +85,7 @@ function LinhaRegistro({ item }: { item: RegistroItem }) {
         item.carboidratos != null ? `${item.carboidratos} g de carboidrato` : null,
       ]
         .filter(Boolean)
-        .join(' · ');
+        .join(' - ');
 
   return (
     <View style={styles.registro}>
@@ -109,7 +109,7 @@ function LinhaRegistro({ item }: { item: RegistroItem }) {
           ) : null}
         </View>
         <Text style={styles.registroDetalhe}>
-          {[detalhe, formatarQuando(item.dataHora)].filter(Boolean).join(' · ')}
+          {[detalhe, formatarQuando(item.dataHora)].filter(Boolean).join(' - ')}
         </Text>
         {glicemia && item.alerta && item.alerta.severidade !== 'normal' ? (
           <Text style={[styles.registroAlerta, { color: tint.fg }]}>
@@ -200,7 +200,7 @@ export default function RegistrosScreen() {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.statValue}>{seteDias.glicemia}</Text>
-            <Text style={styles.statLabel}>Glicemia · 7d</Text>
+            <Text style={styles.statLabel}>Glicemia - 7d</Text>
           </View>
         </View>
 
@@ -210,7 +210,7 @@ export default function RegistrosScreen() {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.statValue}>{seteDias.refeicao}</Text>
-            <Text style={styles.statLabel}>Refeições · 7d</Text>
+            <Text style={styles.statLabel}>Refeições - 7d</Text>
           </View>
         </View>
       </View>

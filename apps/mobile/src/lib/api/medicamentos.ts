@@ -19,7 +19,7 @@ export interface MedicamentoInput {
   observacoes?: string;
 }
 
-/** Medicamentos do próprio paciente — a API recorta pelo usuário do token. */
+/** Medicamentos do próprio paciente - a API recorta pelo usuário do token. */
 export async function listarMedicamentos(): Promise<Medicamento[]> {
   const { data } = await api.get('/medicamentos');
   return data.data;

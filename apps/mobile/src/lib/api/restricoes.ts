@@ -6,7 +6,7 @@ export interface Restricao {
   criadoEm: string;
 }
 
-/** Restrições do próprio paciente — a API recorta pelo usuário do token. */
+/** Restrições do próprio paciente - a API recorta pelo usuário do token. */
 export async function listarRestricoes(): Promise<Restricao[]> {
   const { data } = await api.get('/restricoes');
   return data.data;

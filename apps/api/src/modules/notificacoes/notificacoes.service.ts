@@ -29,7 +29,7 @@ export class NotificacoesService {
 
   /**
    * Chamada por outros módulos (alertas de glicemia, publicação de conteúdo).
-   * Guarda o histórico do que foi avisado — o push_token só diz para onde
+   * Guarda o histórico do que foi avisado - o push_token só diz para onde
    * enviar, não o que foi enviado.
    */
   async registrar(dados: {

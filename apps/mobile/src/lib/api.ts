@@ -56,7 +56,7 @@ api.interceptors.request.use(async (config) => {
 
 /**
  * A API rotaciona o refresh token: cada uso revoga o anterior e devolve um novo.
- * Por isso a renovação precisa ser única — se duas telas tomarem 401 ao mesmo
+ * Por isso a renovação precisa ser única - se duas telas tomarem 401 ao mesmo
  * tempo, a segunda espera a mesma promessa em vez de gastar um token já revogado
  * e derrubar a sessão.
  */
@@ -94,7 +94,7 @@ api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const requisicao = error.config as RequisicaoOriginal | undefined;
-    // 401 em `/auth/*` é credencial errada ou sessão expirada — renovar não ajuda.
+    // 401 em `/auth/*` é credencial errada ou sessão expirada - renovar não ajuda.
     const rotaDeAutenticacao = requisicao?.url?.startsWith('/auth/') ?? false;
 
     // Toda chamada que falha vira uma linha no console, com o requestId da API.

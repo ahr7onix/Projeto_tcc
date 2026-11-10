@@ -24,8 +24,8 @@ O mobile foi implementado contra esses endpoints. O módulo `apps/api/src/module
 ```
 
 **Erros**
-- `401` — credenciais inválidas
-- `400` — payload mal formado
+- `401` - credenciais inválidas
+- `400` - payload mal formado
 
 `POST /auth/cadastro`
 
@@ -39,11 +39,11 @@ O mobile foi implementado contra esses endpoints. O módulo `apps/api/src/module
 }
 ```
 
-**Response 201** — mesmo formato do login.
+**Response 201** - mesmo formato do login.
 
 **Erros**
-- `409` — e-mail já cadastrado
-- `400` — payload mal formado
+- `409` - e-mail já cadastrado
+- `400` - payload mal formado
 
 `POST /auth/refresh` (opcional, mas recomendado)
 
@@ -59,7 +59,7 @@ O mobile foi implementado contra esses endpoints. O módulo `apps/api/src/module
 
 `POST /auth/logout` (opcional)
 
-Header `Authorization: Bearer <accessToken>` → `204`.
+Header `Authorization: Bearer <accessToken>` -> `204`.
 
 Convenções
 

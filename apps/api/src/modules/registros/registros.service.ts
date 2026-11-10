@@ -145,7 +145,7 @@ export class RegistrosService {
   }
 
   /**
-   * Última glicemia registrada, sem o corte de dias que `findAll` aplica —
+   * Última glicemia registrada, sem o corte de dias que `findAll` aplica -
    * para não esconder o único dado que existe de quem não registra há mais
    * de 30 dias (o alerta precisa saber que o dado está velho, não sumir com ele).
    */

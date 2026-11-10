@@ -30,7 +30,7 @@ export interface EmocionalInput {
 }
 
 /**
- * Registros do próprio paciente — a API recorta pelo usuário do token,
+ * Registros do próprio paciente - a API recorta pelo usuário do token,
  * então não existe parâmetro de paciente para o app mandar.
  */
 export async function listarEmocional(dias?: number, limite?: number): Promise<RegistroEmocional[]> {

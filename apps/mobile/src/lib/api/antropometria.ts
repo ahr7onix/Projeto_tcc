@@ -36,7 +36,7 @@ export interface EvolucaoAntropometrica {
 
 export interface AntropometriaInput {
   peso?: number;
-  /** Em metros (1.72), como a API espera — a tela converte o que o paciente digita. */
+  /** Em metros (1.72), como a API espera - a tela converte o que o paciente digita. */
   altura?: number;
   circCintura?: number;
   circQuadril?: number;
@@ -47,7 +47,7 @@ export interface AntropometriaInput {
 }
 
 /**
- * Medidas do próprio paciente — a API recorta pelo usuário do token,
+ * Medidas do próprio paciente - a API recorta pelo usuário do token,
  * então não existe parâmetro de paciente para o app mandar.
  */
 export async function listarAntropometria(limite?: number): Promise<RegistroAntropometrico[]> {

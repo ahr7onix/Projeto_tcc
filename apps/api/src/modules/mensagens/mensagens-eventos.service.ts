@@ -26,7 +26,7 @@ export interface EventoMensagem {
 }
 
 /**
- * Sinal leve da conversa — não é mensagem, mas muda a tela de quem recebe:
+ * Sinal leve da conversa - não é mensagem, mas muda a tela de quem recebe:
  * "está digitando" e "leu até aqui". Vai pelo mesmo canal SSE.
  */
 export interface SinalDigitando {
@@ -49,8 +49,8 @@ export type Sinal = SinalDigitando | SinalLeitura;
  * Barramento em memória que liga quem envia uma mensagem a quem está com a
  * tela aberta, para o painel não depender de o usuário apertar F5.
  *
- * É em memória de propósito: com uma única instância da API — que é o caso
- * aqui — isso basta e não exige Redis nem outro serviço. Se um dia a API rodar
+ * É em memória de propósito: com uma única instância da API - que é o caso
+ * aqui - isso basta e não exige Redis nem outro serviço. Se um dia a API rodar
  * em mais de um processo, cada um só enxergará os próprios clientes, e este
  * `Subject` precisa virar um canal compartilhado (LISTEN/NOTIFY do Postgres,
  * por exemplo).

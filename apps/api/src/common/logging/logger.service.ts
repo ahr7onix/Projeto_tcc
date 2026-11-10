@@ -19,7 +19,7 @@ const RESET = '\x1b[0m';
 /**
  * O Nest anuncia cada rota mapeada e cada módulo carregado em nível `log`.
  * São dezenas de linhas que só interessam quando algo não sobe, então caem
- * para DEBUG — o terminal fica com o que é da aplicação.
+ * para DEBUG - o terminal fica com o que é da aplicação.
  */
 const CONTEXTOS_DE_BOOT = [
   'InstanceLoader',
@@ -29,7 +29,7 @@ const CONTEXTOS_DE_BOOT = [
   'NestApplication',
 ];
 
-/** `2026-08-29 16:10:32` — hora local, que é como o log é lido no terminal. */
+/** `2026-08-29 16:10:32` - hora local, que é como o log é lido no terminal. */
 function carimbo(data = new Date()): string {
   const p = (n: number, casas = 2) => String(n).padStart(casas, '0');
   return (
@@ -40,7 +40,7 @@ function carimbo(data = new Date()): string {
 
 /**
  * Arquivo de log com limite de tamanho. Ao estourar, o arquivo atual vira
- * `.1` e um novo é aberto — mantém só duas gerações de propósito, para o
+ * `.1` e um novo é aberto - mantém só duas gerações de propósito, para o
  * repositório do TCC não crescer sem controle.
  *
  * Escreve por descritor síncrono, e não por WriteStream: no Windows não dá
@@ -112,7 +112,7 @@ interface Configuracao {
 }
 
 /**
- * Logger estruturado da API, usado como logger do próprio Nest — assim os
+ * Logger estruturado da API, usado como logger do próprio Nest - assim os
  * avisos do framework e os da aplicação saem no mesmo formato.
  *
  * Nada aqui recebe corpo de requisição bruto: quem chama passa apenas campos
@@ -153,7 +153,7 @@ export class NutriCareLogger implements LoggerService {
     return this.obterConfig().desenvolvimento;
   }
 
-  /** Onde `app.log` e `error.log` estão. Só o servidor usa — nunca vai para a resposta. */
+  /** Onde `app.log` e `error.log` estão. Só o servidor usa - nunca vai para a resposta. */
   get pastaDeLogs(): string {
     return this.obterConfig().pasta;
   }

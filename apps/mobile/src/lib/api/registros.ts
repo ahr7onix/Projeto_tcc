@@ -69,7 +69,7 @@ export interface RegistrosResponse {
 }
 
 /**
- * Histórico do próprio paciente — a API recorta pelo usuário do token,
+ * Histórico do próprio paciente - a API recorta pelo usuário do token,
  * então não existe parâmetro de paciente para o app mandar.
  */
 export async function listarRegistros(dias = 30): Promise<RegistrosResponse> {

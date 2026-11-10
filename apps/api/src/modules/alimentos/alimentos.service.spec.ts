@@ -204,7 +204,7 @@ describe('AlimentosService', () => {
   describe('importar', () => {
     /**
      * Pool com transação: cada INSERT responde, na ordem, se inseriu (true) ou
-     * atualizou (false) — o que o `xmax = 0` devolve no banco de verdade.
+     * atualizou (false) - o que o `xmax = 0` devolve no banco de verdade.
      */
     function criarPoolDeImportacao(inseriu: boolean[], falharNoInsert?: number) {
       const fila = [...inseriu];

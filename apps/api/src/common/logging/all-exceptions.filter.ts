@@ -9,7 +9,7 @@ import { limparUrl } from './redacao';
  * Rede de segurança para tudo que escapa dos controllers.
  *
  * Erro previsto (HttpException) continua saindo exatamente como o Nest já
- * devolvia — o painel e o app dependem do formato atual, e mudar isso
+ * devolvia - o painel e o app dependem do formato atual, e mudar isso
  * quebraria as mensagens de validação.
  *
  * Erro imprevisto vira 500 genérico com o `requestId`: quem chamou tem como
@@ -31,7 +31,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       // o middleware já registra a linha da requisição. Aqui só interessa o
       // 5xx explícito, que indica defeito.
       if (status >= 500) {
-        logger.escrever('ERROR', `${req?.method} ${rota} ${status} — ${excecao.name}`, {
+        logger.escrever('ERROR', `${req?.method} ${rota} ${status} - ${excecao.name}`, {
           requestId,
         });
         // Envio para a central: chamada síncrona que só enfileira, nunca espera.
@@ -70,7 +70,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const erro = excecao as Error;
     const status = HttpStatus.INTERNAL_SERVER_ERROR;
 
-    logger.escrever('ERROR', `${req?.method} ${rota} ${status} — ${erro?.name ?? 'Error'}`, {
+    logger.escrever('ERROR', `${req?.method} ${rota} ${status} - ${erro?.name ?? 'Error'}`, {
       requestId,
       tipo: erro?.name ?? typeof excecao,
       usuario: req?.user?.sub,

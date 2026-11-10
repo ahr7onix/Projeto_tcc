@@ -65,13 +65,13 @@ async function bootstrap() {
   const banco = await app.get(HealthService).verificarBanco();
   const endereco = `http://${host === '0.0.0.0' ? 'localhost' : host}:${port}`;
 
-  logger.escrever('INFO', '[NutriCare API] ✓ API iniciada');
+  logger.escrever('INFO', '[NutriCare API] API iniciada');
   logger.escrever(
     banco === 'connected' ? 'INFO' : 'ERROR',
-    `[NutriCare API] ${banco === 'connected' ? '✓ Database conectado' : '✗ Database indisponível'}`,
+    `[NutriCare API] ${banco === 'connected' ? 'Database conectado' : 'Database indisponível'}`,
   );
-  logger.escrever('INFO', '[NutriCare API] ✓ Realtime iniciado (SSE /mensagens/stream)');
-  logger.escrever('INFO', '[NutriCare API] ✓ Rotas carregadas');
+  logger.escrever('INFO', '[NutriCare API] Realtime iniciado (SSE /mensagens/stream)');
+  logger.escrever('INFO', '[NutriCare API] Rotas carregadas');
   logger.escrever('INFO', `[NutriCare API] API .... ${endereco}`);
   logger.escrever('INFO', `[NutriCare API] Health . ${endereco}/health`);
 }

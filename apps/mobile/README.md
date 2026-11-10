@@ -37,7 +37,7 @@ src/
 
 Variáveis de ambiente
 
-Apenas `EXPO_PUBLIC_*` são expostas ao bundle — qualquer outra variável fica restrita ao build. Veja `.env.example`.
+Apenas `EXPO_PUBLIC_*` são expostas ao bundle - qualquer outra variável fica restrita ao build. Veja `.env.example`.
 
 Notas
 

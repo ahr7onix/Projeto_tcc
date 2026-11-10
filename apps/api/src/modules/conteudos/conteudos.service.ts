@@ -48,7 +48,7 @@ export class ConteudosService {
    * mas nenhuma consulta a usava: marcar um conteúdo como "pacientes_diabetes"
    * não escondia nada, e todo paciente via tudo.
    *
-   * Editores recebem lista vazia — para eles não há filtro, porque precisam
+   * Editores recebem lista vazia - para eles não há filtro, porque precisam
    * enxergar todo o acervo para administrá-lo.
    *
    * `adultos` fica de fora quando a data de nascimento não foi preenchida: sem

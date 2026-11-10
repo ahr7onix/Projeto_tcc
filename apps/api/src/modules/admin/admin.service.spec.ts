@@ -123,9 +123,9 @@ describe('AdminService.analise', () => {
   it('classifica cada leitura pelo alvo do seu momento do dia', async () => {
     const { service } = servico({
       glicemias: [
-        // 150 em jejum está dentro (alvo 70–180)...
+        // 150 em jejum está dentro (alvo 70-180)...
         { valor: '150', momento: 'jejum', mes: '2026-09', no_periodo: true },
-        // ...e 150 antes de dormir está acima (alvo 90–150 é o teto).
+        // ...e 150 antes de dormir está acima (alvo 90-150 é o teto).
         { valor: '160', momento: 'antes_dormir', mes: '2026-09', no_periodo: true },
         { valor: '40', momento: 'jejum', mes: '2026-09', no_periodo: true },
       ],

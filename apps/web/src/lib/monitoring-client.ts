@@ -86,7 +86,7 @@ async function esvaziar(saindo = false) {
   const lote = fila.splice(0, fila.length)
   const corpo = JSON.stringify({ events: lote })
 
-  // `keepalive` deixa a requisição terminar mesmo com a aba fechando — é o
+  // `keepalive` deixa a requisição terminar mesmo com a aba fechando - é o
   // que `sendBeacon` faria, mas mantendo o cabeçalho `X-API-Key`. Com beacon a
   // chave teria de ir na URL e acabaria no log de acesso de todo intermediário.
   try {
@@ -136,7 +136,7 @@ export function registrarNaCentral(evento: Evento): void {
       stack: evento.stack ? limpar(evento.stack.split('\n').slice(0, 10).join('\n')) : null,
       metadata: {
         // Contexto do requisito: página, rota, navegador e sistema. Nada disso
-        // identifica a pessoa — é a mesma informação que qualquer servidor web
+        // identifica a pessoa - é a mesma informação que qualquer servidor web
         // já registra.
         page: limparRota(window.location.pathname),
         userAgent: navigator.userAgent.slice(0, 200),

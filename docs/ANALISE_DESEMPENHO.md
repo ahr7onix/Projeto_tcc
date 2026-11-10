@@ -1,4 +1,4 @@
-# Análise de desempenho e concorrência — NutriCare
+# Análise de desempenho e concorrência - NutriCare
 
 Análise feita em 28/10/2026 sobre o estado atual da `main`, cobrindo a API, o
 banco, o painel web, o app mobile e a hospedagem no Render. A pergunta que ela
@@ -6,8 +6,8 @@ responde: **o sistema aguenta várias pessoas usando ao mesmo tempo?** Complemen
 a seção "Performance" do `docs/REVISAO_CODIGO.md`, que é anterior ao canal de
 mensagens em tempo real e às telas atuais do painel.
 
-Legenda de gravidade: **[CRÍTICO]** · **[ALTO]** · **[MÉDIO]** · **[BAIXO]** ·
-**[INFO]** (observação, sem ação obrigatória) · **[OK]** (testado e adequado).
+Legenda de gravidade: **[CRÍTICO]** - **[ALTO]** - **[MÉDIO]** - **[BAIXO]** -
+**[INFO]** (observação, sem ação obrigatória) - **[OK]** (testado e adequado).
 
 Como foi testado
 
@@ -22,9 +22,9 @@ Como foi testado
   glicemias, 360 mil refeições, 90 mil registros de humor e 20 mil mensagens, em
   142 MB. Criado e descartado só para o teste; nenhum dado real foi tocado.
 - **Dois ambientes:**
-  - **PC, sem limite** — a API (`node dist/main.js`, `NODE_ENV=production`) num
+  - **PC, sem limite** - a API (`node dist/main.js`, `NODE_ENV=production`) num
     Windows com 12 núcleos e o banco no Docker. Mostra o teto do código.
-  - **"Render gratuito" simulado** — a API num contêiner Docker com **0,1 CPU e
+  - **"Render gratuito" simulado** - a API num contêiner Docker com **0,1 CPU e
     512 MB** e o banco em outro contêiner com **0,1 CPU e 256 MB**, os limites do
     plano gratuito do Render para o serviço web e o Postgres
     ([instâncias do Render](https://render.com/docs/compute-plans),
@@ -47,7 +47,7 @@ exata.
 
 1. Resumo executivo
 
-**Resposta curta:** para a banca e para uma demonstração, aguenta — **desde que
+**Resposta curta:** para a banca e para uma demonstração, aguenta - **desde que
 se corrija antes o travamento do login (item 2.1)**. Hoje, uns 15 logins no
 mesmo instante (uma turma apertando "Entrar" junto, ou os aplicativos renovando
 a sessão quando o servidor acorda) **congelam a API até alguém reiniciá-la**, e
@@ -121,7 +121,7 @@ Reproduzido nos dois ambientes:
 |---|---|---|
 | 10 logins simultâneos | ok (0,8 s) | ok (9,2 s) |
 | 15 logins simultâneos | **nenhum responde; API parada** | **nenhum responde; API parada** |
-| 15 renovações de sessão simultâneas | — | **nenhuma responde; API parada** |
+| 15 renovações de sessão simultâneas | - | **nenhuma responde; API parada** |
 | `/status` depois do travamento | `200` com `"banco":"indisponivel"` | `200` com `"banco":"indisponivel"` |
 
 No banco, as 10 conexões ficam paradas em "idle" com a última consulta sendo o
@@ -349,10 +349,10 @@ ocupado com requisições abandonadas da rota anterior (item 2.4).
 | Nutri: `GET /alertas/resumo` | 49 | 47 ms | 5,2 | 201 ms | ~190 ms |
 | Nutri: `GET /notificacoes?limite=100` | 332 | 5 ms | 25 | 9 ms | ~40 ms |
 | Nutri: `GET /registros?dias=90&tipo=glicemia` (Início) | 5,5 | 314 ms | 0,2 | **6.092 ms** | **~6 s** |
-| Nutri: `GET /relatorios` (completo) | 93 | 20 ms | 4,6 | — | ~220 ms |
+| Nutri: `GET /relatorios` (completo) | 93 | 20 ms | 4,6 | - | ~220 ms |
 | Nutri: `GET /mensagens` (conversas) | 350 | 5 ms | 24 | 12 ms | ~42 ms |
 | Nutri: `GET /mensagens/nao-lidas` | 398 | 5 ms | 29 | 10 ms | ~35 ms |
-| Login (`bcryptjs`, custo 10) | 11 | 92 ms | ~1,1 | 600–1.300 ms | ~0,9 s |
+| Login (`bcryptjs`, custo 10) | 11 | 92 ms | ~1,1 | 600-1.300 ms | ~0,9 s |
 
 No PC, durante os testes, o processo da API ficou perto de 100% de um núcleo: o
 limite é o Node (montar e serializar a resposta), não o banco.
@@ -370,13 +370,13 @@ mais demoradas (p95).
 
 | Pessoas ao mesmo tempo | Tela do app em regime (típica / lentas) | Painel (central / Início) | Tela do app na entrada (lentas) |
 |---|---|---|---|
-| 50 pacientes | 15 ms / 0,6 s | — | 3,2 s |
-| 100 pacientes | 50 ms / 1,7 s | — | 9,7 s |
-| 200 pacientes¹ | 12 s / 29 s, com timeouts | — | — |
-| 1 nutricionista | — | 0,2 s / 5,4 s | — |
+| 50 pacientes | 15 ms / 0,6 s | - | 3,2 s |
+| 100 pacientes | 50 ms / 1,7 s | - | 9,7 s |
+| 200 pacientes¹ | 12 s / 29 s, com timeouts | - | - |
+| 1 nutricionista | - | 0,2 s / 5,4 s | - |
 | 1 nutricionista + 50 pacientes | 14 ms / **4,8 s** | 0,2 s / 5,2 s | 7,5 s |
-| 2 nutricionistas + 50 pacientes¹ | **17 s / 19 s** | 11 s / 19 s | — |
-| 4 nutricionistas¹ | — | 20 s / 30 s, com timeouts | — |
+| 2 nutricionistas + 50 pacientes¹ | **17 s / 19 s** | 11 s / 19 s | - |
+| 4 nutricionistas¹ | - | 20 s / 30 s, com timeouts | - |
 
 ¹ Primeira rodada, de 60 s e sem separar a entrada do regime. O servidor já
 estava saturado, então a separação não mudaria a conclusão.
@@ -421,7 +421,7 @@ memória não depende da CPU.
 
 | Conexões abertas | Memória da API | Mensagens entregues | Tempo até chegar (mediana / pior) |
 |---|---|---|---|
-| 0 (parada) | 37 MB | — | — |
+| 0 (parada) | 37 MB | - | - |
 | 200 | ~49 MB | 20 de 20 | 11 ms / 22 ms |
 | 1.000 | ~76 MB | 20 de 20 | 20 ms / 45 ms |
 
@@ -438,7 +438,7 @@ seguem o código (levantamento em `apps/web` e `apps/mobile`):
 | Quem | Requisições | Carga no "Render" (0,1 CPU) |
 |---|---|---|
 | Paciente com o app parado | ~0,5 por minuto | desprezível |
-| Paciente usando o app (uma tela a cada 10–30 s) | ~6 por minuto | ~0,7% |
+| Paciente usando o app (uma tela a cada 10-30 s) | ~6 por minuto | ~0,7% |
 | Nutricionista com o painel aberto em outra tela | 36 por minuto | ~8% |
 | Nutricionista com o painel na Início | 44 por minuto | **~29%** |
 | Nutricionista com o painel novo, fora da Início | 6 por minuto | ~1,3% |
@@ -494,7 +494,7 @@ verdade, as correções da seção 5 são o que separa "funciona" de "trava".
    uma linha no pool. O modo `travamento` do script confere a correção. De
    quebra, `/status` devolvendo `503` sem banco (2.5). **Feito** em
    `fix/travamento-login`.
-2. **Central de notificações: de 5 s para 30–60 s**, parando quando a aba está
+2. **Central de notificações: de 5 s para 30-60 s**, parando quando a aba está
    escondida (`document.visibilityState`) e sem disparar uma rodada nova com a
    anterior em andamento (2.2 e 2.4). Só espaçar não resolve a banda: o
    `/alertas` de 337 KB a cada 30 s ainda soma ~7 GB por mês por nutricionista

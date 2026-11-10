@@ -220,7 +220,7 @@ export default function ReceitasPage() {
                       {receita.titulo}
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
-                      {receita.categoria} · por {receita.autorNome}
+                      {receita.categoria} - por {receita.autorNome}
                     </div>
                   </div>
                   <Badge

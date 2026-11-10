@@ -205,7 +205,7 @@ export default function AlimentacaoPage() {
                       <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{plano.pacienteNome}</span>
                     </button>
                     <span style={{ fontSize: 12, color: 'var(--text-muted)', minWidth: 168 }}>
-                      {formatarData(plano.dataInicio)} → {formatarData(plano.dataFim)}
+                      {formatarData(plano.dataInicio)} a {formatarData(plano.dataFim)}
                     </span>
                     <span style={{ fontSize: 12, color: 'var(--text-muted)', minWidth: 84 }}>
                       {plano.refeicoes.length} {plano.refeicoes.length === 1 ? 'refeição' : 'refeições'}
