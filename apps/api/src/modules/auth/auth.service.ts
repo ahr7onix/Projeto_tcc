@@ -27,6 +27,14 @@ import { LoginDto } from './dto/login.dto';
 
 type Papel = 'paciente' | 'nutricionista' | 'administrador';
 
+/**
+ * Hash de uma senha que ninguém conhece, no mesmo custo das contas. Com e-mail
+ * sem conta, o login confere a senha contra ele assim mesmo: sem isso a recusa
+ * vinha em ~3 ms em vez de ~66 ms, e o tempo entregava quais e-mails têm conta
+ * (docs/ANALISE_SEGURANCA_LGPD.md, item 2.6).
+ */
+const HASH_SEM_CONTA = bcrypt.hashSync(randomBytes(16).toString('hex'), 10);
+
 interface UserRow {
   id_usuario: string;
   nome: string;
@@ -188,6 +196,7 @@ export class AuthService {
     );
     const user = result.rows[0];
     if (!user) {
+      await bcrypt.compare(dto.senha, HASH_SEM_CONTA);
       throw new UnauthorizedException('E-mail ou senha incorretos');
     }
     const ok = await bcrypt.compare(dto.senha, user.senha);

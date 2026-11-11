@@ -66,10 +66,18 @@ export async function gerarRelatorio(pacienteId: string, dias = 30, completo = f
   return data
 }
 
-export async function baixarCsv(pacienteId: string, dias = 30): Promise<void> {
+export async function baixarCsv(pacienteId: string, dias = 30, completo = false): Promise<void> {
   const response = await api.get('/relatorios/csv', {
-    params: { pacienteId, dias },
+    params: { pacienteId, dias, completo },
     responseType: 'blob',
+  }).catch(async (err) => {
+    // Com responseType blob o erro da API também chega como Blob; sem ler o JSON,
+    // a tela mostraria só "erro inesperado".
+    const dados = err?.response?.data
+    if (dados instanceof Blob) {
+      try { err.response.data = JSON.parse(await dados.text()) } catch { /* fica o erro original */ }
+    }
+    throw err
   })
 
   const disposition = response.headers['content-disposition'] as string | undefined

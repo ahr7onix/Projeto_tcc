@@ -288,5 +288,14 @@ describe('RelatoriosService', () => {
 
       expect(nomeArquivo).toBe('relatorio_ana_creia_30d.csv');
     });
+
+    it('should export the whole history when asked, like the report page', async () => {
+      // A página do relatório mostra 10 anos; sem o "completo" a planilha pararia em 365 dias.
+      const { service, query } = servicoComCsv();
+      const { nomeArquivo } = await service.gerarCsv(usuario('paciente', '2'), undefined, undefined, true);
+
+      expect(query.mock.calls[1][1]).toEqual(['2', 3650]);
+      expect(nomeArquivo).toBe('relatorio_ana_creia_3650d.csv');
+    });
   });
 });

@@ -3,10 +3,12 @@ import { api } from './api'
 /**
  * O vínculo nasce de um convite que o paciente aceita pelo aplicativo (LGPD):
  * o painel convida e acompanha a resposta, mas não vincula ninguém direto.
+ * Até o aceite, o painel só conhece o e-mail digitado: a API não diz se ele
+ * tem conta nem devolve o nome do paciente.
  */
 export interface ConviteEnviado {
   id: string
-  paciente: { id: string; nome: string; email: string }
+  email: string
   criadoEm: string
 }
 

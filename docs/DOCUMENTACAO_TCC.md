@@ -610,7 +610,7 @@ São cerca de 90 rotas. A tabela abaixo lista as principais, agrupadas por final
 | GET | `/alertas` | Medições fora da faixa no período |
 | GET | `/alertas/resumo` | Percentual dentro da faixa e ranking por paciente |
 | GET | `/relatorios` | Relatório consolidado do paciente |
-| GET | `/relatorios/csv` | O mesmo relatório em planilha |
+| GET | `/relatorios/csv` | O mesmo relatório em planilha (`completo=true` para o histórico inteiro) |
 | GET/POST | `/mensagens` | Conversas e envio de mensagem |
 | GET | `/mensagens/stream` | **Canal SSE** de mensagens em tempo real |
 | POST | `/mensagens/:id/digitando` | Sinal de "está digitando" |
@@ -669,7 +669,7 @@ Os arquivos ficam em `database/`:
 | Arquivo | Conteúdo |
 |---|---|
 | `schema.sql` | Criação completa: 7 tipos enumerados, 24 tabelas, índices e triggers |
-| `migrations/001` a `migrations/014` | Alterações incrementais, aplicadas em ordem |
+| `migrations/001` a `migrations/018` | Alterações incrementais, aplicadas em ordem |
 | `seeds_admin.sql` | Administrador inicial |
 | `seeds_alimentos.sql` | 36 alimentos de exemplo |
 | `seeds.sql` | Dados fictícios de demonstração |
@@ -906,6 +906,9 @@ a ninguém**: o nutricionista o convida pelo e-mail, e o vínculo só nasce quan
 o convite no aplicativo (`POST /vinculos/convites` e `PATCH /vinculos/convites/:id/aceitar`).
 Até outubro de 2026 o cadastro vinculava o paciente a todos os nutricionistas do sistema, sem
 pedir autorização; a mudança atende ao consentimento exigido pela LGPD para dado de saúde.
+Desde a migration 018, o convite é guardado pelo e-mail digitado, tenha ele conta ou não, e a
+resposta é sempre a mesma: o painel não descobre quem é paciente nem vê o nome antes do aceite.
+Quem se cadastrar depois com esse e-mail encontra o convite no aplicativo.
 
 **Nutricionista** (`POST /auth/cadastro/nutricionista`, usado pelo painel): cria a conta com
 tipo `nutricionista` e o perfil em `nutricionista`, com CRN e especialidade. A conta nasce
@@ -1321,7 +1324,8 @@ Este é o principal item em aberto do projeto, e está registrado como tal na se
 - as anotações do profissional.
 
 O período padrão é de 30 dias e o máximo é de 365; existe ainda a opção de relatório completo,
-que percorre todo o histórico. A exportação em planilha é feita por `GET /relatorios/csv`, e a
+que percorre todo o histórico. A exportação em planilha é o botão "Exportar CSV" da tela do
+relatório, que baixa o mesmo histórico completo da tela por `GET /relatorios/csv?completo=true`. A
 exportação em PDF usa a impressão do próprio navegador, com uma folha de estilo específica para
 impressão.
 
@@ -1819,7 +1823,7 @@ Projeto_tcc/
 │   └── web/          Painel React
 ├── database/
 │   ├── schema.sql
-│   ├── migrations/   001 a 014
+│   ├── migrations/   001 a 018
 │   └── seeds
 ├── docs/             Documentação
 └── scripts/
@@ -2462,6 +2466,6 @@ função no sistema.
 | `docs/DIAGRAMAS.md` | Diagramas anteriores — **o modelo de dados nele está incompleto**; vale o desta documentação |
 | `docs/RESUMO_ENTREGA.md` | Resumo enviado à área de Nutrição em julho de 2026 — **desatualizado** em cinco dos dez requisitos |
 | `database/schema.sql` | Definição completa do banco |
-| `database/migrations/` | Migrações 001 a 014 |
+| `database/migrations/` | Migrações 001 a 018 |
 | `render.yaml` | Configuração da publicação |
 | `docker-compose.yml` | Ambiente em contêiner (ver a ressalva da seção 8.11) |

@@ -32,8 +32,8 @@ e avise a equipe antes.
 
 | Parte | Por que não mexer |
 |---|---|
-| `database/schema.sql` e `database/migrations/*.sql` | Os dois têm que descrever o mesmo banco. Toda mudança de banco vai nos dois, e migration já criada nunca é editada: cria-se uma nova com o número seguinte (a próxima é a 018). O CI confere (`npm run db:verificar`). Já houve tabela que existia só na migration e todo banco novo nascia sem ela. |
-| Vínculo nutricionista–paciente (`nutricionista_paciente`, `VinculosService.garantirVinculo` / `resolverPacienteAlvo`, `ConvitesService`) | É o que autoriza o nutricionista a ver dado de saúde do paciente (LGPD, dado sensível). O vínculo só nasce quando o paciente aceita o convite. Não crie caminho que vincule sem aceite e não leia dado clínico sem passar por essa checagem. Já existiu vínculo automático com todos os nutricionistas e isso vazava dados. |
+| `database/schema.sql` e `database/migrations/*.sql` | Os dois têm que descrever o mesmo banco. Toda mudança de banco vai nos dois, e migration já criada nunca é editada: cria-se uma nova com o número seguinte (a próxima é a 019). O CI confere (`npm run db:verificar`). Já houve tabela que existia só na migration e todo banco novo nascia sem ela. |
+| Vínculo nutricionista–paciente (`nutricionista_paciente`, `VinculosService.garantirVinculo` / `resolverPacienteAlvo`, `ConvitesService`) | É o que autoriza o nutricionista a ver dado de saúde do paciente (LGPD, dado sensível). O vínculo só nasce quando o paciente aceita o convite. Não crie caminho que vincule sem aceite e não leia dado clínico sem passar por essa checagem. Já existiu vínculo automático com todos os nutricionistas e isso vazava dados. O convite também não pode dizer se o e-mail é de paciente nem mostrar o nome antes do aceite (migration 018). |
 | Aprovação do nutricionista pela administração (migration 017) | O painel só abre depois que o admin confere o CRN e aprova. Não pule essa etapa. A única exceção é a `CADASTRO_TESTE_ABERTO`, temporária, ligada no Render só para a fase de testes (ver `docs/PUBLICAR.md`); desligue antes de qualquer uso real. |
 | `JwtAuthGuard`, `RolesGuard` e os `@Roles(...)` dos controllers | Afrouxar abre dado de um perfil para outro. Paciente só vê os próprios dados. O guard também confere se a sessão do token (`sid`) segue aberta (`common/sessoes`): quem revogar sessão por um caminho novo precisa chamar `sessoesEncerradas()`, senão o token vale por mais até 30 s. |
 | Faixas de glicemia (`apps/api/src/common/glicemia`) e fórmulas de nutrição (`apps/api/src/common/nutricao`) | É regra clínica. Só muda com validação do curso de Nutrição (`docs/CONFERENCIA_NUTRICAO.md`). Os alimentos do seed (`fonte = 'exemplo'`) são aproximados. |
@@ -43,7 +43,7 @@ e avise a equipe antes.
 | Plano alimentar "ativo" | É calculado pelas datas de início e fim, não por coluna. Criar plano novo encerra o anterior. |
 | Raiz do repositório sem npm workspaces | O Render instala cada serviço isolado pelo `rootDir`. Workspaces quebram o deploy. |
 | `render.yaml` e `render-tcc.yaml` (`NODE_ENV=production`) e `RESET_LINK_NA_RESPOSTA` | Em produção o link de criar/redefinir senha nunca pode vir na resposta da API (`common/ambiente.ts`). Não ligue `RESET_LINK_NA_RESPOSTA` fora do desenvolvimento. |
-| Segredos (`.env`, `JWT_SECRET`, senhas) | Nunca vão para o Git. A senha do admin do seed vale só em desenvolvimento. |
+| Segredos (`.env`, `JWT_SECRET`, senhas) | Nunca vão para o Git. As senhas do seed (admin e contas de demonstração) valem só em desenvolvimento; no ar elas são trocadas pelas variáveis `ADMIN_SENHA` e `SENHA_DEMO`, criadas no painel do Render e nunca no `render.yaml`. |
 | Limites de tentativa (`common/limite-tentativas.ts`, `LimitePorMinutoGuard`) | Ficam na memória de uma instância. Com mais de uma réplica da API deixam de proteger; troque por armazenamento compartilhado antes de escalar. |
 | Versões do Expo / React Native no app | Foram testadas juntas. Atualizar sem testar no celular pode quebrar o app. |
 
@@ -133,6 +133,10 @@ Resumo; o completo está em `docs/DOCUMENTACAO_TCC.md` (seção 10.3) e `docs/RE
 
 - Fase de testes com `CADASTRO_TESTE_ABERTO=true` no Render (09/11/2026): cadastro no painel
   entra direto e ganha conta `+app` para o app. Desligar ao fim dos testes.
+
+- Senhas do ar (correção CO-04 do parecer, 09/11/2026): falta criar `ADMIN_SENHA` e
+  `SENHA_DEMO` no Environment da API no Render. Enquanto não existirem, o admin e as contas
+  de demonstração do site seguem com as senhas escritas no repositório.
 
 - v1.0: falta só a tag `v1.0` no `main`, com o APK 1.0.0 anexado à release. Os PRs #10 e #19
   entraram em 30/10/2026. Para saber se a tag já saiu: `git tag`.

@@ -38,6 +38,47 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
       - a desativação derruba todas.
     - `e2e:fluxo` passou nos 21 passos, rodado com o Chrome instalado.
 
+## 2026-11-11 — Convite que não revela quem é paciente
+- Quem: Natan, com apoio de IA
+- PR/branch: `fix/convite-sem-revelar-paciente`
+- O que aconteceu: o parecer de 02/11 (correção CO-03) pediu resposta genérica no convite. Antes,
+  um e-mail sem conta de paciente dava 404, e um paciente vinha com o nome. A lista de convites
+  pendentes também mostrava o nome. A nutricionista descobria quem usa o NutriCare, e num serviço
+  de diabetes isso já é dado de saúde por associação.
+- O que foi adicionado:
+  - Migration 018 (e `schema.sql`): `solicitacao_vinculo.email_convidado`, `id_paciente` passa a
+    aceitar vazio, a restrição `chk_solicitacao_destino` e um convite pendente por e-mail. Os
+    convites antigos recebem o e-mail da conta convidada.
+  - Testes em `convites.service.spec.ts`: e-mail sem conta, lista sem nome, aceite de convite
+    mandado antes da conta existir.
+- O que foi modificado:
+  - `POST /vinculos/convites` grava o convite pelo e-mail, exista ou não a conta, e responde sempre
+    `{ id, email, criadoEm }`. Só quem já acompanha o paciente recebe o 409 "já vinculado".
+  - A lista de convites da nutricionista mostra só o e-mail. A do paciente inclui os convites
+    mandados ao e-mail dele antes de ele ter conta, e o aceite grava o id de quem respondeu. O
+    vínculo continua nascendo só do aceite.
+  - Painel: a mensagem do convite não diz se a conta existe, a aba virou "Convidar por e-mail" e as
+    listas mostram o e-mail. Saiu o atalho que abria o cadastro quando o e-mail não tinha conta,
+    porque ele dependia justamente da resposta que entregava a informação.
+- Arquivos principais: `database/migrations/018_convite_por_email.sql`, `database/schema.sql`,
+  `apps/api/src/modules/vinculos/convites.service.ts`, `apps/web/src/components/ConvidarPacienteModal.tsx`
+  e `apps/web/src/pages/app/PacientesPage.tsx`.
+- Atenção para quem vier depois:
+  - Mexe em duas partes do "NÃO MEXA": banco (migration nova) e `ConvitesService`. Feito a
+    pedido do Natan, para o parecer. Precisa de revisão do grupo antes do merge.
+  - A próxima migration é a 019.
+  - O cadastro (público e pelo nutricionista) ainda responde "e-mail já cadastrado". Fechar esse
+    canal pede confirmação de e-mail (REC-05).
+  - Conferido:
+    - `db:verificar` passou com as 18 migrations, e a migration foi aplicada no banco de teste
+      `tcc` (27 convites antigos receberam o e-mail).
+    - Um roteiro pela API passou nos 13 passos: mesma resposta com e sem conta, lista sem nome,
+      409 no repetido, cadastro depois do convite, aceite e paciente na lista.
+    - A tela foi conferida no Chrome.
+    - `e2e:fluxo` passou nos 21 passos, rodado com o Chrome instalado porque o navegador do
+      Playwright não está baixado nesta máquina.
+  - O vídeo da pré-banca mostra o convite com o nome da Cláudia e fala em 17 migrations.
+
 ## 2026-11-10 — Painel: botão para baixar o app Android
 - Quem: Isac, com apoio de IA
 - PR/branch: `feat/painel-baixar-app`
@@ -45,6 +86,54 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   endereço do APK em `VITE_APP_APK_URL`; sem a variável, usa `releases/latest/download/NutriCare.apk`
   do repositório. Para o botão funcionar, o APK precisa estar anexado a uma Release do GitHub com esse
   nome (ou a variável apontar para outro endereço, no `render.yaml`/`render-tcc.yaml`).
+
+## 2026-11-09 — Senhas públicas fora do ar e tempo igual no login
+- Quem: Natan, com apoio de IA
+- PR/branch: `fix/senhas-publicas-e-tempo-do-login`
+- O que aconteceu: o parecer de 02/11 pediu as correções CO-03 (enumeração de e-mail) e CO-04
+  (senhas de demonstração no repositório público valendo no site).
+- O que foi adicionado:
+  - `preparar-banco.mjs` lê `ADMIN_SENHA` e `SENHA_DEMO`. A conta do seed que ainda usa a senha
+    pública (admin; Camila, João e Maria) passa a usar a da variável, e as sessões abertas são
+    encerradas. Quem já trocou a senha não é tocado. Senha com menos de 8 caracteres é
+    recusada com aviso, sem travar a subida da API. Em produção, sem as variáveis, o log avisa
+    quais contas seguem com a senha pública.
+  - Teste em `auth.service.spec.ts`: com e-mail sem conta, o login confere a senha mesmo assim.
+- O que foi modificado:
+  - Login: com e-mail sem conta, a API roda o `bcrypt.compare` contra um hash qualquer antes de
+    recusar. Medido com a API rodando: 77 ms com senha errada e 70 ms com e-mail sem conta (antes,
+    66 ms e 3 ms).
+  - `PUBLICAR.md` não lista mais as senhas do site; explica as duas variáveis. README,
+    `ANALISE_SEGURANCA_LGPD.md` (itens 2.2 e 2.6) e esta página foram atualizados.
+- Arquivos principais: `apps/api/preparar-banco.mjs`, `apps/api/src/modules/auth/auth.service.ts`.
+- Atenção para quem vier depois:
+  - A troca no ar só acontece depois de criar as variáveis no Render (Environment da API).
+    Combine com o grupo antes: quem usa o site com as senhas antigas (inclusive para o vídeo da
+    pré-banca) precisa das novas.
+  - O convite (`POST /vinculos/convites`) ainda diz se o e-mail é de paciente e devolve o nome.
+    Ele fica no `ConvitesService`, que está no "NÃO MEXA": a correção espera a equipe.
+  - A troca de senha foi testada num banco descartável (`tcc_co04`, apagado depois). Foram testados
+    os casos: sem variáveis em produção e em desenvolvimento, com variáveis, segunda rodada com
+    outra senha e senha curta.
+
+## 2026-11-09 — Botão "Exportar CSV" no relatório do paciente
+- Quem: Natan, com apoio de IA
+- PR/branch: `feat/painel-exportar-csv`
+- O que aconteceu: o parecer de 02/11 (correção CO-08) apontou que a planilha só existia na API.
+  O painel já tinha a função `baixarCsv`, mas nenhum botão a chamava.
+- O que foi adicionado:
+  - Botão "Exportar CSV" ao lado de "Imprimir" na tela do relatório. Baixa o mesmo histórico da
+    tela (10 anos), mostra o erro da API se falhar e some na impressão.
+  - `GET /relatorios/csv` aceita `completo=true`, como o `GET /relatorios`. Sem ele a planilha
+    parava em 365 dias. Teste novo em `relatorios.service.spec.ts`.
+- O que foi modificado: o CORS da API expõe o `Content-Disposition`. Sem isso o navegador esconde
+  esse cabeçalho quando o painel e a API ficam em endereços diferentes (como no Render), e o
+  arquivo baixaria sem o nome do paciente.
+- Arquivos principais: `apps/web/src/pages/app/RelatorioPacientePage.tsx`,
+  `apps/web/src/lib/relatorios.ts`, `apps/api/src/modules/relatorios` e `apps/api/src/main.ts`.
+- Atenção para quem vier depois: conferido com Playwright no Chrome, com painel (vite preview) e
+  API em portas diferentes, no banco de teste `tcc`. O arquivo baixado tem o nome do paciente, BOM
+  e as 6 glicemias do João. O 404 no console é o `favicon.ico`, que o painel não tem.
 
 ## 2026-11-09 — Cadastro aberto para teste (temporário)
 - Quem: Isac, com apoio de IA

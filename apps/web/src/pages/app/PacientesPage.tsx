@@ -171,10 +171,10 @@ export default function PacientesPage() {
           </div>
           {convitesPendentes.map((c) => (
             <div key={c.id} style={linhaConvite}>
-              <div style={{ flex: 1, minWidth: 0, fontSize: 14, color: 'var(--text)' }}>
-                {c.paciente.nome}{' '}
+              <div style={{ flex: 1, minWidth: 0, fontSize: 14, color: 'var(--text)', overflowWrap: 'anywhere' }}>
+                {c.email}{' '}
                 <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>
-                  {c.paciente.email} · enviado em {new Date(c.criadoEm).toLocaleDateString('pt-BR')}
+                  · enviado em {new Date(c.criadoEm).toLocaleDateString('pt-BR')}
                 </span>
               </div>
               <Btn
