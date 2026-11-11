@@ -35,7 +35,7 @@ e avise a equipe antes.
 | `database/schema.sql` e `database/migrations/*.sql` | Os dois têm que descrever o mesmo banco. Toda mudança de banco vai nos dois, e migration já criada nunca é editada: cria-se uma nova com o número seguinte (a próxima é a 018). O CI confere (`npm run db:verificar`). Já houve tabela que existia só na migration e todo banco novo nascia sem ela. |
 | Vínculo nutricionista–paciente (`nutricionista_paciente`, `VinculosService.garantirVinculo` / `resolverPacienteAlvo`, `ConvitesService`) | É o que autoriza o nutricionista a ver dado de saúde do paciente (LGPD, dado sensível). O vínculo só nasce quando o paciente aceita o convite. Não crie caminho que vincule sem aceite e não leia dado clínico sem passar por essa checagem. Já existiu vínculo automático com todos os nutricionistas e isso vazava dados. |
 | Aprovação do nutricionista pela administração (migration 017) | O painel só abre depois que o admin confere o CRN e aprova. Não pule essa etapa. A única exceção é a `CADASTRO_TESTE_ABERTO`, temporária, ligada no Render só para a fase de testes (ver `docs/PUBLICAR.md`); desligue antes de qualquer uso real. |
-| `JwtAuthGuard`, `RolesGuard` e os `@Roles(...)` dos controllers | Afrouxar abre dado de um perfil para outro. Paciente só vê os próprios dados. |
+| `JwtAuthGuard`, `RolesGuard` e os `@Roles(...)` dos controllers | Afrouxar abre dado de um perfil para outro. Paciente só vê os próprios dados. O guard também confere se a sessão do token (`sid`) segue aberta (`common/sessoes`): quem revogar sessão por um caminho novo precisa chamar `sessoesEncerradas()`, senão o token vale por mais até 30 s. |
 | Faixas de glicemia (`apps/api/src/common/glicemia`) e fórmulas de nutrição (`apps/api/src/common/nutricao`) | É regra clínica. Só muda com validação do curso de Nutrição (`docs/CONFERENCIA_NUTRICAO.md`). Os alimentos do seed (`fonte = 'exemplo'`) são aproximados. |
 | `AllExceptionsFilter` (formato das respostas de erro) | O painel e o app leem as mensagens de erro nesse formato. |
 | Conexão presa do pool (`pool.connect()`) | Quem segura um `client` não pode chamar `this.pool` (nem serviço que use o pool) antes do `release()`. O pool tem 10 conexões: com ~15 pedidos juntos, todas ficavam presas esperando uma segunda e a API parava de falar com o banco até ser reiniciada. Já aconteceu no login e na renovação de sessão; o `auth.service.spec.ts` testa com um pool de uma conexão só. |
@@ -151,8 +151,6 @@ Bugs pequenos, podem ser corrigidos:
 
 - `tipo_refeicao` não é validado na API. O app usa `cafe`, `almoco`, `lanche`, `jantar` e `ceia`.
 - Apagar medicamento só desativa; apagar de novo devolve 200 em vez de 404.
-- O token de acesso continua valendo até expirar (15 min) depois de desativar a conta ou trocar a
-  senha.
 - Os testes automáticos escrevem erros falsos no `logs/` real da API.
 
 Melhorias de tela que ficaram para depois:

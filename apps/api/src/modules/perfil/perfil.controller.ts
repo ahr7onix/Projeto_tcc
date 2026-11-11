@@ -55,7 +55,7 @@ export class PerfilController {
   @Patch('perfil')
   @HttpCode(HttpStatus.OK)
   update(@CurrentUser() user: JwtPayload, @Body() dto: UpdatePerfilDto) {
-    return this.perfil.update(user.sub, dto);
+    return this.perfil.update(user.sub, dto, user.sid);
   }
 
   @Get('perfil/paciente')

@@ -2,6 +2,42 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-11-11 — Acesso cai na hora do logout
+- Quem: Natan, com apoio de IA
+- PR/branch: `fix/acesso-cai-no-logout`
+- O que aconteceu: o parecer de 02/11 (correção CO-05) apontou que, depois de sair, trocar a senha
+  ou desativar a conta, o token de acesso seguia aceito por até 15 minutos. A troca de senha pelo
+  perfil nem encerrava as sessões dos outros aparelhos (`ANALISE_SEGURANCA_LGPD.md`, item 2.4).
+- O que foi adicionado:
+  - `common/sessoes` (`SessoesService`, módulo global): diz se a sessão de um token segue aberta,
+    olhando a linha de `refresh_token`. O token emitido antes de uma renovação continua valendo
+    enquanto a sessão nova estiver aberta. A resposta fica 30 s em memória, e
+    `sessoesEncerradas()` limpa essa memória.
+  - Testes em `sessoes.service.spec.ts` (guard e serviço) e a verificação do `sid` no login e na
+    renovação em `auth.service.spec.ts`.
+- O que foi modificado:
+  - O token de acesso leva `sid`, o id da sessão. O `JwtAuthGuard` recusa token sem sessão aberta
+    e token sem `sid`. Os de antes desta mudança fazem o painel e o app renovarem uma vez.
+  - Logout, redefinição de senha, desativação da conta e remoção pelo admin limpam a memória.
+  - Troca de senha pelo perfil encerra as outras sessões e mantém a de quem trocou.
+- Arquivos principais: `apps/api/src/common/sessoes/`, `apps/api/src/common/guards/jwt.guard.ts`,
+  `apps/api/src/modules/auth/auth.service.ts`, `apps/api/src/modules/perfil/perfil.service.ts` e
+  `apps/api/src/modules/admin/admin.service.ts`.
+- Atenção para quem vier depois:
+  - Mexe no `JwtAuthGuard`, que está no "NÃO MEXA". Feito a pedido do Natan, para o parecer.
+    Precisa de revisão do grupo antes do merge.
+  - Sem migration.
+  - Cada pedido autenticado faz no máximo uma consulta ao banco a cada 30 s por sessão.
+  - A conexão de mensagens (SSE) já aberta não cai: ela só é conferida ao conectar.
+  - Conferido:
+    - Um roteiro pela API rodando passou nos 11 passos:
+      - duas sessões da mesma conta;
+      - o logout derruba só a sessão de quem saiu;
+      - a renovação mantém os dois tokens;
+      - a troca de senha derruba a outra sessão e mantém a de quem trocou;
+      - a desativação derruba todas.
+    - `e2e:fluxo` passou nos 21 passos, rodado com o Chrome instalado.
+
 ## 2026-11-10 — Painel: botão para baixar o app Android
 - Quem: Isac, com apoio de IA
 - PR/branch: `feat/painel-baixar-app`

@@ -10,10 +10,14 @@ import { PG_POOL } from '../../database/database.module';
 import { logger } from '../../common/logging/logger.service';
 import { normalizarDataNascimento } from '../../common/data-nascimento';
 import { perfilEstaCompleto } from '../../common/perfil-completo';
+import { SessoesService } from '../../common/sessoes/sessoes.service';
 
 @Injectable()
 export class PerfilService {
-  constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
+  constructor(
+    @Inject(PG_POOL) private readonly pool: Pool,
+    private readonly sessoes: SessoesService,
+  ) {}
 
   async getMe(idUsuario: string) {
     const result = await this.pool.query(
@@ -33,7 +37,16 @@ export class PerfilService {
     };
   }
 
-  async update(idUsuario: string, dto: { nome?: string; senhaAtual?: string; novaSenha?: string }) {
+  /**
+   * Trocar a senha encerra as outras sessões da conta: quem entrou com a senha
+   * antiga, em outro aparelho, sai na hora. A sessão de quem trocou continua,
+   * e também a que a substituiu numa renovação (CO-05 do parecer).
+   */
+  async update(
+    idUsuario: string,
+    dto: { nome?: string; senhaAtual?: string; novaSenha?: string },
+    sessaoAtual?: string,
+  ) {
     if (dto.senhaAtual && dto.novaSenha) {
       const result = await this.pool.query<{ senha: string }>(
         'SELECT senha FROM usuario WHERE id_usuario = $1',
@@ -43,6 +56,22 @@ export class PerfilService {
       if (!ok) throw new UnauthorizedException('Senha atual incorreta');
       const hash = await bcrypt.hash(dto.novaSenha, 10);
       await this.pool.query('UPDATE usuario SET senha = $1 WHERE id_usuario = $2', [hash, idUsuario]);
+      await this.pool.query(
+        `UPDATE refresh_token SET revogado_em = NOW()
+          WHERE id_usuario = $1
+            AND revogado_em IS NULL
+            AND id_token NOT IN (
+              -- Sem o filtro de NULL, o NOT IN contra um substituto vazio não
+              -- revogaria nada.
+              SELECT manter FROM (
+                SELECT unnest(ARRAY[id_token, substituto_id]) AS manter FROM refresh_token
+                 WHERE id_token = $2 AND id_usuario = $1
+              ) atual
+               WHERE manter IS NOT NULL
+            )`,
+        [idUsuario, sessaoAtual ?? null],
+      );
+      this.sessoes.sessoesEncerradas();
     }
     if (dto.nome) {
       await this.pool.query('UPDATE usuario SET nome = $1 WHERE id_usuario = $2', [dto.nome.trim(), idUsuario]);
@@ -89,6 +118,7 @@ export class PerfilService {
     } finally {
       client.release();
     }
+    this.sessoes.sessoesEncerradas();
 
     // Evento de segurança: só o id interno, nada que identifique a pessoa.
     logger.escrever('WARN', 'conta desativada pelo próprio usuário', {

@@ -1,9 +1,11 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import type { Pool } from 'pg';
+import type { SessoesService } from '../../common/sessoes/sessoes.service';
 import type { ContasService } from '../contas/contas.service';
 import { AdminService } from './admin.service';
 
 const semContas = {} as ContasService;
+const sessoes = { sessoesEncerradas: jest.fn() } as unknown as SessoesService;
 
 function criarPoolMock(respostas: unknown[][]) {
   const query = jest.fn();
@@ -32,7 +34,7 @@ function servico(opcoes: {
       },
     ],
   ]);
-  return { service: new AdminService(pool, semContas), query };
+  return { service: new AdminService(pool, semContas, sessoes), query };
 }
 
 describe('AdminService.aprovarNutricionista', () => {
@@ -40,7 +42,7 @@ describe('AdminService.aprovarNutricionista', () => {
     const aprovadoEm = new Date();
     const { pool, query } = criarPoolMock([[{ aprovado_em: aprovadoEm }]]);
 
-    await expect(new AdminService(pool, semContas).aprovarNutricionista('9')).resolves.toEqual({
+    await expect(new AdminService(pool, semContas, sessoes).aprovarNutricionista('9')).resolves.toEqual({
       aprovado: true,
       aprovadoEm,
     });
@@ -52,7 +54,7 @@ describe('AdminService.aprovarNutricionista', () => {
 
   it('responde 404 para quem já foi aprovado ou não é nutricionista', async () => {
     const { pool } = criarPoolMock([[]]);
-    await expect(new AdminService(pool, semContas).aprovarNutricionista('9')).rejects.toThrow(
+    await expect(new AdminService(pool, semContas, sessoes).aprovarNutricionista('9')).rejects.toThrow(
       NotFoundException,
     );
   });
@@ -76,7 +78,7 @@ describe('AdminService.cadastrarNutricionista', () => {
       enviarBoasVindas: jest.fn(async () => ({ emailEnviado: true })),
     };
     return {
-      service: new AdminService(pool, contas as unknown as ContasService),
+      service: new AdminService(pool, contas as unknown as ContasService, sessoes),
       clientQuery,
       contas,
     };

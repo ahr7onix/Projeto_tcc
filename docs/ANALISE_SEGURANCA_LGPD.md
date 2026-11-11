@@ -178,6 +178,15 @@ min do access token, a opção barata é checar no `JwtAuthGuard` um carimbo de
 "senha trocada em" / "conta desativada em" contra o `iat` do token, ou manter
 uma lista curta de revogação.
 
+**Corrigido em 11/11/2026** (CO-05 do parecer): o token de acesso leva o id da
+sessão (`sid`, a linha de `refresh_token`), e o `JwtAuthGuard` confere se ela
+segue aberta (`common/sessoes`). O resultado fica 30 s em memória, e quem
+encerra sessão limpa essa memória. A troca de senha pelo perfil passou a
+encerrar as outras sessões e mantém a de quem trocou. Medido com a API rodando:
+depois do logout, da troca de senha e da desativação, o token antigo recebe 401
+na hora. Fica de fora a conexão de mensagens (SSE) já aberta, que só é
+conferida ao conectar.
+
 ### 2.5 [MÉDIO] `?dias=` / `?limite=` inválido ainda gera 500
 
 [registros.controller.ts](../apps/api/src/modules/registros/registros.controller.ts) · [admin.controller.ts:34](../apps/api/src/modules/admin/admin.controller.ts#L34)
