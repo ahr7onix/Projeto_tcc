@@ -214,6 +214,12 @@ preferência validando na borda (DTO de query com `@IsInt`/`@Min`/`@Max`).
   paciente já é informação sensível por associação. **Correção:** resposta
   genérica (ex.: "se houver um paciente com este e-mail, o convite foi
   enviado") e não devolver nome/e-mail de volta para quem convida.
+  **Corrigido em 11/11/2026** (CO-03 do parecer, migration 018): o convite é
+  guardado pelo e-mail digitado, exista ou não a conta, com a mesma resposta
+  (`id`, `email`, `criadoEm`). A lista de convites pendentes mostra só o
+  e-mail, e o nome aparece depois do aceite. Continuam abertos o cadastro
+  (público e pelo nutricionista), que responde "e-mail já cadastrado"; fechar
+  esse canal pede confirmação de e-mail no cadastro (REC-05 do parecer).
 
 Positivo: o "esqueci a senha" responde mensagem genérica e teve tempo
 equivalente para e-mail existente vs inexistente — está correto.

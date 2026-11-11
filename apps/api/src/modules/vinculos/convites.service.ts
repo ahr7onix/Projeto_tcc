@@ -41,26 +41,29 @@ export class ConvitesService {
       .catch(() => undefined);
   }
 
-  async convidar(idUsuarioNutri: string, email: string) {
+  /**
+   * O convite é gravado pelo e-mail digitado, tenha ele conta de paciente ou
+   * não, e a resposta é sempre a mesma. Antes, um 404 ou o nome devolvido
+   * contavam à nutricionista quem usa o NutriCare, o que num serviço de
+   * diabetes já é dado de saúde por associação (migration 018, CO-03 do
+   * parecer). Quem se cadastrar depois com esse e-mail encontra o convite.
+   */
+  async convidar(idUsuarioNutri: string, emailDigitado: string) {
     const idNutricionista = await this.vinculos.resolveNutricionistaId(idUsuarioNutri);
+    const email = emailDigitado.trim().toLowerCase();
 
     const { rows: pacientes } = await this.pool.query(
-      `SELECT p.id_paciente, u.id_usuario, u.nome, u.email
+      `SELECT p.id_paciente, u.id_usuario
          FROM usuario u
          JOIN paciente p ON p.id_usuario = u.id_usuario
         WHERE u.email = $1
           AND u.desativado_em IS NULL`,
-      [email.trim().toLowerCase()],
+      [email],
     );
     const paciente = pacientes[0];
-    if (!paciente) {
-      throw new NotFoundException(
-        'Nenhum paciente com este e-mail. Confira o endereço ou cadastre o paciente.',
-      );
-    }
-
-    const idUsuarioPaciente = String(paciente.id_usuario);
-    if (await this.vinculos.existeVinculo(idUsuarioNutri, idUsuarioPaciente)) {
+    const idUsuarioPaciente = paciente ? String(paciente.id_usuario) : null;
+    // Só ouve isso quem já acompanha o paciente: não conta nada novo.
+    if (idUsuarioPaciente && (await this.vinculos.existeVinculo(idUsuarioNutri, idUsuarioPaciente))) {
       throw new ConflictException('Este paciente já está vinculado a você');
     }
 
@@ -69,56 +72,57 @@ export class ConvitesService {
       ({
         rows: [criado],
       } = await this.pool.query(
-        `INSERT INTO solicitacao_vinculo (id_nutricionista, id_paciente)
-         VALUES ($1, $2)
+        `INSERT INTO solicitacao_vinculo (id_nutricionista, id_paciente, email_convidado)
+         VALUES ($1, $2, $3)
          RETURNING id_solicitacao, criado_em`,
-        [idNutricionista, paciente.id_paciente],
+        [idNutricionista, paciente?.id_paciente ?? null, email],
       ));
     } catch (err) {
-      // Índice único parcial: um convite pendente por par.
+      // Índices únicos parciais: um convite pendente por paciente e por e-mail.
       if ((err as { code?: string })?.code === '23505') {
-        throw new ConflictException('Este paciente já tem um convite seu aguardando resposta');
+        throw new ConflictException('Você já tem um convite para este e-mail aguardando resposta');
       }
       throw err;
     }
 
-    const { rows: autor } = await this.pool.query(
-      'SELECT nome FROM usuario WHERE id_usuario = $1',
-      [idUsuarioNutri],
-    );
-    this.avisar(
-      idUsuarioPaciente,
-      'Convite de acompanhamento',
-      `${autor[0]?.nome ?? 'Um nutricionista'} quer acompanhar sua saúde pelo NutriCare. ` +
-        'Abra o aplicativo para aceitar ou recusar.',
-    );
+    if (idUsuarioPaciente) {
+      const { rows: autor } = await this.pool.query(
+        'SELECT nome FROM usuario WHERE id_usuario = $1',
+        [idUsuarioNutri],
+      );
+      this.avisar(
+        idUsuarioPaciente,
+        'Convite de acompanhamento',
+        `${autor[0]?.nome ?? 'Um nutricionista'} quer acompanhar sua saúde pelo NutriCare. ` +
+          'Abra o aplicativo para aceitar ou recusar.',
+      );
+    }
 
-    return {
-      id: String(criado.id_solicitacao),
-      paciente: { id: idUsuarioPaciente, nome: paciente.nome, email: paciente.email },
-      criadoEm: criado.criado_em,
-    };
+    return { id: String(criado.id_solicitacao), email, criadoEm: criado.criado_em };
   }
 
-  /** Nutricionista vê os convites que mandou; paciente, os que recebeu. */
+  /**
+   * Nutricionista vê os convites que mandou, só pelo e-mail que digitou: o
+   * nome do paciente aparece depois do aceite. Paciente vê os que recebeu,
+   * inclusive os mandados ao seu e-mail antes de ele ter conta.
+   */
   async listarPendentes(user: JwtPayload) {
     if (user.role === 'nutricionista') {
       const { rows } = await this.pool.query(
-        `SELECT s.id_solicitacao, s.criado_em, u.id_usuario, u.nome, u.email
+        `SELECT s.id_solicitacao, s.criado_em, COALESCE(s.email_convidado, u.email) AS email
            FROM solicitacao_vinculo s
            JOIN nutricionista n ON n.id_nutricionista = s.id_nutricionista
-           JOIN paciente p      ON p.id_paciente = s.id_paciente
-           JOIN usuario u       ON u.id_usuario = p.id_usuario
+           LEFT JOIN paciente p ON p.id_paciente = s.id_paciente
+           LEFT JOIN usuario u  ON u.id_usuario = p.id_usuario
           WHERE n.id_usuario = $1
             AND s.status = 'pendente'
-            AND u.desativado_em IS NULL
           ORDER BY s.criado_em DESC`,
         [user.sub],
       );
       return {
         data: rows.map((r) => ({
           id: String(r.id_solicitacao),
-          paciente: { id: String(r.id_usuario), nome: r.nome, email: r.email },
+          email: r.email,
           criadoEm: r.criado_em,
         })),
       };
@@ -127,10 +131,12 @@ export class ConvitesService {
     const { rows } = await this.pool.query(
       `SELECT s.id_solicitacao, s.criado_em, u.id_usuario, u.nome, n.crn, n.especialidade
          FROM solicitacao_vinculo s
-         JOIN paciente p      ON p.id_paciente = s.id_paciente
+         JOIN paciente p      ON p.id_usuario = $1
+         JOIN usuario up      ON up.id_usuario = p.id_usuario
          JOIN nutricionista n ON n.id_nutricionista = s.id_nutricionista
          JOIN usuario u       ON u.id_usuario = n.id_usuario
-        WHERE p.id_usuario = $1
+        WHERE (s.id_paciente = p.id_paciente
+               OR (s.id_paciente IS NULL AND s.email_convidado = up.email))
           AND s.status = 'pendente'
           AND u.desativado_em IS NULL
         ORDER BY s.criado_em DESC`,
@@ -153,7 +159,8 @@ export class ConvitesService {
   /**
    * Resposta do paciente. A troca de status e a criação do vínculo vão na
    * mesma transação: um aceite nunca fica gravado sem o vínculo, nem o
-   * contrário.
+   * contrário. Convite mandado ao e-mail antes da conta existir ganha aqui o
+   * id do paciente que respondeu.
    */
   async responder(idUsuarioPaciente: string, idSolicitacao: string, aceitar: boolean) {
     const client = await this.pool.connect();
@@ -162,11 +169,13 @@ export class ConvitesService {
       await client.query('BEGIN');
       const { rows } = await client.query(
         `UPDATE solicitacao_vinculo s
-            SET status = $3, respondido_em = NOW()
+            SET status = $3, respondido_em = NOW(), id_paciente = p.id_paciente
            FROM paciente p
+           JOIN usuario u ON u.id_usuario = p.id_usuario
           WHERE s.id_solicitacao = $1
-            AND s.id_paciente = p.id_paciente
             AND p.id_usuario = $2
+            AND (s.id_paciente = p.id_paciente
+                 OR (s.id_paciente IS NULL AND s.email_convidado = u.email))
             AND s.status = 'pendente'
           RETURNING s.id_nutricionista, s.id_paciente`,
         [idSolicitacao, idUsuarioPaciente, aceitar ? 'aceita' : 'recusada'],

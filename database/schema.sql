@@ -83,24 +83,33 @@ CREATE INDEX idx_vinculo_paciente
 
 -- ---------- Tabela: solicitacao_vinculo ----------
 -- Consentimento (LGPD): o nutricionista convida e o vínculo acima só nasce
--- quando o paciente aceita. Espelha migrations/016_solicitacao_vinculo.sql.
+-- quando o paciente aceita. Espelha migrations/016_solicitacao_vinculo.sql e a
+-- 018, que guarda o convite pelo e-mail digitado: sem conta de paciente com
+-- esse e-mail, id_paciente fica vazio até alguém se cadastrar com ele.
 CREATE TABLE solicitacao_vinculo (
     id_solicitacao   BIGSERIAL   PRIMARY KEY,
     id_nutricionista BIGINT      NOT NULL
         REFERENCES nutricionista(id_nutricionista) ON DELETE CASCADE,
-    id_paciente      BIGINT      NOT NULL
+    id_paciente      BIGINT
         REFERENCES paciente(id_paciente) ON DELETE CASCADE,
     status           VARCHAR(12) NOT NULL DEFAULT 'pendente'
         CHECK (status IN ('pendente', 'aceita', 'recusada', 'cancelada')),
     criado_em        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     respondido_em    TIMESTAMPTZ,
+    email_convidado  VARCHAR(160),
     CONSTRAINT chk_solicitacao_resposta
-        CHECK ((status = 'pendente') = (respondido_em IS NULL))
+        CHECK ((status = 'pendente') = (respondido_em IS NULL)),
+    CONSTRAINT chk_solicitacao_destino
+        CHECK (id_paciente IS NOT NULL OR email_convidado IS NOT NULL)
 );
 CREATE UNIQUE INDEX idx_solicitacao_pendente_unica
     ON solicitacao_vinculo (id_nutricionista, id_paciente) WHERE status = 'pendente';
 CREATE INDEX idx_solicitacao_paciente
     ON solicitacao_vinculo (id_paciente) WHERE status = 'pendente';
+CREATE UNIQUE INDEX idx_solicitacao_pendente_email
+    ON solicitacao_vinculo (id_nutricionista, email_convidado) WHERE status = 'pendente';
+CREATE INDEX idx_solicitacao_email
+    ON solicitacao_vinculo (email_convidado) WHERE status = 'pendente';
 
 -- ---------- Tabela: mensagem ----------
 -- Conversa entre nutricionista e paciente, presa ao vinculo entre os dois.
