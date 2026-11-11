@@ -10,6 +10,35 @@ Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
   do repositório. Para o botão funcionar, o APK precisa estar anexado a uma Release do GitHub com esse
   nome (ou a variável apontar para outro endereço, no `render.yaml`/`render-tcc.yaml`).
 
+## 2026-11-09 — Senhas públicas fora do ar e tempo igual no login
+- Quem: Natan, com apoio de IA
+- PR/branch: `fix/senhas-publicas-e-tempo-do-login`
+- O que aconteceu: o parecer de 02/11 pediu as correções CO-03 (enumeração de e-mail) e CO-04
+  (senhas de demonstração no repositório público valendo no site).
+- O que foi adicionado:
+  - `preparar-banco.mjs` lê `ADMIN_SENHA` e `SENHA_DEMO`. A conta do seed que ainda usa a senha
+    pública (admin; Camila, João e Maria) passa a usar a da variável, e as sessões abertas são
+    encerradas. Quem já trocou a senha não é tocado. Senha com menos de 8 caracteres é
+    recusada com aviso, sem travar a subida da API. Em produção, sem as variáveis, o log avisa
+    quais contas seguem com a senha pública.
+  - Teste em `auth.service.spec.ts`: com e-mail sem conta, o login confere a senha mesmo assim.
+- O que foi modificado:
+  - Login: com e-mail sem conta, a API roda o `bcrypt.compare` contra um hash qualquer antes de
+    recusar. Medido com a API rodando: 77 ms com senha errada e 70 ms com e-mail sem conta (antes,
+    66 ms e 3 ms).
+  - `PUBLICAR.md` não lista mais as senhas do site; explica as duas variáveis. README,
+    `ANALISE_SEGURANCA_LGPD.md` (itens 2.2 e 2.6) e esta página foram atualizados.
+- Arquivos principais: `apps/api/preparar-banco.mjs`, `apps/api/src/modules/auth/auth.service.ts`.
+- Atenção para quem vier depois:
+  - A troca no ar só acontece depois de criar as variáveis no Render (Environment da API).
+    Combine com o grupo antes: quem usa o site com as senhas antigas (inclusive para o vídeo da
+    pré-banca) precisa das novas.
+  - O convite (`POST /vinculos/convites`) ainda diz se o e-mail é de paciente e devolve o nome.
+    Ele fica no `ConvitesService`, que está no "NÃO MEXA": a correção espera a equipe.
+  - A troca de senha foi testada num banco descartável (`tcc_co04`, apagado depois). Foram testados
+    os casos: sem variáveis em produção e em desenvolvimento, com variáveis, segunda rodada com
+    outra senha e senha curta.
+
 ## 2026-11-09 — Botão "Exportar CSV" no relatório do paciente
 - Quem: Natan, com apoio de IA
 - PR/branch: `feat/painel-exportar-csv`
