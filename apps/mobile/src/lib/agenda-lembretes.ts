@@ -139,6 +139,12 @@ async function limparAgendados(): Promise<void> {
   );
 }
 
+/** Desliga tudo o que este app agendou. Usado quando a sessão acaba. */
+export async function cancelarAgenda(): Promise<void> {
+  if (Platform.OS === 'web') return;
+  await limparAgendados();
+}
+
 /**
  * Reescreve a agenda inteira a partir da lista que veio da API.
  *

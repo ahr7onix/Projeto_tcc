@@ -238,9 +238,24 @@ export default function MensagensPage() {
     carregarConversas()
   }, [carregarConversas])
 
+  // Trocar de conversa limpa o que era da anterior: nome, ficha, histórico e o
+  // rascunho, que seguia no campo e ia para o paciente novo.
+  const trocarConversa = useCallback((id: string, nome = '') => {
+    setSelId(id)
+    setSelNome(nome)
+    setThreadNome('')
+    setPerfil(null)
+    setMensagens([])
+    setTexto('')
+    setEmojiAberto(false)
+    ultimoSinal.current = 0
+  }, [])
+
+  // O aviso do sino leva para /mensagens/:id sem remontar a tela, então a troca
+  // pela URL precisa limpar igual ao clique na lista.
   useEffect(() => {
-    if (paramId) setSelId(paramId)
-  }, [paramId])
+    if (paramId && paramId !== selRef.current) trocarConversa(paramId)
+  }, [paramId, trocarConversa])
 
   // Abre a conversa selecionada: histórico + ficha do paciente, e zera o
   // contador de não lidas na lista da esquerda.
@@ -357,7 +372,15 @@ export default function MensagensPage() {
     try {
       setEnviando(true)
       setErro(null)
-      const nova = await enviarMensagem(selId, conteudo)
+      const destino = selId
+      const nova = await enviarMensagem(destino, conteudo)
+      // Se ela trocou de conversa enquanto a mensagem ia, a resposta não é desta
+      // tela: não entra no histórico do outro paciente nem apaga o que ela já
+      // começou a escrever para ele.
+      if (selRef.current !== destino) {
+        carregarConversas()
+        return
+      }
       setMensagens((atual) => acrescentar(atual, nova))
       setTexto('')
       setEmojiAberto(false)
@@ -386,14 +409,7 @@ export default function MensagensPage() {
 
   function selecionar(c: Conversa) {
     if (c.contraparteId === selId) return
-    setSelId(c.contraparteId)
-    setSelNome(c.contraparteNome)
-    setThreadNome('')
-    setPerfil(null)
-    setMensagens([])
-    setTexto('')
-    setEmojiAberto(false)
-    ultimoSinal.current = 0
+    trocarConversa(c.contraparteId, c.contraparteNome)
   }
 
   const conversasFiltradas = useMemo(() => {

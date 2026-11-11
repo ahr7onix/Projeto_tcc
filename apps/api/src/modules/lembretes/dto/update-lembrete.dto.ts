@@ -3,7 +3,9 @@ import {
   IsArray,
   IsBoolean,
   IsDateString,
+  IsIn,
   IsInt,
+  IsNumberString,
   IsOptional,
   IsString,
   Matches,
@@ -12,10 +14,23 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
+import { TIPOS_LEMBRETE } from './create-lembrete.dto';
 
 const HORA_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export class UpdateLembreteDto {
+  // O app manda o formulário inteiro ao editar, com tipo e remédio. Sem estes
+  // dois campos o ValidationPipe recusava o pedido e nenhuma edição salvava.
+  @IsOptional()
+  @IsIn(TIPOS_LEMBRETE as unknown as string[], {
+    message: `tipo deve ser um de: ${TIPOS_LEMBRETE.join(', ')}`,
+  })
+  tipo?: string;
+
+  @IsOptional()
+  @IsNumberString()
+  medicamentoId?: string;
+
   @IsOptional()
   @IsString()
   @MinLength(2)

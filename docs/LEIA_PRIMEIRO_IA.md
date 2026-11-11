@@ -157,6 +157,35 @@ Bugs pequenos, podem ser corrigidos:
 - Apagar medicamento só desativa; apagar de novo devolve 200 em vez de 404.
 - Os testes automáticos escrevem erros falsos no `logs/` real da API.
 
+Achados da revisão de código de 09/11/2026 que continuam abertos (os quatro mais graves fora do
+"NÃO MEXA" foram corrigidos em 11/11, ver o histórico):
+
+- API: depois que o paciente encerra o vínculo, a ex-nutricionista ainda lê, altera e apaga os
+  planos dele. `buscarPlanoAutorizado` (`planos.service.ts`) só confere quem escreveu o plano.
+  Mexe no vínculo ("NÃO MEXA").
+- API: qualquer nutricionista edita ou desativa qualquer alimento, inclusive os da TACO, e os
+  totais dos planos já prescritos mudam junto (`podeEditar` em `alimentos.service.ts` só olha o
+  perfil). Pesa mais com o `CADASTRO_TESTE_ABERTO` ligado.
+- API: a conta excluída pelo paciente mantém o vínculo ativo, e a nutricionista ainda lê e grava
+  dados dele pelo id (`desativarConta` não encerra `nutricionista_paciente`).
+- API: medida antiga lançada no painel sobrescreve o peso e a altura atuais do paciente
+  (`antropometria.service.ts`, `UPDATE paciente` sem comparar a data).
+- API: o admin não remove nutricionista que já escreveu plano, anotação, receita ou conteúdo: o
+  `ON DELETE RESTRICT` vira 500.
+- API: `POST /auth/cadastro` (rota antiga, sem uso) não passa pela validação, porque o tipo
+  `CadastroDto & { role?: string }` vira `Object` para o `ValidationPipe`.
+- Fuso: "hoje" e "dia" são calculados em UTC. Das 21h à meia-noite, medidas, início de plano,
+  gráficos e o cruzamento humor x glicemia caem no dia seguinte. No ambiente publicado, a data
+  de nascimento do relatório sai um dia antes.
+- App: os formulários (glicemia, refeição, medidas, humor) continuam preenchidos depois de salvar,
+  e a refeição nova herda o alimento e a quantidade da anterior. Editar perfil reenvia o peso da
+  primeira vez que a tela abriu.
+- App: a Início não se atualiza depois de um registro, convite ou plano novo, e o paciente acaba
+  registrando de novo. Conta de nutricionista consegue entrar no app.
+- Painel: ao editar plano, receita, alimento ou conteúdo, apagar um campo opcional não apaga (o
+  painel manda `undefined`). A cor da glicemia média usa limites fixos, diferentes na lista e na
+  ficha (regra clínica). O link de criar ou redefinir senha não abre para quem está logado.
+
 Melhorias de tela que ficaram para depois:
 
 - Plano alimentar: o alimento é escolhido numa lista de 578 opções. Um campo de busca (como o

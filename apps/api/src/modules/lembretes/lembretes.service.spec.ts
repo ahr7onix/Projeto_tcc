@@ -1,9 +1,10 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException, ValidationPipe } from '@nestjs/common';
 import type { Pool } from 'pg';
 import type { JwtPayload } from '../../common/guards/jwt.guard';
 import { VinculosService } from '../vinculos/vinculos.service';
 import { LembretesService } from './lembretes.service';
 import { CreateLembreteDto } from './dto/create-lembrete.dto';
+import { UpdateLembreteDto } from './dto/update-lembrete.dto';
 
 function criarPoolMock(respostas: unknown[][]) {
   const query = jest.fn();
@@ -154,6 +155,93 @@ describe('LembretesService', () => {
       // Recorrente guarda hora e ignora a data avulsa que veio junto.
       expect(params[6]).toBeNull();
       expect(params[7]).toEqual([1, 3, 5]);
+    });
+  });
+
+  describe('atualizar', () => {
+    // O mesmo corpo que a tela de lembretes do app manda ao salvar a edição.
+    const EDICAO_DO_APP = {
+      tipo: 'medicamento',
+      titulo: 'Metformina',
+      recorrente: true,
+      hora: '09:30',
+      diasSemana: [1, 3, 5],
+      medicamentoId: '9',
+    };
+
+    it('should accept the body the app sends (same pipe options as main.ts)', async () => {
+      const pipe = new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      });
+
+      await expect(
+        pipe.transform(EDICAO_DO_APP, { type: 'body', metatype: UpdateLembreteDto }),
+      ).resolves.toBeInstanceOf(UpdateLembreteDto);
+    });
+
+    it('should save the type and the medicine', async () => {
+      const { pool, query } = criarPoolMock([
+        [linhaLembrete({ tipo_lembrete: 'glicemia' })],
+        [{ ok: 1 }],
+        [linhaLembrete({ id_uso: 9 })],
+      ]);
+      const service = new LembretesService(pool, criarVinculosMock());
+
+      await service.atualizar(PACIENTE, '6', EDICAO_DO_APP as UpdateLembreteDto);
+
+      const params = query.mock.calls[2][1] as unknown[];
+      expect(params[5]).toBe('09:30');
+      expect(params[10]).toBe('medicamento');
+      expect(params[11]).toBe('9');
+    });
+
+    it('should reject a medicine that is not from this patient', async () => {
+      const { pool } = criarPoolMock([[linhaLembrete()], []]);
+      const service = new LembretesService(pool, criarVinculosMock());
+
+      await expect(
+        service.atualizar(PACIENTE, '6', EDICAO_DO_APP as UpdateLembreteDto),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should unlink the medicine when the type stops being medicine', async () => {
+      const { pool, query } = criarPoolMock([
+        [linhaLembrete({ id_uso: 9 })],
+        [linhaLembrete({ tipo_lembrete: 'glicemia' })],
+      ]);
+      const service = new LembretesService(pool, criarVinculosMock());
+
+      await service.atualizar(PACIENTE, '6', { tipo: 'glicemia' } as UpdateLembreteDto);
+
+      const params = query.mock.calls[1][1] as unknown[];
+      expect(params[10]).toBe('glicemia');
+      expect(params[11]).toBeNull();
+    });
+
+    it('should keep the medicine when the edit does not send one', async () => {
+      const { pool, query } = criarPoolMock([[linhaLembrete({ id_uso: 9 })], [linhaLembrete()]]);
+      const service = new LembretesService(pool, criarVinculosMock());
+
+      await service.atualizar(PACIENTE, '6', { hora: '10:00' } as UpdateLembreteDto);
+
+      const params = query.mock.calls[1][1] as unknown[];
+      expect(params[10]).toBe('medicamento');
+      expect(params[11]).toBe(9);
+    });
+
+    it('should clear the note when it comes empty', async () => {
+      const { pool, query } = criarPoolMock([
+        [linhaLembrete({ descricao: 'Depois do café' })],
+        [linhaLembrete()],
+      ]);
+      const service = new LembretesService(pool, criarVinculosMock());
+
+      await service.atualizar(PACIENTE, '6', { descricao: '  ' } as UpdateLembreteDto);
+
+      const params = query.mock.calls[1][1] as unknown[];
+      expect(params[3]).toBeNull();
     });
   });
 
