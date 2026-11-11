@@ -852,6 +852,12 @@ O refresh token **é rotacionado**: a cada renovação, o token usado é revogad
 emitido. No banco fica apenas o hash SHA-256 do token; o valor original só existe no
 dispositivo. Se o banco vazar, os tokens gravados não servem para entrar no sistema.
 
+O token de acesso leva o id da sessão que o emitiu, e o `JwtAuthGuard` confere a cada pedido se
+ela continua aberta. Por isso sair, trocar a senha, desativar a conta ou ter a conta removida
+derruba o acesso na hora, sem esperar os 15 minutos. Para não ir ao banco a cada pedido, a
+resposta fica 30 segundos em memória e é apagada sempre que uma sessão é encerrada. Trocar a senha
+pelo perfil encerra as sessões dos outros aparelhos e mantém a de quem trocou.
+
 ## 5.2 Login por e-mail e senha
 
 O usuário informa e-mail e senha em `POST /auth/login`. O servidor busca a conta pelo e-mail,

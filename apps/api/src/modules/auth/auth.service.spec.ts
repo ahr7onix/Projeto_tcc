@@ -2,6 +2,7 @@ import { JwtService } from '@nestjs/jwt';
 import type { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import type { Pool } from 'pg';
+import type { SessoesService } from '../../common/sessoes/sessoes.service';
 import type { MailService } from '../mail/mail.service';
 import { AuthService } from './auth.service';
 
@@ -12,6 +13,7 @@ jest.mock('bcryptjs', () => {
 });
 
 const SENHA = 'Senha123!';
+const sessoes = { sessoesEncerradas: jest.fn() } as unknown as SessoesService;
 const usuario = {
   id_usuario: '30',
   nome: 'João',
@@ -88,6 +90,7 @@ function montar() {
     new JwtService({ secret: 'teste' }),
     config,
     {} as MailService,
+    sessoes,
   );
   return service;
 }
@@ -109,11 +112,14 @@ describe('AuthService com o pool cheio', () => {
     const resposta = await semTravar(montar().login({ email: 'joao@x.com', senha: SENHA }));
     expect(resposta.user).toMatchObject({ id: '30', perfilCompleto: true });
     expect(resposta.refreshToken).toHaveLength(64);
+    // O token de acesso leva a sessão que o emitiu: é por ela que o guard sabe se ainda vale.
+    expect(new JwtService({ secret: 'teste' }).decode(resposta.accessToken)).toMatchObject({ sid: '2' });
   });
 
   it('should renew a session using a single free connection', async () => {
     const resposta = await semTravar(montar().refresh('token-antigo'));
     expect(resposta.user).toMatchObject({ id: '30', perfilCompleto: true });
+    expect(new JwtService({ secret: 'teste' }).decode(resposta.accessToken)).toMatchObject({ sid: '2' });
   });
 
   it('should sign up a patient using a single free connection', async () => {
@@ -140,7 +146,7 @@ describe('AuthService com e-mail sem conta', () => {
     // Sem a conferência a recusa vinha em ~3 ms em vez de ~66 ms, e o tempo dizia quais e-mails têm conta.
     const pool = { query: async () => ({ rows: [], rowCount: 0 }) } as unknown as Pool;
     const config = { get: (_chave: string, padrao?: string) => padrao } as unknown as ConfigService;
-    const service = new AuthService(pool, new JwtService({ secret: 'teste' }), config, {} as MailService);
+    const service = new AuthService(pool, new JwtService({ secret: 'teste' }), config, {} as MailService, sessoes);
     (bcrypt.compare as jest.Mock).mockClear();
 
     await expect(service.login({ email: 'ninguem@x.com', senha: SENHA })).rejects.toThrow(
@@ -173,7 +179,7 @@ describe('AuthService com CADASTRO_TESTE_ABERTO', () => {
       get: (chave: string, padrao?: string) =>
         chave === 'CADASTRO_TESTE_ABERTO' ? String(aberto) : padrao,
     } as unknown as ConfigService;
-    const service = new AuthService(pool, new JwtService({ secret: 'teste' }), config, {} as MailService);
+    const service = new AuthService(pool, new JwtService({ secret: 'teste' }), config, {} as MailService, sessoes);
     return { service, consultas };
   }
 

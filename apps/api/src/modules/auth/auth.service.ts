@@ -20,6 +20,7 @@ import {
 } from '../../common/ambiente';
 import { logger } from '../../common/logging/logger.service';
 import { perfilEstaCompleto } from '../../common/perfil-completo';
+import { SessoesService } from '../../common/sessoes/sessoes.service';
 import { MailService } from '../mail/mail.service';
 import { CadastroDto } from './dto/cadastro.dto';
 import { LoginDto } from './dto/login.dto';
@@ -102,6 +103,7 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
     private readonly mail: MailService,
+    private readonly sessoes: SessoesService,
   ) {
     this.googleClientId =
       this.config.get<string>('GOOGLE_CLIENT_ID', '').trim();
@@ -326,7 +328,7 @@ export class AuthService {
   async refresh(refreshToken: string): Promise<AuthResponse> {
     const tokenHash = this.hashToken(refreshToken);
     const client = await this.pool.connect();
-    let renovada: { user: UserRow; refreshToken: string };
+    let renovada: { user: UserRow; refreshToken: string; sid: string };
     try {
       await client.query('BEGIN');
       const result = await client.query<{
@@ -368,7 +370,7 @@ export class AuthService {
 
       const session = await this.createRefreshToken(client, user.id_usuario, row.id_token);
       await client.query('COMMIT');
-      renovada = { user, refreshToken: session.token };
+      renovada = { user, refreshToken: session.token, sid: session.id };
     } catch (err) {
       await client.query('ROLLBACK').catch(() => undefined);
       throw err;
@@ -379,7 +381,7 @@ export class AuthService {
     // Só depois de devolver a conexão: o toPublicUser consulta o pool (ver issueSession).
     return {
       user: await this.toPublicUser(renovada.user),
-      accessToken: this.signAccessToken(renovada.user),
+      accessToken: this.signAccessToken(renovada.user, renovada.sid),
       refreshToken: renovada.refreshToken,
     };
   }
@@ -391,6 +393,8 @@ export class AuthService {
        WHERE token_hash = $1 AND revogado_em IS NULL`,
       [tokenHash],
     );
+    // O token de acesso desta sessão para de valer agora, não em 15 minutos.
+    this.sessoes.sessoesEncerradas();
   }
 
   /**
@@ -536,6 +540,7 @@ export class AuthService {
     } finally {
       client.release();
     }
+    this.sessoes.sessoesEncerradas();
 
     return { message: 'Senha atualizada com sucesso. Você já pode entrar.', perfil };
   }
@@ -606,7 +611,7 @@ export class AuthService {
     const session = await this.createRefreshToken(this.pool, user.id_usuario, null);
     return {
       user: await this.toPublicUser(user),
-      accessToken: this.signAccessToken(user),
+      accessToken: this.signAccessToken(user, session.id),
       refreshToken: session.token,
     };
   }
@@ -615,7 +620,7 @@ export class AuthService {
     client: { query: Pool['query'] },
     idUsuario: string,
     substituiId: string | null,
-  ): Promise<{ token: string }> {
+  ): Promise<{ token: string; id: string }> {
     const token = randomBytes(32).toString('hex');
     const tokenHash = this.hashToken(token);
     const ttlDays = Number(this.config.get<string>('REFRESH_TOKEN_TTL_DAYS', '30'));
@@ -635,7 +640,7 @@ export class AuthService {
       );
     }
 
-    return { token };
+    return { token, id: String(inserted.rows[0].id_token) };
   }
 
   /**
@@ -668,9 +673,10 @@ export class AuthService {
     }
   }
 
-  private signAccessToken(user: UserRow): string {
+  /** `sid` liga o token à sessão: encerrada a sessão, o `JwtAuthGuard` recusa o token. */
+  private signAccessToken(user: UserRow, sid: string): string {
     return this.jwt.sign(
-      { sub: user.id_usuario, email: user.email, role: user.tipo },
+      { sub: user.id_usuario, email: user.email, role: user.tipo, sid },
       {
         expiresIn: this.config.get<string>('JWT_EXPIRES_IN', '15m'),
       },

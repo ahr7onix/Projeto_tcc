@@ -10,6 +10,7 @@ import { randomBytes } from 'crypto';
 import type { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
 import { avaliarGlicemia } from '../../common/glicemia/glicemia';
+import { SessoesService } from '../../common/sessoes/sessoes.service';
 import { ContasService } from '../contas/contas.service';
 import { CadastrarNutricionistaDto } from './dto/cadastrar-nutricionista.dto';
 
@@ -78,6 +79,7 @@ export class AdminService {
   constructor(
     @Inject(PG_POOL) private readonly pool: Pool,
     private readonly contas: ContasService,
+    private readonly sessoes: SessoesService,
   ) {}
 
   async metricas() {
@@ -404,6 +406,8 @@ export class AdminService {
     }
 
     await this.pool.query(`DELETE FROM usuario WHERE id_usuario = $1`, [idUsuario]);
+    // As sessões somem junto com a conta (CASCADE); o token dela para de valer agora.
+    this.sessoes.sessoesEncerradas();
     return { removido: true };
   }
 }

@@ -7,6 +7,7 @@ import {
 } from './common/guards/limite-por-minuto.guard';
 import { HttpLoggerMiddleware } from './common/logging/http-logger.middleware';
 import { MonitoringModule } from './common/monitoring/monitoring.module';
+import { SessoesModule } from './common/sessoes/sessoes.module';
 import { DatabaseModule } from './database/database.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AnotacoesModule } from './modules/anotacoes/anotacoes.module';
@@ -44,6 +45,7 @@ import { VinculosModule } from './modules/vinculos/vinculos.module';
       errorMessage: 'Muitas tentativas seguidas. Aguarde um minuto e tente de novo.',
     }),
     DatabaseModule,
+    SessoesModule,
     MonitoringModule,
     HealthModule,
     StatusModule,
