@@ -130,13 +130,7 @@ export class LembretesService {
     this.validarQuando(recorrente, dto.hora, dto.dataHora);
 
     if (dto.tipo === 'medicamento' && dto.medicamentoId) {
-      const { rowCount } = await this.pool.query(
-        'SELECT 1 FROM medicamento WHERE id_uso = $1 AND id_paciente = $2',
-        [dto.medicamentoId, idPaciente],
-      );
-      if (!rowCount) {
-        throw new BadRequestException('Medicamento não encontrado para este paciente');
-      }
+      await this.garantirMedicamentoDoPaciente(idPaciente, dto.medicamentoId);
     }
 
     const { rows } = await this.pool.query(
@@ -149,7 +143,7 @@ export class LembretesService {
         idPaciente,
         dto.tipo,
         dto.titulo.trim(),
-        dto.descricao?.trim() ?? null,
+        dto.descricao?.trim() || null,
         recorrente,
         recorrente ? dto.hora : null,
         recorrente ? null : dto.dataHora,
@@ -159,6 +153,16 @@ export class LembretesService {
     );
 
     return this.mapLembrete(rows[0]);
+  }
+
+  private async garantirMedicamentoDoPaciente(idPaciente: string, medicamentoId: string) {
+    const { rowCount } = await this.pool.query(
+      'SELECT 1 FROM medicamento WHERE id_uso = $1 AND id_paciente = $2',
+      [medicamentoId, idPaciente],
+    );
+    if (!rowCount) {
+      throw new BadRequestException('Medicamento não encontrado para este paciente');
+    }
   }
 
   private async buscarDoPaciente(idPaciente: string, id: string) {
@@ -184,17 +188,28 @@ export class LembretesService {
     const dataHora = dto.dataHora ?? atual.data_hora ?? undefined;
     this.validarQuando(recorrente, hora, dataHora ? String(dataHora) : undefined);
 
+    const tipo = dto.tipo ?? atual.tipo_lembrete;
+    if (tipo === 'medicamento' && dto.medicamentoId) {
+      await this.garantirMedicamentoDoPaciente(idPaciente, dto.medicamentoId);
+    }
+    // Remédio só fica ligado a lembrete de medicamento. Sem remédio novo no
+    // pedido, continua o que já estava.
+    const idUso =
+      tipo !== 'medicamento' ? null : (dto.medicamentoId ?? atual.id_uso);
+
     const { rows } = await this.pool.query(
       `UPDATE lembrete SET
          titulo = $3, descricao = $4, recorrente = $5, hora = $6,
-         data_hora = $7, dias_semana = $8, ativo = $9, concluido = $10
+         data_hora = $7, dias_semana = $8, ativo = $9, concluido = $10,
+         tipo_lembrete = $11, id_uso = $12
        WHERE id_lembrete = $1 AND id_paciente = $2
        RETURNING *`,
       [
         id,
         idPaciente,
         dto.titulo?.trim() ?? atual.titulo,
-        dto.descricao !== undefined ? dto.descricao?.trim() ?? null : atual.descricao,
+        // Texto vazio apaga a observação.
+        dto.descricao !== undefined ? dto.descricao.trim() || null : atual.descricao,
         recorrente,
         recorrente ? hora : null,
         recorrente ? null : dataHora,
@@ -205,6 +220,8 @@ export class LembretesService {
           : atual.dias_semana,
         dto.ativo ?? atual.ativo,
         dto.concluido ?? atual.concluido,
+        tipo,
+        idUso,
       ],
     );
 

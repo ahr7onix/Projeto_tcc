@@ -148,7 +148,9 @@ export default function LembretesScreen() {
     const input = {
       tipo: form.tipo,
       titulo: form.titulo.trim(),
-      descricao: form.descricao.trim() || undefined,
+      // Vazio vai como texto vazio, e não some do pedido: é assim que a
+      // edição apaga a observação.
+      descricao: form.descricao.trim(),
       recorrente: true,
       hora: form.hora.trim(),
       diasSemana: form.dias,

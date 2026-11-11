@@ -2,6 +2,49 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-11-11 — Bugs graves da revisão de 09/11: lembretes, troca de conta e Mensagens
+- Quem: Natan, com apoio de IA
+- PR/branch: `fix/bugs-graves-da-revisao`
+- O que aconteceu: a revisão do código de 09/11 achou quatro defeitos graves fora do "NÃO MEXA".
+  Editar lembrete no app sempre dava erro. Sair da conta deixava os lembretes tocando no
+  celular, sem ninguém logado para desligar. Quem entrava em seguida no mesmo celular via os
+  dados da conta anterior. E a tela de Mensagens do painel mostrava o paciente errado ao trocar
+  de conversa pelo sino.
+- O que foi modificado:
+  - API, lembretes: `PATCH /lembretes/:id` aceita `tipo` e `medicamentoId`, que o app sempre
+    manda ao editar. O `forbidNonWhitelisted` recusava o pedido com 400. Agora os dois são
+    gravados. O remédio só fica ligado a lembrete de medicamento e é conferido como no cadastro.
+    Observação vazia apaga a anterior (antes ficava a antiga; no cadastro, gravava texto vazio).
+  - App: hook `useLimpezaAoSair` na raiz. Quando a sessão acaba (sair, excluir a conta ou
+    renovação recusada), cancela os lembretes agendados no aparelho e limpa o cache do
+    react-query. Só age na passagem de logado para deslogado, para não apagar a agenda na
+    abertura do app, antes do `hydrate`. Fica fora da store para não fechar o ciclo
+    store -> agenda -> api -> store.
+  - App, lembretes: a observação vai como texto vazio ao editar, para poder ser apagada.
+  - Painel, Mensagens: trocar de conversa pela URL (o aviso do sino) limpa nome, ficha,
+    histórico e rascunho, igual ao clique na lista. A resposta de um envio que chega depois da
+    troca não entra no histórico do outro paciente nem apaga o rascunho dele.
+- O que foi adicionado: 6 testes em `lembretes.service.spec.ts`. Um deles passa o corpo do app
+  pelo `ValidationPipe` com as opções do `main.ts`, e falha sem a correção.
+- Arquivos principais: `apps/api/src/modules/lembretes/`, `apps/mobile/src/hooks/use-limpeza-ao-sair.ts`,
+  `apps/mobile/src/app/_layout.tsx`, `apps/mobile/src/lib/agenda-lembretes.ts` e
+  `apps/web/src/pages/app/MensagensPage.tsx`. Os achados que ficaram abertos foram para as
+  pendências do `LEIA_PRIMEIRO_IA.md`.
+- Atenção para quem vier depois:
+  - A edição de lembrete volta a funcionar no APK já instalado assim que a API for publicada. A
+    limpeza ao sair e a observação apagável só chegam ao celular com `npm run atualizar`.
+  - Conferido:
+    - API: 302 testes. `tsc` da API, do painel e do app, e lint do app.
+    - Com uma API local num banco copiado do `tcc_demo` (apagado no fim):
+      - edição de lembrete com o corpo do app: 200, hora trocada, observação apagada;
+      - Mensagens com Playwright, na versão da `main` e na nova. Na da `main`, a troca pelo sino
+        mostrava o nome e a ficha da Maria enquanto o João carregava, e o rascunho dela ficava
+        no campo dele. No envio lento, a mensagem do João entrava no histórico da Maria. Na
+        nova, nada disso acontece;
+      - troca de conta no app em modo web. Sem a correção, a Maria via a última glicemia do
+        João (07:00) e continuava vendo depois de 8 s. Com ela, vê a própria (13:09).
+    - O cancelamento dos lembretes não roda no navegador: só dá para conferir no celular.
+
 ## 2026-11-11 — Acesso cai na hora do logout
 - Quem: Natan, com apoio de IA
 - PR/branch: `fix/acesso-cai-no-logout`
