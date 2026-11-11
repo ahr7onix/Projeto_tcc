@@ -33,7 +33,6 @@ export default function ConvidarPacienteModal({ onClose, onConvitesAlterados }: 
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [sucesso, setSucesso] = useState<string | null>(null)
-  const [info, setInfo] = useState<string | null>(null)
   const [cadastro, setCadastro] = useState<CadastroPacienteResultado | null>(null)
   const [convites, setConvites] = useState<ConviteEnviado[]>([])
   const [carregando, setCarregando] = useState(true)
@@ -74,7 +73,6 @@ export default function ConvidarPacienteModal({ onClose, onConvitesAlterados }: 
     setModo(novo)
     setErro(null)
     setSucesso(null)
-    setInfo(null)
     setCadastro(null)
   }
 
@@ -92,20 +90,14 @@ export default function ConvidarPacienteModal({ onClose, onConvitesAlterados }: 
     try {
       const convite = await convidarPaciente(email.trim())
       await recarregar()
+      // A API responde igual com ou sem conta: o painel não sabe, e não deve
+      // saber, se o e-mail é de um paciente.
       setSucesso(
-        `Convite enviado para ${convite.paciente.nome}. Quando for aceito pelo aplicativo, o nome passa a aparecer na sua lista.`,
+        `Convite enviado para ${convite.email}. Ele aparece no aplicativo de quem usa este e-mail, ou de quem se cadastrar com ele. Depois do aceite, o paciente entra na sua lista.`,
       )
       setEmail('')
     } catch (err) {
-      const status = (err as { response?: { status?: number } })?.response?.status
-      if (status === 404) {
-        // Ninguém com este e-mail: em vez de parar no erro, abre o cadastro
-        // já com o e-mail preenchido.
-        trocarModo('cadastro')
-        setInfo('Nenhuma conta de paciente usa este e-mail. Preencha os dados abaixo para cadastrar.')
-      } else {
-        setErro(extractError(err))
-      }
+      setErro(extractError(err))
     } finally {
       setEnviando(false)
     }
@@ -123,7 +115,6 @@ export default function ConvidarPacienteModal({ onClose, onConvitesAlterados }: 
     }
     setErro(null)
     setSucesso(null)
-    setInfo(null)
     setEnviando(true)
     try {
       const payload: CadastroPacientePayload = {
@@ -181,14 +172,13 @@ export default function ConvidarPacienteModal({ onClose, onConvitesAlterados }: 
             value={modo}
             onChange={(v) => trocarModo(v as Modo)}
             options={[
-              { value: 'convite', label: 'Já usa o aplicativo' },
+              { value: 'convite', label: 'Convidar por e-mail' },
               { value: 'cadastro', label: 'Cadastrar novo paciente' },
             ]}
           />
 
           {erro && <AlertBanner message={erro} />}
           {sucesso && <AlertBanner type="success" message={sucesso} />}
-          {info && <div style={aviso}>{info}</div>}
           {cadastro && <ResultadoCadastro resultado={cadastro} />}
 
           <div style={aviso}>
@@ -280,14 +270,13 @@ export default function ConvidarPacienteModal({ onClose, onConvitesAlterados }: 
                     borderBottom: i < convites.length - 1 ? '1px solid var(--border)' : 'none',
                   }}
                 >
-                  <div style={avatar}>{c.paciente.nome.charAt(0).toUpperCase()}</div>
+                  <div style={avatar}>{c.email.charAt(0).toUpperCase()}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>
-                      {c.paciente.nome}
+                    <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)', overflowWrap: 'anywhere' }}>
+                      {c.email}
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                      {c.paciente.email} · enviado em{' '}
-                      {new Date(c.criadoEm).toLocaleDateString('pt-BR')}
+                      enviado em {new Date(c.criadoEm).toLocaleDateString('pt-BR')}
                     </div>
                   </div>
                   <Btn

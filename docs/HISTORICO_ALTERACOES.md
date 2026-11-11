@@ -2,6 +2,47 @@
 
 Entradas mais novas primeiro. Regras e formato: veja `docs/LEIA_PRIMEIRO_IA.md`.
 
+## 2026-11-11 — Convite que não revela quem é paciente
+- Quem: Natan, com apoio de IA
+- PR/branch: `fix/convite-sem-revelar-paciente`
+- O que aconteceu: o parecer de 02/11 (correção CO-03) pediu resposta genérica no convite. Antes,
+  um e-mail sem conta de paciente dava 404, e um paciente vinha com o nome. A lista de convites
+  pendentes também mostrava o nome. A nutricionista descobria quem usa o NutriCare, e num serviço
+  de diabetes isso já é dado de saúde por associação.
+- O que foi adicionado:
+  - Migration 018 (e `schema.sql`): `solicitacao_vinculo.email_convidado`, `id_paciente` passa a
+    aceitar vazio, a restrição `chk_solicitacao_destino` e um convite pendente por e-mail. Os
+    convites antigos recebem o e-mail da conta convidada.
+  - Testes em `convites.service.spec.ts`: e-mail sem conta, lista sem nome, aceite de convite
+    mandado antes da conta existir.
+- O que foi modificado:
+  - `POST /vinculos/convites` grava o convite pelo e-mail, exista ou não a conta, e responde sempre
+    `{ id, email, criadoEm }`. Só quem já acompanha o paciente recebe o 409 "já vinculado".
+  - A lista de convites da nutricionista mostra só o e-mail. A do paciente inclui os convites
+    mandados ao e-mail dele antes de ele ter conta, e o aceite grava o id de quem respondeu. O
+    vínculo continua nascendo só do aceite.
+  - Painel: a mensagem do convite não diz se a conta existe, a aba virou "Convidar por e-mail" e as
+    listas mostram o e-mail. Saiu o atalho que abria o cadastro quando o e-mail não tinha conta,
+    porque ele dependia justamente da resposta que entregava a informação.
+- Arquivos principais: `database/migrations/018_convite_por_email.sql`, `database/schema.sql`,
+  `apps/api/src/modules/vinculos/convites.service.ts`, `apps/web/src/components/ConvidarPacienteModal.tsx`
+  e `apps/web/src/pages/app/PacientesPage.tsx`.
+- Atenção para quem vier depois:
+  - Mexe em duas partes do "NÃO MEXA": banco (migration nova) e `ConvitesService`. Feito a
+    pedido do Natan, para o parecer. Precisa de revisão do grupo antes do merge.
+  - A próxima migration é a 019.
+  - O cadastro (público e pelo nutricionista) ainda responde "e-mail já cadastrado". Fechar esse
+    canal pede confirmação de e-mail (REC-05).
+  - Conferido:
+    - `db:verificar` passou com as 18 migrations, e a migration foi aplicada no banco de teste
+      `tcc` (27 convites antigos receberam o e-mail).
+    - Um roteiro pela API passou nos 13 passos: mesma resposta com e sem conta, lista sem nome,
+      409 no repetido, cadastro depois do convite, aceite e paciente na lista.
+    - A tela foi conferida no Chrome.
+    - `e2e:fluxo` passou nos 21 passos, rodado com o Chrome instalado porque o navegador do
+      Playwright não está baixado nesta máquina.
+  - O vídeo da pré-banca mostra o convite com o nome da Cláudia e fala em 17 migrations.
+
 ## 2026-11-10 — Painel: botão para baixar o app Android
 - Quem: Isac, com apoio de IA
 - PR/branch: `feat/painel-baixar-app`

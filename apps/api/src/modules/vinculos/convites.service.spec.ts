@@ -54,11 +54,20 @@ const comandos = (cliente: { query: jest.Mock }) =>
 
 describe('ConvitesService', () => {
   describe('convidar', () => {
-    const paciente = { id_paciente: 3, id_usuario: 30, nome: 'João', email: 'joao@x.com' };
+    const paciente = { id_paciente: 3, id_usuario: 30 };
 
-    it('should refuse an e-mail that does not belong to an active patient', async () => {
-      const { service } = montar({ consultas: [[]] });
-      await expect(service.convidar('1', 'ninguem@x.com')).rejects.toThrow(NotFoundException);
+    it('should save the invitation by e-mail when there is no patient, answering the same way', async () => {
+      // Antes era 404: a nutricionista descobria quem é paciente só pela resposta.
+      const criadoEm = new Date();
+      const { service, query, notificacoes } = montar({
+        consultas: [[], [{ id_solicitacao: 9, criado_em: criadoEm }]],
+      });
+
+      const convite = await service.convidar('1', 'Ninguem@x.com');
+
+      expect(convite).toEqual({ id: '9', email: 'ninguem@x.com', criadoEm });
+      expect(query.mock.calls[1][1]).toEqual(['7', null, 'ninguem@x.com']);
+      expect(notificacoes.registrar).not.toHaveBeenCalled();
     });
 
     it('should refuse a patient that is already linked', async () => {
@@ -83,11 +92,9 @@ describe('ConvitesService', () => {
       const convite = await service.convidar('1', '  JOAO@x.com ');
 
       expect(query.mock.calls[0][1]).toEqual(['joao@x.com']);
-      expect(convite).toEqual({
-        id: '9',
-        paciente: { id: '30', nome: 'João', email: 'joao@x.com' },
-        criadoEm,
-      });
+      expect(query.mock.calls[1][1]).toEqual(['7', 3, 'joao@x.com']);
+      // Mesma forma de resposta do e-mail sem conta, e sem o nome do paciente.
+      expect(convite).toEqual({ id: '9', email: 'joao@x.com', criadoEm });
       expect(notificacoes.registrar).toHaveBeenCalledWith(
         expect.objectContaining({ idUsuario: '30', titulo: 'Convite de acompanhamento' }),
       );
@@ -114,6 +121,18 @@ describe('ConvitesService', () => {
       expect(notificacoes.registrar).toHaveBeenCalledWith(
         expect.objectContaining({ idUsuario: '1', titulo: 'Convite aceito' }),
       );
+    });
+
+    it('should also accept an invitation sent to the e-mail before the account existed', async () => {
+      const { service, cliente } = montar({ transacao: [resposta, []], consultas: [partes] });
+
+      await service.responder('30', '9', true);
+
+      const update = String(cliente.query.mock.calls[1][0]);
+      expect(update).toContain('s.id_paciente IS NULL AND s.email_convidado = u.email');
+      // O convite passa a apontar para quem respondeu, e o vínculo usa esse id.
+      expect(update).toContain('id_paciente = p.id_paciente');
+      expect(cliente.query.mock.calls[2][1]).toEqual([7, 3]);
     });
 
     it('should not create a link when the patient refuses', async () => {
@@ -144,6 +163,19 @@ describe('ConvitesService', () => {
   });
 
   describe('listarPendentes', () => {
+    it('should show the nutritionist only the e-mail typed, never the patient name', async () => {
+      const criadoEm = new Date();
+      const { service, query } = montar({
+        consultas: [[{ id_solicitacao: 9, criado_em: criadoEm, email: 'joao@x.com' }]],
+      });
+      const nutri: JwtPayload = { sub: '1', email: 'camila@x.com', role: 'nutricionista' };
+
+      const { data } = await service.listarPendentes(nutri);
+
+      expect(query.mock.calls[0][0]).not.toContain('u.nome');
+      expect(data).toEqual([{ id: '9', email: 'joao@x.com', criadoEm }]);
+    });
+
     it('should list the invitations a patient received, with who sent them', async () => {
       const criadoEm = new Date();
       const { service, query } = montar({
@@ -156,6 +188,8 @@ describe('ConvitesService', () => {
       const { data } = await service.listarPendentes(paciente);
 
       expect(query.mock.calls[0][0]).toContain('p.id_usuario = $1');
+      // Também os mandados ao e-mail dele antes de a conta existir.
+      expect(query.mock.calls[0][0]).toContain('s.email_convidado = up.email');
       expect(data).toEqual([
         {
           id: '9',
