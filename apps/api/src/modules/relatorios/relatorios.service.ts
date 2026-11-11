@@ -232,8 +232,8 @@ export class RelatoriosService {
     return colunas.map((c) => this.escaparCsv(c)).join(';');
   }
 
-  async gerarCsv(user: JwtPayload, pacienteId?: string, dias?: number) {
-    const relatorio = await this.gerar(user, pacienteId, dias);
+  async gerarCsv(user: JwtPayload, pacienteId?: string, dias?: number, completo = false) {
+    const relatorio = await this.gerar(user, pacienteId, dias, completo);
 
     const linhas: string[] = [];
     linhas.push(

@@ -38,6 +38,9 @@ async function bootstrap() {
   app.enableCors({
     origin: origens.length === 0 || origens.includes('*') ? true : origens,
     credentials: true,
+    // Sem isso o navegador esconde o cabeçalho de outra origem e o painel não
+    // consegue ler o nome do arquivo da planilha.
+    exposedHeaders: ['Content-Disposition'],
   });
 
   app.useGlobalPipes(

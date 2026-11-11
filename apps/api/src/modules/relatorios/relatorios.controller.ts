@@ -34,11 +34,13 @@ export class RelatoriosController {
     @Res({ passthrough: true }) res: Response,
     @Query('pacienteId') pacienteId?: string,
     @Query('dias') dias?: string,
+    @Query('completo') completo?: string,
   ) {
     const { nomeArquivo, conteudo } = await this.relatorios.gerarCsv(
       user,
       pacienteId,
       diasDaQuery(dias),
+      completo === 'true',
     );
     res.setHeader('Content-Disposition', `attachment; filename="${nomeArquivo}"`);
     return conteudo;
